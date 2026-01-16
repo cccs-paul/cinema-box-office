@@ -1,0 +1,64 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: cinema-box-office-api-dev
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/boxoffice
+      SPRING_DATASOURCE_USERNAME: boxoffice
+      SPRING_DATASOURCE_PASSWORD: boxoffice_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - boxoffice-network-dev
+    restart: unless-stopped
+
+  web:
+    image: node:20-alpine
+    container_name: cinema-box-office-web-dev
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "4200:4200"
+    command: npm start -- --host 0.0.0.0 --poll 2000
+    depends_on:
+      - api
+    networks:
+      - boxoffice-network-dev
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: cinema-box-office-db-dev
+    environment:
+      POSTGRES_DB: boxoffice
+      POSTGRES_USER: boxoffice
+      POSTGRES_PASSWORD: boxoffice_password
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boxoffice"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - boxoffice-network-dev
+    restart: unless-stopped
+
+volumes:
+  postgres_data_dev:
+    driver: local
+
+networks:
+  boxoffice-network-dev:
+    driver: bridge

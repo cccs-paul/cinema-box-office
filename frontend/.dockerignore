@@ -1,0 +1,40 @@
+# .dockerignore for frontend
+# Remove unnecessary files from Docker build context
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build files
+dist/
+build/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+.project
+.classpath
+.c9/
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Test files
+karma.conf.js
+protractor.conf.js
+test/
+spec/
+
+# Other
+*.log
+*.tmp
+.env
+.angular/
+.git/

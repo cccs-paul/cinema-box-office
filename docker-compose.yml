@@ -1,0 +1,78 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: cinema-box-office-db
+    environment:
+      POSTGRES_DB: boxoffice
+      POSTGRES_USER: boxoffice
+      POSTGRES_PASSWORD: boxoffice_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boxoffice"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - boxoffice-network
+    restart: unless-stopped
+
+  # Backend API Service
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: cinema-box-office-api
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/boxoffice
+      SPRING_DATASOURCE_USERNAME: boxoffice
+      SPRING_DATASOURCE_PASSWORD: boxoffice_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: prod
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - boxoffice-network
+    restart: unless-stopped
+
+  # Frontend Application
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: cinema-box-office-web
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - boxoffice-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  boxoffice-network:
+    driver: bridge

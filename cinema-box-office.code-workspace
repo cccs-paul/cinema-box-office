@@ -1,0 +1,196 @@
+{
+  "folders": [
+    {
+      "path": "backend",
+      "name": "Backend (Java)"
+    },
+    {
+      "path": "frontend",
+      "name": "Frontend (Angular)"
+    },
+    {
+      "path": ".",
+      "name": "Root"
+    }
+  ],
+  "settings": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.rulers": [80, 120],
+    "[java]": {
+      "editor.defaultFormatter": "redhat.java",
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.fixAll": true
+      }
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode",
+      "editor.formatOnSave": true
+    },
+    "[html]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[scss]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/target": true,
+      "**/dist": true,
+      "**/.angular": true,
+      "**/.idea": true,
+      "**/.vscode": false
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/target": true,
+      "**/dist": true
+    },
+    "java.project.sourcePath": "backend/src/main/java",
+    "java.project.referencedLibraries": [
+      "backend/target/dependency/*.jar"
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "redhat.java",
+      "vscjava.vscode-java-debug",
+      "vscjava.vscode-maven",
+      "Angular.ng-template",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "christian-kohler.npm-intellisense",
+      "ms-azuretools.vscode-docker"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Backend - Debug Spring Boot",
+        "type": "java",
+        "name": "Debug Spring Boot App",
+        "request": "launch",
+        "mainClass": "com.boxoffice.BoxOfficeApplication",
+        "projectName": "backend",
+        "cwd": "${workspaceFolder}/backend",
+        "console": "integratedTerminal"
+      },
+      {
+        "name": "Frontend - Angular Dev Server",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/frontend/node_modules/@angular/cli/bin/ng",
+        "args": ["serve"],
+        "cwd": "${workspaceFolder}/frontend",
+        "console": "integratedTerminal"
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Build All",
+        "type": "shell",
+        "command": "bash",
+        "args": ["build.sh"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Test All",
+        "type": "shell",
+        "command": "bash",
+        "args": ["test.sh"],
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Start Development",
+        "type": "shell",
+        "command": "bash",
+        "args": ["start.sh", "dev"],
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Start Production",
+        "type": "shell",
+        "command": "bash",
+        "args": ["start.sh", "prod"],
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "Backend - Maven Build",
+        "type": "shell",
+        "command": "mvn",
+        "args": ["clean", "package"],
+        "cwd": "${workspaceFolder}/backend",
+        "group": {
+          "kind": "build"
+        },
+        "presentation": {
+          "reveal": "always"
+        }
+      },
+      {
+        "label": "Backend - Maven Test",
+        "type": "shell",
+        "command": "mvn",
+        "args": ["test"],
+        "cwd": "${workspaceFolder}/backend",
+        "group": {
+          "kind": "test"
+        },
+        "presentation": {
+          "reveal": "always"
+        }
+      },
+      {
+        "label": "Frontend - NPM Install",
+        "type": "shell",
+        "command": "npm",
+        "args": ["install"],
+        "cwd": "${workspaceFolder}/frontend",
+        "presentation": {
+          "reveal": "always"
+        }
+      },
+      {
+        "label": "Frontend - NPM Test",
+        "type": "shell",
+        "command": "npm",
+        "args": ["test", "--", "--watch=false"],
+        "cwd": "${workspaceFolder}/frontend",
+        "group": {
+          "kind": "test"
+        },
+        "presentation": {
+          "reveal": "always"
+        }
+      }
+    ]
+  }
+}
