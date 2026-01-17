@@ -3,28 +3,4 @@
   Copyright (c) 2026 Box Office Team
   Licensed under MIT License
 -->
-<main>
-  <header>
-    <h1>{{ title }}</h1>
-  </header>
-
-  <section class="api-status">
-    <h2>API Status</h2>
-    <div [class.healthy]="isApiHealthy" [class.unhealthy]="!isApiHealthy" class="status-indicator">
-      <span class="status-dot"></span>
-      <span class="status-text">{{ apiStatus }}</span>
-    </div>
-  </section>
-
-  <section class="database-status">
-    <h2>Database Status</h2>
-    <div [class.healthy]="isDatabaseHealthy" [class.unhealthy]="!isDatabaseHealthy" class="status-indicator">
-      <span class="status-dot"></span>
-      <span class="status-text">{{ databaseStatus }}</span>
-    </div>
-  </section>
-
-  <section class="content">
-    <p>Welcome to Cinema Box Office Management System</p>
-  </section>
-</main>
+<router-outlet></router-outlet>
