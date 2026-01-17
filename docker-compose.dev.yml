@@ -20,15 +20,14 @@ services:
     restart: unless-stopped
 
   web:
-    image: node:20-alpine
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.dev
     container_name: cinema-box-office-web-dev
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    environment:
+      NODE_ENV: development
     ports:
       - "4200:4200"
-    command: npm start -- --host 0.0.0.0 --poll 2000
     depends_on:
       - api
     networks:

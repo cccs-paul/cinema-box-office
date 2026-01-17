@@ -14,11 +14,45 @@ spring:
     username: boxoffice
     password: boxoffice_password
     driver-class-name: org.postgresql.Driver
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://your-oauth-provider.com
+          jwk-set-uri: https://your-oauth-provider.com/.well-known/jwks.json
 
 server:
   port: 8080
   servlet:
     context-path: /api
+
+# Application-specific security configuration
+app:
+  security:
+    ldap:
+      enabled: false
+      # LDAP server configuration
+      url: ldap://ldap.example.com:389
+      base-dn: dc=example,dc=com
+      user-search-base: ou=users
+      user-search-filter: "(uid={0})"
+      group-search-base: ou=groups
+      group-search-filter: "(member={0})"
+      manager-dn: cn=admin,dc=example,dc=com
+      manager-password: admin_password
+    oauth2:
+      enabled: false
+      # OAuth2 client configuration
+      client:
+        registration:
+          google:
+            client-id: ${OAUTH2_GOOGLE_CLIENT_ID:}
+            client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET:}
+            scope: openid,profile,email
+          github:
+            client-id: ${OAUTH2_GITHUB_CLIENT_ID:}
+            client-secret: ${OAUTH2_GITHUB_CLIENT_SECRET:}
+            scope: user:email
 
 management:
   endpoints:

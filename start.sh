@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 # Parse arguments
 if [ "$1" = "dev" ]; then
     echo "Starting in development mode..."
-    docker-compose -f docker-compose.dev.yml up -d
+    docker compose -f docker-compose.dev.yml up -d
     echo ""
     echo -e "${GREEN}✓ Development environment started${NC}"
     echo ""
@@ -29,10 +29,10 @@ if [ "$1" = "dev" ]; then
     echo "  - API Health: http://localhost:8080/api/health"
     echo "  - Database: localhost:5432"
     echo ""
-    echo "View logs with: docker-compose -f docker-compose.dev.yml logs -f"
+    echo "View logs with: docker compose -f docker-compose.dev.yml logs -f"
 elif [ "$1" = "prod" ]; then
     echo "Starting in production mode..."
-    docker-compose up -d
+    docker compose up -d
     echo ""
     echo -e "${GREEN}✓ Production environment started${NC}"
     echo ""
@@ -41,7 +41,7 @@ elif [ "$1" = "prod" ]; then
     echo "  - API: http://localhost:8080/api"
     echo "  - API Health: http://localhost:8080/api/health"
     echo ""
-    echo "View logs with: docker-compose logs -f"
+    echo "View logs with: docker compose logs -f"
 else
     echo "Usage: $0 [dev|prod]"
     echo ""

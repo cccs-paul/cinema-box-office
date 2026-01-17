@@ -69,7 +69,8 @@
               "browserTarget": "cinema-box-office:build:production"
             },
             "development": {
-              "browserTarget": "cinema-box-office:build:development"
+              "browserTarget": "cinema-box-office:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

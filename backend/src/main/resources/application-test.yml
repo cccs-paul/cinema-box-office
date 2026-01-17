@@ -17,6 +17,14 @@ spring:
 server:
   port: 8080
 
+# Disable LDAP and OAuth2 for tests
+app:
+  security:
+    ldap:
+      enabled: false
+    oauth2:
+      enabled: false
+
 logging:
   level:
     root: WARN

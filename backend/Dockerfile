@@ -1,8 +1,14 @@
 # Multi-stage build for Box Office Backend API
 # Stage 1: Build stage
-FROM eclipse-temurin:25-jdk-noble AS builder
+FROM ubuntu:24.04 AS builder
 
 WORKDIR /build
+
+# Install Maven and Java
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    maven \
+    openjdk-25-jdk-headless && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy Maven files
 COPY backend/pom.xml .
@@ -18,12 +24,18 @@ COPY backend/src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Runtime stage
-FROM eclipse-temurin:25-jre-noble
+FROM ubuntu:24.04
 
 WORKDIR /app
 
-# Create non-root user
-RUN useradd -m -u 1000 boxoffice && \
+# Install Java runtime and curl for health checks
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openjdk-25-jre-headless \
+    curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create non-root user (use different UID)
+RUN useradd -m -u 1001 boxoffice && \
     chown -R boxoffice:boxoffice /app
 
 # Copy JAR from builder stage
@@ -34,7 +46,7 @@ USER boxoffice
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD java -jar app.jar --check-health || exit 1
+    CMD curl -f http://localhost:8080/api/health || exit 1
 
 # Expose API port
 EXPOSE 8080
