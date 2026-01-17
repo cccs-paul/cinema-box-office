@@ -1,0 +1,68 @@
+/*
+ * Cinema Box Office - Authentication Configuration
+ * Copyright (c) 2026 Box Office Team
+ * Licensed under MIT License
+ */
+package com.boxoffice.config;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+/**
+ * Core authentication configuration for the application.
+ * Supports multiple authentication mechanisms including LDAP and OAuth2.
+ *
+ * @author Box Office Team
+ * @version 1.0.0
+ * @since 2026-01-16
+ */
+@Configuration
+@EnableWebSecurity
+public class AuthenticationConfig {
+
+    /**
+     * Provides password encoding using BCrypt.
+     *
+     * @return configured BCryptPasswordEncoder
+     */
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Configures the main security filter chain for basic authentication.
+     * Used when OAuth2 and LDAP are not enabled.
+     *
+     * @param http HttpSecurity to configure
+     * @return configured SecurityFilterChain
+     * @throws Exception if configuration fails
+     */
+    @Bean
+    @ConditionalOnProperty(
+        name = "app.security.oauth2.enabled",
+        havingValue = "false",
+        matchIfMissing = true
+    )
+    public SecurityFilterChain basicSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/health", "/actuator/**").permitAll()
+                .anyRequest().permitAll()
+            )
+            .httpBasic(basic -> {})
+            .csrf(csrf -> csrf.disable());
+        return http.build();
+    }
+}

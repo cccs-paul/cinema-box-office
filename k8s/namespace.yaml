@@ -1,0 +1,10 @@
+---
+# Cinema Box Office - Kubernetes Namespace
+# License: MIT
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cinema-box-office
+  labels:
+    app: cinema-box-office
+    version: "1.0.0"

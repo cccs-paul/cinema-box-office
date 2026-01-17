@@ -1,0 +1,34 @@
+---
+# Cinema Box Office - ConfigMap for application configuration
+# License: MIT
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cinema-box-office-config
+  namespace: cinema-box-office
+  labels:
+    app: cinema-box-office
+    component: config
+data:
+  # Backend configuration
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+  SPRING_JPA_SHOW_SQL: "false"
+  SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+  
+  # Logging
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_COM_BOXOFFICE: "DEBUG"
+  
+  # Security profiles (can be overridden per environment)
+  # Options: dev, prod, ldap, oauth2
+  SPRING_PROFILES_ACTIVE: "prod"
+  
+  # API configuration
+  API_BASE_URL: "http://api:8080/api"
+  API_HEALTH_ENDPOINT: "/health"
+  
+  # CORS configuration
+  CORS_ALLOWED_ORIGINS: "http://localhost:4200,http://localhost:80"
+  CORS_ALLOWED_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
+  CORS_ALLOWED_HEADERS: "Content-Type,Authorization"
+  CORS_ALLOW_CREDENTIALS: "true"

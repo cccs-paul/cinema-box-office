@@ -35,6 +35,16 @@ header {
   }
 }
 
+.database-status {
+  padding: 2rem;
+  text-align: center;
+
+  h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+  }
+}
+
 .status-indicator {
   display: inline-flex;
   align-items: center;

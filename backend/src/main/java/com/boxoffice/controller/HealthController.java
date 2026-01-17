@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Autowired;
+import javax.sql.DataSource;
+import java.sql.Connection;
 
 /**
  * Health check controller for API endpoints.
@@ -22,6 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/health")
 public class HealthController {
 
+    @Autowired(required = false)
+    private DataSource dataSource;
+
     /**
      * Health check endpoint.
      *
@@ -30,6 +36,33 @@ public class HealthController {
     @GetMapping
     public ResponseEntity<HealthResponse> health() {
         return ResponseEntity.ok(new HealthResponse("UP", "Box Office API is running"));
+    }
+
+    /**
+     * Database health check endpoint.
+     * Attempts to validate a database connection.
+     *
+     * @return HTTP 200 OK if database is healthy, 503 otherwise
+     */
+    @GetMapping("/db")
+    public ResponseEntity<HealthResponse> databaseHealth() {
+        try {
+            if (dataSource != null) {
+                try (Connection connection = dataSource.getConnection()) {
+                    if (connection.isValid(2)) {
+                        return ResponseEntity.ok(new HealthResponse("UP", "Database connection is UP"));
+                    } else {
+                        return ResponseEntity.status(503)
+                                .body(new HealthResponse("DOWN", "Database connection validation failed"));
+                    }
+                }
+            } else {
+                return ResponseEntity.ok(new HealthResponse("UP", "Database is available"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(503)
+                    .body(new HealthResponse("DOWN", "Database connection failed: " + e.getMessage()));
+        }
     }
 
     /**

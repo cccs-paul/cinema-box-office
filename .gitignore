@@ -1,0 +1,64 @@
+# .gitignore for Cinema Box Office Project
+
+# Java / Maven
+*.class
+*.jar
+*.war
+*.ear
+target/
+.m2/
+*.classpath
+*.project
+*.prefs
+.settings/
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Node / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+.angular/
+.cache/
+
+# IDE / Editor
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+build/
+dist/
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.~
+
+# Docker
+docker-compose.override.yml

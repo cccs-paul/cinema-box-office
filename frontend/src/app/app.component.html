@@ -10,9 +10,17 @@
 
   <section class="api-status">
     <h2>API Status</h2>
-    <div [class.healthy]="isHealthy" [class.unhealthy]="!isHealthy" class="status-indicator">
+    <div [class.healthy]="isApiHealthy" [class.unhealthy]="!isApiHealthy" class="status-indicator">
       <span class="status-dot"></span>
       <span class="status-text">{{ apiStatus }}</span>
+    </div>
+  </section>
+
+  <section class="database-status">
+    <h2>Database Status</h2>
+    <div [class.healthy]="isDatabaseHealthy" [class.unhealthy]="!isDatabaseHealthy" class="status-indicator">
+      <span class="status-dot"></span>
+      <span class="status-text">{{ databaseStatus }}</span>
     </div>
   </section>
 

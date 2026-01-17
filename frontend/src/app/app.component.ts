@@ -25,7 +25,9 @@ import { CommonModule } from '@angular/common';
 export class AppComponent implements OnInit {
   title = 'Cinema Box Office';
   apiStatus = 'Checking...';
-  isHealthy = false;
+  isApiHealthy = false;
+  databaseStatus = 'Checking...';
+  isDatabaseHealthy = false;
 
   /**
    * Constructor.
@@ -36,10 +38,11 @@ export class AppComponent implements OnInit {
 
   /**
    * Component initialization.
-   * Checks health status of API.
+   * Checks health status of API and database.
    */
   ngOnInit(): void {
     this.checkApiHealth();
+    this.checkDatabaseHealth();
   }
 
   /**
@@ -48,13 +51,30 @@ export class AppComponent implements OnInit {
   private checkApiHealth(): void {
     this.http.get<{ status: string; message: string }>('/api/health').subscribe(
       (response) => {
-        this.isHealthy = response.status === 'UP';
+        this.isApiHealthy = response.status === 'UP';
         this.apiStatus = response.message;
       },
       (error) => {
-        this.isHealthy = false;
+        this.isApiHealthy = false;
         this.apiStatus = 'API is not available';
         console.error('API health check failed:', error);
+      }
+    );
+  }
+
+  /**
+   * Check database health status.
+   */
+  private checkDatabaseHealth(): void {
+    this.http.get<{ status: string; message: string }>('/api/health/db').subscribe(
+      (response) => {
+        this.isDatabaseHealthy = response.status === 'UP';
+        this.databaseStatus = response.message;
+      },
+      (error) => {
+        this.isDatabaseHealthy = false;
+        this.databaseStatus = 'Database is not available';
+        console.error('Database health check failed:', error);
       }
     );
   }

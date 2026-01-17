@@ -1,5 +1,5 @@
 /*
- * Cinema Box Office - Health Controller Tests
+ * Cinema Box Office - Authentication Controller Tests
  * Copyright (c) 2026 Box Office Team
  * Licensed under MIT License
  */
@@ -9,15 +9,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import com.boxoffice.BoxOfficeApplication;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Integration tests for HealthController.
+ * Integration tests for AuthenticationController.
  *
  * @author Box Office Team
  * @version 1.0.0
@@ -25,26 +24,27 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 @SpringBootTest(classes = BoxOfficeApplication.class)
 @ActiveProfiles("test")
-class HealthControllerTest {
+class AuthenticationControllerTest {
 
     @Autowired
-    private HealthController healthController;
+    private AuthenticationController authenticationController;
 
     @Test
-    @DisplayName("Should return UP status when health endpoint is called")
-    void testHealthCheck() {
-        ResponseEntity<?> response = healthController.health();
+    @DisplayName("Should return unauthenticated status for anonymous user")
+    void testGetAuthStatusUnauthenticated() {
+        var response = authenticationController.getAuthStatus();
         
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
+        assertNotNull(response);
+        assertFalse(response.getBody().authenticated());
     }
 
     @Test
-    @DisplayName("Should return database health status when database health endpoint is called")
-    void testDatabaseHealthCheck() {
-        ResponseEntity<?> response = healthController.databaseHealth();
+    @DisplayName("Should return authentication info for anonymous user")
+    void testGetAuthInfo() {
+        var response = authenticationController.getAuthInfo();
         
         assertNotNull(response);
         assertNotNull(response.getBody());
+        assertFalse(response.getBody().authenticated());
     }
 }
