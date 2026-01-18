@@ -43,12 +43,17 @@ COPY --from=builder /build/dist/cinema-box-office ./
 # Copy Nginx configuration
 COPY frontend/nginx.conf /etc/nginx/nginx.conf
 
-# Create non-root user and set permissions
-RUN useradd -m -u 1001 nginx-user && \
+# Create all required nginx directories as root, then set proper permissions
+RUN mkdir -p /var/lib/nginx/body /var/lib/nginx/fastcgi /var/lib/nginx/proxy /var/lib/nginx/scgi /var/lib/nginx/uwsgi \
+    /var/log/nginx /var/cache/nginx /var/run/nginx /tmp/nginx && \
+    chmod -R 755 /var/lib/nginx /tmp/nginx && \
+    useradd -m -u 1001 nginx-user && \
     chown -R nginx-user:nginx-user /usr/share/nginx/html && \
-    mkdir -p /var/log/nginx /var/cache/nginx && \
+    chown -R nginx-user:nginx-user /var/lib/nginx && \
     chown -R nginx-user:nginx-user /var/log/nginx && \
     chown -R nginx-user:nginx-user /var/cache/nginx && \
+    chown -R nginx-user:nginx-user /var/run/nginx && \
+    chown -R nginx-user:nginx-user /tmp/nginx && \
     chown -R nginx-user:nginx-user /etc/nginx
 
 # Health check

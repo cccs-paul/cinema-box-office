@@ -5,10 +5,11 @@
  */
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { HeaderComponent } from './components/header/header.component';
 
 /**
  * Root application component.
- * Provides router outlet for view rendering.
+ * Provides global header and router outlet for view rendering.
  *
  * @author Box Office Team
  * @version 1.0.0
@@ -17,7 +18,7 @@ import { RouterOutlet } from '@angular/router';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, HeaderComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
