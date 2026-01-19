@@ -13,7 +13,7 @@
     <!-- Create RC Form Overlay -->
     <div class="create-rc-form" *ngIf="showCreateForm">
       <div class="form-container">
-        <h3>Create New Responsibility Centre</h3>
+        <h3>{{ editingRCId ? 'Edit' : 'Create New' }} Responsibility Centre</h3>
         <div class="form-group">
           <label for="rcName">RC Name *</label>
           <input
@@ -35,8 +35,8 @@
           ></textarea>
         </div>
         <div class="form-actions">
-          <button class="btn btn-primary" (click)="createRC()" [disabled]="isCreating">
-            {{ isCreating ? 'Creating...' : 'Create RC' }}
+          <button class="btn btn-primary" (click)="saveRC()" [disabled]="isCreating">
+            {{ isCreating ? (editingRCId ? 'Saving...' : 'Creating...') : (editingRCId ? 'Save Changes' : 'Create RC') }}
           </button>
           <button class="btn btn-secondary" (click)="toggleCreateForm()" [disabled]="isCreating">
             Cancel
@@ -70,6 +70,14 @@
 
       <!-- RC List -->
       <div class="rc-card" *ngFor="let rc of responsibilityCentres" (click)="onRCSelected(rc)">
+        <div class="rc-actions" *ngIf="rc.accessLevel === 'READ_WRITE'">
+          <button class="btn-action" (click)="startEditRC($event, rc)" title="Rename RC">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button class="btn-action btn-delete" (click)="deleteRC($event, rc)" title="Delete RC">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
         <div class="rc-card-header">
           <h3 class="rc-name">{{ rc.name }}</h3>
           <span class="access-badge" [ngClass]="getAccessLevelClass(rc.accessLevel)">
@@ -104,7 +112,7 @@
     <!-- Create FY Form Overlay -->
     <div class="create-rc-form" *ngIf="showCreateFYForm">
       <div class="form-container">
-        <h3>Create New Fiscal Year</h3>
+        <h3>{{ editingFYId ? 'Edit' : 'Create New' }} Fiscal Year</h3>
         <div class="form-group">
           <label for="fyName">FY Name *</label>
           <input
@@ -116,8 +124,8 @@
           />
         </div>
         <div class="form-actions">
-          <button class="btn btn-primary" (click)="createFY()" [disabled]="isCreatingFY">
-            {{ isCreatingFY ? 'Creating...' : 'Create FY' }}
+          <button class="btn btn-primary" (click)="saveFY()" [disabled]="isCreatingFY">
+            {{ isCreatingFY ? (editingFYId ? 'Saving...' : 'Creating...') : (editingFYId ? 'Save Changes' : 'Create FY') }}
           </button>
           <button class="btn btn-secondary" (click)="toggleCreateFYForm()" [disabled]="isCreatingFY">
             Cancel
@@ -153,6 +161,14 @@
 
       <!-- FY List -->
       <div class="rc-card fy-card" *ngFor="let fy of fiscalYears" (click)="onFYSelected(fy)">
+        <div class="rc-actions" *ngIf="selectedRC?.accessLevel === 'READ_WRITE'">
+          <button class="btn-action" (click)="startEditFY($event, fy)" title="Rename FY">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          <button class="btn-action btn-delete" (click)="deleteFY($event, fy)" title="Delete FY">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
         <div class="rc-card-header">
           <h3 class="rc-name">{{ fy.name }}</h3>
           <span class="access-badge" [ngClass]="selectedRC?.accessLevel === 'READ_WRITE' ? 'access-readwrite' : 'access-readonly'">

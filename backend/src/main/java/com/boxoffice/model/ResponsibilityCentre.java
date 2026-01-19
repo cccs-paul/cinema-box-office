@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "responsibility_centres")
@@ -32,6 +34,10 @@ public class ResponsibilityCentre {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "rc", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<FiscalYear> fiscalYears = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

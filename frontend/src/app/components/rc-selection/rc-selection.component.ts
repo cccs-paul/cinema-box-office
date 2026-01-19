@@ -41,6 +41,12 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
   isCreatingFY = false;
   newFYName = '';
 
+  // Edit State
+  editingRCId: number | null = null;
+  editingFYId: number | null = null;
+  editValue = '';
+  editDescriptionValue = '';
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -108,9 +114,81 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
 
   toggleCreateForm(): void {
     this.showCreateForm = !this.showCreateForm;
+    if (this.showCreateForm) {
+      this.editingRCId = null;
+    }
     if (!this.showCreateForm) {
       this.resetRCForm();
     }
+  }
+
+  startEditRC(event: Event, rc: ResponsibilityCentreDTO): void {
+    event.stopPropagation();
+    this.editingRCId = rc.id;
+    this.newRCName = rc.name;
+    this.newRCDescription = rc.description || '';
+    this.showCreateForm = true;
+  }
+
+  deleteRC(event: Event, rc: ResponsibilityCentreDTO): void {
+    event.stopPropagation();
+
+    // First check if it has FYs
+    this.fyService.getAllForRc(rc.id).subscribe({
+      next: (fys) => {
+        let message = `Are you sure you want to delete "${rc.name}"?`;
+        if (fys.length > 0) {
+          message = `Warning: This Responsibility Centre has ${fys.length} Fiscal Year(s). Deleting it will also delete all associated Fiscal Years. Continue?`;
+        }
+
+        if (confirm(message)) {
+          this.rcService.deleteResponsibilityCentre(rc.id).subscribe({
+            next: () => this.loadResponsibilityCentres(),
+            error: (err) => this.errorMessage = err.error?.message || 'Failed to delete RC'
+          });
+        }
+      },
+      error: () => {
+        if (confirm(`Are you sure you want to delete "${rc.name}"?`)) {
+          this.rcService.deleteResponsibilityCentre(rc.id).subscribe({
+            next: () => this.loadResponsibilityCentres(),
+            error: (err) => this.errorMessage = err.error?.message || 'Failed to delete RC'
+          });
+        }
+      }
+    });
+  }
+
+  saveRC(): void {
+    if (this.editingRCId) {
+      this.updateRC();
+    } else {
+      this.createRC();
+    }
+  }
+
+  updateRC(): void {
+    if (!this.newRCName.trim() || !this.editingRCId) return;
+
+    this.isCreating = true;
+    this.rcService.updateResponsibilityCentre(
+      this.editingRCId,
+      this.newRCName,
+      this.newRCDescription
+    ).pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.loadResponsibilityCentres();
+          this.resetRCForm();
+          this.showCreateForm = false;
+          this.isCreating = false;
+          this.editingRCId = null;
+        },
+        error: (error: any) => {
+          this.errorMessage = error.error?.message || 'Failed to update RC';
+          this.isCreating = false;
+        }
+      });
   }
 
   createRC(): void {
@@ -141,9 +219,58 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
 
   toggleCreateFYForm(): void {
     this.showCreateFYForm = !this.showCreateFYForm;
+    if (this.showCreateFYForm) {
+      this.editingFYId = null;
+    }
     if (!this.showCreateFYForm) {
       this.resetFYForm();
     }
+  }
+
+  startEditFY(event: Event, fy: FiscalYearDTO): void {
+    event.stopPropagation();
+    this.editingFYId = fy.id;
+    this.newFYName = fy.name;
+    this.showCreateFYForm = true;
+  }
+
+  deleteFY(event: Event, fy: FiscalYearDTO): void {
+    event.stopPropagation();
+    if (confirm(`Are you sure you want to delete Fiscal Year "${fy.name}"?`)) {
+      this.fyService.deleteFiscalYear(fy.id).subscribe({
+        next: () => this.loadFiscalYears(fy.rcId),
+        error: (err) => this.errorMessage = err.error?.message || 'Failed to delete FY'
+      });
+    }
+  }
+
+  saveFY(): void {
+    if (this.editingFYId) {
+      this.updateFY();
+    } else {
+      this.createFY();
+    }
+  }
+
+  updateFY(): void {
+    if (!this.newFYName.trim() || !this.editingFYId || !this.selectedRC) return;
+
+    this.isCreatingFY = true;
+    this.fyService.updateFiscalYear(this.editingFYId, this.newFYName)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.loadFiscalYears(this.selectedRC!.id);
+          this.resetFYForm();
+          this.showCreateFYForm = false;
+          this.isCreatingFY = false;
+          this.editingFYId = null;
+        },
+        error: (error: any) => {
+          this.errorMessage = error.error?.message || 'Failed to update FY';
+          this.isCreatingFY = false;
+        }
+      });
   }
 
   createFY(): void {

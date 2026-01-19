@@ -50,6 +50,48 @@ public class ResponsibilityCentreService {
         return convertToDto(saved, username);
     }
 
+    @Transactional
+    public ResponsibilityCentreDTO update(Long id, String name, String description, String username) {
+        ResponsibilityCentre rc = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Responsibility Centre not found"));
+
+        if (!rc.getOwnerUsername().equals(username)) {
+            throw new RuntimeException("You do not have permission to update this Responsibility Centre");
+        }
+
+        if (DEMO_RC_NAME.equals(rc.getName())) {
+            throw new RuntimeException("Cannot rename the Demo Responsibility Centre");
+        }
+
+        rc.setName(name);
+        rc.setDescription(description);
+        ResponsibilityCentre saved = repository.save(rc);
+        return convertToDto(saved, username);
+    }
+
+    @Transactional
+    public void delete(Long id, String username) {
+        ResponsibilityCentre rc = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Responsibility Centre not found"));
+
+        if (!rc.getOwnerUsername().equals(username)) {
+            throw new RuntimeException("You do not have permission to delete this Responsibility Centre");
+        }
+
+        if (DEMO_RC_NAME.equals(rc.getName())) {
+            throw new RuntimeException("Cannot delete the Demo Responsibility Centre");
+        }
+
+        repository.delete(rc);
+    }
+
+    @Transactional(readOnly = true)
+    public ResponsibilityCentreDTO getById(Long id, String username) {
+        ResponsibilityCentre rc = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Responsibility Centre not found"));
+        return convertToDto(rc, username);
+    }
+
     private ResponsibilityCentreDTO convertToDto(ResponsibilityCentre rc, String currentUsername) {
         boolean isOwner = rc.getOwnerUsername().equals(currentUsername);
         String accessLevel = isOwner ? "READ_WRITE" : "READ_ONLY";

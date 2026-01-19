@@ -345,6 +345,48 @@
     overflow: hidden;
   }
 
+  .rc-actions {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 10;
+
+    .btn-action {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--background-secondary);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--background-primary);
+        color: var(--primary-gradient-start);
+        border-color: var(--primary-gradient-start);
+        transform: scale(1.1);
+      }
+
+      &.btn-delete:hover {
+        color: #ef4444;
+        border-color: #fca5a5;
+        background: #fef2f2;
+      }
+    }
+  }
+
+  &:hover .rc-actions {
+    opacity: 1;
+  }
+
   .rc-card-footer {
     margin-top: auto;
     padding-top: 1.25rem;

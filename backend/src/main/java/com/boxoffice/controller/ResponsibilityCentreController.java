@@ -24,6 +24,14 @@ public class ResponsibilityCentreController {
         return ResponseEntity.ok(service.getAllForUser(username));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponsibilityCentreDTO> getById(
+            @PathVariable Long id,
+            Authentication authentication) {
+        String username = authentication != null ? authentication.getName() : "anonymous";
+        return ResponseEntity.ok(service.getById(id, username));
+    }
+
     @PostMapping
     public ResponseEntity<ResponsibilityCentreDTO> create(
             @RequestBody Map<String, String> request,
@@ -32,5 +40,25 @@ public class ResponsibilityCentreController {
         String name = request.get("name");
         String description = request.get("description");
         return ResponseEntity.ok(service.create(name, description, username));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ResponsibilityCentreDTO> update(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
+        String username = authentication != null ? authentication.getName() : "anonymous";
+        String name = request.get("name");
+        String description = request.get("description");
+        return ResponseEntity.ok(service.update(id, name, description, username));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            Authentication authentication) {
+        String username = authentication != null ? authentication.getName() : "anonymous";
+        service.delete(id, username);
+        return ResponseEntity.noContent().build();
     }
 }

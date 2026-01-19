@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -42,7 +43,7 @@ class ResponsibilityCentreServiceTest {
                 .build();
 
         when(repository.findByOwnerUsername(username)).thenReturn(Arrays.asList(userRc));
-        when(repository.findAll()).thenReturn(Arrays.asList(userRc, demoRc));
+        when(repository.findByName(DEMO_RC_NAME)).thenReturn(Optional.of(demoRc));
 
         List<ResponsibilityCentreDTO> result = service.getAllForUser(username);
 

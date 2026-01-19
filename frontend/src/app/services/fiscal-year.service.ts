@@ -32,6 +32,16 @@ export class FiscalYearService {
     });
   }
 
+  updateFiscalYear(id: number, name: string): Observable<FiscalYearDTO> {
+    return this.http.put<FiscalYearDTO>(`${this.apiUrl}/${id}`, {
+      name
+    });
+  }
+
+  deleteFiscalYear(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
   setSelectedFY(fyId: number): void {
     localStorage.setItem('selectedFY', fyId.toString());
     this.selectedFYSubject.next(fyId);

@@ -54,6 +54,48 @@ public class FiscalYearService {
         return convertToDto(saved);
     }
 
+    @Transactional
+    public FiscalYearDTO update(Long id, String name, String username) {
+        FiscalYear fy = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Fiscal Year not found"));
+
+        ResponsibilityCentre rc = fy.getRc();
+
+        if (!rc.getOwnerUsername().equals(username)) {
+            throw new RuntimeException("You do not have permission to update Fiscal Years for this Responsibility Centre");
+        }
+
+        if ("Demo Responsibility Centre".equals(rc.getName())) {
+            throw new RuntimeException("Cannot update Fiscal Years for the Demo Responsibility Centre");
+        }
+
+        if (repository.existsByNameAndRcId(name, rc.getId()) && !fy.getName().equals(name)) {
+            throw new RuntimeException("Fiscal Year with name " + name + " already exists for this RC");
+        }
+
+        fy.setName(name);
+        FiscalYear saved = repository.save(fy);
+        return convertToDto(saved);
+    }
+
+    @Transactional
+    public void delete(Long id, String username) {
+        FiscalYear fy = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Fiscal Year not found"));
+
+        ResponsibilityCentre rc = fy.getRc();
+
+        if (!rc.getOwnerUsername().equals(username)) {
+            throw new RuntimeException("You do not have permission to delete Fiscal Years for this Responsibility Centre");
+        }
+
+        if ("Demo Responsibility Centre".equals(rc.getName())) {
+            throw new RuntimeException("Cannot delete Fiscal Years for the Demo Responsibility Centre");
+        }
+
+        repository.delete(fy);
+    }
+
     private FiscalYearDTO convertToDto(FiscalYear fy) {
         return FiscalYearDTO.builder()
                 .id(fy.getId())
