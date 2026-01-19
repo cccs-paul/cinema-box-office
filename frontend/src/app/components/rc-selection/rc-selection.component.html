@@ -1,0 +1,87 @@
+<!-- Cinema Box Office - RC Selection Template -->
+<div class="rc-selection-container">
+  <div class="rc-header">
+    <div class="rc-title-section">
+      <h1>Responsibility Centres</h1>
+      <p class="rc-subtitle">Select a responsibility centre to begin</p>
+    </div>
+    <button class="btn-create-rc" (click)="toggleCreateForm()">
+      <span class="icon">+</span>
+      Create New RC
+    </button>
+  </div>
+
+  <!-- Create RC Form -->
+  <div class="create-rc-form" *ngIf="showCreateForm">
+    <div class="form-container">
+      <h3>Create New Responsibility Centre</h3>
+      <div class="form-group">
+        <label for="rcName">RC Name *</label>
+        <input
+          id="rcName"
+          type="text"
+          [(ngModel)]="newRCName"
+          placeholder="Enter RC name"
+          [disabled]="isCreating"
+        />
+      </div>
+      <div class="form-group">
+        <label for="rcDescription">Description</label>
+        <textarea
+          id="rcDescription"
+          [(ngModel)]="newRCDescription"
+          placeholder="Enter RC description (optional)"
+          [disabled]="isCreating"
+          rows="3"
+        ></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" (click)="createRC()" [disabled]="isCreating">
+          {{ isCreating ? 'Creating...' : 'Create RC' }}
+        </button>
+        <button class="btn btn-secondary" (click)="toggleCreateForm()" [disabled]="isCreating">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="errorMessage">
+    <span class="icon">⚠️</span>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading responsibility centres...</p>
+  </div>
+
+  <!-- RC List -->
+  <div class="rc-list" *ngIf="!isLoading && responsibilityCentres.length > 0">
+    <div class="rc-card" *ngFor="let rc of responsibilityCentres" (click)="selectRC(rc)">
+      <div class="rc-card-header">
+        <h3 class="rc-name">{{ rc.name }}</h3>
+        <span class="access-badge" [ngClass]="getAccessLevelClass(rc.accessLevel)">
+          {{ getAccessLevelLabel(rc.accessLevel) }}
+        </span>
+      </div>
+      <p class="rc-description" *ngIf="rc.description">{{ rc.description }}</p>
+      <div class="rc-card-footer">
+        <span class="owner" *ngIf="rc.isOwner">✓ You own this RC</span>
+        <span class="owner" *ngIf="!rc.isOwner">Owned by {{ rc.ownerUsername }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading && responsibilityCentres.length === 0">
+    <div class="empty-icon">📋</div>
+    <h3>No Responsibility Centres Yet</h3>
+    <p>Create your first responsibility centre to get started</p>
+    <button class="btn btn-primary" (click)="toggleCreateForm()">
+      Create Your First RC
+    </button>
+  </div>
+</div>

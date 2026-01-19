@@ -1,0 +1,298 @@
+/*
+ * Cinema Box Office - Developer Tools Component Styles
+ * Copyright (c) 2026 Box Office Team
+ * Licensed under MIT License
+ */
+
+.dev-tools-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  color: var(--text-primary);
+}
+
+/* Header */
+.dev-tools-header {
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 2rem;
+  box-shadow: var(--shadow-sm);
+
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+
+    @media (max-width: 768px) {
+      gap: 1rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .btn-back {
+      background: var(--background-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+
+      .back-icon {
+        display: inline-block;
+      }
+
+      &:hover {
+        background: var(--primary-gradient-start);
+        background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
+        color: white;
+        border-color: var(--primary-gradient-end);
+        transform: scale(1.05);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+  }
+}
+
+/* Main Content */
+.dev-tools-main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}
+
+.tools-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Cards */
+.card {
+  background: var(--background-secondary);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: slideIn 0.4s ease;
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .card-header {
+    background: var(--primary-gradient-start);
+    background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
+    padding: 1.5rem;
+    color: white;
+
+    h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+  }
+
+  .card-body {
+    padding: 1.5rem;
+    color: var(--text-primary);
+  }
+}
+
+/* Status Section */
+.status-section {
+  .status-item {
+    margin-bottom: 1.5rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-tertiary);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.5px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.8rem 1rem;
+      background: var(--background-tertiary);
+      border-radius: 8px;
+      border-left: 4px solid transparent;
+      transition: all 0.3s ease;
+
+      &.healthy {
+        background: #ecfdf5;
+        border-left-color: #10b981;
+
+        .status-dot {
+          background: #10b981;
+          box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-text {
+          color: #065f46;
+        }
+      }
+
+      &.unhealthy {
+        background: #fef2f2;
+        border-left-color: #ef4444;
+
+        .status-dot {
+          background: #ef4444;
+          box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+        }
+
+        .status-text {
+          color: #7f1d1d;
+        }
+      }
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-text {
+      font-size: 0.9rem;
+    }
+  }
+}
+
+/* Links Section */
+.links-section {
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .tool-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+    background: var(--background-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    text-align: center;
+
+    &:hover {
+      border-color: var(--primary-gradient-start);
+      background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);
+      color: white;
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .tool-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .tool-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+      color: var(--text-primary);
+    }
+
+    .tool-desc {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+    }
+  }
+}
+
+/* Info Section */
+.info-section {
+  .info-item {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+
+      strong {
+        color: var(--primary-gradient-start);
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+/* Footer */
+.dev-tools-footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--background-secondary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  p {
+    margin: 0;
+  }
+}

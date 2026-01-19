@@ -1,0 +1,46 @@
+<!--
+  Cinema Box Office - Global Header Template
+  Copyright (c) 2026 Box Office Team
+  Licensed under MIT License
+-->
+<header class="app-header">
+  <div class="header-content">
+    <div class="header-title">
+      <h1>Cinema Box Office</h1>
+    </div>
+    <nav class="header-nav">
+      <div class="user-menu-container">
+        <button (click)="toggleUserMenu()" class="btn-user-menu" title="User menu">
+          <span class="user-avatar">👤</span>
+          <span class="user-name" *ngIf="currentUser">{{ currentUser?.fullName || currentUser?.username }}</span>
+          <span class="menu-arrow" [class.open]="isUserMenuOpen">▼</span>
+        </button>
+        <div *ngIf="isUserMenuOpen" class="user-menu-dropdown" (click)="$event.stopPropagation()">
+          <div class="menu-header" *ngIf="currentUser">
+            <div class="menu-user-info">
+              <span class="menu-username">{{ currentUser?.username }}</span>
+              <span class="menu-email" *ngIf="currentUser?.email">{{ currentUser?.email }}</span>
+            </div>
+          </div>
+          <div class="menu-divider"></div>
+          <div class="menu-items">
+            <button (click)="openApiDocs()" class="menu-item">
+              <span class="menu-icon">📚</span>
+              <span>API Documentation</span>
+            </button>
+            <button (click)="toggleTheme()" class="menu-item">
+              <span class="menu-icon">{{ getThemeIcon() }}</span>
+              <span>{{ currentTheme === 'light' ? 'Dark' : 'Light' }} Theme</span>
+            </button>
+            <div class="menu-divider"></div>
+            <button (click)="logout()" class="menu-item logout-item" [disabled]="isLoggingOut">
+              <span class="menu-icon">🚪</span>
+              <span *ngIf="!isLoggingOut">Sign Out</span>
+              <span *ngIf="isLoggingOut">Signing Out...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+</header>
