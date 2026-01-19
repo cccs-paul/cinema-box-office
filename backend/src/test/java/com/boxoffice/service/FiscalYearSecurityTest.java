@@ -1,5 +1,6 @@
 package com.boxoffice.service;
 
+import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
@@ -55,6 +56,44 @@ public class FiscalYearSecurityTest {
 
         assertThrows(RuntimeException.class, () -> {
             service.create("FY 2024", rcId, "system");
+        });
+    }
+
+    @Test
+    public void update_shouldThrowException_whenUserIsNotOwner() {
+        Long fyId = 10L;
+        ResponsibilityCentre rc = ResponsibilityCentre.builder()
+                .id(1L)
+                .ownerUsername("owner")
+                .build();
+        FiscalYear fy = FiscalYear.builder()
+                .id(fyId)
+                .rc(rc)
+                .build();
+
+        when(repository.findById(fyId)).thenReturn(Optional.of(fy));
+
+        assertThrows(RuntimeException.class, () -> {
+            service.update(fyId, "New Name", "not-owner");
+        });
+    }
+
+    @Test
+    public void delete_shouldThrowException_whenUserIsNotOwner() {
+        Long fyId = 10L;
+        ResponsibilityCentre rc = ResponsibilityCentre.builder()
+                .id(1L)
+                .ownerUsername("owner")
+                .build();
+        FiscalYear fy = FiscalYear.builder()
+                .id(fyId)
+                .rc(rc)
+                .build();
+
+        when(repository.findById(fyId)).thenReturn(Optional.of(fy));
+
+        assertThrows(RuntimeException.class, () -> {
+            service.delete(fyId, "not-owner");
         });
     }
 }

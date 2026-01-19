@@ -40,6 +40,10 @@ public class ResponsibilityCentreService {
 
     @Transactional
     public ResponsibilityCentreDTO create(String name, String description, String username) {
+        if (repository.existsByName(name)) {
+            throw new RuntimeException("Responsibility Centre with name " + name + " already exists");
+        }
+
         ResponsibilityCentre rc = ResponsibilityCentre.builder()
                 .name(name)
                 .description(description)
@@ -61,6 +65,10 @@ public class ResponsibilityCentreService {
 
         if (DEMO_RC_NAME.equals(rc.getName())) {
             throw new RuntimeException("Cannot rename the Demo Responsibility Centre");
+        }
+
+        if (repository.existsByName(name) && !rc.getName().equals(name)) {
+            throw new RuntimeException("Responsibility Centre with name " + name + " already exists");
         }
 
         rc.setName(name);

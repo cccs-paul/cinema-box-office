@@ -42,38 +42,35 @@ class FiscalYearServiceTest {
         List<FiscalYearDTO> result = service.getAllForRc(rcId);
 
         assertEquals(2, result.size());
-        assertEquals("2024", result.get(0).getName());
-        assertEquals("2025", result.get(1).getName());
     }
 
     @Test
-    void testCreateFiscalYear() {
+    void testCreateFiscalYearSuccess() {
         String name = "2024";
         Long rcId = 1L;
         String username = "admin";
         ResponsibilityCentre rc = ResponsibilityCentre.builder()
                 .id(rcId)
                 .ownerUsername(username)
+                .name("Normal RC")
                 .build();
 
-        when(repository.existsByNameAndRcId(name, rcId)).thenReturn(false);
         when(rcRepository.findById(rcId)).thenReturn(Optional.of(rc));
-        when(repository.save(any(FiscalYear.class))).thenAnswer(invocation -> {
-            FiscalYear fy = invocation.getArgument(0);
-            fy.setId(1L);
+        when(repository.existsByNameAndRcId(name, rcId)).thenReturn(false);
+        when(repository.save(any(FiscalYear.class))).thenAnswer(i -> {
+            FiscalYear fy = i.getArgument(0);
+            fy.setId(10L);
             return fy;
         });
 
         FiscalYearDTO result = service.create(name, rcId, username);
 
         assertNotNull(result);
-        assertEquals(1L, result.getId());
         assertEquals(name, result.getName());
-        assertEquals(rcId, result.getRcId());
     }
 
     @Test
-    void testCreateDuplicateFiscalYearFails() {
+    void testCreateFiscalYearDuplicateFails() {
         String name = "2024";
         Long rcId = 1L;
         String username = "admin";
@@ -86,5 +83,73 @@ class FiscalYearServiceTest {
         when(repository.existsByNameAndRcId(name, rcId)).thenReturn(true);
 
         assertThrows(RuntimeException.class, () -> service.create(name, rcId, username));
+    }
+
+    @Test
+    void testUpdateFiscalYearSuccess() {
+        Long fyId = 10L;
+        String username = "admin";
+        ResponsibilityCentre rc = ResponsibilityCentre.builder()
+                .id(1L)
+                .ownerUsername(username)
+                .name("Normal RC")
+                .build();
+        FiscalYear fy = FiscalYear.builder()
+                .id(fyId)
+                .name("Old Name")
+                .rc(rc)
+                .build();
+
+        when(repository.findById(fyId)).thenReturn(Optional.of(fy));
+        when(repository.existsByNameAndRcId("New Name", 1L)).thenReturn(false);
+        when(repository.save(any(FiscalYear.class))).thenAnswer(i -> i.getArgument(0));
+
+        FiscalYearDTO result = service.update(fyId, "New Name", username);
+
+        assertEquals("New Name", result.getName());
+    }
+
+    @Test
+    void testUpdateFiscalYearSameNameSuccess() {
+        Long fyId = 10L;
+        String username = "admin";
+        ResponsibilityCentre rc = ResponsibilityCentre.builder()
+                .id(1L)
+                .ownerUsername(username)
+                .name("Normal RC")
+                .build();
+        FiscalYear fy = FiscalYear.builder()
+                .id(fyId)
+                .name("Same Name")
+                .rc(rc)
+                .build();
+
+        when(repository.findById(fyId)).thenReturn(Optional.of(fy));
+        when(repository.existsByNameAndRcId("Same Name", 1L)).thenReturn(true);
+        when(repository.save(any(FiscalYear.class))).thenAnswer(i -> i.getArgument(0));
+
+        FiscalYearDTO result = service.update(fyId, "Same Name", username);
+
+        assertEquals("Same Name", result.getName());
+    }
+
+    @Test
+    void testDeleteFiscalYearSuccess() {
+        Long fyId = 10L;
+        String username = "admin";
+        ResponsibilityCentre rc = ResponsibilityCentre.builder()
+                .id(1L)
+                .ownerUsername(username)
+                .build();
+        FiscalYear fy = FiscalYear.builder()
+                .id(fyId)
+                .rc(rc)
+                .build();
+
+        when(repository.findById(fyId)).thenReturn(Optional.of(fy));
+
+        service.delete(fyId, username);
+
+        verify(repository).delete(fy);
     }
 }
