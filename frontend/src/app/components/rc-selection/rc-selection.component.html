@@ -3,15 +3,11 @@
   <div class="rc-header">
     <div class="rc-title-section">
       <h1>Responsibility Centres</h1>
-      <p class="rc-subtitle">Select a responsibility centre to begin</p>
+      <p class="rc-subtitle">Select a responsibility centre to begin managing box office operations</p>
     </div>
-    <button class="btn-create-rc" (click)="toggleCreateForm()">
-      <span class="icon">+</span>
-      Create New RC
-    </button>
   </div>
 
-  <!-- Create RC Form -->
+  <!-- Create RC Form Overlay -->
   <div class="create-rc-form" *ngIf="showCreateForm">
     <div class="form-container">
       <h3>Create New Responsibility Centre</h3>
@@ -21,7 +17,7 @@
           id="rcName"
           type="text"
           [(ngModel)]="newRCName"
-          placeholder="Enter RC name"
+          placeholder="Enter RC name (e.g. Cinema 1, Main Box Office)"
           [disabled]="isCreating"
         />
       </div>
@@ -58,8 +54,18 @@
     <p>Loading responsibility centres...</p>
   </div>
 
-  <!-- RC List -->
-  <div class="rc-list" *ngIf="!isLoading && responsibilityCentres.length > 0">
+  <!-- RC Grid -->
+  <div class="rc-grid" *ngIf="!isLoading">
+    <!-- Action Card: Create New RC -->
+    <div class="rc-card create-card" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
+      <div class="create-content">
+        <span class="create-icon">+</span>
+        <h3>Create New RC</h3>
+        <p>Start a new management unit</p>
+      </div>
+    </div>
+
+    <!-- RC List -->
     <div class="rc-card" *ngFor="let rc of responsibilityCentres" (click)="selectRC(rc)">
       <div class="rc-card-header">
         <h3 class="rc-name">{{ rc.name }}</h3>
@@ -69,19 +75,15 @@
       </div>
       <p class="rc-description" *ngIf="rc.description">{{ rc.description }}</p>
       <div class="rc-card-footer">
-        <span class="owner" *ngIf="rc.isOwner">✓ You own this RC</span>
-        <span class="owner" *ngIf="!rc.isOwner">Owned by {{ rc.ownerUsername }}</span>
+        <span class="owner" *ngIf="rc.isOwner">
+          <span class="badge badge-owner">OWNER</span>
+          You own this RC
+        </span>
+        <span class="owner" *ngIf="!rc.isOwner">
+          <span class="badge badge-member">MEMBER</span>
+          Owned by {{ rc.ownerUsername }}
+        </span>
       </div>
     </div>
-  </div>
-
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="!isLoading && responsibilityCentres.length === 0">
-    <div class="empty-icon">📋</div>
-    <h3>No Responsibility Centres Yet</h3>
-    <p>Create your first responsibility centre to get started</p>
-    <button class="btn btn-primary" (click)="toggleCreateForm()">
-      Create Your First RC
-    </button>
   </div>
 </div>
