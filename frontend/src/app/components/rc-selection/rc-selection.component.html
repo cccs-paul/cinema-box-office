@@ -1,89 +1,169 @@
-<!-- Cinema Box Office - RC Selection Template -->
+<!-- Cinema Box Office - RC/FY Selection Template -->
 <div class="rc-selection-container">
-  <div class="rc-header">
-    <div class="rc-title-section">
-      <h1>Responsibility Centres</h1>
-      <p class="rc-subtitle">Select a responsibility centre to begin managing box office operations</p>
-    </div>
-  </div>
 
-  <!-- Create RC Form Overlay -->
-  <div class="create-rc-form" *ngIf="showCreateForm">
-    <div class="form-container">
-      <h3>Create New Responsibility Centre</h3>
-      <div class="form-group">
-        <label for="rcName">RC Name *</label>
-        <input
-          id="rcName"
-          type="text"
-          [(ngModel)]="newRCName"
-          placeholder="Enter RC name (e.g. Cinema 1, Main Box Office)"
-          [disabled]="isCreating"
-        />
-      </div>
-      <div class="form-group">
-        <label for="rcDescription">Description</label>
-        <textarea
-          id="rcDescription"
-          [(ngModel)]="newRCDescription"
-          placeholder="Enter RC description (optional)"
-          [disabled]="isCreating"
-          rows="3"
-        ></textarea>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-primary" (click)="createRC()" [disabled]="isCreating">
-          {{ isCreating ? 'Creating...' : 'Create RC' }}
-        </button>
-        <button class="btn btn-secondary" (click)="toggleCreateForm()" [disabled]="isCreating">
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Error Message -->
-  <div class="error-message" *ngIf="errorMessage">
-    <span class="icon">⚠️</span>
-    {{ errorMessage }}
-  </div>
-
-  <!-- Loading State -->
-  <div class="loading-state" *ngIf="isLoading">
-    <div class="spinner"></div>
-    <p>Loading responsibility centres...</p>
-  </div>
-
-  <!-- RC Grid -->
-  <div class="rc-grid" *ngIf="!isLoading">
-    <!-- Action Card: Create New RC -->
-    <div class="rc-card create-card" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
-      <div class="create-content">
-        <span class="create-icon">+</span>
-        <h3>Create New RC</h3>
-        <p>Start a new management unit</p>
+  <!-- RC Selection View -->
+  <ng-container *ngIf="!isSelectingFY">
+    <div class="rc-header">
+      <div class="rc-title-section">
+        <h1>Responsibility Centres</h1>
+        <p class="rc-subtitle">Select a responsibility centre to begin managing box office operations</p>
       </div>
     </div>
 
-    <!-- RC List -->
-    <div class="rc-card" *ngFor="let rc of responsibilityCentres" (click)="selectRC(rc)">
-      <div class="rc-card-header">
-        <h3 class="rc-name">{{ rc.name }}</h3>
-        <span class="access-badge" [ngClass]="getAccessLevelClass(rc.accessLevel)">
-          {{ getAccessLevelLabel(rc.accessLevel) }}
-        </span>
-      </div>
-      <p class="rc-description" *ngIf="rc.description">{{ rc.description }}</p>
-      <div class="rc-card-footer">
-        <span class="owner" *ngIf="rc.isOwner">
-          <span class="badge badge-owner">OWNER</span>
-          You own this RC
-        </span>
-        <span class="owner" *ngIf="!rc.isOwner">
-          <span class="badge badge-member">MEMBER</span>
-          Owned by {{ rc.ownerUsername }}
-        </span>
+    <!-- Create RC Form Overlay -->
+    <div class="create-rc-form" *ngIf="showCreateForm">
+      <div class="form-container">
+        <h3>Create New Responsibility Centre</h3>
+        <div class="form-group">
+          <label for="rcName">RC Name *</label>
+          <input
+            id="rcName"
+            type="text"
+            [(ngModel)]="newRCName"
+            placeholder="Enter RC name (e.g. Cinema 1, Main Box Office)"
+            [disabled]="isCreating"
+          />
+        </div>
+        <div class="form-group">
+          <label for="rcDescription">Description</label>
+          <textarea
+            id="rcDescription"
+            [(ngModel)]="newRCDescription"
+            placeholder="Enter RC description (optional)"
+            [disabled]="isCreating"
+            rows="3"
+          ></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="createRC()" [disabled]="isCreating">
+            {{ isCreating ? 'Creating...' : 'Create RC' }}
+          </button>
+          <button class="btn btn-secondary" (click)="toggleCreateForm()" [disabled]="isCreating">
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="errorMessage">
+      <span class="icon">⚠️</span>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="spinner"></div>
+      <p>Loading responsibility centres...</p>
+    </div>
+
+    <!-- RC Grid -->
+    <div class="rc-grid" *ngIf="!isLoading">
+      <!-- Action Card: Create New RC -->
+      <div class="rc-card create-card" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
+        <div class="create-content">
+          <span class="create-icon">+</span>
+          <h3>Create New RC</h3>
+          <p>Start a new management unit</p>
+        </div>
+      </div>
+
+      <!-- RC List -->
+      <div class="rc-card" *ngFor="let rc of responsibilityCentres" (click)="onRCSelected(rc)">
+        <div class="rc-card-header">
+          <h3 class="rc-name">{{ rc.name }}</h3>
+          <span class="access-badge" [ngClass]="getAccessLevelClass(rc.accessLevel)">
+            {{ getAccessLevelLabel(rc.accessLevel) }}
+          </span>
+        </div>
+        <p class="rc-description" *ngIf="rc.description">{{ rc.description }}</p>
+        <div class="rc-card-footer">
+          <span class="owner" *ngIf="rc.isOwner">
+            <span class="badge badge-owner">OWNER</span>
+            You own this RC
+          </span>
+          <span class="owner" *ngIf="!rc.isOwner">
+            <span class="badge badge-member">MEMBER</span>
+            Owned by {{ rc.ownerUsername }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- FY Selection View -->
+  <ng-container *ngIf="isSelectingFY">
+    <div class="rc-header">
+      <div class="rc-title-section">
+        <button class="btn-back" (click)="backToRCSelection()">← Back to RCs</button>
+        <h1>Fiscal Years</h1>
+        <p class="rc-subtitle">Select a fiscal year for <strong>{{ selectedRC?.name }}</strong></p>
+      </div>
+    </div>
+
+    <!-- Create FY Form Overlay -->
+    <div class="create-rc-form" *ngIf="showCreateFYForm">
+      <div class="form-container">
+        <h3>Create New Fiscal Year</h3>
+        <div class="form-group">
+          <label for="fyName">FY Name *</label>
+          <input
+            id="fyName"
+            type="text"
+            [(ngModel)]="newFYName"
+            placeholder="Enter FY name (e.g. 2024, 2024-2025)"
+            [disabled]="isCreatingFY"
+          />
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="createFY()" [disabled]="isCreatingFY">
+            {{ isCreatingFY ? 'Creating...' : 'Create FY' }}
+          </button>
+          <button class="btn btn-secondary" (click)="toggleCreateFYForm()" [disabled]="isCreatingFY">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="errorMessage">
+      <span class="icon">⚠️</span>
+      {{ errorMessage }}
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoadingFY">
+      <div class="spinner"></div>
+      <p>Loading fiscal years...</p>
+    </div>
+
+    <!-- FY Grid -->
+    <div class="rc-grid" *ngIf="!isLoadingFY">
+      <!-- Action Card: Create New FY -->
+      <div class="rc-card create-card"
+           (click)="toggleCreateFYForm()"
+           *ngIf="!showCreateFYForm && selectedRC?.accessLevel === 'READ_WRITE'">
+        <div class="create-content">
+          <span class="create-icon">+</span>
+          <h3>Create New FY</h3>
+          <p>Start a new fiscal period</p>
+        </div>
+      </div>
+
+      <!-- FY List -->
+      <div class="rc-card fy-card" *ngFor="let fy of fiscalYears" (click)="onFYSelected(fy)">
+        <div class="rc-card-header">
+          <h3 class="rc-name">{{ fy.name }}</h3>
+          <span class="access-badge" [ngClass]="selectedRC?.accessLevel === 'READ_WRITE' ? 'access-readwrite' : 'access-readonly'">
+            {{ selectedRC?.accessLevel === 'READ_WRITE' ? 'READ/WRITE' : 'READ ONLY' }}
+          </span>
+        </div>
+        <div class="rc-card-footer">
+          <span class="owner">Created: {{ fy.createdAt | date:'mediumDate' }}</span>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
 </div>

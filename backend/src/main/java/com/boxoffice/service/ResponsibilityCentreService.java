@@ -24,11 +24,7 @@ public class ResponsibilityCentreService {
         List<ResponsibilityCentre> userRcs = repository.findByOwnerUsername(username);
 
         // Find demo RC
-        List<ResponsibilityCentre> allRcs = repository.findAll();
-        ResponsibilityCentre demoRc = allRcs.stream()
-                .filter(rc -> DEMO_RC_NAME.equals(rc.getName()))
-                .findFirst()
-                .orElse(null);
+        ResponsibilityCentre demoRc = repository.findByName(DEMO_RC_NAME).orElse(null);
 
         List<ResponsibilityCentreDTO> dtos = userRcs.stream()
                 .map(rc -> convertToDto(rc, username))

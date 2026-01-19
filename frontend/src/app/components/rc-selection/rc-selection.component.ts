@@ -1,5 +1,5 @@
 /*
- * Cinema Box Office - RC Selection Component
+ * Cinema Box Office - RC/FY Selection Component
  * Copyright (c) 2026 Box Office Team
  * Licensed under MIT License
  */
@@ -12,6 +12,8 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
+import { FiscalYearService } from '../../services/fiscal-year.service';
+import { FiscalYearDTO } from '../../models/fiscal-year.model';
 
 @Component({
   selector: 'app-rc-selection',
@@ -21,6 +23,7 @@ import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.mode
   styleUrls: ['./rc-selection.component.scss']
 })
 export class RCSelectionComponent implements OnInit, OnDestroy {
+  // RC Selection State
   responsibilityCentres: ResponsibilityCentreDTO[] = [];
   isLoading = true;
   errorMessage: string | null = null;
@@ -28,10 +31,21 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
   newRCDescription = '';
   showCreateForm = false;
   isCreating = false;
+
+  // FY Selection State
+  isSelectingFY = false;
+  selectedRC: ResponsibilityCentreDTO | null = null;
+  fiscalYears: FiscalYearDTO[] = [];
+  isLoadingFY = false;
+  showCreateFYForm = false;
+  isCreatingFY = false;
+  newFYName = '';
+
   private destroy$ = new Subject<void>();
 
   constructor(
     private rcService: ResponsibilityCentreService,
+    private fyService: FiscalYearService,
     private router: Router
   ) {}
 
@@ -56,15 +70,46 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
       });
   }
 
-  selectRC(rc: ResponsibilityCentreDTO): void {
+  onRCSelected(rc: ResponsibilityCentreDTO): void {
+    this.selectedRC = rc;
     this.rcService.setSelectedRC(rc.id);
+    this.loadFiscalYears(rc.id);
+  }
+
+  loadFiscalYears(rcId: number): void {
+    this.isSelectingFY = true;
+    this.isLoadingFY = true;
+    this.errorMessage = null;
+    this.fyService.getAllForRc(rcId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (fys: FiscalYearDTO[]) => {
+          this.fiscalYears = fys;
+          this.isLoadingFY = false;
+        },
+        error: (error: any) => {
+          this.errorMessage = 'Failed to load fiscal years';
+          this.isLoadingFY = false;
+        }
+      });
+  }
+
+  backToRCSelection(): void {
+    this.isSelectingFY = false;
+    this.selectedRC = null;
+    this.fiscalYears = [];
+    this.errorMessage = null;
+  }
+
+  onFYSelected(fy: FiscalYearDTO): void {
+    this.fyService.setSelectedFY(fy.id);
     this.router.navigate(['/dashboard']);
   }
 
   toggleCreateForm(): void {
     this.showCreateForm = !this.showCreateForm;
     if (!this.showCreateForm) {
-      this.resetForm();
+      this.resetRCForm();
     }
   }
 
@@ -82,10 +127,10 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (newRC: ResponsibilityCentreDTO) => {
           this.responsibilityCentres.push(newRC);
-          this.resetForm();
+          this.resetRCForm();
           this.showCreateForm = false;
           this.isCreating = false;
-          this.selectRC(newRC);
+          this.onRCSelected(newRC);
         },
         error: (error: any) => {
           this.errorMessage = error.error?.message || 'Failed to create RC';
@@ -94,9 +139,49 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
       });
   }
 
-  private resetForm(): void {
+  toggleCreateFYForm(): void {
+    this.showCreateFYForm = !this.showCreateFYForm;
+    if (!this.showCreateFYForm) {
+      this.resetFYForm();
+    }
+  }
+
+  createFY(): void {
+    if (!this.newFYName.trim()) {
+      this.errorMessage = 'FY name is required';
+      return;
+    }
+
+    if (!this.selectedRC) return;
+
+    this.isCreatingFY = true;
+    this.fyService.createFiscalYear(
+      this.newFYName,
+      this.selectedRC.id
+    ).pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (newFY: FiscalYearDTO) => {
+          this.fiscalYears.push(newFY);
+          this.resetFYForm();
+          this.showCreateFYForm = false;
+          this.isCreatingFY = false;
+          this.onFYSelected(newFY);
+        },
+        error: (error: any) => {
+          this.errorMessage = error.error?.message || 'Failed to create FY';
+          this.isCreatingFY = false;
+        }
+      });
+  }
+
+  private resetRCForm(): void {
     this.newRCName = '';
     this.newRCDescription = '';
+    this.errorMessage = null;
+  }
+
+  private resetFYForm(): void {
+    this.newFYName = '';
     this.errorMessage = null;
   }
 

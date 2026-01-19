@@ -28,6 +28,24 @@
       max-width: 600px;
       margin: 0 auto;
     }
+
+    .btn-back {
+      background: none;
+      border: none;
+      color: var(--primary-gradient-start);
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
   }
 }
 

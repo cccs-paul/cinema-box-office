@@ -11,8 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/responsibility-centres")
+@RequestMapping("/api/responsibility-centres")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class ResponsibilityCentreController {
 
     private final ResponsibilityCentreService service;
