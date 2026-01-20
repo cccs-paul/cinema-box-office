@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY frontend/package*.json ./
 
 # Install dependencies (including dev dependencies needed for build)
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY frontend/ ./

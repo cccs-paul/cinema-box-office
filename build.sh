@@ -20,7 +20,7 @@ NC='\033[0m' # No Color
 echo "Checking prerequisites..."
 
 if ! command -v java &> /dev/null; then
-    echo -e "${RED}Error: Java 25 JDK is not installed${NC}"
+    echo -e "${RED}Error: Java 21 JDK is not installed${NC}"
     exit 1
 fi
 
@@ -57,7 +57,7 @@ echo "========================================="
 echo "Building Frontend..."
 echo "========================================="
 cd frontend
-npm install
+npm install --legacy-peer-deps
 npm run build
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Frontend build successful${NC}"
@@ -66,6 +66,18 @@ else
     exit 1
 fi
 cd ..
+echo ""
+
+# Build Docker images
+echo "========================================="
+echo "Building Docker Images..."
+echo "========================================="
+if command -v docker &> /dev/null; then
+    docker compose build
+    echo -e "${GREEN}✓ Docker images built successfully${NC}"
+else
+    echo -e "${YELLOW}! Docker not found, skipping image build${NC}"
+fi
 echo ""
 
 echo "========================================="

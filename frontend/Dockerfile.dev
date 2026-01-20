@@ -24,7 +24,7 @@ EXPOSE 4200
 COPY frontend/package*.json ./
 
 # Install dependencies (including all optional dependencies for Angular)
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY frontend/ ./
