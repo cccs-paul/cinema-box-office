@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "fiscal_years", uniqueConstraints = {
@@ -25,6 +27,8 @@ public class FiscalYear {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "rc_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private ResponsibilityCentre rc;
 
     @Column(nullable = false)

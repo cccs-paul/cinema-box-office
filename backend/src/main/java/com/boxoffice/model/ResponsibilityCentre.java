@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.ToString;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "responsibility_centres", uniqueConstraints = {
@@ -39,6 +41,8 @@ public class ResponsibilityCentre {
 
     @OneToMany(mappedBy = "rc", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<FiscalYear> fiscalYears = new ArrayList<>();
 
     @PrePersist
