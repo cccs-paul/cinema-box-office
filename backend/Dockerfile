@@ -7,7 +7,7 @@ WORKDIR /build
 # Install Maven and Java
 RUN apt-get update && apt-get install -y --no-install-recommends \
     maven \
-    openjdk-25-jdk-headless && \
+    openjdk-21-jdk-headless && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy Maven files
@@ -30,7 +30,7 @@ WORKDIR /app
 
 # Install Java runtime and curl for health checks
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    openjdk-25-jre-headless \
+    openjdk-21-jre-headless \
     curl && \
     rm -rf /var/lib/apt/lists/*
 
