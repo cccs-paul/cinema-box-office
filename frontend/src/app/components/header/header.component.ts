@@ -5,7 +5,7 @@
  */
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
@@ -23,7 +23,7 @@ import { ThemeService, Theme } from '../../services/theme.service';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
 })
@@ -85,8 +85,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.closeUserMenu();
   }
 
-  getThemeIcon(): string {
-    return this.currentTheme === 'light' ? '🌙' : '☀️';
+  goToProfile(): void {
+    this.router.navigate(['/dashboard']);
+    this.closeUserMenu();
   }
 
   openApiDocs(): void {
