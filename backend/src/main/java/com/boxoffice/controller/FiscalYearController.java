@@ -26,7 +26,7 @@ public class FiscalYearController {
 
     @PostMapping
     public ResponseEntity<FiscalYearDTO> create(@RequestBody FiscalYearRequest request, Principal principal) {
-        String username = principal != null ? principal.getName() : "admin"; // Fallback for dev/testing
+        String username = principal != null ? principal.getName() : "anonymous"; // Fallback for dev/testing
         return ResponseEntity.ok(service.create(request.getName(), request.getRcId(), username));
     }
 
@@ -35,7 +35,7 @@ public class FiscalYearController {
             @PathVariable Long id,
             @RequestBody Map<String, String> request,
             Principal principal) {
-        String username = principal != null ? principal.getName() : "admin";
+        String username = principal != null ? principal.getName() : "anonymous";
         String name = request.get("name");
         return ResponseEntity.ok(service.update(id, name, username));
     }
@@ -44,7 +44,7 @@ public class FiscalYearController {
     public ResponseEntity<Void> delete(
             @PathVariable Long id,
             Principal principal) {
-        String username = principal != null ? principal.getName() : "admin";
+        String username = principal != null ? principal.getName() : "anonymous";
         service.delete(id, username);
         return ResponseEntity.noContent().build();
     }
