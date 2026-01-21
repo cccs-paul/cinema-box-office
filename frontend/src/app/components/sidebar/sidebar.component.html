@@ -1,0 +1,22 @@
+<!--
+  Cinema Box Office - Sidebar Component Template
+  Copyright (c) 2026 Box Office Team
+  Licensed under MIT License
+-->
+<aside class="app-sidebar">
+  <nav class="sidebar-nav">
+    <div class="sidebar-menu">
+      <a
+        *ngFor="let item of menuItems"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: false }"
+        class="menu-item"
+      >
+        <span class="menu-icon">{{ item.icon }}</span>
+        <span class="menu-label">{{ item.label }}</span>
+        <span *ngIf="item.badge" class="menu-badge">{{ item.badge }}</span>
+      </a>
+    </div>
+  </nav>
+</aside>

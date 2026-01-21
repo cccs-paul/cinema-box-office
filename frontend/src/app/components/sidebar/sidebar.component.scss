@@ -1,0 +1,123 @@
+/*
+ * Cinema Box Office - Sidebar Styles
+ * Copyright (c) 2026 Box Office Team
+ * Licensed under MIT License
+ */
+
+.app-sidebar {
+  position: fixed;
+  left: 0;
+  top: 60px;
+  width: 250px;
+  height: calc(100vh - 60px);
+  background-color: var(--background-secondary);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  z-index: 999;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background-color: var(--dropdown-hover);
+    border-left-color: var(--primary-gradient-start);
+  }
+
+  &.active {
+    background-color: rgba(var(--primary-rgb, 25, 118, 210), 0.1);
+    border-left-color: var(--primary-gradient-start);
+    color: var(--primary-gradient-start);
+    font-weight: 600;
+  }
+
+  .menu-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .menu-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.95rem;
+  }
+
+  .menu-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 0.5rem;
+    background-color: var(--primary-gradient-start);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+}
+
+/* Dark theme adjustments */
+html[data-theme='dark'] {
+  .app-sidebar {
+    background-color: var(--background-secondary);
+    border-right-color: var(--border-color);
+  }
+
+  .menu-item {
+    color: var(--text-primary);
+
+    &:hover {
+      background-color: var(--dropdown-hover);
+    }
+
+    &.active {
+      background-color: rgba(66, 165, 245, 0.15);
+    }
+  }
+}
+
+/* Scrollbar styling */
+.app-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+
+  &:hover {
+    background: var(--text-secondary);
+  }
+}

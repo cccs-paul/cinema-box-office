@@ -9,7 +9,7 @@
 
 .rc-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-start;
   max-width: 1200px;
   margin: 0 auto 2rem;
@@ -30,42 +30,6 @@
       font-size: 1rem;
       color: var(--text-secondary);
       margin: 0;
-    }
-  }
-
-  .btn-create-rc {
-    background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow-md);
-    white-space: nowrap;
-
-    &:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    &:active:not(:disabled) {
-      transform: translateY(0);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .icon {
-      font-size: 1.25rem;
-      font-weight: 700;
     }
   }
 }

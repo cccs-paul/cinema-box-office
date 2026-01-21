@@ -36,10 +36,12 @@ html[data-theme='dark'] {
 
 .app-header {
   background-color: var(--header-bg);
-  border-bottom: 1px solid var(--header-border);
+  border-bottom: 2px solid var(--header-border);
   box-shadow: var(--header-shadow);
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 1000;
   padding: 0 20px;
   transition: opacity 0.2s ease;
@@ -85,6 +87,9 @@ html[data-theme='dark'] {
     font-size: 14px;
     font-weight: 500;
     transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 
     &:hover {
       background-color: var(--button-hover-bg);
@@ -96,6 +101,7 @@ html[data-theme='dark'] {
 
     .user-avatar {
       font-size: 18px;
+      flex-shrink: 0;
     }
 
     .user-name {
@@ -103,15 +109,6 @@ html[data-theme='dark'] {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    .menu-arrow {
-      font-size: 12px;
-      transition: transform 0.2s ease;
-
-      &.open {
-        transform: rotate(180deg);
-      }
     }
   }
 

@@ -11,9 +11,8 @@
     <nav class="header-nav">
       <div class="user-menu-container">
         <button (click)="toggleUserMenu()" class="btn-user-menu" title="User menu">
-          <span class="user-avatar">👤</span>
           <span class="user-name" *ngIf="currentUser">{{ currentUser?.fullName || currentUser?.username }}</span>
-          <span class="menu-arrow" [class.open]="isUserMenuOpen">▼</span>
+          <span class="user-avatar">⚙️</span>
         </button>
         <div *ngIf="isUserMenuOpen" class="user-menu-dropdown" (click)="$event.stopPropagation()">
           <div class="menu-header" *ngIf="currentUser">

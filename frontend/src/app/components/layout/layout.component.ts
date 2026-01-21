@@ -6,9 +6,10 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from '../header/header.component';
+import { SidebarComponent } from '../sidebar/sidebar.component';
 
 /**
- * Layout component that wraps authenticated pages with header.
+ * Layout component that wraps authenticated pages with header and sidebar.
  * Provides consistent layout for all authenticated routes.
  *
  * @author Box Office Team
@@ -18,7 +19,7 @@ import { HeaderComponent } from '../header/header.component';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent],
+  imports: [RouterOutlet, HeaderComponent, SidebarComponent],
   templateUrl: './layout.component.html',
   styleUrls: ['./layout.component.scss'],
 })
