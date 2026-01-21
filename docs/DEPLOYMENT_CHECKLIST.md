@@ -1,6 +1,6 @@
 # Kubernetes Deployment Checklist
 
-Use this checklist to ensure proper deployment and operation of Cinema Box Office on Kubernetes.
+Use this checklist to ensure proper deployment and operation of myRC on Kubernetes.
 
 ## Pre-Deployment Planning
 

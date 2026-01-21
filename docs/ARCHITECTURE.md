@@ -2,7 +2,7 @@
 
 ## Overview
 
-Cinema Box Office is a cloud-native microservices application designed for scalability, security, and maintainability. This document provides a comprehensive overview of the application architecture.
+myRC is a cloud-native microservices application designed for scalability, security, and maintainability. This document provides a comprehensive overview of the application architecture.
 
 ## System Architecture
 

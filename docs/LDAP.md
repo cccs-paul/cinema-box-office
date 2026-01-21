@@ -2,7 +2,7 @@
 
 ## Overview
 
-Cinema Box Office supports LDAP (Lightweight Directory Access Protocol) for enterprise authentication. This guide covers configuring LDAP authentication with your Kubernetes deployment.
+myRC supports LDAP (Lightweight Directory Access Protocol) for enterprise authentication. This guide covers configuring LDAP authentication with your Kubernetes deployment.
 
 ## Prerequisites
 

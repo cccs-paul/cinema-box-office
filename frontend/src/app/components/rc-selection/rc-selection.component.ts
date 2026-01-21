@@ -48,10 +48,23 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
         next: (rcs: ResponsibilityCentreDTO[]) => {
           this.responsibilityCentres = rcs;
           this.isLoading = false;
+          // If empty, don't show error - the empty state UI will handle it
+          this.errorMessage = null;
         },
         error: (error: any) => {
-          this.errorMessage = 'Failed to load responsibility centres';
           this.isLoading = false;
+          // Handle authentication errors separately
+          if (error.status === 401) {
+            this.errorMessage = 'Your session has expired. Please log in again.';
+          } else if (error.status === 403) {
+            this.errorMessage = 'You do not have permission to view responsibility centres.';
+          } else if (error.status === 404) {
+            // 404 means no RCs found - this is not an error, show empty state
+            this.responsibilityCentres = [];
+            this.errorMessage = null;
+          } else {
+            this.errorMessage = 'Failed to load responsibility centres. Please try again later.';
+          }
         }
       });
   }
@@ -75,6 +88,7 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
     }
 
     this.isCreating = true;
+    this.errorMessage = null;
     this.rcService.createResponsibilityCentre(
       this.newRCName,
       this.newRCDescription
@@ -88,8 +102,19 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
           this.selectRC(newRC);
         },
         error: (error: any) => {
-          this.errorMessage = error.error?.message || 'Failed to create RC';
           this.isCreating = false;
+          // Provide more specific error messages
+          if (error.status === 401) {
+            this.errorMessage = 'Your session has expired. Please log in again.';
+          } else if (error.status === 400) {
+            this.errorMessage = error.error?.message || 'Invalid RC details. Please check your input.';
+          } else if (error.status === 404) {
+            this.errorMessage = 'The API endpoint is not available. Please contact support.';
+          } else if (error.status === 500) {
+            this.errorMessage = 'Server error occurred while creating RC. Please try again later.';
+          } else {
+            this.errorMessage = error.error?.message || 'Failed to create responsibility centre. Please try again.';
+          }
         }
       });
   }

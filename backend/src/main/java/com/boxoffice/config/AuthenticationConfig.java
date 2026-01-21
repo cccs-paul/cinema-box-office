@@ -13,6 +13,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -41,6 +43,16 @@ public class AuthenticationConfig {
     }
 
     /**
+     * Provides HTTP session security context repository for session persistence.
+     *
+     * @return HttpSessionSecurityContextRepository
+     */
+    @Bean
+    public HttpSessionSecurityContextRepository httpSessionSecurityContextRepository() {
+        return new HttpSessionSecurityContextRepository();
+    }
+
+    /**
      * Configures the main security filter chain for basic authentication.
      * Used when OAuth2 and LDAP are not enabled.
      *
@@ -57,10 +69,10 @@ public class AuthenticationConfig {
     public SecurityFilterChain basicSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(session -> session.sessionFixation().migrateSession())
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/health", "/actuator/**").permitAll()
                 .requestMatchers("/users/authenticate", "/users/authenticate/ldap").permitAll()
-                .requestMatchers("/responsibility-centres").permitAll()
                 .anyRequest().permitAll()
             )
             .httpBasic(basic -> {})

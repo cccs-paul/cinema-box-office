@@ -1,6 +1,6 @@
 # Kubernetes Deployment Files
 
-This directory contains all Kubernetes manifests needed to deploy Cinema Box Office on Kubernetes clusters.
+This directory contains all Kubernetes manifests needed to deploy myRC on Kubernetes clusters.
 
 ## File Structure
 

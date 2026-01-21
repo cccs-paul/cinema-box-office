@@ -22,11 +22,11 @@ export class ResponsibilityCentreService {
   constructor(private http: HttpClient) {}
 
   getAllResponsibilityCentres(): Observable<ResponsibilityCentreDTO[]> {
-    return this.http.get<ResponsibilityCentreDTO[]>(this.apiUrl);
+    return this.http.get<ResponsibilityCentreDTO[]>(this.apiUrl, { withCredentials: true });
   }
 
   getResponsibilityCentre(id: number): Observable<ResponsibilityCentreDTO> {
-    return this.http.get<ResponsibilityCentreDTO>(`${this.apiUrl}/${id}`);
+    return this.http.get<ResponsibilityCentreDTO>(`${this.apiUrl}/${id}`, { withCredentials: true });
   }
 
   createResponsibilityCentre(
@@ -36,7 +36,7 @@ export class ResponsibilityCentreService {
     return this.http.post<ResponsibilityCentreDTO>(this.apiUrl, {
       name,
       description
-    });
+    }, { withCredentials: true });
   }
 
   updateResponsibilityCentre(
@@ -47,11 +47,11 @@ export class ResponsibilityCentreService {
     return this.http.put<ResponsibilityCentreDTO>(`${this.apiUrl}/${id}`, {
       name,
       description
-    });
+    }, { withCredentials: true });
   }
 
   deleteResponsibilityCentre(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { withCredentials: true });
   }
 
   grantAccess(
@@ -62,17 +62,17 @@ export class ResponsibilityCentreService {
     return this.http.post(`${this.apiUrl}/${rcId}/access/grant`, {
       username,
       accessLevel
-    });
+    }, { withCredentials: true });
   }
 
   revokeAccess(rcId: number, username: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${rcId}/access/revoke`, {
       username
-    });
+    }, { withCredentials: true });
   }
 
   getResponsibilityCentreAccess(rcId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/${rcId}/access`);
+    return this.http.get<any[]>(`${this.apiUrl}/${rcId}/access`, { withCredentials: true });
   }
 
   setSelectedRC(rcId: number): void {

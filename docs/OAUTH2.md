@@ -2,7 +2,7 @@
 
 ## Overview
 
-Cinema Box Office supports OAuth2 for enterprise single sign-on (SSO) integration. This guide covers configuring OAuth2 authentication with your Kubernetes deployment.
+myRC supports OAuth2 for enterprise single sign-on (SSO) integration. This guide covers configuring OAuth2 authentication with your Kubernetes deployment.
 
 ## Supported OAuth2 Providers
 

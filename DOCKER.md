@@ -1,6 +1,6 @@
 # Dockerfile Documentation
 
-This document provides detailed information about the Docker configuration for Cinema Box Office.
+This document provides detailed information about the Docker configuration for myRC.
 
 ## Backend Dockerfile
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers deploying Cinema Box Office to Kubernetes clusters. The application is containerized and ready for production deployment.
+This guide covers deploying myRC to Kubernetes clusters. The application is containerized and ready for production deployment.
 
 ## Prerequisites
 

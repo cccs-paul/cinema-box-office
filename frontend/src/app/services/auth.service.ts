@@ -63,7 +63,8 @@ export class AuthService {
     return this.http
       .post<User>(
         `${this.API_URL}/users/authenticate?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
-        {}
+        {},
+        { withCredentials: true }
       )
       .pipe(
         tap((user) => this.setCurrentUser(user)),
@@ -82,7 +83,8 @@ export class AuthService {
     return this.http
       .post<User>(
         `${this.API_URL}/users/authenticate/ldap?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`,
-        {}
+        {},
+        { withCredentials: true }
       )
       .pipe(
         tap((user) => this.setCurrentUser(user)),
@@ -108,7 +110,7 @@ export class AuthService {
    * @returns Observable of authentication response
    */
   handleOAuth2Callback(): Observable<User> {
-    return this.http.get<User>(`${this.API_URL}/users/me`).pipe(
+    return this.http.get<User>(`${this.API_URL}/users/me`, { withCredentials: true }).pipe(
       tap((user) => this.setCurrentUser(user)),
       catchError((error) => this.handleError(error))
     );

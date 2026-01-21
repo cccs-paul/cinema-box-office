@@ -27,7 +27,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -388,13 +394,29 @@ public class UserController {
             @Parameter(description = "Username", required = true)
             @RequestParam String username,
             @Parameter(description = "Password", required = true)
-            @RequestParam String password) {;
+            @RequestParam String password,
+            HttpServletRequest request,
+            HttpServletResponse response) {
         Optional<UserDTO> user = userService.authenticate(username, password);
-        return user.map(ResponseEntity::ok)
-            .orElseGet(() -> {
-                logger.warning("Warning");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            });
+        if (user.isPresent()) {
+            // Create/access session
+            HttpSession session = request.getSession(true);
+            
+            // Establish security context
+            UsernamePasswordAuthenticationToken auth = 
+                new UsernamePasswordAuthenticationToken(username, null, List.of());
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            
+            // Persist security context to session
+            HttpSessionSecurityContextRepository repository = new HttpSessionSecurityContextRepository();
+            repository.saveContext(SecurityContextHolder.getContext(), request, response);
+            
+            logger.info("User authenticated with session: " + username + " (Session ID: " + session.getId() + ")");
+            return ResponseEntity.ok(user.get());
+        } else {
+            logger.warning("Authentication failed for user: " + username);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
     }
 
     /**

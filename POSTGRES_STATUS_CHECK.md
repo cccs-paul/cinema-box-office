@@ -69,7 +69,7 @@ isDatabaseHealthy = false;
 - Uses `isDatabaseHealthy` and `databaseStatus` properties
 - Layout:
   ```
-  Header (Cinema Box Office)
+  Header (myRC)
   API Status Section
   Database Status Section    [NEW]
   Content Section
@@ -364,7 +364,7 @@ All requirements met:
 
 ### Implementation Complete
 
-The PostgreSQL database status check is fully integrated into the Cinema Box Office application:
+The PostgreSQL database status check is fully integrated into the myRC application:
 
 1. **Backend API** - `/api/health/db` endpoint validates database connection
 2. **Frontend UI** - Displays database status alongside API status

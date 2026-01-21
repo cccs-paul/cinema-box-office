@@ -1,6 +1,6 @@
 # Kubernetes Testing Guide
 
-This guide provides comprehensive testing procedures for validating Cinema Box Office deployments on Kubernetes.
+This guide provides comprehensive testing procedures for validating myRC deployments on Kubernetes.
 
 ## Test Environment Setup
 

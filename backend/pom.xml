@@ -6,13 +6,13 @@
 
     <parent>
         <groupId>com.boxoffice</groupId>
-        <artifactId>cinema-box-office</artifactId>
+        <artifactId>myrc</artifactId>
         <version>1.0.0</version>
     </parent>
 
     <artifactId>backend</artifactId>
-    <name>Box Office Backend API</name>
-    <description>REST API backend for Box Office Management System</description>
+    <name>myRC Backend API</name>
+    <description>REST API backend for myRC Management System</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

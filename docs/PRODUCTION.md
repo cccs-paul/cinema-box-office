@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers best practices for deploying Cinema Box Office to production Kubernetes clusters with security, reliability, and scalability considerations.
+This guide covers best practices for deploying myRC to production Kubernetes clusters with security, reliability, and scalability considerations.
 
 ## Pre-Deployment Checklist
 

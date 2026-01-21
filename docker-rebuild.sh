@@ -1,14 +1,14 @@
 #!/bin/bash
 #
 # Docker Image Rebuild Script
-# Cinema Box Office - Rebuild all Docker images
+# myRC - Rebuild all Docker images
 #
-# Author: Box Office Team
+# Author: myRC Team
 # License: MIT
 # Date: January 17, 2026
 #
 # Description:
-#   Rebuilds all Docker images for the Cinema Box Office project.
+#   Rebuilds all Docker images for the myRC project.
 #   This script rebuilds both the backend API and frontend web images
 #   with the latest code changes.
 #

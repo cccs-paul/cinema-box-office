@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.boxoffice</groupId>
-    <artifactId>cinema-box-office</artifactId>
+    <artifactId>myrc</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
-    <name>Cinema Box Office</name>
-    <description>Box Office Management System with REST API</description>
+    <name>myRC</name>
+    <description>Responsibility Centre Management System with REST API</description>
 
     <modules>
         <module>backend</module>

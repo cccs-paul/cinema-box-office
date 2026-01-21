@@ -29,7 +29,7 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnInit {
-  title = 'Cinema Box Office';
+  title = 'myRC';
   activeTab: 'local' | 'ldap' | 'oauth2' = 'local';
   
   // Form groups

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers security best practices for deploying and running Cinema Box Office in production environments.
+This guide covers security best practices for deploying and running myRC in production environments.
 
 ## Authentication & Authorization
 

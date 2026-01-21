@@ -1,4 +1,4 @@
-# Cinema Box Office - Complete Resource Index
+# myRC - Complete Resource Index
 
 ## 📋 Start Here
 

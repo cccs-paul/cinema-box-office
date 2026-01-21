@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers integrating Cinema Box Office with corporate LDAP directories and OAuth2 providers when deploying on Docker. It includes Docker Compose configurations, environment setup, and testing procedures.
+This guide covers integrating myRC with corporate LDAP directories and OAuth2 providers when deploying on Docker. It includes Docker Compose configurations, environment setup, and testing procedures.
 
 ## Table of Contents
 
@@ -40,9 +40,9 @@ services:
       - "389:389"
       - "636:636"
     environment:
-      LDAP_ORGANISATION: "Cinema Box Office"
-      LDAP_DOMAIN: "cinema.local"
-      LDAP_BASE_DN: "dc=cinema,dc=local"
+      LDAP_ORGANISATION: "myRC"
+      LDAP_DOMAIN: "myrc.local"
+      LDAP_BASE_DN: "dc=myrc,dc=local"
       LDAP_ADMIN_PASSWORD: "admin-password-123"
       LDAP_READONLY_USER: "true"
       LDAP_READONLY_USER_USERNAME: "readonly"
@@ -260,7 +260,7 @@ docker-compose -f docker-compose.ldap.yml up -d
 
 ```
 1. Go to https://console.cloud.google.com/
-2. Create new project: "Cinema Box Office"
+2. Create new project: "myRC"
 3. Enable OAuth 2.0 API
 4. Create OAuth 2.0 credentials (Web application)
 5. Authorized redirect URIs:
@@ -350,7 +350,7 @@ DB_PASSWORD=your-secure-password
 ```
 1. Go to GitHub Settings → Developer settings → OAuth Apps
 2. Create new OAuth App
-3. Application name: Cinema Box Office
+3. Application name: myRC
 4. Homepage URL: http://localhost:4200
 5. Authorization callback URL:
    - http://localhost:8080/login/oauth2/code/github
@@ -397,7 +397,7 @@ services:
 ```
 1. Azure Portal → Azure Active Directory
 2. App registrations → New registration
-3. Name: Cinema Box Office
+3. Name: myRC
 4. Supported account types: Multitenant
 5. Redirect URI: http://localhost:8080/login/oauth2/code/azure
 6. Certificates & secrets → New client secret
@@ -473,7 +473,7 @@ services:
       - "389:389"
       - "636:636"
     environment:
-      LDAP_ORGANISATION: "Cinema Box Office Dev"
+      LDAP_ORGANISATION: "myRC Dev"
       LDAP_DOMAIN: "cinema.local"
       LDAP_BASE_DN: "dc=cinema,dc=local"
       LDAP_ADMIN_PASSWORD: "admin-password"

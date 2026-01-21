@@ -1,7 +1,7 @@
 # Responsibility Centre (RC) System - Implementation Summary
 
 ## Overview
-A complete Responsibility Centre (RC) system has been implemented for the Cinema Box Office application. After login, users are presented with an RC selection page where they can create new Responsibility Centres or select existing ones they have access to. Each RC displays the user's access level (Read-Only or Read-Write).
+A complete Responsibility Centre (RC) system has been implemented for the myRC application. After login, users are presented with an RC selection page where they can create new Responsibility Centres or select existing ones they have access to. Each RC displays the user's access level (Read-Only or Read-Write).
 
 ## Architecture
 
