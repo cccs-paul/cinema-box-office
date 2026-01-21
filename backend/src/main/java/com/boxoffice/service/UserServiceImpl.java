@@ -55,7 +55,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public UserDTO createUser(CreateUserRequest createUserRequest) {
-        logger.info("Creating new user: {}: " + createUserRequest.getUsername());
+        logger.info(() -> "Creating new user: " + createUserRequest.getUsername());
 
         // Validate request
         if (!createUserRequest.isValid()) {
@@ -214,7 +214,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public void changePassword(Long userId, ChangePasswordRequest changePasswordRequest) {
-        logger.info("Password change requested for user: {}: " + userId);
+        logger.info(() -> "Password change requested for user: " + userId);
 
         if (!changePasswordRequest.isValid()) {
             throw new IllegalArgumentException("Invalid password change request");
@@ -403,7 +403,7 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
-        int newAttempts = (user.getFailedLoginAttempts() != null ? user.getFailedLoginAttempts() : 0) + 1;
+        int newAttempts = (user.getFailedLoginAttempts() == null ? 0 : user.getFailedLoginAttempts()) + 1;
         user.setFailedLoginAttempts(newAttempts);
 
         // Lock account after max failed attempts

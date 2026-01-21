@@ -99,6 +99,30 @@ export class LoginComponent implements OnInit {
   }
 
   /**
+   * Disable form controls during loading.
+   */
+  private disableFormControls(): void {
+    Object.keys(this.localForm.controls).forEach((key) => {
+      this.localForm.get(key)?.disable();
+    });
+    Object.keys(this.ldapForm.controls).forEach((key) => {
+      this.ldapForm.get(key)?.disable();
+    });
+  }
+
+  /**
+   * Enable form controls after loading.
+   */
+  private enableFormControls(): void {
+    Object.keys(this.localForm.controls).forEach((key) => {
+      this.localForm.get(key)?.enable();
+    });
+    Object.keys(this.ldapForm.controls).forEach((key) => {
+      this.ldapForm.get(key)?.enable();
+    });
+  }
+
+  /**
    * Handle LOCAL authentication.
    */
   loginLocal(): void {
@@ -110,6 +134,7 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.disableFormControls();
 
     const { username, password } = this.localForm.value;
 
@@ -123,6 +148,7 @@ export class LoginComponent implements OnInit {
       },
       error: (error: Error) => {
         this.isLoading = false;
+        this.enableFormControls();
         this.errorMessage = error.message || 'Login failed. Please check your credentials.';
       },
     });
@@ -140,6 +166,7 @@ export class LoginComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.disableFormControls();
 
     const username = this.ldapForm.value.ldapUsername;
     const password = this.ldapForm.value.ldapPassword;
@@ -154,6 +181,7 @@ export class LoginComponent implements OnInit {
       },
       error: (error: Error) => {
         this.isLoading = false;
+        this.enableFormControls();
         this.errorMessage = error.message || 'LDAP authentication failed. Please check your credentials.';
       },
     });

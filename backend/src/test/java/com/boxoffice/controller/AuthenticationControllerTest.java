@@ -35,6 +35,7 @@ class AuthenticationControllerTest {
         var response = authenticationController.getAuthStatus();
         
         assertNotNull(response);
+        assertNotNull(response.getBody());
         assertFalse(response.getBody().authenticated());
     }
 

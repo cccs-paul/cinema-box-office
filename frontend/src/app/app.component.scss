@@ -4,15 +4,9 @@
  * Licensed under MIT License
  */
 
-/* App main content area - positioned below sticky header when visible */
-.app-main {
-  min-height: 100vh;
-  margin-top: 0;
-  
-  /* Content will be rendered by routed components */
-  
-  /* Adjust when header is visible (user logged in) */
-  :host-context(body:has(app-header)) & {
-    min-height: calc(100vh - 60px);
-  }
+/* App root - minimal styling, layout handled by routed components */
+:host {
+  display: block;
 }
+
+

@@ -1,0 +1,12 @@
+/*
+ * Cinema Box Office - Layout Component Styles
+ * Copyright (c) 2026 Box Office Team
+ * Licensed under MIT License
+ */
+
+.app-main {
+  min-height: calc(100vh - 60px);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}

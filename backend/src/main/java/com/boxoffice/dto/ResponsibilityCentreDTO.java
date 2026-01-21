@@ -1,0 +1,208 @@
+/*
+ * Cinema Box Office - Responsibility Centre DTO
+ * Copyright (c) 2026 Box Office Team
+ * Licensed under MIT License
+ */
+package com.boxoffice.dto;
+
+import com.boxoffice.model.RCAccess;
+import com.boxoffice.model.ResponsibilityCentre;
+import java.time.LocalDateTime;
+
+/**
+ * Data Transfer Object for ResponsibilityCentre.
+ * Used for API responses and requests related to responsibility centres.
+ *
+ * @author Box Office Team
+ * @version 1.0.0
+ * @since 2026-01-17
+ */
+public class ResponsibilityCentreDTO {
+
+  private Long id;
+  private String name;
+  private String description;
+  private String ownerUsername;
+  private String currentUsername; // The username viewing this DTO
+  private String accessLevel; // READ_ONLY or READ_WRITE
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
+  private Boolean active;
+
+  // Constructors
+  public ResponsibilityCentreDTO() {}
+
+  public ResponsibilityCentreDTO(Long id, String name, String description, 
+      String ownerUsername, String accessLevel, LocalDateTime createdAt,
+      LocalDateTime updatedAt, Boolean active) {
+    this.id = id;
+    this.name = name;
+    this.description = description;
+    this.ownerUsername = ownerUsername;
+    this.accessLevel = accessLevel;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+    this.active = active;
+  }
+
+  public ResponsibilityCentreDTO(Long id, String name, String description, 
+      String ownerUsername, String currentUsername, String accessLevel, LocalDateTime createdAt,
+      LocalDateTime updatedAt, Boolean active) {
+    this.id = id;
+    this.name = name;
+    this.description = description;
+    this.ownerUsername = ownerUsername;
+    this.currentUsername = currentUsername;
+    this.accessLevel = accessLevel;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
+    this.active = active;
+  }
+
+  // Factory methods
+  /**
+   * Create a DTO from a ResponsibilityCentre entity.
+   * Used when the current user is the owner.
+   *
+   * @param rc the responsibility centre entity
+   * @param currentUsername the current user's username
+   * @param accessLevel the access level for the current user
+   * @return the DTO
+   */
+  public static ResponsibilityCentreDTO fromEntity(ResponsibilityCentre rc, 
+      String currentUsername, String accessLevel) {
+    ResponsibilityCentreDTO dto = new ResponsibilityCentreDTO(
+        rc.getId(),
+        rc.getName(),
+        rc.getDescription(),
+        rc.getOwner().getUsername(),
+        accessLevel,
+        rc.getCreatedAt(),
+        rc.getUpdatedAt(),
+        rc.getActive()
+    );
+    dto.setCurrentUsername(currentUsername);
+    return dto;
+  }
+
+  /**
+   * Create a DTO from a ResponsibilityCentre entity with access information.
+   * Used when the current user has shared access.
+   *
+   * @param rc the responsibility centre entity
+   * @param currentUsername the current user's username
+   * @param access the access record
+   * @return the DTO
+   */
+  public static ResponsibilityCentreDTO fromEntityWithAccess(ResponsibilityCentre rc,
+      String currentUsername, RCAccess access) {
+    ResponsibilityCentreDTO dto = new ResponsibilityCentreDTO(
+        rc.getId(),
+        rc.getName(),
+        rc.getDescription(),
+        rc.getOwner().getUsername(),
+        access.getAccessLevel().toString(),
+        rc.getCreatedAt(),
+        rc.getUpdatedAt(),
+        rc.getActive()
+    );
+    dto.setCurrentUsername(currentUsername);
+    return dto;
+  }
+
+  // Getters and Setters
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  public String getOwnerUsername() {
+    return ownerUsername;
+  }
+
+  public void setOwnerUsername(String ownerUsername) {
+    this.ownerUsername = ownerUsername;
+  }
+
+  public String getAccessLevel() {
+    return accessLevel;
+  }
+
+  public void setAccessLevel(String accessLevel) {
+    this.accessLevel = accessLevel;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  public LocalDateTime getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(LocalDateTime updatedAt) {
+    this.updatedAt = updatedAt;
+  }
+
+  public Boolean getActive() {
+    return active;
+  }
+
+  public void setActive(Boolean active) {
+    this.active = active;
+  }
+
+  public String getCurrentUsername() {
+    return currentUsername;
+  }
+
+  public void setCurrentUsername(String currentUsername) {
+    this.currentUsername = currentUsername;
+  }
+
+  /**
+   * Check if the current user is the owner of this responsibility centre.
+   *
+   * @return true if current user is the owner, false otherwise
+   */
+  public boolean isOwner() {
+    return currentUsername != null && currentUsername.equals(ownerUsername);
+  }
+
+  @Override
+  public String toString() {
+    return "ResponsibilityCentreDTO{" +
+        "id=" + id +
+        ", name='" + name + '\'' +
+        ", description='" + description + '\'' +
+        ", ownerUsername='" + ownerUsername + '\'' +
+        ", accessLevel='" + accessLevel + '\'' +
+        ", createdAt=" + createdAt +
+        ", updatedAt=" + updatedAt +
+        ", active=" + active +
+        '}';
+  }
+}

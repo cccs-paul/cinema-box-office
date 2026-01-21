@@ -12,7 +12,6 @@
 package com.boxoffice.init;
 
 import com.boxoffice.dto.CreateUserRequest;
-import com.boxoffice.model.User;
 import com.boxoffice.repository.UserRepository;
 import com.boxoffice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,7 +65,7 @@ public class DataInitializer implements ApplicationRunner {
                 logger.info("Default admin user created successfully with username: admin, password: Admin@123");
                 logger.info("IMPORTANT: Please change the default admin password immediately for security!");
             } catch (Exception e) {
-                logger.warning("Failed to create default admin user: " + e.getMessage());
+                logger.warning(() -> "Failed to create default admin user: " + e.getMessage());
             }
         } else {
             logger.info("Admin user already exists, skipping initialization");
