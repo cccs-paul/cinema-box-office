@@ -88,7 +88,7 @@ public class UserServiceImpl implements UserService {
             .accountLocked(false)
             .emailVerified(false)
             .failedLoginAttempts(0)
-            .roles(createUserRequest.getRoles() != null ? createUserRequest.getRoles() : java.util.Set.of("USER"))
+            .roles(createUserRequest.getRoles() != null ? createUserRequest.getRoles() : new java.util.HashSet<>(java.util.Set.of("USER")))
             .build();
 
         // Hash password for LOCAL authentication
@@ -476,7 +476,7 @@ public class UserServiceImpl implements UserService {
             .accountLocked(false)
             .emailVerified(true) // OAuth2 emails are verified by provider
             .failedLoginAttempts(0)
-            .roles(java.util.Set.of("USER"))
+            .roles(new java.util.HashSet<>(java.util.Set.of("USER")))
             .lastLoginAt(LocalDateTime.now())
             .build();
 
@@ -522,7 +522,7 @@ public class UserServiceImpl implements UserService {
             .accountLocked(false)
             .emailVerified(email != null)
             .failedLoginAttempts(0)
-            .roles(java.util.Set.of("USER"))
+            .roles(new java.util.HashSet<>(java.util.Set.of("USER")))
             .lastLoginAt(LocalDateTime.now())
             .build();
 

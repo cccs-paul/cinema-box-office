@@ -2,15 +2,35 @@
 <div class="rc-selection-container">
   <div class="rc-header">
     <div class="rc-title-section">
-      <h1>Responsibility Centres</h1>
-      <p class="rc-subtitle">Select a responsibility centre to begin</p>
+      <h1>Responsibility Centres & Fiscal Years</h1>
+      <p class="rc-subtitle">Select a responsibility centre and fiscal year to begin</p>
     </div>
+  </div>
+
+  <!-- RC Action Buttons -->
+  <div class="action-buttons" *ngIf="!showCreateForm && !showCloneForm && !showRenameForm">
+    <button class="btn btn-action" (click)="toggleCreateForm()" title="Create New RC">
+      <span class="action-icon">➕</span>
+      <span class="action-label">New RC</span>
+    </button>
+    <button class="btn btn-action" (click)="toggleCloneForm()" [disabled]="selectedRCId === null" title="Clone Selected RC">
+      <span class="action-icon">📋</span>
+      <span class="action-label">Clone RC</span>
+    </button>
+    <button class="btn btn-action btn-danger" (click)="confirmDelete()" [disabled]="selectedRCId === null || !selectedRCIsOwner" title="Delete Selected RC">
+      <span class="action-icon">🗑️</span>
+      <span class="action-label">Delete RC</span>
+    </button>
+    <button class="btn btn-action" (click)="toggleRenameForm()" [disabled]="selectedRCId === null || !selectedRCIsOwner" title="Rename Selected RC">
+      <span class="action-icon">✏️</span>
+      <span class="action-label">Rename RC</span>
+    </button>
   </div>
 
   <!-- Create RC Form -->
   <div class="create-rc-form" *ngIf="showCreateForm">
     <div class="form-container">
-      <h3>Create New Responsibility Centre</h3>
+      <h3>➕ Create New Responsibility Centre</h3>
       <div class="form-group">
         <label for="rcName">RC Name *</label>
         <input
@@ -32,7 +52,7 @@
         ></textarea>
       </div>
       <div class="form-actions">
-        <button class="btn btn-primary" (click)="createRC()" [disabled]="isCreating">
+        <button class="btn btn-primary" (click)="createRC()" [disabled]="isCreating || !newRCName.trim()">
           {{ isCreating ? 'Creating...' : 'Create RC' }}
         </button>
         <button class="btn btn-secondary" (click)="toggleCreateForm()" [disabled]="isCreating">
@@ -42,10 +62,96 @@
     </div>
   </div>
 
+  <!-- Clone RC Form -->
+  <div class="create-rc-form" *ngIf="showCloneForm">
+    <div class="form-container">
+      <h3>📋 Clone Responsibility Centre</h3>
+      <p class="form-info">Cloning: <strong>{{ selectedRC?.name }}</strong></p>
+      <div class="form-group">
+        <label for="cloneName">New RC Name *</label>
+        <input
+          id="cloneName"
+          type="text"
+          [(ngModel)]="cloneNewName"
+          placeholder="Enter new RC name"
+          [disabled]="isCloning"
+        />
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" (click)="cloneRC()" [disabled]="isCloning || !cloneNewName.trim()">
+          {{ isCloning ? 'Cloning...' : 'Clone RC' }}
+        </button>
+        <button class="btn btn-secondary" (click)="closeAllForms()" [disabled]="isCloning">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rename RC Form -->
+  <div class="create-rc-form" *ngIf="showRenameForm">
+    <div class="form-container">
+      <h3>✏️ Rename Responsibility Centre</h3>
+      <div class="form-group">
+        <label for="renameName">RC Name *</label>
+        <input
+          id="renameName"
+          type="text"
+          [(ngModel)]="renameNewName"
+          placeholder="Enter new RC name"
+          [disabled]="isRenaming"
+        />
+      </div>
+      <div class="form-group">
+        <label for="renameDescription">Description</label>
+        <textarea
+          id="renameDescription"
+          [(ngModel)]="renameNewDescription"
+          placeholder="Enter RC description (optional)"
+          [disabled]="isRenaming"
+          rows="3"
+        ></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" (click)="renameRC()" [disabled]="isRenaming || !renameNewName.trim()">
+          {{ isRenaming ? 'Renaming...' : 'Rename RC' }}
+        </button>
+        <button class="btn btn-secondary" (click)="closeAllForms()" [disabled]="isRenaming">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Dialog -->
+  <div class="delete-confirm-overlay" *ngIf="showDeleteConfirm">
+    <div class="delete-confirm-dialog">
+      <h3>🗑️ Delete Responsibility Centre?</h3>
+      <p>Are you sure you want to delete <strong>{{ selectedRC?.name }}</strong>?</p>
+      <p class="warning-text">This action cannot be undone. All fiscal years and data associated with this RC will be permanently deleted.</p>
+      <div class="form-actions">
+        <button class="btn btn-danger" (click)="deleteRC()" [disabled]="isDeleting">
+          {{ isDeleting ? 'Deleting...' : 'Delete RC' }}
+        </button>
+        <button class="btn btn-secondary" (click)="cancelDelete()" [disabled]="isDeleting">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Error Message -->
-  <div class="error-message" *ngIf="errorMessage">
+  <div class="error-message" *ngIf="errorMessage" (click)="clearError()">
     <span class="icon">⚠️</span>
     {{ errorMessage }}
+    <span class="dismiss">✕</span>
+  </div>
+
+  <!-- Success Message -->
+  <div class="success-message" *ngIf="successMessage" (click)="clearSuccess()">
+    <span class="icon">✓</span>
+    {{ successMessage }}
+    <span class="dismiss">✕</span>
   </div>
 
   <!-- Loading State -->
@@ -54,30 +160,182 @@
     <p>Loading responsibility centres...</p>
   </div>
 
-  <!-- RC List -->
-  <div class="rc-list" *ngIf="!isLoading && responsibilityCentres.length > 0">
-    <div class="rc-card" *ngFor="let rc of responsibilityCentres" (click)="selectRC(rc)">
-      <div class="rc-card-header">
-        <h3 class="rc-name">{{ rc.name }}</h3>
-        <span class="access-badge" [ngClass]="getAccessLevelClass(rc.accessLevel)">
-          {{ getAccessLevelLabel(rc.accessLevel) }}
-        </span>
+  <!-- Main Content - Two Panels -->
+  <div class="main-content" *ngIf="!isLoading">
+    <!-- RC Panel -->
+    <div class="panel rc-panel">
+      <div class="panel-header">
+        <h2>📋 Responsibility Centres</h2>
       </div>
-      <p class="rc-description" *ngIf="rc.description">{{ rc.description }}</p>
-      <div class="rc-card-footer">
-        <span class="owner" *ngIf="rc.isOwner">✓ You own this RC</span>
-        <span class="owner" *ngIf="!rc.isOwner">Owned by {{ rc.ownerUsername }}</span>
+
+      <div class="rc-list" *ngIf="responsibilityCentres.length > 0">
+        <div
+          class="rc-card"
+          *ngFor="let rc of sortedResponsibilityCentres"
+          (click)="selectRCWithoutNavigate(rc)"
+          [class.selected]="selectedRCId === rc.id"
+        >
+          <div class="rc-card-header">
+            <h3 class="rc-name">{{ rc.name }}</h3>
+            <span class="access-badge" [ngClass]="getAccessLevelClass(rc.accessLevel)">
+              {{ getAccessLevelLabel(rc.accessLevel) }}
+            </span>
+          </div>
+          <p class="rc-description" *ngIf="rc.description">{{ rc.description }}</p>
+          <div class="rc-card-footer">
+            <span class="owner" *ngIf="rc.isOwner">✓ You own this RC</span>
+            <span class="owner" *ngIf="!rc.isOwner">Owned by {{ rc.ownerUsername }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty RC State -->
+      <div class="empty-state" *ngIf="responsibilityCentres.length === 0">
+        <h3>No Responsibility Centres Yet</h3>
+        <p>Create your first responsibility centre to get started</p>
+        <button class="btn btn-primary" (click)="toggleCreateForm()">
+          ➕ Create Your First RC
+        </button>
+      </div>
+    </div>
+
+    <!-- Fiscal Year Panel -->
+    <div class="panel fy-panel" *ngIf="selectedRCId !== null">
+      <div class="panel-header">
+        <h2>📅 Fiscal Years</h2>
+      </div>
+
+      <!-- FY Action Buttons -->
+      <div class="fy-action-buttons" *ngIf="!showFYCreateForm && !showFYRenameForm && selectedRCCanWrite">
+        <button class="btn btn-action btn-sm" (click)="toggleFYCreateForm()" title="Create New Fiscal Year">
+          <span class="action-icon">➕</span>
+          <span class="action-label">New FY</span>
+        </button>
+        <button class="btn btn-action btn-sm" (click)="toggleFYRenameForm()" [disabled]="selectedFYId === null" title="Rename Selected FY">
+          <span class="action-icon">✏️</span>
+          <span class="action-label">Rename FY</span>
+        </button>
+      </div>
+
+      <!-- Create FY Form -->
+      <div class="create-fy-form" *ngIf="showFYCreateForm">
+        <div class="form-container">
+          <h3>➕ Create New Fiscal Year</h3>
+          <div class="form-group">
+            <label for="fyName">Fiscal Year Name *</label>
+            <input
+              id="fyName"
+              type="text"
+              [(ngModel)]="newFYName"
+              placeholder="e.g., FY 2025-2026"
+              [disabled]="isCreatingFY"
+            />
+          </div>
+          <div class="form-group">
+            <label for="fyDescription">Description</label>
+            <textarea
+              id="fyDescription"
+              [(ngModel)]="newFYDescription"
+              placeholder="Enter fiscal year description (optional)"
+              [disabled]="isCreatingFY"
+              rows="2"
+            ></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" (click)="createFY()" [disabled]="isCreatingFY || !isValidFYForm()">
+              {{ isCreatingFY ? 'Creating...' : 'Create Fiscal Year' }}
+            </button>
+            <button class="btn btn-secondary" (click)="toggleFYCreateForm()" [disabled]="isCreatingFY">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rename FY Form -->
+      <div class="create-fy-form" *ngIf="showFYRenameForm">
+        <div class="form-container">
+          <h3>✏️ Rename Fiscal Year</h3>
+          <div class="form-group">
+            <label for="renameFYName">Fiscal Year Name *</label>
+            <input
+              id="renameFYName"
+              type="text"
+              [(ngModel)]="renameFYNewName"
+              placeholder="Enter new fiscal year name"
+              [disabled]="isRenamingFY"
+            />
+          </div>
+          <div class="form-group">
+            <label for="renameFYDescription">Description</label>
+            <textarea
+              id="renameFYDescription"
+              [(ngModel)]="renameFYNewDescription"
+              placeholder="Enter fiscal year description (optional)"
+              [disabled]="isRenamingFY"
+              rows="2"
+            ></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" (click)="renameFY()" [disabled]="isRenamingFY || !renameFYNewName.trim()">
+              {{ isRenamingFY ? 'Renaming...' : 'Rename Fiscal Year' }}
+            </button>
+            <button class="btn btn-secondary" (click)="closeFYForms()" [disabled]="isRenamingFY">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FY Loading State -->
+      <div class="loading-state" *ngIf="isFYLoading">
+        <div class="spinner"></div>
+        <p>Loading fiscal years...</p>
+      </div>
+
+      <!-- FY List -->
+      <div class="fy-list" *ngIf="!isFYLoading && fiscalYears.length > 0">
+        <div
+          class="fy-card"
+          *ngFor="let fy of sortedFiscalYears"
+          (click)="selectFY(fy)"
+          [class.selected]="selectedFYId === fy.id"
+        >
+          <div class="fy-card-header">
+            <h3 class="fy-name">{{ fy.name }}</h3>
+            <span class="fy-badge" [class.active]="fy.active">
+              {{ fy.active ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          <p class="fy-description" *ngIf="fy.description">{{ fy.description }}</p>
+        </div>
+      </div>
+
+      <!-- Empty FY State -->
+      <div class="empty-state" *ngIf="!isFYLoading && fiscalYears.length === 0 && !showFYCreateForm">
+        <h3>No Fiscal Years</h3>
+        <p>This responsibility centre has no fiscal years yet.</p>
+        <button class="btn btn-primary" (click)="toggleFYCreateForm()" *ngIf="selectedRCCanWrite">
+          ➕ Create First Fiscal Year
+        </button>
+      </div>
+    </div>
+
+    <!-- Placeholder when no RC selected -->
+    <div class="panel fy-panel placeholder" *ngIf="selectedRCId === null && responsibilityCentres.length > 0">
+      <div class="placeholder-content">
+        <span class="icon">📅</span>
+        <h3>Select a Responsibility Centre</h3>
+        <p>Choose an RC from the list to view its fiscal years</p>
       </div>
     </div>
   </div>
 
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="!isLoading && responsibilityCentres.length === 0">
-    <div class="empty-icon">📋</div>
-    <h3>No Responsibility Centres Yet</h3>
-    <p>Create your first responsibility centre to get started</p>
-    <button class="btn btn-primary" (click)="toggleCreateForm()">
-      Create Your First RC
+  <!-- Navigation Button -->
+  <div class="navigation-section" *ngIf="selectedRCId !== null && selectedFYId !== null">
+    <button class="btn btn-primary btn-large btn-open" (click)="navigateToDashboard()">
+      <span class="action-icon">🚀</span>
+      <span class="action-label">Open Selected RC & Fiscal Year</span>
     </button>
   </div>
 </div>

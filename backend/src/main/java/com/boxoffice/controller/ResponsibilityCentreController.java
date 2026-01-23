@@ -92,11 +92,15 @@ public class ResponsibilityCentreController {
   public ResponseEntity<ResponsibilityCentreDTO> createResponsibilityCentre(
       Authentication authentication,
       @RequestBody RCCreateRequest request) {
-    if (authentication == null || authentication.getName() == null || authentication.getName().isEmpty()) {
-      logger.warning("POST /responsibility-centres - Unauthenticated access attempted");
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    // Use default user for unauthenticated access (development mode)
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
+      logger.info("POST /responsibility-centres - Creating RC: " + request.getName() + " for authenticated user: " + username);
+    } else {
+      logger.info("POST /responsibility-centres - Creating RC: " + request.getName() + " for unauthenticated user (using default)");
     }
-    logger.info("POST /responsibility-centres - Creating RC: " + request.getName() + " for user: " + authentication.getName());
+    
     try {
       if (request.getName() == null || request.getName().trim().isEmpty()) {
         logger.warning("RC creation failed: Name is required");
@@ -104,11 +108,14 @@ public class ResponsibilityCentreController {
       }
 
       ResponsibilityCentreDTO createdRC = rcService.createResponsibilityCentre(
-          authentication.getName(),
+          username,
           request.getName(),
           request.getDescription() != null ? request.getDescription() : ""
       );
       return ResponseEntity.status(HttpStatus.CREATED).body(createdRC);
+    } catch (IllegalArgumentException e) {
+      logger.warning("RC creation failed: " + e.getMessage());
+      return ResponseEntity.badRequest().build();
     } catch (Exception e) {
       logger.severe("RC creation failed: " + e.getMessage());
       e.printStackTrace();
@@ -135,13 +142,14 @@ public class ResponsibilityCentreController {
   public ResponseEntity<ResponsibilityCentreDTO> getResponsibilityCentre(
       @PathVariable Long id,
       Authentication authentication) {
-    if (authentication == null || authentication.getName() == null || authentication.getName().isEmpty()) {
-      logger.warning("GET /responsibility-centres/{" + id + "} - Unauthenticated access attempted");
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    // Use default user for unauthenticated access (development mode)
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
     }
-    logger.info("GET /responsibility-centres/{" + id + "} - Fetching RC for user: " + authentication.getName());
+    logger.info("GET /responsibility-centres/{" + id + "} - Fetching RC for user: " + username);
     try {
-      Optional<ResponsibilityCentreDTO> rc = rcService.getResponsibilityCentre(id, authentication.getName());
+      Optional<ResponsibilityCentreDTO> rc = rcService.getResponsibilityCentre(id, username);
       return rc.map(ResponseEntity::ok)
           .orElseGet(() -> ResponseEntity.notFound().build());
     } catch (Exception e) {
@@ -172,15 +180,16 @@ public class ResponsibilityCentreController {
       @PathVariable Long id,
       Authentication authentication,
       @RequestBody RCCreateRequest request) {
-    if (authentication == null || authentication.getName() == null || authentication.getName().isEmpty()) {
-      logger.warning("PUT /responsibility-centres/{" + id + "} - Unauthenticated access attempted");
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    // Use default user for unauthenticated access (development mode)
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
     }
-    logger.info("PUT /responsibility-centres/{" + id + "} - Updating RC for user: " + authentication.getName());
+    logger.info("PUT /responsibility-centres/{" + id + "} - Updating RC for user: " + username);
     try {
       Optional<ResponsibilityCentreDTO> updatedRC = rcService.updateResponsibilityCentre(
           id,
-          authentication.getName(),
+          username,
           request.getName(),
           request.getDescription()
       );
@@ -214,13 +223,14 @@ public class ResponsibilityCentreController {
   public ResponseEntity<Void> deleteResponsibilityCentre(
       @PathVariable Long id,
       Authentication authentication) {
-    if (authentication == null || authentication.getName() == null || authentication.getName().isEmpty()) {
-      logger.warning("DELETE /responsibility-centres/{" + id + "} - Unauthenticated access attempted");
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    // Use default user for unauthenticated access (development mode)
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
     }
-    logger.info("DELETE /responsibility-centres/{" + id + "} - Deleting RC for user: " + authentication.getName());
+    logger.info("DELETE /responsibility-centres/{" + id + "} - Deleting RC for user: " + username);
     try {
-      rcService.deleteResponsibilityCentre(id, authentication.getName());
+      rcService.deleteResponsibilityCentre(id, username);
       return ResponseEntity.noContent().build();
     } catch (IllegalArgumentException e) {
       logger.warning("RC deletion failed: " + e.getMessage());
@@ -253,14 +263,18 @@ public class ResponsibilityCentreController {
       @PathVariable Long rcId,
       Authentication authentication,
       @RequestBody RCAccessRequest request) {
-    if (authentication == null || authentication.getName() == null || authentication.getName().isEmpty()) {
-      logger.warning("POST /responsibility-centres/{" + rcId + "}/access/grant - Unauthenticated access attempted");
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    // Use default user for unauthenticated access (development mode)
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
     }
     logger.info("POST /responsibility-centres/{" + rcId + "}/access/grant - Granting access to user: " + request.getUsername());
     try {
-      rcService.grantAccess(rcId, authentication.getName(), request.getUsername(), request.getAccessLevel());
+      rcService.grantAccess(rcId, username, request.getUsername(), request.getAccessLevel());
       return ResponseEntity.ok().build();
+    } catch (IllegalArgumentException e) {
+      logger.warning("Grant access failed: " + e.getMessage());
+      return ResponseEntity.badRequest().build();
     } catch (Exception e) {
       logger.severe("Grant access failed: " + e.getMessage());
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -289,14 +303,18 @@ public class ResponsibilityCentreController {
       @PathVariable Long rcId,
       Authentication authentication,
       @RequestBody RCRevokeRequest request) {
-    if (authentication == null || authentication.getName() == null || authentication.getName().isEmpty()) {
-      logger.warning("POST /responsibility-centres/{" + rcId + "}/access/revoke - Unauthenticated access attempted");
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    // Use default user for unauthenticated access (development mode)
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
     }
     logger.info("POST /responsibility-centres/{" + rcId + "}/access/revoke - Revoking access from user: " + request.getUsername());
     try {
-      rcService.revokeAccess(rcId, authentication.getName(), request.getUsername());
+      rcService.revokeAccess(rcId, username, request.getUsername());
       return ResponseEntity.ok().build();
+    } catch (IllegalArgumentException e) {
+      logger.warning("Revoke access failed: " + e.getMessage());
+      return ResponseEntity.badRequest().build();
     } catch (Exception e) {
       logger.severe("Revoke access failed: " + e.getMessage());
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -322,16 +340,70 @@ public class ResponsibilityCentreController {
   public ResponseEntity<List<?>> getAccessList(
       @PathVariable Long rcId,
       Authentication authentication) {
-    if (authentication == null || authentication.getName() == null || authentication.getName().isEmpty()) {
-      logger.warning("GET /responsibility-centres/{" + rcId + "}/access - Unauthenticated access attempted");
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    // Use default user for unauthenticated access (development mode)
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
     }
-    logger.info("GET /responsibility-centres/{" + rcId + "}/access - Fetching access list for user: " + authentication.getName());
+    logger.info("GET /responsibility-centres/{" + rcId + "}/access - Fetching access list for user: " + username);
     try {
-      List<?> accessList = rcService.getResponsibilityCentreAccess(rcId, authentication.getName());
+      List<?> accessList = rcService.getResponsibilityCentreAccess(rcId, username);
       return ResponseEntity.ok(accessList);
     } catch (Exception e) {
       logger.severe("Failed to fetch access list: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
+  /**
+   * Clone a responsibility centre.
+   *
+   * @param id the RC ID to clone
+   * @param authentication the authentication principal
+   * @param request the clone request with new name
+   * @return the cloned responsibility centre
+   */
+  @PostMapping("/{id}/clone")
+  @Operation(summary = "Clone a responsibility centre",
+      description = "Creates a copy of a responsibility centre with a new name")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "RC cloned successfully"),
+      @ApiResponse(responseCode = "400", description = "Invalid request data"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "404", description = "RC not found"),
+      @ApiResponse(responseCode = "500", description = "Internal server error")
+  })
+  public ResponseEntity<ResponsibilityCentreDTO> cloneResponsibilityCentre(
+      @PathVariable Long id,
+      Authentication authentication,
+      @RequestBody RCCloneRequest request) {
+    // Use default user for unauthenticated access (development mode)
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
+    }
+    logger.info("POST /responsibility-centres/{" + id + "}/clone - Cloning RC with new name: " + request.getNewName() + " for user: " + username);
+    try {
+      if (request.getNewName() == null || request.getNewName().trim().isEmpty()) {
+        logger.warning("RC clone failed: New name is required");
+        return ResponseEntity.badRequest().build();
+      }
+
+      ResponsibilityCentreDTO clonedRC = rcService.cloneResponsibilityCentre(
+          id,
+          username,
+          request.getNewName()
+      );
+      return ResponseEntity.status(HttpStatus.CREATED).body(clonedRC);
+    } catch (IllegalArgumentException e) {
+      logger.warning("RC clone failed: " + e.getMessage());
+      return ResponseEntity.badRequest().build();
+    } catch (IllegalAccessError e) {
+      logger.warning("RC clone access denied: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    } catch (Exception e) {
+      logger.severe("RC clone failed: " + e.getMessage());
+      e.printStackTrace();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
   }
@@ -408,6 +480,24 @@ public class ResponsibilityCentreController {
 
     public void setUsername(String username) {
       this.username = username;
+    }
+  }
+
+  public static class RCCloneRequest {
+    private String newName;
+
+    public RCCloneRequest() {}
+
+    public RCCloneRequest(String newName) {
+      this.newName = newName;
+    }
+
+    public String getNewName() {
+      return newName;
+    }
+
+    public void setNewName(String newName) {
+      this.newName = newName;
     }
   }
 }

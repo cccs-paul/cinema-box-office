@@ -90,6 +90,32 @@ public class UserController {
     }
 
     /**
+     * Get the current authenticated user
+     * 
+     * @return current user information
+     */
+    @GetMapping("/me")
+    @Operation(summary = "Get current user", description = "Retrieves the currently authenticated user's information")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User found"),
+        @ApiResponse(responseCode = "401", description = "Not authenticated")
+    })
+    public ResponseEntity<UserDTO> getCurrentUser(
+            @Parameter(hidden = true) org.springframework.security.core.Authentication authentication) {
+        if (authentication == null || authentication.getName() == null || authentication.getName().isEmpty()) {
+            logger.info("GET /users/me - No authentication found");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        logger.info("GET /users/me - Fetching current user: " + authentication.getName());
+        Optional<UserDTO> user = userService.getUserByUsername(authentication.getName());
+        return user.map(ResponseEntity::ok)
+            .orElseGet(() -> {
+                logger.warning("GET /users/me - User not found: " + authentication.getName());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            });
+    }
+
+    /**
      * Get a user by ID
      * 
      * @param userId the user ID

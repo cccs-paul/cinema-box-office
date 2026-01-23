@@ -271,4 +271,49 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
     return accessRepository.findByResponsibilityCentre(rc);
   }
+
+  @Override
+  public ResponsibilityCentreDTO cloneResponsibilityCentre(Long sourceRcId, String username, String newName) {
+    Optional<User> userOpt = userRepository.findByUsername(username);
+    if (userOpt.isEmpty()) {
+      throw new IllegalArgumentException("User not found: " + username);
+    }
+
+    User user = userOpt.get();
+
+    Optional<ResponsibilityCentre> sourceRcOpt = rcRepository.findById(sourceRcId);
+    if (sourceRcOpt.isEmpty()) {
+      throw new IllegalArgumentException("Source responsibility centre not found: " + sourceRcId);
+    }
+
+    ResponsibilityCentre sourceRc = sourceRcOpt.get();
+
+    // Check if user has access to the source RC
+    boolean hasAccess = sourceRc.getOwner().getId().equals(user.getId());
+    if (!hasAccess) {
+      Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(sourceRc, user);
+      hasAccess = accessOpt.isPresent();
+    }
+
+    if (!hasAccess) {
+      throw new IllegalAccessError("User does not have access to clone this RC");
+    }
+
+    // Check if name already exists for this user
+    if (rcRepository.existsByNameAndOwner(newName, user)) {
+      throw new IllegalArgumentException(
+          "A Responsibility Centre with this name already exists for this user");
+    }
+
+    // Create the cloned RC
+    ResponsibilityCentre clonedRc = new ResponsibilityCentre(
+        newName,
+        sourceRc.getDescription(),
+        user
+    );
+
+    ResponsibilityCentre saved = rcRepository.save(clonedRc);
+
+    return ResponsibilityCentreDTO.fromEntity(saved, username, "READ_WRITE");
+  }
 }

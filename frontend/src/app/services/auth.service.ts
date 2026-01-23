@@ -32,10 +32,28 @@ export class AuthService {
    * @param http Angular HTTP client
    */
   constructor(private http: HttpClient) {
-    // Start with no user - don't trust localStorage on initial load
-    // The user must login or have a valid session restored
+    // Start with no user - will check for active session
     this.currentUserSubject = new BehaviorSubject<User | null>(null);
     this.currentUser$ = this.currentUserSubject.asObservable();
+    
+    // Check if there's an active session on initialization
+    this.checkSession();
+  }
+
+  /**
+   * Check if there's an active session and restore user.
+   */
+  private checkSession(): void {
+    this.http.get<User>(`${this.API_URL}/users/me`, { withCredentials: true })
+      .subscribe({
+        next: (user) => {
+          this.setCurrentUser(user);
+        },
+        error: () => {
+          // No active session, user needs to login
+          this.currentUserSubject.next(null);
+        }
+      });
   }
 
   /**

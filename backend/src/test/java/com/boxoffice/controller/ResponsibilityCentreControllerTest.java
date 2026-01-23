@@ -237,5 +237,82 @@ public class ResponsibilityCentreControllerTest {
     
     assertFalse(result.isPresent());
   }
+
+  @Test
+  @DisplayName("Should handle clone responsibility centre request")
+  void testCloneResponsibilityCentreCallsService() {
+    // Arrange
+    ResponsibilityCentreDTO clonedRC = new ResponsibilityCentreDTO();
+    clonedRC.setId(3L);
+    clonedRC.setName("Cloned Theatre");
+    clonedRC.setDescription("Main theatre responsibility centre");
+    clonedRC.setOwnerUsername("testuser");
+    clonedRC.setAccessLevel("READ_WRITE");
+    clonedRC.setCreatedAt(LocalDateTime.now());
+    clonedRC.setActive(true);
+
+    when(rcService.cloneResponsibilityCentre(
+        eq(1L),
+        eq("testuser"),
+        eq("Cloned Theatre")
+    )).thenReturn(clonedRC);
+
+    // Act
+    ResponsibilityCentreDTO result = rcService.cloneResponsibilityCentre(1L, "testuser", "Cloned Theatre");
+
+    // Assert
+    assertNotNull(result);
+    assertEquals("Cloned Theatre", result.getName());
+    assertEquals(3L, result.getId());
+    verify(rcService, times(1)).cloneResponsibilityCentre(1L, "testuser", "Cloned Theatre");
+  }
+
+  @Test
+  @DisplayName("Should handle clone with duplicate name")
+  void testCloneResponsibilityCentreDuplicateName() {
+    // Arrange
+    when(rcService.cloneResponsibilityCentre(
+        eq(1L),
+        eq("testuser"),
+        eq("Main Theatre")
+    )).thenThrow(new IllegalArgumentException("A Responsibility Centre with this name already exists for this user"));
+
+    // Act & Assert
+    assertThrows(IllegalArgumentException.class, () ->
+        rcService.cloneResponsibilityCentre(1L, "testuser", "Main Theatre")
+    );
+  }
+
+  @Test
+  @DisplayName("Should handle clone with no access")
+  void testCloneResponsibilityCentreNoAccess() {
+    // Arrange
+    when(rcService.cloneResponsibilityCentre(
+        eq(1L),
+        eq("noaccessuser"),
+        eq("Cloned Theatre")
+    )).thenThrow(new IllegalAccessError("User does not have access to clone this RC"));
+
+    // Act & Assert
+    assertThrows(IllegalAccessError.class, () ->
+        rcService.cloneResponsibilityCentre(1L, "noaccessuser", "Cloned Theatre")
+    );
+  }
+
+  @Test
+  @DisplayName("Should handle clone with source not found")
+  void testCloneResponsibilityCentreSourceNotFound() {
+    // Arrange
+    when(rcService.cloneResponsibilityCentre(
+        eq(999L),
+        eq("testuser"),
+        eq("Cloned Theatre")
+    )).thenThrow(new IllegalArgumentException("Source responsibility centre not found"));
+
+    // Act & Assert
+    assertThrows(IllegalArgumentException.class, () ->
+        rcService.cloneResponsibilityCentre(999L, "testuser", "Cloned Theatre")
+    );
+  }
 }
 

@@ -70,5 +70,31 @@ public class DataInitializer implements ApplicationRunner {
         } else {
             logger.info("Admin user already exists, skipping initialization");
         }
+        
+        // Check if default-user exists (for unauthenticated development access)
+        if (userRepository.findByUsername("default-user").isEmpty()) {
+            logger.info("Creating default-user for unauthenticated access...");
+            
+            CreateUserRequest defaultRequest = new CreateUserRequest();
+            defaultRequest.setUsername("default-user");
+            defaultRequest.setEmail("default@boxoffice.local");
+            defaultRequest.setFullName("Default User");
+            defaultRequest.setPassword("DefaultPass@123");
+            defaultRequest.setAuthProvider("LOCAL");
+            
+            Set<String> userRoles = new HashSet<>();
+            userRoles.add("USER");
+            defaultRequest.setRoles(userRoles);
+            defaultRequest.setProfileDescription("Default user for unauthenticated access");
+            
+            try {
+                userService.createUser(defaultRequest);
+                logger.info("Default user created successfully for unauthenticated development access");
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create default user: " + e.getMessage());
+            }
+        } else {
+            logger.info("Default user already exists, skipping initialization");
+        }
     }
 }

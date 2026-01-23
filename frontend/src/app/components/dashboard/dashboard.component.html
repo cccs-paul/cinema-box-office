@@ -8,7 +8,15 @@
   <header class="dashboard-header">
     <div class="header-content">
       <div class="header-title">
+        <button class="btn-back" (click)="navigateToRCSelection()" title="Back to RC Selection">
+          ← Change RC/FY
+        </button>
         <h1>{{ title }}</h1>
+      </div>
+      <div class="context-info" *ngIf="selectedRC && selectedFY">
+        <span class="context-rc">{{ selectedRC.name }}</span>
+        <span class="context-separator">›</span>
+        <span class="context-fy">{{ selectedFY.name }}</span>
       </div>
       <nav class="header-nav">
         <div class="user-menu-container">
@@ -26,17 +34,9 @@
             </div>
             <div class="menu-divider"></div>
             <div class="menu-items">
-              <button (click)="toggleProfileCard()" class="menu-item">
-                <span class="menu-icon">👤</span>
-                <span>View Profile</span>
-              </button>
               <button (click)="toggleTheme()" class="menu-item">
                 <span class="menu-icon">{{ getThemeIcon() }}</span>
                 <span>{{ currentTheme === 'light' ? 'Dark' : 'Light' }} Theme</span>
-              </button>
-              <button (click)="goToDeveloperTools()" class="menu-item">
-                <span class="menu-icon">🛠️</span>
-                <span>Developer Tools</span>
               </button>
               <div class="menu-divider"></div>
               <button (click)="logout()" class="menu-item logout-item" [disabled]="isLoggingOut">
@@ -53,203 +53,131 @@
 
   <!-- Main Content -->
   <main class="dashboard-main">
-    <!-- User Profile Card - Toggleable -->
-    <div *ngIf="isProfileCardVisible" class="profile-card-container">
-      <section class="card user-profile-card">
-        <div class="card-header">
-          <div class="profile-card-header-content">
-            <h2>👤 User Profile</h2>
-            <button (click)="toggleProfileCard()" class="btn-close-profile" title="Close profile">✕</button>
-          </div>
-        </div>
-        <div class="card-body" *ngIf="currentUser">
-          <div class="profile-section">
-            <div class="profile-field">
-              <label>Username</label>
-              <span class="profile-value">{{ currentUser.username }}</span>
-            </div>
-            <div class="profile-field">
-              <label>Full Name</label>
-              <span class="profile-value">{{ currentUser.fullName || 'N/A' }}</span>
-            </div>
-            <div class="profile-field">
-              <label>Email</label>
-              <span class="profile-value">{{ currentUser.email }}</span>
-            </div>
-          </div>
-
-          <div class="profile-section">
-            <div class="profile-field">
-              <label>Auth Provider</label>
-              <span class="profile-value">
-                <span class="badge" [class]="'badge-' + currentUser.authProvider.toLowerCase()">
-                  {{ currentUser.authProvider }}
-                </span>
-              </span>
-            </div>
-            <div class="profile-field">
-              <label>Roles</label>
-              <span class="profile-value">
-                <span *ngFor="let role of currentUser.roles; let last = last" class="badge badge-role">
-                  {{ role }}<span *ngIf="!last">, </span>
-                </span>
-              </span>
-            </div>
-            <div class="profile-field">
-              <label>Account Status</label>
-              <span class="profile-value">
-                <span *ngIf="currentUser.enabled" class="status-badge status-active">✓ Active</span>
-                <span *ngIf="!currentUser.enabled" class="status-badge status-inactive">✗ Inactive</span>
-              </span>
-            </div>
-          </div>
-
-          <div class="profile-section">
-            <div class="profile-field">
-              <label>Email Verified</label>
-              <span class="profile-value">
-                <span *ngIf="currentUser.emailVerified" class="status-badge status-verified">✓ Yes</span>
-                <span *ngIf="!currentUser.emailVerified" class="status-badge status-unverified">✗ No</span>
-              </span>
-            </div>
-            <div class="profile-field">
-              <label>Account Locked</label>
-              <span class="profile-value">
-                <span *ngIf="currentUser.accountLocked" class="status-badge status-locked">🔒 Locked</span>
-                <span *ngIf="!currentUser.accountLocked" class="status-badge status-unlocked">🔓 Unlocked</span>
-              </span>
-            </div>
-          </div>
-
-          <div class="profile-section timestamps">
-            <div class="profile-field">
-              <label>Last Login</label>
-              <span class="profile-value small">{{ formatDate(currentUser.lastLoginAt) }}</span>
-            </div>
-            <div class="profile-field">
-              <label>Account Created</label>
-              <span class="profile-value small">{{ formatDate(currentUser.createdAt) }}</span>
-            </div>
-            <div class="profile-field">
-              <label>Last Updated</label>
-              <span class="profile-value small">{{ formatDate(currentUser.updatedAt) }}</span>
-            </div>
-          </div>
-
-          <div *ngIf="currentUser.profileDescription" class="profile-section">
-            <div class="profile-field">
-              <label>Description</label>
-              <p class="profile-description">{{ currentUser.profileDescription }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
+    <!-- Page Header -->
+    <div class="page-header">
+      <h2>Funding Items</h2>
+      <button class="btn btn-primary" (click)="toggleCreateForm()" *ngIf="canWrite && !showCreateForm">
+        + Add Funding Item
+      </button>
     </div>
 
-    <div class="dashboard-grid">
-      <section class="card status-card">
-        <div class="card-header">
-          <h2>🔧 System Status</h2>
+    <!-- Create Form -->
+    <div class="create-form" *ngIf="showCreateForm">
+      <div class="form-container">
+        <h3>Create New Funding Item</h3>
+        <div class="form-group">
+          <label for="itemName">Name *</label>
+          <input
+            id="itemName"
+            type="text"
+            [(ngModel)]="newItemName"
+            placeholder="Enter funding item name"
+            [disabled]="isCreating"
+          />
         </div>
-        <div class="card-body">
-          <div class="status-section">
-            <div class="status-item">
-              <label>REST API</label>
-              <div [class.healthy]="isApiHealthy" [class.unhealthy]="!isApiHealthy" class="status-indicator">
-                <span class="status-dot"></span>
-                <span class="status-text">{{ apiStatus }}</span>
-              </div>
-            </div>
-            <div class="status-item">
-              <label>Database</label>
-              <div [class.healthy]="isDatabaseHealthy" [class.unhealthy]="!isDatabaseHealthy" class="status-indicator">
-                <span class="status-dot"></span>
-                <span class="status-text">{{ databaseStatus }}</span>
-              </div>
-            </div>
+        <div class="form-group">
+          <label for="itemDescription">Description</label>
+          <textarea
+            id="itemDescription"
+            [(ngModel)]="newItemDescription"
+            placeholder="Enter description (optional)"
+            [disabled]="isCreating"
+            rows="3"
+          ></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="itemBudget">Budget Amount</label>
+            <input
+              id="itemBudget"
+              type="number"
+              [(ngModel)]="newItemBudget"
+              placeholder="0.00"
+              [disabled]="isCreating"
+              step="0.01"
+              min="0"
+            />
+          </div>
+          <div class="form-group">
+            <label for="itemStatus">Status</label>
+            <select id="itemStatus" [(ngModel)]="newItemStatus" [disabled]="isCreating">
+              <option *ngFor="let status of statusOptions" [value]="status">
+                {{ getStatusLabel(status) }}
+              </option>
+            </select>
           </div>
         </div>
-      </section>
+        <div class="form-actions">
+          <button class="btn btn-primary" (click)="createFundingItem()" [disabled]="isCreating || !newItemName.trim()">
+            {{ isCreating ? 'Creating...' : 'Create' }}
+          </button>
+          <button class="btn btn-secondary" (click)="toggleCreateForm()" [disabled]="isCreating">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
 
-      <!-- Developer Tools Card -->
-      <section class="card tools-card">
-        <div class="card-header">
-          <h2>🛠️ Developer Tools</h2>
-        </div>
-        <div class="card-body">
-          <div class="tools-grid">
-            <a href="http://localhost:8080/api/swagger-ui.html" target="_blank" class="tool-link">
-              <span class="tool-icon">📚</span>
-              <span class="tool-name">API Swagger</span>
-              <span class="tool-desc">Interactive API documentation</span>
-            </a>
-            <a href="http://localhost:5050" target="_blank" class="tool-link">
-              <span class="tool-icon">🗄️</span>
-              <span class="tool-name">Database Console</span>
-              <span class="tool-desc">PostgreSQL management</span>
-            </a>
-            <a href="http://localhost:8080/api/health" target="_blank" class="tool-link">
-              <span class="tool-icon">❤️</span>
-              <span class="tool-name">API Health</span>
-              <span class="tool-desc">API health check endpoint</span>
-            </a>
-            <a href="http://localhost:8080/api/health/db" target="_blank" class="tool-link">
-              <span class="tool-icon">📊</span>
-              <span class="tool-name">DB Health</span>
-              <span class="tool-desc">Database health check endpoint</span>
-            </a>
-          </div>
-        </div>
-      </section>
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="errorMessage" (click)="clearError()">
+      <span class="icon">⚠️</span>
+      {{ errorMessage }}
+      <span class="dismiss">✕</span>
+    </div>
 
-      <!-- Quick Info Card -->
-      <section class="card info-card">
-        <div class="card-header">
-          <h2>ℹ️ Quick Info</h2>
-        </div>
-        <div class="card-body">
-          <div class="info-item">
-            <p>
-              <strong>Application:</strong> Cinema Box Office Management System
-            </p>
-          </div>
-          <div class="info-item">
-            <p>
-              <strong>Version:</strong> 1.0.0
-            </p>
-          </div>
-          <div class="info-item">
-            <p>
-              <strong>Authentication:</strong> LOCAL (App-managed), LDAP, OAuth2
-            </p>
-          </div>
-          <div class="info-item">
-            <p>
-              <strong>Frontend:</strong> Angular 17
-            </p>
-          </div>
-          <div class="info-item">
-            <p>
-              <strong>Backend:</strong> Spring Boot 3.2.0 (Java 21)
-            </p>
-          </div>
-          <div class="info-item">
-            <p>
-              <strong>Database:</strong> PostgreSQL 16
-            </p>
-          </div>
-          <div class="info-item">
-            <p>
-              <strong>License:</strong> MIT
-            </p>
-          </div>
-        </div>
-      </section>
+    <!-- Success Message -->
+    <div class="success-message" *ngIf="successMessage" (click)="clearSuccess()">
+      <span class="icon">✓</span>
+      {{ successMessage }}
+      <span class="dismiss">✕</span>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoadingItems">
+      <div class="spinner"></div>
+      <p>Loading funding items...</p>
+    </div>
+
+    <!-- Funding Items List -->
+    <div class="items-list" *ngIf="!isLoadingItems && fundingItems.length > 0">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Budget</th>
+            <th>Status</th>
+            <th *ngIf="canWrite">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of sortedFundingItems">
+            <td class="item-name">{{ item.name }}</td>
+            <td class="item-description">{{ item.description || '-' }}</td>
+            <td class="item-budget">{{ formatCurrency(item.budgetAmount) }}</td>
+            <td class="item-status">
+              <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+                {{ getStatusLabel(item.status) }}
+              </span>
+            </td>
+            <td class="item-actions" *ngIf="canWrite">
+              <button class="btn btn-icon btn-delete" (click)="deleteFundingItem(item)" title="Delete">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoadingItems && fundingItems.length === 0 && !showCreateForm">
+      <div class="empty-icon">📋</div>
+      <h3>No Funding Items</h3>
+      <p>This fiscal year has no funding items yet.</p>
+      <button class="btn btn-primary" (click)="toggleCreateForm()" *ngIf="canWrite">
+        Create First Funding Item
+      </button>
     </div>
   </main>
-
-  <!-- Footer -->
-  <footer class="dashboard-footer">
-    <p>&copy; 2026 Cinema Box Office. All rights reserved.</p>
-  </footer>
 </div>

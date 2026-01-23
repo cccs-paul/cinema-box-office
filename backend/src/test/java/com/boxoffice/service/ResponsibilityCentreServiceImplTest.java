@@ -170,4 +170,95 @@ class ResponsibilityCentreServiceImplTest {
     assertTrue(result);
     verify(accessRepository).deleteByResponsibilityCentreAndUser(testRC, grantedToUser);
   }
+
+  @Test
+  void testCloneResponsibilityCentre() {
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+    when(rcRepository.existsByNameAndOwner("Cloned RC", testUser)).thenReturn(false);
+    
+    ResponsibilityCentre clonedRC = new ResponsibilityCentre();
+    clonedRC.setId(2L);
+    clonedRC.setName("Cloned RC");
+    clonedRC.setDescription("Test description");
+    clonedRC.setOwner(testUser);
+    
+    when(rcRepository.save(any(ResponsibilityCentre.class))).thenReturn(clonedRC);
+
+    ResponsibilityCentreDTO result = service.cloneResponsibilityCentre(1L, "testuser", "Cloned RC");
+
+    assertNotNull(result);
+    assertEquals("Cloned RC", result.getName());
+    assertEquals("testuser", result.getOwnerUsername());
+    assertTrue(result.isOwner());
+    verify(rcRepository).save(any(ResponsibilityCentre.class));
+  }
+
+  @Test
+  void testCloneResponsibilityCentreUserNotFound() {
+    when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
+
+    assertThrows(IllegalArgumentException.class,
+        () -> service.cloneResponsibilityCentre(1L, "nonexistent", "Cloned RC"));
+  }
+
+  @Test
+  void testCloneResponsibilityCentreSourceNotFound() {
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(999L)).thenReturn(Optional.empty());
+
+    assertThrows(IllegalArgumentException.class,
+        () -> service.cloneResponsibilityCentre(999L, "testuser", "Cloned RC"));
+  }
+
+  @Test
+  void testCloneResponsibilityCentreDuplicateName() {
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+    when(rcRepository.existsByNameAndOwner("Cloned RC", testUser)).thenReturn(true);
+
+    assertThrows(IllegalArgumentException.class,
+        () -> service.cloneResponsibilityCentre(1L, "testuser", "Cloned RC"));
+  }
+
+  @Test
+  void testCloneResponsibilityCentreWithAccessUser() {
+    User accessUser = new User();
+    accessUser.setId(2L);
+    accessUser.setUsername("accessuser");
+
+    RCAccess access = new RCAccess(testRC, accessUser, RCAccess.AccessLevel.READ_ONLY);
+
+    when(userRepository.findByUsername("accessuser")).thenReturn(Optional.of(accessUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+    when(accessRepository.findByResponsibilityCentreAndUser(testRC, accessUser)).thenReturn(Optional.of(access));
+    when(rcRepository.existsByNameAndOwner("Cloned RC", accessUser)).thenReturn(false);
+
+    ResponsibilityCentre clonedRC = new ResponsibilityCentre();
+    clonedRC.setId(3L);
+    clonedRC.setName("Cloned RC");
+    clonedRC.setDescription("Test description");
+    clonedRC.setOwner(accessUser);
+
+    when(rcRepository.save(any(ResponsibilityCentre.class))).thenReturn(clonedRC);
+
+    ResponsibilityCentreDTO result = service.cloneResponsibilityCentre(1L, "accessuser", "Cloned RC");
+
+    assertNotNull(result);
+    assertEquals("Cloned RC", result.getName());
+  }
+
+  @Test
+  void testCloneResponsibilityCentreNoAccess() {
+    User noAccessUser = new User();
+    noAccessUser.setId(3L);
+    noAccessUser.setUsername("noaccessuser");
+
+    when(userRepository.findByUsername("noaccessuser")).thenReturn(Optional.of(noAccessUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+    when(accessRepository.findByResponsibilityCentreAndUser(testRC, noAccessUser)).thenReturn(Optional.empty());
+
+    assertThrows(IllegalAccessError.class,
+        () -> service.cloneResponsibilityCentre(1L, "noaccessuser", "Cloned RC"));
+  }
 }

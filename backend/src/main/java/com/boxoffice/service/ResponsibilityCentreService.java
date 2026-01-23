@@ -99,4 +99,15 @@ public interface ResponsibilityCentreService {
    * @return list of access records for the responsibility centre
    */
   List<RCAccess> getResponsibilityCentreAccess(Long rcId, String ownerUsername);
+
+  /**
+   * Clone a responsibility centre with a new name.
+   * Creates a new RC owned by the requesting user with the same structure but no fiscal years.
+   *
+   * @param sourceRcId the ID of the responsibility centre to clone
+   * @param username the username of the user creating the clone
+   * @param newName the name for the cloned responsibility centre
+   * @return the cloned responsibility centre DTO
+   */
+  ResponsibilityCentreDTO cloneResponsibilityCentre(Long sourceRcId, String username, String newName);
 }

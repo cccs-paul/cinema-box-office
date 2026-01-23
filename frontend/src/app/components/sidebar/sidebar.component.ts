@@ -25,7 +25,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 export class SidebarComponent implements OnInit {
   menuItems = [
     {
-      label: 'Responsibility Centres',
+      label: 'RC Selection',
       icon: '📋',
       route: '/rc-selection',
       badge: null,
@@ -33,13 +33,13 @@ export class SidebarComponent implements OnInit {
     {
       label: 'Dashboard',
       icon: '📊',
-      route: '/dashboard',
+      route: '/app/dashboard',
       badge: null,
     },
     {
       label: 'Developer Tools',
       icon: '🛠️',
-      route: '/developer-tools',
+      route: '/app/developer-tools',
       badge: null,
     },
   ];

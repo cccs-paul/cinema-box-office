@@ -57,6 +57,7 @@ public class AuthenticationConfig {
      * Used when OAuth2 and LDAP are not enabled.
      *
      * @param http HttpSecurity to configure
+     * @param securityContextRepository the repository for restoring security context from session
      * @return configured SecurityFilterChain
      * @throws Exception if configuration fails
      */
@@ -66,10 +67,17 @@ public class AuthenticationConfig {
         havingValue = "false",
         matchIfMissing = true
     )
-    public SecurityFilterChain basicSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain basicSecurityFilterChain(
+            HttpSecurity http,
+            HttpSessionSecurityContextRepository securityContextRepository) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session -> session.sessionFixation().migrateSession())
+            .securityContext(context -> context
+                .securityContextRepository(securityContextRepository)
+                .requireExplicitSave(true))
+            .sessionManagement(session -> session
+                .sessionFixation().migrateSession()
+                .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/health", "/actuator/**").permitAll()
                 .requestMatchers("/users/authenticate", "/users/authenticate/ldap").permitAll()

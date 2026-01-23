@@ -13,11 +13,16 @@ import { ResponsibilityCentreDTO } from '../models/responsibility-centre.model';
   providedIn: 'root'
 })
 export class ResponsibilityCentreService {
-  private apiUrl = 'http://localhost:8080/api/responsibility-centres';
+  private apiUrl = '/api/responsibility-centres';
   private selectedRCSubject = new BehaviorSubject<number | null>(
     this.getStoredSelectedRC()
   );
   public selectedRC$ = this.selectedRCSubject.asObservable();
+
+  private selectedFYSubject = new BehaviorSubject<number | null>(
+    this.getStoredSelectedFY()
+  );
+  public selectedFY$ = this.selectedFYSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -54,6 +59,12 @@ export class ResponsibilityCentreService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, { withCredentials: true });
   }
 
+  cloneResponsibilityCentre(id: number, newName: string): Observable<ResponsibilityCentreDTO> {
+    return this.http.post<ResponsibilityCentreDTO>(`${this.apiUrl}/${id}/clone`, {
+      newName
+    }, { withCredentials: true });
+  }
+
   grantAccess(
     rcId: number,
     username: string,
@@ -84,8 +95,29 @@ export class ResponsibilityCentreService {
     return this.selectedRCSubject.value;
   }
 
+  setSelectedFY(fyId: number): void {
+    localStorage.setItem('selectedFY', fyId.toString());
+    this.selectedFYSubject.next(fyId);
+  }
+
+  getSelectedFY(): number | null {
+    return this.selectedFYSubject.value;
+  }
+
+  clearSelection(): void {
+    localStorage.removeItem('selectedRC');
+    localStorage.removeItem('selectedFY');
+    this.selectedRCSubject.next(null);
+    this.selectedFYSubject.next(null);
+  }
+
   private getStoredSelectedRC(): number | null {
     const stored = localStorage.getItem('selectedRC');
+    return stored ? parseInt(stored, 10) : null;
+  }
+
+  private getStoredSelectedFY(): number | null {
+    const stored = localStorage.getItem('selectedFY');
     return stored ? parseInt(stored, 10) : null;
   }
 }
