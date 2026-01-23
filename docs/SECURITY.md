@@ -42,7 +42,7 @@ This guide covers security best practices for deploying and running myRC in prod
 
 ```yaml
 # Use SSL for database connections
-SPRING_DATASOURCE_URL: "jdbc:postgresql://prod-db.rds.amazonaws.com:5432/boxoffice?sslmode=require"
+SPRING_DATASOURCE_URL: "jdbc:postgresql://prod-db.rds.amazonaws.com:5432/myrc?sslmode=require"
 ```
 
 ### Access Control
@@ -58,7 +58,7 @@ SPRING_DATASOURCE_URL: "jdbc:postgresql://prod-db.rds.amazonaws.com:5432/boxoffi
 ```bash
 # Enable encryption at rest
 # For AWS RDS
-aws rds modify-db-instance --db-instance-identifier boxoffice-db --storage-encrypted
+aws rds modify-db-instance --db-instance-identifier myrc-db --storage-encrypted
 
 # Enable encryption in transit
 SPRING_DATASOURCE_URL: "jdbc:postgresql://...?sslmode=require"
@@ -82,7 +82,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-ingress
-  namespace: cinema-box-office
+  namespace: myrc
 spec:
   podSelector: {}
   policyTypes:
@@ -93,7 +93,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-frontend-to-backend
-  namespace: cinema-box-office
+  namespace: myrc
 spec:
   podSelector:
     matchLabels:
@@ -132,12 +132,12 @@ SERVER_SSL_PROTOCOL: "TLSv1.2"
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: cinema-box-office-ingress
+  name: myrc-ingress
 spec:
   tls:
   - hosts:
-    - cinema-box-office.example.com
-    secretName: cinema-box-office-tls
+    - myrc.example.com
+    secretName: myrc-tls
 ```
 
 ## Container Security
@@ -146,7 +146,7 @@ spec:
 
 ```dockerfile
 # Don't run as root
-USER cinema-box-office
+USER myrc
 
 # Use read-only root filesystem where possible
 RUN chmod a-w /
@@ -155,7 +155,7 @@ RUN chmod a-w /
 # Use multi-stage builds
 
 # Scan images for vulnerabilities
-# docker scan cinema-box-office-api:latest
+# docker scan myrc-api:latest
 ```
 
 ### Pod Security
@@ -191,8 +191,8 @@ securityContext:
 kubectl apply -f k8s/secrets.yaml
 
 # Rotate secrets regularly
-kubectl delete secret cinema-box-office-oauth2-secret
-kubectl create secret generic cinema-box-office-oauth2-secret \
+kubectl delete secret myrc-oauth2-secret
+kubectl create secret generic myrc-oauth2-secret \
   --from-literal=client-secret="new-secret"
 
 # Audit secret access
@@ -218,14 +218,14 @@ helm install vault hashicorp/vault -n vault --create-namespace
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: cinema-box-office
-  namespace: cinema-box-office
+  name: myrc
+  namespace: myrc
 rules:
 # Minimal permissions required
 - apiGroups: [""]
   resources: ["secrets", "configmaps"]
   verbs: ["get"]
-  resourceNames: ["cinema-box-office-config"]
+  resourceNames: ["myrc-config"]
 ```
 
 ### User Access Control
@@ -281,7 +281,7 @@ response.setHeader("Content-Security-Policy", "default-src 'self'");
 SPRING_SECURITY_CSRF_ENABLED: "true"
 
 # CORS configuration
-CORS_ALLOWED_ORIGINS: "https://cinema-box-office.example.com"
+CORS_ALLOWED_ORIGINS: "https://myrc.example.com"
 CORS_ALLOWED_CREDENTIALS: "true"
 ```
 

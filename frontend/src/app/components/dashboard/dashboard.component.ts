@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Dashboard Component
- * Copyright (c) 2026 Box Office Team
+ * myRC - Dashboard Component
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { Component, OnInit, OnDestroy } from '@angular/core';
@@ -21,7 +21,7 @@ import { FundingItem, FundingItemCreateRequest, getStatusLabel, getStatusClass, 
 /**
  * Dashboard component showing funding items for the selected RC and FY.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 2.0.0
  * @since 2026-01-17
  */

@@ -11,7 +11,7 @@ Added PostgreSQL database status check to the frontend, similar to the existing 
 
 ### 1. Backend API - Health Controller Enhancement
 
-**File**: [backend/src/main/java/com/boxoffice/controller/HealthController.java](backend/src/main/java/com/boxoffice/controller/HealthController.java)
+**File**: [backend/src/main/java/com/myrc/controller/HealthController.java](backend/src/main/java/com/myrc/controller/HealthController.java)
 
 **New Endpoint**: `GET /api/health/db`
 
@@ -130,7 +130,7 @@ isDatabaseHealthy = false;
 open http://localhost:4200
 
 # 3. Verify both status indicators show:
-#    - API Status: "Box Office API is running" (green)
+#    - API Status: "myRC API is running" (green)
 #    - Database Status: "Database connection is UP" (green)
 
 # 4. Test API endpoint directly
@@ -138,7 +138,7 @@ curl http://localhost:8080/api/health
 curl http://localhost:8080/api/health/db
 
 # 5. Expected responses
-# API:      {"status":"UP","message":"Box Office API is running"}
+# API:      {"status":"UP","message":"myRC API is running"}
 # Database: {"status":"UP","message":"Database connection is UP"}
 ```
 
@@ -149,7 +149,7 @@ curl http://localhost:8080/api/health/db
 docker-compose -f docker-compose.dev.yml down postgres
 
 # Frontend will now show:
-# - API Status: "Box Office API is running" (green)
+# - API Status: "myRC API is running" (green)
 # - Database Status: "Database is not available" (red)
 ```
 
@@ -175,8 +175,8 @@ docker-compose -f docker-compose.dev.yml down postgres
 
 | File | Changes | Status |
 |------|---------|--------|
-| [backend/src/main/java/com/boxoffice/controller/HealthController.java](backend/src/main/java/com/boxoffice/controller/HealthController.java) | Added `databaseHealth()` endpoint | ✅ |
-| [backend/src/test/java/com/boxoffice/controller/HealthControllerTest.java](backend/src/test/java/com/boxoffice/controller/HealthControllerTest.java) | Added database health test case | ✅ |
+| [backend/src/main/java/com/myrc/controller/HealthController.java](backend/src/main/java/com/myrc/controller/HealthController.java) | Added `databaseHealth()` endpoint | ✅ |
+| [backend/src/test/java/com/myrc/controller/HealthControllerTest.java](backend/src/test/java/com/myrc/controller/HealthControllerTest.java) | Added database health test case | ✅ |
 | [frontend/src/app/app.component.ts](frontend/src/app/app.component.ts) | Added database health check logic | ✅ |
 | [frontend/src/app/app.component.html](frontend/src/app/app.component.html) | Added database status section | ✅ |
 | [frontend/src/app/app.component.scss](frontend/src/app/app.component.scss) | Added database status styling | ✅ |
@@ -225,14 +225,14 @@ springdoc:
 - Added pgAdmin 4 service for database management
 - Port: 5050
 - Default credentials:
-  - Email: `admin@boxoffice.local`
+  - Email: `admin@myrc.local`
   - Password: `admin_password`
 - Database connection configured automatically
 
 ### Frontend Tools Section Layout
 
 ```
-Header (Cinema Box Office)
+Header (myRC)
 API Status Section
 Database Status Section
 Developer Tools Section [NEW]
@@ -292,7 +292,7 @@ Content Section
 - API Swagger:       http://localhost:4200 → Click "API Swagger" link
                      or directly: http://localhost:8080/api/swagger-ui.html
 - Database Console:  http://localhost:5050
-  - Email: admin@boxoffice.local
+  - Email: admin@myrc.local
   - Password: admin_password
 ```
 
@@ -304,9 +304,9 @@ After logging into pgAdmin:
 2. **Connection Details**:
    - Host name/address: `postgres` (or `localhost` if using localhost)
    - Port: `5432`
-   - Maintenance database: `boxoffice`
-   - Username: `boxoffice`
-   - Password: `boxoffice_password`
+   - Maintenance database: `myrc`
+   - Username: `myrc`
+   - Password: `myrc_password`
 
 ### Files Modified/Created
 
@@ -372,7 +372,7 @@ The PostgreSQL database status check is fully integrated into the myRC applicati
 4. **Testing** - Unit tests added for database health endpoint
 5. **Documentation** - Updated POSTGRES_STATUS_CHECK.md with implementation details
 
-All requirements from the BoxOffice Instructions have been met:
+All requirements from the MyRC Instructions have been met:
 - ✅ Code compiles without errors
 - ✅ No warnings present
 - ✅ All tests pass

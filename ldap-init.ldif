@@ -1,20 +1,20 @@
-# LDAP initialization file for Cinema Box Office
+# LDAP initialization file for myRC
 # This file is loaded by OpenLDAP on first startup
 # Add organizational units
 
-dn: ou=users,dc=cinema,dc=local
+dn: ou=users,dc=myrc,dc=local
 objectClass: organizationalUnit
 ou: users
-description: Cinema Box Office Users
+description: myRC Users
 
-dn: ou=groups,dc=cinema,dc=local
+dn: ou=groups,dc=myrc,dc=local
 objectClass: organizationalUnit
 ou: groups
-description: Cinema Box Office Groups
+description: myRC Groups
 
 # Add test users
 
-dn: uid=testuser,ou=users,dc=cinema,dc=local
+dn: uid=testuser,ou=users,dc=myrc,dc=local
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
 objectClass: person
@@ -23,12 +23,12 @@ uid: testuser
 cn: Test User
 sn: User
 givenName: Test
-mail: testuser@cinema.local
+mail: testuser@myrc.local
 userPassword: testpassword123
 telephoneNumber: +1-555-0001
 title: Test User
 
-dn: uid=adminuser,ou=users,dc=cinema,dc=local
+dn: uid=adminuser,ou=users,dc=myrc,dc=local
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
 objectClass: person
@@ -37,12 +37,12 @@ uid: adminuser
 cn: Admin User
 sn: User
 givenName: Admin
-mail: admin@cinema.local
+mail: admin@myrc.local
 userPassword: adminpassword123
 telephoneNumber: +1-555-0002
 title: Administrator
 
-dn: uid=movieuser,ou=users,dc=cinema,dc=local
+dn: uid=movieuser,ou=users,dc=myrc,dc=local
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
 objectClass: person
@@ -51,12 +51,12 @@ uid: movieuser
 cn: Movie Manager
 sn: Manager
 givenName: Movie
-mail: moviemanager@cinema.local
+mail: moviemanager@myrc.local
 userPassword: moviepassword123
 telephoneNumber: +1-555-0003
 title: Movie Manager
 
-dn: uid=ticketuser,ou=users,dc=cinema,dc=local
+dn: uid=ticketuser,ou=users,dc=myrc,dc=local
 objectClass: inetOrgPerson
 objectClass: organizationalPerson
 objectClass: person
@@ -65,38 +65,38 @@ uid: ticketuser
 cn: Ticket Seller
 sn: Seller
 givenName: Ticket
-mail: ticketseller@cinema.local
+mail: ticketseller@myrc.local
 userPassword: ticketpassword123
 telephoneNumber: +1-555-0004
 title: Ticket Seller
 
 # Add groups
 
-dn: cn=users,ou=groups,dc=cinema,dc=local
+dn: cn=users,ou=groups,dc=myrc,dc=local
 objectClass: groupOfNames
 cn: users
-member: uid=testuser,ou=users,dc=cinema,dc=local
-member: uid=adminuser,ou=users,dc=cinema,dc=local
-member: uid=movieuser,ou=users,dc=cinema,dc=local
-member: uid=ticketuser,ou=users,dc=cinema,dc=local
+member: uid=testuser,ou=users,dc=myrc,dc=local
+member: uid=adminuser,ou=users,dc=myrc,dc=local
+member: uid=movieuser,ou=users,dc=myrc,dc=local
+member: uid=ticketuser,ou=users,dc=myrc,dc=local
 description: Regular users group
 
-dn: cn=admins,ou=groups,dc=cinema,dc=local
+dn: cn=admins,ou=groups,dc=myrc,dc=local
 objectClass: groupOfNames
 cn: admins
-member: uid=adminuser,ou=users,dc=cinema,dc=local
+member: uid=adminuser,ou=users,dc=myrc,dc=local
 description: Administrator group
 
-dn: cn=managers,ou=groups,dc=cinema,dc=local
+dn: cn=managers,ou=groups,dc=myrc,dc=local
 objectClass: groupOfNames
 cn: managers
-member: uid=adminuser,ou=users,dc=cinema,dc=local
-member: uid=movieuser,ou=users,dc=cinema,dc=local
+member: uid=adminuser,ou=users,dc=myrc,dc=local
+member: uid=movieuser,ou=users,dc=myrc,dc=local
 description: Manager group
 
-dn: cn=staff,ou=groups,dc=cinema,dc=local
+dn: cn=staff,ou=groups,dc=myrc,dc=local
 objectClass: groupOfNames
 cn: staff
-member: uid=movieuser,ou=users,dc=cinema,dc=local
-member: uid=ticketuser,ou=users,dc=cinema,dc=local
+member: uid=movieuser,ou=users,dc=myrc,dc=local
+member: uid=ticketuser,ou=users,dc=myrc,dc=local
 description: Staff group

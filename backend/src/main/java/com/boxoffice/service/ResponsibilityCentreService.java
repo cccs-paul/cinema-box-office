@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Responsibility Centre Service Interface
- * Copyright (c) 2026 Box Office Team
+ * myRC - Responsibility Centre Service Interface
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.service;
@@ -14,7 +14,7 @@ import java.util.Optional;
  * Service interface for managing Responsibility Centres.
  * Defines operations for creating, reading, updating, and managing access to responsibility centres.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

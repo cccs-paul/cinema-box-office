@@ -1,4 +1,4 @@
-# Docker Compose configuration for Cinema Box Office with OAuth2 authentication
+# Docker Compose configuration for myRC with OAuth2 authentication
 # Supports: Google, GitHub, Azure AD, Keycloak
 #
 # Usage:
@@ -15,7 +15,7 @@
 version: '3.9'
 
 networks:
-  cinema-network:
+  myrc-network:
     driver: bridge
 
 volumes:
@@ -28,21 +28,21 @@ services:
   # PostgreSQL database
   postgres:
     image: postgres:16-alpine
-    container_name: cinema-postgres-oauth2
+    container_name: myrc-postgres-oauth2
     hostname: postgres
     environment:
-      POSTGRES_DB: cinema_db
-      POSTGRES_USER: cinema_user
-      POSTGRES_PASSWORD: cinema_password
+      POSTGRES_DB: myrc_db
+      POSTGRES_USER: myrc_user
+      POSTGRES_PASSWORD: myrc_password
       POSTGRES_INITDB_ARGS: "-c max_connections=200"
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - cinema-network
+      - myrc-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cinema_user -d cinema_db"]
+      test: ["CMD-SHELL", "pg_isready -U myrc_user -d myrc_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,13 +52,13 @@ services:
   # Keycloak (Optional OAuth2 provider)
   keycloak:
     image: keycloak/keycloak:23.0.0-alpine
-    container_name: cinema-keycloak
+    container_name: myrc-keycloak
     hostname: keycloak
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/cinema_db
-      KC_DB_USERNAME: cinema_user
-      KC_DB_PASSWORD: cinema_password
+      KC_DB_URL: jdbc:postgresql://postgres:5432/myrc_db
+      KC_DB_USERNAME: myrc_user
+      KC_DB_PASSWORD: myrc_password
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin_password
       KC_PROXY: edge
@@ -66,7 +66,7 @@ services:
     ports:
       - "8180:8080"
     networks:
-      - cinema-network
+      - myrc-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,24 +80,24 @@ services:
     command:
       - "start-dev"
 
-  # Cinema Box Office Backend API with OAuth2
+  # myRC Backend API with OAuth2
   api:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: cinema-api-oauth2
+    container_name: myrc-api-oauth2
     hostname: api
     environment:
       # Application configuration
       SPRING_PROFILES_ACTIVE: dev
-      SPRING_APPLICATION_NAME: cinema-box-office-api
+      SPRING_APPLICATION_NAME: myrc-api
       SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 10MB
       SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 10MB
 
       # Database configuration
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cinema_db
-      SPRING_DATASOURCE_USERNAME: cinema_user
-      SPRING_DATASOURCE_PASSWORD: cinema_password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/myrc_db
+      SPRING_DATASOURCE_USERNAME: myrc_user
+      SPRING_DATASOURCE_PASSWORD: myrc_password
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQL10Dialect
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -120,13 +120,13 @@ services:
       AZURE_REDIRECT_URI: "http://localhost:4200/oauth2/callback/azure"
 
       # OAuth2 Configuration - Keycloak
-      KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/cinema"
-      KEYCLOAK_CLIENT_ID: "cinema-api"
-      KEYCLOAK_CLIENT_SECRET: "${KEYCLOAK_CLIENT_SECRET:-cinema-secret}"
+      KEYCLOAK_ISSUER_URI: "http://keycloak:8080/realms/myrc"
+      KEYCLOAK_CLIENT_ID: "myrc-api"
+      KEYCLOAK_CLIENT_SECRET: "${KEYCLOAK_CLIENT_SECRET:-myrc-secret}"
 
       # Security
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "${KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/cinema}"
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "${KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/cinema}/protocol/openid-connect/certs"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "${KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/myrc}"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: "${KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/myrc}/protocol/openid-connect/certs"
 
       # Logging
       LOGGING_LEVEL_ROOT: INFO
@@ -136,7 +136,7 @@ services:
     ports:
       - "8080:8080"
     networks:
-      - cinema-network
+      - myrc-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -150,12 +150,12 @@ services:
       start_period: 30s
     restart: unless-stopped
 
-  # Cinema Box Office Frontend
+  # myRC Frontend
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: cinema-frontend-oauth2
+    container_name: myrc-frontend-oauth2
     hostname: frontend
     environment:
       NODE_ENV: development
@@ -165,7 +165,7 @@ services:
     ports:
       - "4200:80"
     networks:
-      - cinema-network
+      - myrc-network
     depends_on:
       - api
     healthcheck:
@@ -197,7 +197,7 @@ services:
 #    - Access at http://localhost:8180
 #    - Login with: admin / admin_password
 #    - Create realm: cinema
-#    - Create client: cinema-api
+#    - Create client: myrc-api
 #    - Set "Valid Redirect URIs" to http://localhost:4200/oauth2/callback/*
 #
 # Starting the stack:

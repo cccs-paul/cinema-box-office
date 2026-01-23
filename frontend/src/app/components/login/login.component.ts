@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Login Component
- * Copyright (c) 2026 Box Office Team
+ * myRC - Login Component
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { Component, OnInit } from '@angular/core';
@@ -17,7 +17,7 @@ import { HttpClient } from '@angular/common/http';
  * Displays API and database status.
  * Provides tab-based interface for switching between auth methods.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

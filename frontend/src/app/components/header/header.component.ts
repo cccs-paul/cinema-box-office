@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Global Header Component
- * Copyright (c) 2026 Box Office Team
+ * myRC - Global Header Component
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
@@ -16,7 +16,7 @@ import { ThemeService, Theme } from '../../services/theme.service';
  * Displayed on authenticated pages to provide navigation and user options.
  * Hidden on login page for full-screen login experience.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-18
  */

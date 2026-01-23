@@ -21,13 +21,13 @@ apt-get install -y apache2-utils wrk
 
 ```bash
 # Create isolated test namespace
-kubectl create namespace cinema-box-office-test
+kubectl create namespace myrc-test
 
 # Configure kubectl to use test namespace
-kubectl config set-context --current --namespace=cinema-box-office-test
+kubectl config set-context --current --namespace=myrc-test
 
 # Update k8s/ manifests namespace before applying
-sed -i 's/namespace: cinema-box-office/namespace: cinema-box-office-test/g' k8s/*.yaml
+sed -i 's/namespace: myrc/namespace: myrc-test/g' k8s/*.yaml
 ```
 
 ## Unit Test Validation
@@ -66,13 +66,13 @@ open http://localhost:8080/target/site/jacoco/index.html
 
 ```bash
 # Test database connection from API pod
-./k8s-deploy.sh exec api bash -c "psql -h postgres -U boxoffice -d boxoffice -c 'SELECT version();'"
+./k8s-deploy.sh exec api bash -c "psql -h postgres -U myrc -d myrc -c 'SELECT version();'"
 
 # Check database is initialized
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice -c "\dt"
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc -c "\dt"
 
 # Verify schemas and tables
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice -c "SELECT * FROM information_schema.tables;"
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc -c "SELECT * FROM information_schema.tables;"
 ```
 
 ### API Health Check
@@ -206,7 +206,7 @@ wrk -t8 -c200 -d10s http://localhost:4200/
 ```bash
 # Create test data
 ./k8s-deploy.sh exec postgres bash -c '
-psql -U boxoffice -d boxoffice << SQL
+psql -U myrc -d myrc << SQL
 CREATE TABLE test_load (
     id SERIAL PRIMARY KEY,
     data TEXT,
@@ -219,7 +219,7 @@ SQL
 
 # Run query performance test
 ./k8s-deploy.sh exec postgres bash -c '
-psql -U boxoffice -d boxoffice << SQL
+psql -U myrc -d myrc << SQL
 EXPLAIN ANALYZE SELECT COUNT(*) FROM test_load;
 EXPLAIN ANALYZE SELECT * FROM test_load WHERE id > 50000 LIMIT 100;
 SQL
@@ -233,7 +233,7 @@ SQL
 wrk -t12 -c400 -d3600s http://localhost:8080/api/health
 
 # Monitor resource usage during test
-watch -n 1 "kubectl top pods -n cinema-box-office"
+watch -n 1 "kubectl top pods -n myrc"
 ```
 
 ## Failover and Recovery Testing
@@ -242,13 +242,13 @@ watch -n 1 "kubectl top pods -n cinema-box-office"
 
 ```bash
 # Get a pod name
-POD=$(kubectl get pods -n cinema-box-office -l component=api -o jsonpath='{.items[0].metadata.name}')
+POD=$(kubectl get pods -n myrc -l component=api -o jsonpath='{.items[0].metadata.name}')
 
 # Delete pod and observe recovery
-kubectl delete pod $POD -n cinema-box-office
+kubectl delete pod $POD -n myrc
 
 # Monitor pod recovery
-kubectl get pods -n cinema-box-office -w
+kubectl get pods -n myrc -w
 
 # Verify API still responsive
 curl http://localhost:8080/api/health
@@ -261,7 +261,7 @@ curl http://localhost:8080/api/health
 kubectl cordon <node-name>
 
 # Observe pod eviction and rescheduling
-kubectl get pods -n cinema-box-office -w
+kubectl get pods -n myrc -w
 
 # Uncordon node
 kubectl uncordon <node-name>
@@ -274,23 +274,23 @@ kubectl uncordon <node-name>
 ./k8s-deploy.sh backup
 
 # Delete database pod
-kubectl delete pod -l component=database -n cinema-box-office
+kubectl delete pod -l component=database -n myrc
 
 # Observe recovery
-kubectl get pods -n cinema-box-office -w
+kubectl get pods -n myrc -w
 
 # Verify data persistence
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice -c "SELECT COUNT(*) FROM information_schema.tables;"
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc -c "SELECT COUNT(*) FROM information_schema.tables;"
 ```
 
 ### Rolling Update
 
 ```bash
 # Update API image
-./k8s-deploy.sh update api cinema-box-office-api:v1.1
+./k8s-deploy.sh update api myrc-api:v1.1
 
 # Observe rolling update
-kubectl get deployment/api -n cinema-box-office -w
+kubectl get deployment/api -n myrc -w
 
 # Monitor during update
 ./k8s-health.sh --watch
@@ -305,10 +305,10 @@ for i in {1..60}; do curl -s http://localhost:8080/api/health && echo " - Reques
 
 ```bash
 # Edit ConfigMap
-kubectl edit configmap cinema-box-office-config -n cinema-box-office
+kubectl edit configmap myrc-config -n myrc
 
 # Changes take effect on pod restart
-kubectl rollout restart deployment/api -n cinema-box-office
+kubectl rollout restart deployment/api -n myrc
 
 # Verify changes
 ./k8s-deploy.sh logs api | grep "Configuration"
@@ -318,12 +318,12 @@ kubectl rollout restart deployment/api -n cinema-box-office
 
 ```bash
 # Create new secret
-kubectl create secret generic cinema-box-office-secrets-new \
+kubectl create secret generic myrc-secrets-new \
   --from-literal=db-password="new-password" \
-  -n cinema-box-office
+  -n myrc
 
 # Update deployment to use new secret
-kubectl set env deployment/api DB_PASSWORD="new-value" -n cinema-box-office
+kubectl set env deployment/api DB_PASSWORD="new-value" -n myrc
 
 # Verify connection still works
 ./k8s-deploy.sh logs api | grep -i "error\|warning"
@@ -335,20 +335,20 @@ kubectl set env deployment/api DB_PASSWORD="new-value" -n cinema-box-office
 
 ```bash
 # Test ServiceAccount permissions
-kubectl auth can-i get secrets --as=system:serviceaccount:cinema-box-office:cinema-box-office -n cinema-box-office
+kubectl auth can-i get secrets --as=system:serviceaccount:myrc:myrc -n myrc
 
 # Test resource access
-kubectl auth can-i get pods --as=system:serviceaccount:cinema-box-office:cinema-box-office -n cinema-box-office
+kubectl auth can-i get pods --as=system:serviceaccount:myrc:myrc -n myrc
 
 # Verify cannot escalate privileges
-kubectl auth can-i create clusterrolebinding --as=system:serviceaccount:cinema-box-office:cinema-box-office
+kubectl auth can-i create clusterrolebinding --as=system:serviceaccount:myrc:myrc
 ```
 
 ### Network Policy Testing
 
 ```bash
 # Test pod-to-pod communication with netcat
-kubectl run -it --rm debug --image=ubuntu --restart=Never -n cinema-box-office -- bash
+kubectl run -it --rm debug --image=ubuntu --restart=Never -n myrc -- bash
 apt-get update && apt-get install -y curl netcat-openbsd
 
 # Test connectivity to API
@@ -362,13 +362,13 @@ nc -zv postgres 5432
 
 ```bash
 # Test certificate validity
-echo | openssl s_client -servername cinema-box-office.example.com -connect cinema-box-office.example.com:443 2>/dev/null | openssl x509 -noout -dates
+echo | openssl s_client -servername myrc.example.com -connect myrc.example.com:443 2>/dev/null | openssl x509 -noout -dates
 
 # Test SSL/TLS version
-echo | openssl s_client -tls1_2 -connect cinema-box-office.example.com:443 2>/dev/null | grep "Protocol"
+echo | openssl s_client -tls1_2 -connect myrc.example.com:443 2>/dev/null | grep "Protocol"
 
 # Test certificate chain
-openssl s_client -connect cinema-box-office.example.com:443 -showcerts
+openssl s_client -connect myrc.example.com:443 -showcerts
 ```
 
 ## Performance Testing
@@ -377,11 +377,11 @@ openssl s_client -connect cinema-box-office.example.com:443 -showcerts
 
 ```bash
 # Monitor resource usage during load test
-kubectl top pods -n cinema-box-office --sort-by=memory
+kubectl top pods -n myrc --sort-by=memory
 kubectl top nodes
 
 # Extended monitoring
-watch -n 5 "kubectl top pods -n cinema-box-office && echo '---' && kubectl top nodes"
+watch -n 5 "kubectl top pods -n myrc && echo '---' && kubectl top nodes"
 ```
 
 ### Horizontal Pod Autoscaler
@@ -391,14 +391,14 @@ watch -n 5 "kubectl top pods -n cinema-box-office && echo '---' && kubectl top n
 wrk -t12 -c400 -d300s http://localhost:8080/api/health &
 
 # Monitor HPA status
-watch -n 5 "kubectl get hpa -n cinema-box-office"
+watch -n 5 "kubectl get hpa -n myrc"
 
 # Monitor pod count change
-watch -n 5 "kubectl get pods -n cinema-box-office | grep api | wc -l"
+watch -n 5 "kubectl get pods -n myrc | grep api | wc -l"
 
 # Verify scale-down after load stops
 sleep 300
-watch -n 5 "kubectl get hpa -n cinema-box-office"
+watch -n 5 "kubectl get hpa -n myrc"
 ```
 
 ### Database Performance
@@ -406,13 +406,13 @@ watch -n 5 "kubectl get hpa -n cinema-box-office"
 ```bash
 # Test query performance
 ./k8s-deploy.sh exec postgres bash -c '
-psql -U boxoffice -d boxoffice << SQL
+psql -U myrc -d myrc << SQL
 EXPLAIN ANALYZE SELECT * FROM your_table LIMIT 100;
 SQL
 '
 
 # Monitor slow queries
-kubectl logs deployment/postgres -n cinema-box-office | grep "duration:"
+kubectl logs deployment/postgres -n myrc | grep "duration:"
 ```
 
 ## Persistence Testing
@@ -424,7 +424,7 @@ kubectl logs deployment/postgres -n cinema-box-office | grep "duration:"
 ./k8s-deploy.sh exec postgres bash -c "echo 'test-data' > /var/lib/postgresql/test-file.txt"
 
 # Delete pod
-kubectl delete pod -l component=database -n cinema-box-office
+kubectl delete pod -l component=database -n myrc
 
 # Verify file persists
 ./k8s-deploy.sh exec postgres bash -c "cat /var/lib/postgresql/test-file.txt"
@@ -438,16 +438,16 @@ kubectl delete pod -l component=database -n cinema-box-office
 
 # Insert test data
 ./k8s-deploy.sh exec postgres bash -c '
-psql -U boxoffice -d boxoffice << SQL
+psql -U myrc -d myrc << SQL
 INSERT INTO test_table (name) VALUES ('test-entry');
 SQL
 '
 
 # Restore from backup (will lose test data)
-./k8s-deploy.sh restore boxoffice-backup-*.sql.gz
+./k8s-deploy.sh restore myrc-backup-*.sql.gz
 
 # Verify test data is gone
-./k8s-deploy.sh exec postgres bash -c "psql -U boxoffice -d boxoffice -c \"SELECT * FROM test_table WHERE name = 'test-entry';\""
+./k8s-deploy.sh exec postgres bash -c "psql -U myrc -d myrc -c \"SELECT * FROM test_table WHERE name = 'test-entry';\""
 ```
 
 ## User Acceptance Testing

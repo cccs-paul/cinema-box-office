@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - RC Selection Component
- * Copyright (c) 2026 Box Office Team
+ * myRC - RC Selection Component
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 
@@ -23,7 +23,7 @@ import { AuthService } from '../../services/auth.service';
  * Users must select both an RC and a FY before navigating to the main dashboard.
  * Includes action buttons for creating, cloning, deleting, and renaming RCs and FYs.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.1.0
  * @since 2026-01-22
  */

@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - LDAP Security Configuration
- * Copyright (c) 2026 Box Office Team
+ * myRC - LDAP Security Configuration
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.config;
@@ -16,7 +16,7 @@ import org.springframework.security.ldap.userdetails.LdapUserDetailsManager;
  * LDAP authentication configuration for the application.
  * Enables LDAP-based user authentication when configured.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-16
  */

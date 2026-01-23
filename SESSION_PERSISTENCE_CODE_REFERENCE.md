@@ -100,7 +100,7 @@ handleOAuth2Callback(): Observable<User> {
 
 ### 3. Backend: UserController - Authenticate Method
 
-**File:** `backend/src/main/java/com/boxoffice/controller/UserController.java`
+**File:** `backend/src/main/java/com/myrc/controller/UserController.java`
 
 **Changes:** Added HttpServletResponse parameter and session context persistence
 
@@ -148,7 +148,7 @@ public ResponseEntity<UserDTO> authenticate(
 
 ### 4. Backend: AuthenticationConfig - Bean & Session Management
 
-**File:** `backend/src/main/java/com/boxoffice/config/AuthenticationConfig.java`
+**File:** `backend/src/main/java/com/myrc/config/AuthenticationConfig.java`
 
 **Changes:** Added HttpSessionSecurityContextRepository bean and session management
 
@@ -202,7 +202,7 @@ private CorsConfigurationSource corsConfigurationSource() {
 
 ### 5. Required Imports
 
-**File:** `backend/src/main/java/com/boxoffice/controller/UserController.java`
+**File:** `backend/src/main/java/com/myrc/controller/UserController.java`
 
 ```java
 import jakarta.servlet.http.HttpServletRequest;
@@ -211,7 +211,7 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 ```
 
-**File:** `backend/src/main/java/com/boxoffice/config/AuthenticationConfig.java`
+**File:** `backend/src/main/java/com/myrc/config/AuthenticationConfig.java`
 
 ```java
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;

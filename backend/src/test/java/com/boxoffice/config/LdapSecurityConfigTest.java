@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - LDAP Configuration Tests
- * Copyright (c) 2026 Box Office Team
+ * myRC - LDAP Configuration Tests
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.config;
@@ -16,7 +16,7 @@ import com.boxoffice.BoxOfficeApplication;
 /**
  * Tests for LDAP security configuration.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-16
  */

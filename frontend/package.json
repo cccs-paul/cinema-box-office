@@ -1,7 +1,7 @@
 {
-  "name": "cinema-box-office",
+  "name": "myrc",
   "version": "1.0.0",
-  "description": "Box Office Management System - Angular Frontend",
+  "description": "myRC Management System - Angular Frontend",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

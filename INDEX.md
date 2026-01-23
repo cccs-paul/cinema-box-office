@@ -97,13 +97,13 @@
 1. Read [docs/LDAP.md](docs/LDAP.md)
 2. Choose your scenario (Active Directory, OpenLDAP, etc.)
 3. Follow configuration steps
-4. Update ConfigMap: `kubectl edit configmap cinema-box-office-config`
+4. Update ConfigMap: `kubectl edit configmap myrc-config`
 
 ### I want to set up OAuth2
 1. Read [docs/OAUTH2.md](docs/OAUTH2.md)
 2. Choose your provider (Google, GitHub, Azure AD, etc.)
 3. Follow provider-specific setup steps
-4. Create secrets: `kubectl create secret generic cinema-box-office-oauth2 ...`
+4. Create secrets: `kubectl create secret generic myrc-oauth2 ...`
 
 ### I want to prepare for production
 1. Review [docs/PRODUCTION.md](docs/PRODUCTION.md)
@@ -120,7 +120,7 @@
 ## 📊 File Organization
 
 ```
-cinema-box-office/
+myrc/
 ├── KUBERNETES_ENTERPRISE_INTEGRATION.md    ← Overview
 ├── INDEX.md                                ← You are here
 ├── k8s-deploy.sh                          ← Deployment tool

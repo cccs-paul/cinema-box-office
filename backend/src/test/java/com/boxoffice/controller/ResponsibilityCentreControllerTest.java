@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Responsibility Centre Controller Tests
- * Copyright (c) 2026 Box Office Team
+ * myRC - Responsibility Centre Controller Tests
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.controller;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
  * Unit tests for ResponsibilityCentreController.
  * Tests controller methods and error handling.
  *
- * @author Cinema Box Office Team
+ * @author myRC Team
  * @version 1.0
  */
 @ExtendWith(MockitoExtension.class)

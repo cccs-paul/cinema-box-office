@@ -193,7 +193,7 @@ myRC is a cloud-native microservices application designed for scalability, secur
 Host Machine
 ├─ Docker Engine
 ├─ Docker Compose
-├─ Docker Network: cinema-box-office
+├─ Docker Network: myrc
 ├─ Containers
 │  ├─ Frontend (ports 4200)
 │  ├─ Backend API (ports 8080)
@@ -206,7 +206,7 @@ Host Machine
 
 ```
 Kubernetes Cluster
-├─ cinema-box-office Namespace
+├─ myrc Namespace
 ├─ Ingress (TLS termination)
 ├─ Frontend Pod (2 replicas)
 │  ├─ Labels: component=frontend
@@ -222,9 +222,9 @@ Kubernetes Cluster
 │  ├─ backend-svc (ClusterIP)
 │  └─ database-svc (ClusterIP)
 ├─ ConfigMaps
-│  └─ cinema-box-office-config
+│  └─ myrc-config
 ├─ Secrets
-│  └─ cinema-box-office-secrets
+│  └─ myrc-secrets
 └─ Horizontal Pod Autoscalers
    ├─ frontend-hpa (2-5 replicas)
    └─ backend-hpa (2-10 replicas)

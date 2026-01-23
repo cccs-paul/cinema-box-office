@@ -192,11 +192,11 @@ docker-compose -f docker-compose.oauth2.yml down
 ### LDAP Configuration
 ```bash
 SPRING_LDAP_URLS=ldap://ldap:389
-SPRING_LDAP_BASE=dc=cinema,dc=local
-SPRING_LDAP_USERNAME=cn=admin,dc=cinema,dc=local
+SPRING_LDAP_BASE=dc=myrc,dc=local
+SPRING_LDAP_USERNAME=cn=admin,dc=myrc,dc=local
 SPRING_LDAP_PASSWORD=admin
 SPRING_SECURITY_LDAP_AUTHENTICATION_USER_SEARCH_FILTER=(uid={0})
-SPRING_SECURITY_LDAP_AUTHENTICATION_USER_SEARCH_BASE=ou=users,dc=cinema,dc=local
+SPRING_SECURITY_LDAP_AUTHENTICATION_USER_SEARCH_BASE=ou=users,dc=myrc,dc=local
 ```
 
 ### OAuth2 Configuration
@@ -218,8 +218,8 @@ AZURE_TENANT=your-tenant-id
 AZURE_REDIRECT_URI=http://localhost:4200/oauth2/callback/azure
 
 # Keycloak
-KEYCLOAK_CLIENT_SECRET=cinema-secret
-KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/cinema
+KEYCLOAK_CLIENT_SECRET=myrc-secret
+KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/myrc
 ```
 
 ## Testing LDAP Users
@@ -229,14 +229,14 @@ All test users are available in OpenLDAP immediately after startup:
 ```bash
 # Connect to LDAP admin UI
 https://localhost:6443
-Login DN: cn=admin,dc=cinema,dc=local
+Login DN: cn=admin,dc=myrc,dc=local
 Password: admin
 
 # Or test from command line
-docker exec -it cinema-ldap ldapsearch \
+docker exec -it myrc-ldap ldapsearch \
   -x -H ldap://localhost:389 \
-  -b "ou=users,dc=cinema,dc=local" \
-  -D "cn=admin,dc=cinema,dc=local" \
+  -b "ou=users,dc=myrc,dc=local" \
+  -D "cn=admin,dc=myrc,dc=local" \
   -w admin
 ```
 
@@ -278,19 +278,19 @@ docker-compose -f docker-compose.dev-full.yml logs -f api
 docker-compose -f docker-compose.dev-full.yml logs -f ldap
 
 # Connect to PostgreSQL
-docker-compose -f docker-compose.dev-full.yml exec postgres psql -U cinema_user -d cinema_db
+docker-compose -f docker-compose.dev-full.yml exec postgres psql -U myrc_user -d myrc_db
 
 # Test LDAP connectivity
 docker-compose -f docker-compose.dev-full.yml exec ldap ldapsearch \
-  -x -b "dc=cinema,dc=local" -D "cn=admin,dc=cinema,dc=local" -w admin
+  -x -b "dc=myrc,dc=local" -D "cn=admin,dc=myrc,dc=local" -w admin
 ```
 
 ### Troubleshooting
 
 1. **LDAP connection failed**
    - Verify LDAP container is running: `docker ps | grep ldap`
-   - Check LDAP logs: `docker logs cinema-ldap`
-   - Test connectivity: `docker exec cinema-api ping ldap`
+   - Check LDAP logs: `docker logs myrc-ldap`
+   - Test connectivity: `docker exec myrc-api ping ldap`
 
 2. **OAuth2 redirect URI mismatch**
    - Verify URI in provider settings matches environment variable
@@ -298,7 +298,7 @@ docker-compose -f docker-compose.dev-full.yml exec ldap ldapsearch \
    - For production: Use full domain name
 
 3. **Authentication failed**
-   - Check API logs: `docker logs cinema-api | grep -i auth`
+   - Check API logs: `docker logs myrc-api | grep -i auth`
    - Verify credentials in environment file
    - Test manually with ldapsearch or curl
 

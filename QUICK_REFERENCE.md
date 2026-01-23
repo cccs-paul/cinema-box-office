@@ -1,6 +1,6 @@
 # Quick Reference Guide
 
-**Cinema Box Office Project** - Quick Command Reference
+**myRC Project** - Quick Command Reference
 
 ## 🚀 Quick Start
 
@@ -60,8 +60,8 @@ npm run build:prod      # Production build
 ### Build Images
 ```bash
 docker-compose build                    # Build all
-docker build -f backend/Dockerfile -t cinema-box-office-api .
-docker build -f frontend/Dockerfile -t cinema-box-office-web .
+docker build -f backend/Dockerfile -t myrc-api .
+docker build -f frontend/Dockerfile -t myrc-web .
 ```
 
 ### Run Services
@@ -82,7 +82,7 @@ docker-compose logs -f postgres         # Database only
 
 ### Access Database
 ```bash
-docker exec -it cinema-box-office-db psql -U boxoffice -d boxoffice
+docker exec -it myrc-db psql -U myrc -d myrc
 ```
 
 ## 📝 Project Files
@@ -117,7 +117,7 @@ Response:
 ```json
 {
   "status": "UP",
-  "message": "Box Office API is running"
+  "message": "myRC API is running"
 }
 ```
 
@@ -140,17 +140,17 @@ Response:
 ### Connection Details
 - **Host**: localhost (dev) or postgres (Docker)
 - **Port**: 5432
-- **Database**: boxoffice
-- **Username**: boxoffice
-- **Password**: boxoffice_password
+- **Database**: myrc
+- **Username**: myrc
+- **Password**: myrc_password
 
 ### Access Database CLI
 ```bash
 # From host (if PostgreSQL installed)
-psql -h localhost -U boxoffice -d boxoffice
+psql -h localhost -U myrc -d myrc
 
 # From Docker container
-docker exec -it cinema-box-office-db psql -U boxoffice -d boxoffice
+docker exec -it myrc-db psql -U myrc -d myrc
 ```
 
 ## 🔍 Common Tasks
@@ -183,7 +183,7 @@ docker-compose up -d                # Start fresh
 ### View Application Logs (Local)
 ```bash
 # Backend
-tail -f /tmp/boxoffice*.log
+tail -f /tmp/myrc*.log
 
 # Frontend (dev server)
 # Check terminal where npm start is running
@@ -212,7 +212,7 @@ tail -f /tmp/boxoffice*.log
 ## 📱 IDE Setup
 
 ### VS Code
-- Open workspace: `cinema-box-office.code-workspace`
+- Open workspace: `myrc.code-workspace`
 - Recommended extensions listed in workspace file
 - Debug configurations available
 
@@ -236,7 +236,7 @@ kill -9 <PID>   # Kill process
 docker ps | grep postgres
 
 # Check logs
-docker logs cinema-box-office-db
+docker logs myrc-db
 
 # Restart database
 docker-compose restart postgres

@@ -1,6 +1,6 @@
-# 🎬 Cinema Box Office - START HERE
+# 🎬 myRC - START HERE
 
-**Welcome!** This is your complete, production-ready Box Office Management System.
+**Welcome!** This is your complete, production-ready myRC Management System.
 
 ## ✅ What You Have
 
@@ -99,13 +99,13 @@ npm start
 ### View Database
 ```bash
 # If PostgreSQL running via Docker:
-docker exec -it cinema-box-office-db psql -U boxoffice -d boxoffice
+docker exec -it myrc-db psql -U myrc -d myrc
 ```
 
 ## 🏗️ Project Structure
 
 ```
-cinema-box-office/
+myrc/
 ├── backend/               # Java Spring Boot API
 │   ├── src/main/         # Application code
 │   ├── src/test/         # Tests
@@ -157,9 +157,9 @@ npm test
 **Database**:
 - Host: localhost (dev) / postgres (Docker)
 - Port: 5432
-- Database: boxoffice
-- Username: boxoffice
-- Password: boxoffice_password
+- Database: myrc
+- Username: myrc
+- Password: myrc_password
 
 ## 🛠️ Next Steps
 
@@ -184,7 +184,7 @@ npm test
 
 | File | Purpose |
 |------|---------|
-| `backend/src/main/java/com/boxoffice/BoxOfficeApplication.java` | Backend entry point |
+| `backend/src/main/java/com/myrc/MyRCApplication.java` | Backend entry point |
 | `frontend/src/app/app.component.ts` | Frontend main component |
 | `docker-compose.yml` | Production setup |
 | `docker-compose.dev.yml` | Development setup |
@@ -226,7 +226,7 @@ kill -9 <PID>      # Kill the process
 
 ### Database Won't Connect
 ```bash
-docker logs cinema-box-office-db    # Check database logs
+docker logs myrc-db    # Check database logs
 docker-compose restart postgres     # Restart database
 ```
 
@@ -267,7 +267,7 @@ docker-compose up -d                # Start fresh
 
 ### For Backend Developers
 1. Start `./start.sh dev`
-2. Edit `backend/src/main/java/com/boxoffice/controller/`
+2. Edit `backend/src/main/java/com/myrc/controller/`
 3. Run `mvn test` in backend folder
 4. Changes auto-reload
 

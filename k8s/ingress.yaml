@@ -1,14 +1,14 @@
 ---
-# Cinema Box Office - Ingress Configuration
+# myRC - Ingress Configuration
 # License: MIT
 # This example uses NGINX Ingress Controller
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: cinema-box-office-ingress
-  namespace: cinema-box-office
+  name: myrc-ingress
+  namespace: myrc
   labels:
-    app: cinema-box-office
+    app: myrc
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-prod
@@ -18,10 +18,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - cinema-box-office.example.com
-    secretName: cinema-box-office-tls
+    - myrc.example.com
+    secretName: myrc-tls
   rules:
-  - host: cinema-box-office.example.com
+  - host: myrc.example.com
     http:
       paths:
       - path: /
@@ -44,20 +44,20 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: cinema-box-office
-  namespace: cinema-box-office
+  name: myrc
+  namespace: myrc
   labels:
-    app: cinema-box-office
+    app: myrc
 
 ---
 # Role for the application
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: cinema-box-office
-  namespace: cinema-box-office
+  name: myrc
+  namespace: myrc
   labels:
-    app: cinema-box-office
+    app: myrc
 rules:
 - apiGroups: [""]
   resources: ["secrets", "configmaps"]
@@ -68,15 +68,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: cinema-box-office
-  namespace: cinema-box-office
+  name: myrc
+  namespace: myrc
   labels:
-    app: cinema-box-office
+    app: myrc
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: cinema-box-office
+  name: myrc
 subjects:
 - kind: ServiceAccount
-  name: cinema-box-office
-  namespace: cinema-box-office
+  name: myrc
+  namespace: myrc

@@ -1,13 +1,13 @@
 /*
- * Cinema Box Office - User Model
- * Copyright (c) 2026 Box Office Team
+ * myRC - User Model
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 
 /**
  * User model representing an authenticated user.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

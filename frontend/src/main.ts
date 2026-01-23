@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Main
- * Copyright (c) 2026 Box Office Team
+ * myRC - Main
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { bootstrapApplication } from '@angular/platform-browser';

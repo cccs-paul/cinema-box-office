@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Auth Guard
- * Copyright (c) 2026 Box Office Team
+ * myRC - Auth Guard
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { Injectable, inject } from '@angular/core';
@@ -10,7 +10,7 @@ import { AuthService } from '../services/auth.service';
 /**
  * Auth guard to protect routes requiring authentication.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

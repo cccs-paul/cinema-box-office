@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Authentication Service
- * Copyright (c) 2026 Box Office Team
+ * myRC - Authentication Service
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { Injectable } from '@angular/core';
@@ -13,7 +13,7 @@ import { User, AuthResponse } from '../models/user.model';
  * Authentication service for managing user login and session.
  * Supports LOCAL (app-managed), LDAP, and OAUTH2 authentication.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

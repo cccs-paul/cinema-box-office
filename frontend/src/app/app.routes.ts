@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - App Routes
- * Copyright (c) 2026 Box Office Team
+ * myRC - App Routes
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { Routes } from '@angular/router';
@@ -18,7 +18,7 @@ import { AuthGuardService } from './guards/auth.guard';
  * RC selection uses layout without sidebar.
  * Dashboard and other main pages use layout with sidebar.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.1.0
  * @since 2026-01-17
  */

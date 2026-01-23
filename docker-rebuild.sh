@@ -82,7 +82,7 @@ done
 
 echo ""
 echo -e "${BLUE}========================================="
-echo "Cinema Box Office - Docker Rebuild"
+echo "myRC - Docker Rebuild"
 echo "==========================================${NC}"
 echo ""
 
@@ -132,7 +132,7 @@ if [ $? -eq 0 ]; then
     
     # Display built images
     echo -e "${BLUE}Built Images:${NC}"
-    docker images | grep cinema-box-office | awk '{print "  " $1 ":" $2 " (" $7 " " $8 " " $9 ")"}'
+    docker images | grep myrc | awk '{print "  " $1 ":" $2 " (" $7 " " $8 " " $9 ")"}'
     echo ""
     
     # Show usage instructions

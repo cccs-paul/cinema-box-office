@@ -1,13 +1,13 @@
 ---
-# Cinema Box Office - Frontend Deployment
+# myRC - Frontend Deployment
 # License: MIT
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend
-  namespace: cinema-box-office
+  namespace: myrc
   labels:
-    app: cinema-box-office
+    app: myrc
     component: frontend
 spec:
   ports:
@@ -16,7 +16,7 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: cinema-box-office
+    app: myrc
     component: frontend
   type: ClusterIP
 
@@ -25,9 +25,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
-  namespace: cinema-box-office
+  namespace: myrc
   labels:
-    app: cinema-box-office
+    app: myrc
     component: frontend
 spec:
   replicas: 2
@@ -38,17 +38,17 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: cinema-box-office
+      app: myrc
       component: frontend
   template:
     metadata:
       labels:
-        app: cinema-box-office
+        app: myrc
         component: frontend
     spec:
       containers:
       - name: frontend
-        image: cinema-box-office-web:latest
+        image: myrc-web:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
@@ -87,7 +87,7 @@ spec:
                 - key: app
                   operator: In
                   values:
-                  - cinema-box-office
+                  - myrc
                 - key: component
                   operator: In
                   values:
@@ -100,7 +100,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: frontend-hpa
-  namespace: cinema-box-office
+  namespace: myrc
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

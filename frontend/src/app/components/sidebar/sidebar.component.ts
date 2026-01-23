@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Sidebar Component
- * Copyright (c) 2026 Box Office Team
+ * myRC - Sidebar Component
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { Component, OnInit, OnDestroy } from '@angular/core';
@@ -18,7 +18,7 @@ import { FiscalYear } from '../../models/fiscal-year.model';
  * Provides main navigation menu for the application.
  * Displays currently selected RC and FY context.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.1.0
  * @since 2026-01-21
  */

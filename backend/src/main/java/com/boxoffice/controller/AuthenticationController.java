@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Authentication Controller
- * Copyright (c) 2026 Box Office Team
+ * myRC - Authentication Controller
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.controller;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Authentication and user information controller.
  * Provides endpoints for authentication status and user details.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-16
  */

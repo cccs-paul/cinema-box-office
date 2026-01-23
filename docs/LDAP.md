@@ -50,8 +50,8 @@ Edit `k8s/secrets.yaml`:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: cinema-box-office-ldap-secret
-  namespace: cinema-box-office
+  name: myrc-ldap-secret
+  namespace: myrc
 type: Opaque
 data:
   ldap-user-dn: Y249YWRtaW4sZGM9ZXhhbXBsZSxkYz1jb20=
@@ -71,27 +71,27 @@ containers:
   - name: APP_SECURITY_LDAP_URL
     valueFrom:
       configMapKeyRef:
-        name: cinema-box-office-config
+        name: myrc-config
         key: LDAP_URL
   - name: APP_SECURITY_LDAP_BASE_DN
     valueFrom:
       configMapKeyRef:
-        name: cinema-box-office-config
+        name: myrc-config
         key: LDAP_BASE_DN
   - name: APP_SECURITY_LDAP_USER_DN_PATTERN
     valueFrom:
       configMapKeyRef:
-        name: cinema-box-office-config
+        name: myrc-config
         key: LDAP_USER_DN_PATTERN
   - name: APP_SECURITY_LDAP_BIND_DN
     valueFrom:
       secretKeyRef:
-        name: cinema-box-office-ldap-secret
+        name: myrc-ldap-secret
         key: ldap-user-dn
   - name: APP_SECURITY_LDAP_BIND_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: cinema-box-office-ldap-secret
+        name: myrc-ldap-secret
         key: ldap-password
 ```
 
@@ -134,7 +134,7 @@ APP_SECURITY_LDAP_SSL_TRUST_ALL: "false"
 
 ```bash
 # From within the pod
-kubectl exec -it deployment/api -n cinema-box-office -- /bin/bash
+kubectl exec -it deployment/api -n myrc -- /bin/bash
 
 # Test LDAP connection
 ldapsearch -x -H ldap://ldap.example.com:389 \
@@ -148,7 +148,7 @@ ldapsearch -x -H ldap://ldap.example.com:389 \
 
 ```bash
 # View backend logs for LDAP errors
-kubectl logs -f deployment/api -n cinema-box-office | grep -i ldap
+kubectl logs -f deployment/api -n myrc | grep -i ldap
 ```
 
 ### 3. Test Authentication
@@ -164,7 +164,7 @@ curl -u username:password http://localhost:8080/api/health
 
 ## LDAP Configuration in Backend
 
-The backend uses Spring Security LDAP authentication. See `backend/src/main/java/com/boxoffice/config/LdapSecurityConfig.java` for implementation details.
+The backend uses Spring Security LDAP authentication. See `backend/src/main/java/com/myrc/config/LdapSecurityConfig.java` for implementation details.
 
 ### Key Configuration Properties
 
@@ -191,10 +191,10 @@ kubectl apply -f k8s/secrets.yaml
 kubectl apply -f k8s/configmap.yaml
 
 # Restart backend deployment to pick up changes
-kubectl rollout restart deployment/api -n cinema-box-office
+kubectl rollout restart deployment/api -n myrc
 
 # Check rollout status
-kubectl rollout status deployment/api -n cinema-box-office
+kubectl rollout status deployment/api -n myrc
 ```
 
 ### Troubleshooting
@@ -252,8 +252,8 @@ Map LDAP groups to application roles:
 
 ```yaml
 APP_SECURITY_LDAP_GROUP_ROLE_MAPPING: |
-  cinema-admin=ADMIN
-  cinema-users=USER
+  myrc-admin=ADMIN
+  myrc-users=USER
 ```
 
 ### Custom LDAP Attributes
@@ -294,7 +294,7 @@ APP_SECURITY_LDAP_USER_ATTRIBUTES: "mail,phone,department"
 ## Support
 
 For issues or questions about LDAP integration:
-1. Check the backend logs: `kubectl logs -f deployment/api -n cinema-box-office`
+1. Check the backend logs: `kubectl logs -f deployment/api -n myrc`
 2. Verify LDAP server connectivity
 3. Review configuration against this guide
 4. Contact support with detailed error messages

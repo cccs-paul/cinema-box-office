@@ -44,10 +44,10 @@ npm start
 
 ```bash
 # Install PostgreSQL locally or use Docker
-docker run --name cinema-db \
-  -e POSTGRES_DB=boxoffice \
-  -e POSTGRES_USER=boxoffice \
-  -e POSTGRES_PASSWORD=boxoffice_password \
+docker run --name myrc-db \
+  -e POSTGRES_DB=myrc \
+  -e POSTGRES_USER=myrc \
+  -e POSTGRES_PASSWORD=myrc_password \
   -p 5432:5432 \
   postgres:16-alpine
 
@@ -138,7 +138,7 @@ npm lint
 
 **IntelliJ IDEA:**
 - Set breakpoints in Java code
-- Run → Debug 'BoxOfficeApplication'
+- Run → Debug 'MyRCApplication'
 
 **VS Code:**
 - Install "Debugger for Java"

@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Responsibility Centre Entity
- * Copyright (c) 2026 Box Office Team
+ * myRC - Responsibility Centre Entity
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.model;
@@ -14,7 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp;
  * Entity representing a Responsibility Centre.
  * A responsibility centre is an organizational unit that manages box office operations.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

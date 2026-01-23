@@ -3,11 +3,11 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: cinema-box-office-api-dev
+    container_name: myrc-api-dev
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/boxoffice
-      SPRING_DATASOURCE_USERNAME: boxoffice
-      SPRING_DATASOURCE_PASSWORD: boxoffice_password
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/myrc
+      SPRING_DATASOURCE_USERNAME: myrc
+      SPRING_DATASOURCE_PASSWORD: myrc_password
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_PROFILES_ACTIVE: dev
     ports:
@@ -16,14 +16,14 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - boxoffice-network-dev
+      - myrc-network-dev
     restart: unless-stopped
 
   web:
     build:
       context: .
       dockerfile: frontend/Dockerfile.dev
-    container_name: cinema-box-office-web-dev
+    container_name: myrc-web-dev
     environment:
       NODE_ENV: development
     ports:
@@ -31,32 +31,32 @@ services:
     depends_on:
       - api
     networks:
-      - boxoffice-network-dev
+      - myrc-network-dev
     restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine
-    container_name: cinema-box-office-db-dev
+    container_name: myrc-db-dev
     environment:
-      POSTGRES_DB: boxoffice
-      POSTGRES_USER: boxoffice
-      POSTGRES_PASSWORD: boxoffice_password
+      POSTGRES_DB: myrc
+      POSTGRES_USER: myrc
+      POSTGRES_PASSWORD: myrc_password
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U boxoffice"]
+      test: ["CMD-SHELL", "pg_isready -U myrc"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - boxoffice-network-dev
+      - myrc-network-dev
     restart: unless-stopped
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: cinema-box-office-pgadmin-dev
+    container_name: myrc-pgadmin-dev
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@example.com
       PGADMIN_DEFAULT_PASSWORD: admin_password
@@ -69,7 +69,7 @@ services:
     depends_on:
       - postgres
     networks:
-      - boxoffice-network-dev
+      - myrc-network-dev
     restart: unless-stopped
 
 volumes:
@@ -77,5 +77,5 @@ volumes:
     driver: local
 
 networks:
-  boxoffice-network-dev:
+  myrc-network-dev:
     driver: bridge

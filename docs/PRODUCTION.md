@@ -53,11 +53,11 @@ helm install prometheus prometheus-community/kube-prometheus-stack -n monitoring
 openssl rand -base64 32
 
 # Create production secrets
-kubectl create secret generic cinema-box-office-prod-secrets \
+kubectl create secret generic myrc-prod-secrets \
   --from-literal=db-password="$(openssl rand -base64 32)" \
   --from-literal=ldap-password="your-ldap-password" \
   --from-literal=oauth2-secret="$(openssl rand -base64 32)" \
-  -n cinema-box-office
+  -n myrc
 ```
 
 ### 2. Update ConfigMap with Production Values
@@ -69,7 +69,7 @@ data:
   SPRING_PROFILES_ACTIVE: "prod,oauth2"
   SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"  # Prevent auto-creation
   LOGGING_LEVEL_ROOT: "WARN"
-  CORS_ALLOWED_ORIGINS: "https://cinema-box-office.example.com"
+  CORS_ALLOWED_ORIGINS: "https://myrc.example.com"
 ```
 
 ### 3. Database Configuration
@@ -86,8 +86,8 @@ kubectl apply -f k8s/frontend.yaml
 kubectl apply -f k8s/ingress.yaml
 
 # Update backend.yaml to use external database
-# Replace: jdbc:postgresql://postgres:5432/boxoffice
-# With:    jdbc:postgresql://prod-db.rds.amazonaws.com:5432/boxoffice
+# Replace: jdbc:postgresql://postgres:5432/myrc
+# With:    jdbc:postgresql://prod-db.rds.amazonaws.com:5432/myrc
 ```
 
 ### 4. SSL/TLS Configuration
@@ -115,10 +115,10 @@ spec:
 
 ```bash
 # Create certificate secret
-kubectl create secret tls cinema-box-office-tls \
+kubectl create secret tls myrc-tls \
   --cert=/path/to/cert.pem \
   --key=/path/to/key.pem \
-  -n cinema-box-office
+  -n myrc
 ```
 
 ### 5. Network Policies
@@ -131,7 +131,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-backend-to-db
-  namespace: cinema-box-office
+  namespace: myrc
 spec:
   podSelector:
     matchLabels:
@@ -150,7 +150,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-frontend-to-backend
-  namespace: cinema-box-office
+  namespace: myrc
 spec:
   podSelector:
     matchLabels:
@@ -180,49 +180,49 @@ kubectl apply -f k8s/configmap.yaml
 ```bash
 # Skip for managed database services
 kubectl apply -f k8s/postgres.yaml
-kubectl wait --for=condition=ready pod -l component=database -n cinema-box-office --timeout=300s
+kubectl wait --for=condition=ready pod -l component=database -n myrc --timeout=300s
 ```
 
 ### 3. Deploy Backend
 
 ```bash
 kubectl apply -f k8s/backend.yaml
-kubectl wait --for=condition=ready pod -l component=backend -n cinema-box-office --timeout=300s
+kubectl wait --for=condition=ready pod -l component=backend -n myrc --timeout=300s
 ```
 
 ### 4. Deploy Frontend
 
 ```bash
 kubectl apply -f k8s/frontend.yaml
-kubectl wait --for=condition=ready pod -l component=frontend -n cinema-box-office --timeout=300s
+kubectl wait --for=condition=ready pod -l component=frontend -n myrc --timeout=300s
 ```
 
 ### 5. Configure Ingress
 
 ```bash
 # Update ingress.yaml with your domain
-# Replace cinema-box-office.example.com with your domain
+# Replace myrc.example.com with your domain
 
 kubectl apply -f k8s/ingress.yaml
 
 # Verify ingress
-kubectl get ingress -n cinema-box-office
+kubectl get ingress -n myrc
 ```
 
 ### 6. Verify Deployment
 
 ```bash
 # Check all pods running
-kubectl get pods -n cinema-box-office
+kubectl get pods -n myrc
 
 # Check services
-kubectl get svc -n cinema-box-office
+kubectl get svc -n myrc
 
 # Check ingress
-kubectl get ingress -n cinema-box-office
+kubectl get ingress -n myrc
 
 # Get ingress IP/hostname
-kubectl get ingress cinema-box-office-ingress -n cinema-box-office -o jsonpath='{.status.loadBalancer.ingress[0]}'
+kubectl get ingress myrc-ingress -n myrc -o jsonpath='{.status.loadBalancer.ingress[0]}'
 ```
 
 ## Monitoring and Alerting
@@ -233,12 +233,12 @@ kubectl get ingress cinema-box-office-ingress -n cinema-box-office -o jsonpath='
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: cinema-box-office-api
-  namespace: cinema-box-office
+  name: myrc-api
+  namespace: myrc
 spec:
   selector:
     matchLabels:
-      app: cinema-box-office
+      app: myrc
       component: backend
   endpoints:
   - port: http
@@ -252,11 +252,11 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: cinema-box-office-alerts
-  namespace: cinema-box-office
+  name: myrc-alerts
+  namespace: myrc
 spec:
   groups:
-  - name: cinema-box-office
+  - name: myrc
     rules:
     - alert: HighErrorRate
       expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 0.05
@@ -268,7 +268,7 @@ spec:
         description: "{{ $value }}% of requests returning 5xx errors"
     
     - alert: PodNotReady
-      expr: min_over_time(kube_pod_status_ready{namespace="cinema-box-office"}[5m]) == 0
+      expr: min_over_time(kube_pod_status_ready{namespace="myrc"}[5m]) == 0
       for: 5m
       labels:
         severity: warning
@@ -306,7 +306,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: postgres-backup
-  namespace: cinema-box-office
+  namespace: myrc
 spec:
   schedule: "0 2 * * *"  # Daily at 2 AM
   jobTemplate:
@@ -320,8 +320,8 @@ spec:
             - /bin/bash
             - -c
             - |
-              pg_dump -h postgres -U boxoffice boxoffice | \
-                gzip > /backup/boxoffice-$(date +%Y%m%d-%H%M%S).sql.gz
+              pg_dump -h postgres -U myrc myrc | \
+                gzip > /backup/myrc-$(date +%Y%m%d-%H%M%S).sql.gz
             volumeMounts:
             - name: backup-storage
               mountPath: /backup
@@ -336,9 +336,9 @@ spec:
 
 ```bash
 # Restore from backup
-kubectl exec -it deployment/postgres -n cinema-box-office -- bash
-zcat /backup/boxoffice-20260117-020000.sql.gz | \
-  psql -h postgres -U boxoffice boxoffice
+kubectl exec -it deployment/postgres -n myrc -- bash
+zcat /backup/myrc-20260117-020000.sql.gz | \
+  psql -h postgres -U myrc myrc
 ```
 
 ## Performance Tuning
@@ -373,7 +373,7 @@ SPRING_MVC_SERVLET_LOAD_ON_STARTUP: "0"
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: cinema-box-office-psp
+  name: myrc-psp
 spec:
   privileged: false
   allowPrivilegeEscalation: false
@@ -399,8 +399,8 @@ spec:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: cinema-box-office
-  namespace: cinema-box-office
+  name: myrc
+  namespace: myrc
 rules:
 - apiGroups: [""]
   resources: ["secrets", "configmaps"]
@@ -422,10 +422,10 @@ maxReplicas: 20       # Adjust based on cluster capacity
 
 ```bash
 # Using Apache Bench
-ab -n 10000 -c 100 https://cinema-box-office.example.com/
+ab -n 10000 -c 100 https://myrc.example.com/
 
 # Using wrk
-wrk -t12 -c400 -d30s https://cinema-box-office.example.com/
+wrk -t12 -c400 -d30s https://myrc.example.com/
 ```
 
 ## Maintenance and Updates
@@ -435,11 +435,11 @@ wrk -t12 -c400 -d30s https://cinema-box-office.example.com/
 ```bash
 # Automatic rolling updates with deployment strategy
 kubectl set image deployment/api \
-  api=cinema-box-office-api:v1.1 \
-  -n cinema-box-office
+  api=myrc-api:v1.1 \
+  -n myrc
 
 # Monitor rollout
-kubectl rollout status deployment/api -n cinema-box-office
+kubectl rollout status deployment/api -n myrc
 ```
 
 ### Database Migrations

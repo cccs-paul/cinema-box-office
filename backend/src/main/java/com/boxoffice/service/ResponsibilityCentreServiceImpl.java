@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Responsibility Centre Service Implementation
- * Copyright (c) 2026 Box Office Team
+ * myRC - Responsibility Centre Service Implementation
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.service;
@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Implementation of ResponsibilityCentreService.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

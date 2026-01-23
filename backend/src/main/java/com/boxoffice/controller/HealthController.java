@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Health Check Controller
- * Copyright (c) 2026 Box Office Team
+ * myRC - Health Check Controller
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.controller;
@@ -17,7 +17,7 @@ import java.sql.Connection;
  * Health check controller for API endpoints.
  * Provides endpoints to verify API is running and accessible.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-16
  */
@@ -35,7 +35,7 @@ public class HealthController {
      */
     @GetMapping
     public ResponseEntity<HealthResponse> health() {
-        return ResponseEntity.ok(new HealthResponse("UP", "Box Office API is running"));
+        return ResponseEntity.ok(new HealthResponse("UP", "myRC API is running"));
     }
 
     /**

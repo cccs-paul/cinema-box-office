@@ -1,13 +1,13 @@
 ---
-# Cinema Box Office - ConfigMap for application configuration
+# myRC - ConfigMap for application configuration
 # License: MIT
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cinema-box-office-config
-  namespace: cinema-box-office
+  name: myrc-config
+  namespace: myrc
   labels:
-    app: cinema-box-office
+    app: myrc
     component: config
 data:
   # Backend configuration

@@ -190,7 +190,7 @@ open http://localhost:4200
 
 ```bash
 # Edit ConfigMap with LDAP settings
-kubectl edit configmap cinema-box-office-config -n cinema-box-office
+kubectl edit configmap myrc-config -n myrc
 
 # Set these LDAP properties:
 # SPRING_PROFILES_ACTIVE=prod,ldap
@@ -204,13 +204,13 @@ kubectl edit configmap cinema-box-office-config -n cinema-box-office
 
 ```bash
 # Create OAuth2 secrets
-kubectl create secret generic cinema-box-office-oauth2 \
+kubectl create secret generic myrc-oauth2 \
   --from-literal=client-id="your-client-id" \
   --from-literal=client-secret="your-client-secret" \
-  -n cinema-box-office
+  -n myrc
 
 # Set profile to oauth2
-kubectl set env deployment/api SPRING_PROFILES_ACTIVE="prod,oauth2" -n cinema-box-office
+kubectl set env deployment/api SPRING_PROFILES_ACTIVE="prod,oauth2" -n myrc
 
 # See OAUTH2.md for provider-specific configuration
 ```

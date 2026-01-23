@@ -15,10 +15,10 @@
 ./k8s-deploy.sh logs postgres
 
 # Describe cluster resources
-kubectl describe nodes -n cinema-box-office
-kubectl describe pods -n cinema-box-office
-kubectl describe services -n cinema-box-office
-kubectl describe ingress -n cinema-box-office
+kubectl describe nodes -n myrc
+kubectl describe pods -n myrc
+kubectl describe services -n myrc
+kubectl describe ingress -n myrc
 ```
 
 ## Pods Not Starting
@@ -32,17 +32,17 @@ kubectl describe ingress -n cinema-box-office
 
 ```bash
 # Get pod status
-kubectl get pods -n cinema-box-office
+kubectl get pods -n myrc
 
 # Describe pod for detailed status
-kubectl describe pod <pod-name> -n cinema-box-office
+kubectl describe pod <pod-name> -n myrc
 
 # Check pod events
-kubectl get events -n cinema-box-office --sort-by='.lastTimestamp'
+kubectl get events -n myrc --sort-by='.lastTimestamp'
 
 # View pod logs
-kubectl logs <pod-name> -n cinema-box-office
-kubectl logs <pod-name> -n cinema-box-office --previous  # For crashed pods
+kubectl logs <pod-name> -n myrc
+kubectl logs <pod-name> -n myrc --previous  # For crashed pods
 ```
 
 ### Common Causes and Solutions
@@ -52,10 +52,10 @@ kubectl logs <pod-name> -n cinema-box-office --previous  # For crashed pods
 
 ```bash
 # Check image reference in manifest
-kubectl get deployment api -n cinema-box-office -o jsonpath='{.spec.template.spec.containers[0].image}'
+kubectl get deployment api -n myrc -o jsonpath='{.spec.template.spec.containers[0].image}'
 
 # Solution: Update image reference
-kubectl set image deployment/api api=your-registry.com/cinema-box-office-api:v1.0 -n cinema-box-office
+kubectl set image deployment/api api=your-registry.com/myrc-api:v1.0 -n myrc
 ```
 
 #### CrashLoopBackOff
@@ -63,7 +63,7 @@ kubectl set image deployment/api api=your-registry.com/cinema-box-office-api:v1.
 
 ```bash
 # View detailed logs
-kubectl logs <pod-name> -n cinema-box-office -f
+kubectl logs <pod-name> -n myrc -f
 
 # Common causes:
 # 1. Database connection failed
@@ -82,15 +82,15 @@ OutOfMemoryError
 
 ```bash
 # Check events for details
-kubectl describe pod <pod-name> -n cinema-box-office
+kubectl describe pod <pod-name> -n myrc
 
 # Check resource availability
 kubectl top nodes
 kubectl describe nodes
 
 # Check PVC status
-kubectl get pvc -n cinema-box-office
-kubectl describe pvc <pvc-name> -n cinema-box-office
+kubectl get pvc -n myrc
+kubectl describe pvc <pvc-name> -n myrc
 
 # Solutions:
 # 1. Increase cluster resources
@@ -103,10 +103,10 @@ kubectl describe pvc <pvc-name> -n cinema-box-office
 
 ```bash
 # View init container logs
-kubectl logs <pod-name> -n cinema-box-office -c init
+kubectl logs <pod-name> -n myrc -c init
 
 # Check init container status in describe
-kubectl describe pod <pod-name> -n cinema-box-office
+kubectl describe pod <pod-name> -n myrc
 ```
 
 ## Database Connection Issues
@@ -120,7 +120,7 @@ kubectl describe pod <pod-name> -n cinema-box-office
 
 ```bash
 # Check database pod status
-kubectl get pods -n cinema-box-office | grep postgres
+kubectl get pods -n myrc | grep postgres
 
 # Check database logs
 ./k8s-deploy.sh logs postgres
@@ -132,7 +132,7 @@ kubectl get pods -n cinema-box-office | grep postgres
 ./k8s-deploy.sh port-forward postgres 5432 5432
 
 # Connect locally
-psql -h localhost -U boxoffice -d boxoffice
+psql -h localhost -U myrc -d myrc
 ```
 
 ### Common Causes and Solutions
@@ -140,25 +140,25 @@ psql -h localhost -U boxoffice -d boxoffice
 #### Database Pod Not Running
 ```bash
 # Check pod status
-kubectl get pods -n cinema-box-office | grep postgres
+kubectl get pods -n myrc | grep postgres
 
 # If pending, check PVC
-kubectl get pvc -n cinema-box-office
-kubectl describe pvc postgres-data -n cinema-box-office
+kubectl get pvc -n myrc
+kubectl describe pvc postgres-data -n myrc
 
 # If node has no space
 kubectl top nodes
 df -h
 
 # Solution: Delete and recreate PVC
-kubectl delete pvc postgres-data -n cinema-box-office
+kubectl delete pvc postgres-data -n myrc
 kubectl apply -f k8s/postgres.yaml
 ```
 
 #### Connection Refused
 ```bash
 # Check if postgres service exists
-kubectl get svc postgres -n cinema-box-office
+kubectl get svc postgres -n myrc
 
 # Test endpoint
 ./k8s-deploy.sh exec api bash -c "curl postgres:5432 || echo 'Expected: connection refused'"
@@ -167,37 +167,37 @@ kubectl get svc postgres -n cinema-box-office
 ./k8s-deploy.sh exec api env | grep DATABASE
 
 # Verify connection string
-# Should be: jdbc:postgresql://postgres:5432/boxoffice
+# Should be: jdbc:postgresql://postgres:5432/myrc
 ```
 
 #### Authentication Failed
 ```bash
 # Check database credentials in secrets
-kubectl get secret cinema-box-office-secrets -n cinema-box-office -o yaml
+kubectl get secret myrc-secrets -n myrc -o yaml
 
 # Verify base64 encoding
 echo "your-base64-password" | base64 -d
 
 # Update secrets if incorrect
-kubectl delete secret cinema-box-office-secrets -n cinema-box-office
-kubectl create secret generic cinema-box-office-secrets \
+kubectl delete secret myrc-secrets -n myrc
+kubectl create secret generic myrc-secrets \
   --from-literal=db-password="new-password" \
-  -n cinema-box-office
+  -n myrc
 ```
 
 #### Database Locked/Unresponsive
 ```bash
 # Check database status
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice -c "SELECT version();"
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc -c "SELECT version();"
 
 # Check active connections
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice -c "SELECT * FROM pg_stat_activity;"
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc -c "SELECT * FROM pg_stat_activity;"
 
 # Kill long-running queries
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='boxoffice' AND pid<>pg_backend_pid();"
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='myrc' AND pid<>pg_backend_pid();"
 
 # Restart database pod
-kubectl delete pod -l component=database -n cinema-box-office
+kubectl delete pod -l component=database -n myrc
 ```
 
 ## Persistent Volume Issues
@@ -211,10 +211,10 @@ kubectl delete pod -l component=database -n cinema-box-office
 
 ```bash
 # Check PVC status
-kubectl get pvc -n cinema-box-office
+kubectl get pvc -n myrc
 
 # Describe PVC
-kubectl describe pvc postgres-data -n cinema-box-office
+kubectl describe pvc postgres-data -n myrc
 
 # Check PV status
 kubectl get pv
@@ -249,7 +249,7 @@ kubectl get pv
 kubectl patch pv <pv-name> -p '{"spec":{"claimRef": null}}'
 
 # Delete and recreate
-kubectl delete pvc postgres-data -n cinema-box-office
+kubectl delete pvc postgres-data -n myrc
 kubectl delete pv <pv-name>
 kubectl apply -f k8s/postgres.yaml
 ```
@@ -263,7 +263,7 @@ df -h
 docker volume prune
 
 # Delete old pods/deployments
-kubectl delete pod <old-pod> -n cinema-box-office
+kubectl delete pod <old-pod> -n myrc
 ```
 
 ## API Connectivity Issues
@@ -277,7 +277,7 @@ kubectl delete pod <old-pod> -n cinema-box-office
 
 ```bash
 # Check API pod status
-kubectl get pods -n cinema-box-office | grep api
+kubectl get pods -n myrc | grep api
 
 # Check API logs
 ./k8s-deploy.sh logs api
@@ -289,8 +289,8 @@ kubectl get pods -n cinema-box-office | grep api
 curl -v http://localhost:8080/api/health
 
 # Check API service
-kubectl get svc api -n cinema-box-office
-kubectl describe svc api -n cinema-box-office
+kubectl get svc api -n myrc
+kubectl describe svc api -n myrc
 ```
 
 ### Common Causes and Solutions
@@ -298,10 +298,10 @@ kubectl describe svc api -n cinema-box-office
 #### API Pod Not Running
 ```bash
 # Check pod status
-kubectl describe pod <api-pod> -n cinema-box-office
+kubectl describe pod <api-pod> -n myrc
 
 # Check logs
-kubectl logs <api-pod> -n cinema-box-office
+kubectl logs <api-pod> -n myrc
 
 # Common issues:
 # - Memory issue: `OutOfMemoryError`
@@ -312,17 +312,17 @@ kubectl logs <api-pod> -n cinema-box-office
 kubectl set resources deployment/api \
   --limits=cpu=1000m,memory=1Gi \
   --requests=cpu=250m,memory=512Mi \
-  -n cinema-box-office
+  -n myrc
 ```
 
 #### Service Endpoint Empty
 ```bash
 # Check endpoints
-kubectl get endpoints api -n cinema-box-office
+kubectl get endpoints api -n myrc
 
 # If empty, pods are not ready
 # Check pod readiness probe
-kubectl describe pod <api-pod> -n cinema-box-office | grep -A 5 "Readiness"
+kubectl describe pod <api-pod> -n myrc | grep -A 5 "Readiness"
 
 # Test readiness endpoint manually
 ./k8s-deploy.sh port-forward api 8080 8080
@@ -357,19 +357,19 @@ curl -v http://localhost:4200/api/health
 
 ```bash
 # Check Ingress status
-kubectl get ingress -n cinema-box-office
+kubectl get ingress -n myrc
 
 # Get Ingress IP/hostname
-kubectl get ingress cinema-box-office-ingress -n cinema-box-office -o jsonpath='{.status.loadBalancer.ingress[0]}'
+kubectl get ingress myrc-ingress -n myrc -o jsonpath='{.status.loadBalancer.ingress[0]}'
 
 # Check Ingress configuration
-kubectl describe ingress cinema-box-office-ingress -n cinema-box-office
+kubectl describe ingress myrc-ingress -n myrc
 
 # Check NGINX controller logs
 kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx
 
 # Test DNS resolution
-nslookup cinema-box-office.example.com
+nslookup myrc.example.com
 ```
 
 ### Common Causes and Solutions
@@ -385,26 +385,26 @@ helm install nginx ingress-nginx/ingress-nginx -n ingress-nginx --create-namespa
 #### Certificate Issues
 ```bash
 # Check certificate secret
-kubectl get secret cinema-box-office-tls -n cinema-box-office
+kubectl get secret myrc-tls -n myrc
 
 # Check certificate validity
-echo | openssl s_client -servername cinema-box-office.example.com -connect cinema-box-office.example.com:443 2>/dev/null | openssl x509 -noout -dates
+echo | openssl s_client -servername myrc.example.com -connect myrc.example.com:443 2>/dev/null | openssl x509 -noout -dates
 
 # Recreate certificate if expired
-kubectl delete secret cinema-box-office-tls -n cinema-box-office
-kubectl create secret tls cinema-box-office-tls \
+kubectl delete secret myrc-tls -n myrc
+kubectl create secret tls myrc-tls \
   --cert=/path/to/cert.pem \
   --key=/path/to/key.pem \
-  -n cinema-box-office
+  -n myrc
 ```
 
 #### 502 Bad Gateway
 ```bash
 # Check backend services are running
-kubectl get svc -n cinema-box-office
+kubectl get svc -n myrc
 
 # Check endpoints
-kubectl get endpoints -n cinema-box-office
+kubectl get endpoints -n myrc
 
 # Check backend pod logs
 ./k8s-deploy.sh logs api
@@ -426,11 +426,11 @@ curl http://localhost:8080/api/health
 
 ```bash
 # Check resource usage
-kubectl top pods -n cinema-box-office
+kubectl top pods -n myrc
 kubectl top nodes
 
 # Check HPA status
-kubectl get hpa -n cinema-box-office
+kubectl get hpa -n myrc
 
 # Check metrics availability
 kubectl get deployment metrics-server -n kube-system
@@ -444,10 +444,10 @@ kubectl describe nodes | grep -A 5 "Conditions:"
 #### High CPU Usage
 ```bash
 # Identify pod using high CPU
-kubectl top pods -n cinema-box-office --sort-by=cpu
+kubectl top pods -n myrc --sort-by=cpu
 
 # Check pod logs for errors
-kubectl logs <pod-name> -n cinema-box-office
+kubectl logs <pod-name> -n myrc
 
 # Profile Java application
 ./k8s-deploy.sh exec api jstack <pid> > stack.txt
@@ -461,7 +461,7 @@ kubectl logs <pod-name> -n cinema-box-office
 #### High Memory Usage
 ```bash
 # Identify pod using high memory
-kubectl top pods -n cinema-box-office --sort-by=memory
+kubectl top pods -n myrc --sort-by=memory
 
 # Check for memory leaks
 ./k8s-deploy.sh exec api jmap -heap <pid>
@@ -475,7 +475,7 @@ kubectl top pods -n cinema-box-office --sort-by=memory
 #### Pod Eviction
 ```bash
 # Check eviction reason
-kubectl describe pod <pod-name> -n cinema-box-office
+kubectl describe pod <pod-name> -n myrc
 
 # Check node pressure
 kubectl describe nodes | grep -A 5 "Allocatable\|Allocated resources"
@@ -501,10 +501,10 @@ kubectl describe nodes | grep -A 5 "Allocatable\|Allocated resources"
 ./k8s-deploy.sh logs api | grep -i "auth\|ldap\|oauth"
 
 # Check LDAP configuration
-kubectl get configmap cinema-box-office-config -n cinema-box-office -o yaml | grep LDAP
+kubectl get configmap myrc-config -n myrc -o yaml | grep LDAP
 
 # Check OAuth2 configuration
-kubectl get configmap cinema-box-office-config -n cinema-box-office -o yaml | grep OAUTH
+kubectl get configmap myrc-config -n myrc -o yaml | grep OAUTH
 
 # Test LDAP connectivity
 ./k8s-deploy.sh exec api bash -c "ldapsearch -H ldap://ldap-server:389 -D 'cn=admin,dc=example,dc=com' -w password"
@@ -516,7 +516,7 @@ kubectl get configmap cinema-box-office-config -n cinema-box-office -o yaml | gr
 ```bash
 # Cause: LDAP server not accessible
 # Check LDAP configuration
-kubectl get configmap cinema-box-office-config -n cinema-box-office -o yaml
+kubectl get configmap myrc-config -n myrc -o yaml
 
 # Test connectivity
 ./k8s-deploy.sh exec api bash -c "nc -zv ldap-server 389"
@@ -525,24 +525,24 @@ kubectl get configmap cinema-box-office-config -n cinema-box-office -o yaml
 ./k8s-deploy.sh exec api bash -c "nslookup ldap-server"
 
 # Solution: Update LDAP configuration with correct server and port
-kubectl edit configmap cinema-box-office-config -n cinema-box-office
+kubectl edit configmap myrc-config -n myrc
 ```
 
 #### OAuth2 Invalid Client
 ```bash
 # Cause: Client ID/Secret incorrect
 # Check OAuth2 configuration
-kubectl get secret cinema-box-office-secrets -n cinema-box-office -o yaml
+kubectl get secret myrc-secrets -n myrc -o yaml
 
 # Decode base64 values
 echo "base64-value" | base64 -d
 
 # Update secrets with correct credentials
-kubectl delete secret cinema-box-office-secrets -n cinema-box-office
-kubectl create secret generic cinema-box-office-secrets \
+kubectl delete secret myrc-secrets -n myrc
+kubectl create secret generic myrc-secrets \
   --from-literal=oauth2-client-id="correct-id" \
   --from-literal=oauth2-client-secret="correct-secret" \
-  -n cinema-box-office
+  -n myrc
 ```
 
 ## Resource Quota Issues
@@ -556,14 +556,14 @@ kubectl create secret generic cinema-box-office-secrets \
 
 ```bash
 # Check resource quotas
-kubectl get resourcequota -n cinema-box-office
-kubectl describe resourcequota <quota-name> -n cinema-box-office
+kubectl get resourcequota -n myrc
+kubectl describe resourcequota <quota-name> -n myrc
 
 # Check current resource usage
-kubectl describe resourcequota <quota-name> -n cinema-box-office
+kubectl describe resourcequota <quota-name> -n myrc
 
 # Check pod requests
-kubectl get pods -n cinema-box-office -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].resources}{"\n"}{end}'
+kubectl get pods -n myrc -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[0].resources}{"\n"}{end}'
 ```
 
 ### Common Causes and Solutions
@@ -571,13 +571,13 @@ kubectl get pods -n cinema-box-office -o jsonpath='{range .items[*]}{.metadata.n
 #### Quota Exceeded
 ```bash
 # Solution 1: Increase quota
-kubectl patch resourcequota <quota-name> -p '{"spec":{"hard":{"cpu":"50","memory":"100Gi"}}}' -n cinema-box-office
+kubectl patch resourcequota <quota-name> -p '{"spec":{"hard":{"cpu":"50","memory":"100Gi"}}}' -n myrc
 
 # Solution 2: Reduce pod resource requests
-kubectl set resources deployment/api --requests=cpu=200m,memory=256Mi -n cinema-box-office
+kubectl set resources deployment/api --requests=cpu=200m,memory=256Mi -n myrc
 
 # Solution 3: Delete unused resources
-kubectl delete pod <unused-pod> -n cinema-box-office
+kubectl delete pod <unused-pod> -n myrc
 ```
 
 ## Network Policy Issues
@@ -591,10 +591,10 @@ kubectl delete pod <unused-pod> -n cinema-box-office
 
 ```bash
 # Check network policies
-kubectl get networkpolicy -n cinema-box-office
+kubectl get networkpolicy -n myrc
 
 # Check connectivity between pods
-kubectl exec -it <pod-name> -n cinema-box-office -- bash
+kubectl exec -it <pod-name> -n myrc -- bash
 apt-get update && apt-get install -y curl
 curl http://api:8080/api/health
 
@@ -608,10 +608,10 @@ nslookup postgres
 ```bash
 # Cause: Too restrictive network policy
 # Check network policies
-kubectl get networkpolicy -n cinema-box-office
+kubectl get networkpolicy -n myrc
 
 # Temporarily disable network policies to test
-kubectl delete networkpolicy -l app=cinema-box-office -n cinema-box-office
+kubectl delete networkpolicy -l app=myrc -n myrc
 
 # If communication works, review and update policies
 # to allow required traffic
@@ -622,7 +622,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-web-to-api
-  namespace: cinema-box-office
+  namespace: myrc
 spec:
   podSelector:
     matchLabels:
@@ -652,13 +652,13 @@ EOF
 ./k8s-deploy.sh exec postgres pg_dump --version
 
 # Verify backup file
-ls -lh boxoffice-backup-*.sql.gz
+ls -lh myrc-backup-*.sql.gz
 
 # Test backup file integrity
-gunzip -t boxoffice-backup-*.sql.gz
+gunzip -t myrc-backup-*.sql.gz
 
 # Check database consistency
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice -c "SELECT pg_database.datname, COUNT(*) FROM pg_database JOIN pg_class ON pg_database.oid = pg_class.relnamespace GROUP BY datname;"
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc -c "SELECT pg_database.datname, COUNT(*) FROM pg_database JOIN pg_class ON pg_database.oid = pg_class.relnamespace GROUP BY datname;"
 ```
 
 ### Common Causes and Solutions
@@ -667,20 +667,20 @@ gunzip -t boxoffice-backup-*.sql.gz
 ```bash
 # Cause: Large database or slow storage
 # Reduce backup size
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice -c "SELECT datname, pg_size_pretty(pg_database_size(datname)) FROM pg_database WHERE datname='boxoffice';"
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc -c "SELECT datname, pg_size_pretty(pg_database_size(datname)) FROM pg_database WHERE datname='myrc';"
 
 # Solution: Increase pod resources
-kubectl set resources pod <backup-pod> --limits=cpu=2000m,memory=2Gi -n cinema-box-office
+kubectl set resources pod <backup-pod> --limits=cpu=2000m,memory=2Gi -n myrc
 ```
 
 #### Restore Fails
 ```bash
 # Cause: Incompatible backup format or corrupted file
 # Verify backup integrity
-gunzip -t boxoffice-backup-*.sql.gz
+gunzip -t myrc-backup-*.sql.gz
 
 # Check PostgreSQL version compatibility
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice -c "SELECT version();"
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc -c "SELECT version();"
 
 # Solution: Create new backup and try restore
 ./k8s-deploy.sh backup
@@ -730,36 +730,36 @@ gunzip -t boxoffice-backup-*.sql.gz
 kubectl drain <node-name> --ignore-daemonsets
 
 # Scale down deployments before restart
-kubectl scale deployment --all --replicas=1 -n cinema-box-office
+kubectl scale deployment --all --replicas=1 -n myrc
 
 # Restart cluster
 
 # Scale back up
-kubectl scale deployment api --replicas=3 -n cinema-box-office
-kubectl scale deployment web --replicas=2 -n cinema-box-office
+kubectl scale deployment api --replicas=3 -n myrc
+kubectl scale deployment web --replicas=2 -n myrc
 ```
 
 ### Rollback Failed Deployment
 
 ```bash
 # View rollout history
-kubectl rollout history deployment/api -n cinema-box-office
+kubectl rollout history deployment/api -n myrc
 
 # Rollback to previous version
 ./k8s-deploy.sh rollback api
 
 # Rollback to specific revision
-kubectl rollout undo deployment/api --to-revision=2 -n cinema-box-office
+kubectl rollout undo deployment/api --to-revision=2 -n myrc
 ```
 
 ### Force Delete Stuck Pod
 
 ```bash
 # Graceful delete
-kubectl delete pod <pod-name> -n cinema-box-office --grace-period=30
+kubectl delete pod <pod-name> -n myrc --grace-period=30
 
 # Force delete (last resort)
-kubectl delete pod <pod-name> -n cinema-box-office --grace-period=0 --force
+kubectl delete pod <pod-name> -n myrc --grace-period=0 --force
 ```
 
 ## Support and Escalation
@@ -769,13 +769,13 @@ If issues persist after following this guide:
 1. **Collect diagnostic information**
    ```bash
    ./k8s-health.sh > health-report.txt
-   kubectl describe pod -n cinema-box-office > pod-description.txt
-   kubectl logs -l component=api -n cinema-box-office > api-logs.txt
+   kubectl describe pod -n myrc > pod-description.txt
+   kubectl logs -l component=api -n myrc > api-logs.txt
    ```
 
 2. **Check logs and events**
    ```bash
-   kubectl get events -n cinema-box-office --sort-by='.lastTimestamp'
+   kubectl get events -n myrc --sort-by='.lastTimestamp'
    ```
 
 3. **Contact support with**

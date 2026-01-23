@@ -8,15 +8,15 @@ services:
   # OpenLDAP Server for development/testing
   ldap:
     image: osixia/openldap:latest
-    container_name: cinema-ldap-dev
+    container_name: myrc-ldap-dev
     hostname: ldap
     ports:
       - "389:389"
       - "636:636"
     environment:
-      LDAP_ORGANISATION: "Cinema Box Office"
-      LDAP_DOMAIN: "cinema.local"
-      LDAP_BASE_DN: "dc=cinema,dc=local"
+      LDAP_ORGANISATION: "myRC"
+      LDAP_DOMAIN: "myrc.local"
+      LDAP_BASE_DN: "dc=myrc,dc=local"
       LDAP_ADMIN_PASSWORD: "admin-password"
       LDAP_READONLY_USER: "true"
       LDAP_READONLY_USER_USERNAME: "readonly"
@@ -26,9 +26,9 @@ services:
       - ldap_config:/etc/ldap/slapd.d
       - ./ldap-init.ldif:/container/service/slapd/assets/config/bootstrap/ldif/50-bootstrap.ldif:ro
     networks:
-      - cinema-network
+      - myrc-network
     healthcheck:
-      test: ["CMD", "ldapwhoami", "-x", "-D", "cn=admin,dc=cinema,dc=local", "-w", "admin-password"]
+      test: ["CMD", "ldapwhoami", "-x", "-D", "cn=admin,dc=myrc,dc=local", "-w", "admin-password"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -37,7 +37,7 @@ services:
   # LDAP Admin UI for managing LDAP (optional)
   phpldapadmin:
     image: osixia/phpldapadmin:latest
-    container_name: cinema-ldap-admin
+    container_name: myrc-ldap-admin
     ports:
       - "6443:443"
     environment:
@@ -46,26 +46,26 @@ services:
     depends_on:
       - ldap
     networks:
-      - cinema-network
+      - myrc-network
 
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: cinema-postgres-dev
+    container_name: myrc-postgres-dev
     hostname: postgres
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: boxoffice
-      POSTGRES_USER: boxoffice
+      POSTGRES_DB: myrc
+      POSTGRES_USER: myrc
       POSTGRES_PASSWORD: devpassword
       TZ: UTC
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - cinema-network
+      - myrc-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U boxoffice -d boxoffice"]
+      test: ["CMD-SHELL", "pg_isready -U myrc -d myrc"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -76,19 +76,19 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: cinema-api-dev
+    container_name: myrc-api-dev
     hostname: api
     ports:
       - "8080:8080"
     environment:
       # Application settings
       SPRING_PROFILES_ACTIVE: "dev,ldap,oauth2"
-      SPRING_APPLICATION_NAME: "cinema-box-office-api"
+      SPRING_APPLICATION_NAME: "myrc-api"
       
       # LDAP Configuration
       SPRING_LDAP_URLS: "ldap://ldap:389"
-      SPRING_LDAP_BASE: "dc=cinema,dc=local"
-      SPRING_LDAP_USERNAME: "cn=admin,dc=cinema,dc=local"
+      SPRING_LDAP_BASE: "dc=myrc,dc=local"
+      SPRING_LDAP_USERNAME: "cn=admin,dc=myrc,dc=local"
       SPRING_LDAP_PASSWORD: "admin-password"
       SPRING_LDAP_USER_SEARCH_FILTER: "(uid={0})"
       SPRING_LDAP_USER_SEARCH_BASE: "ou=users"
@@ -104,8 +104,8 @@ services:
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_REDIRECT_URI: "http://localhost:8080/login/oauth2/code/github"
       
       # Database Configuration
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/boxoffice"
-      SPRING_DATASOURCE_USERNAME: "boxoffice"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/myrc"
+      SPRING_DATASOURCE_USERNAME: "myrc"
       SPRING_DATASOURCE_PASSWORD: "devpassword"
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.postgresql.Driver"
       SPRING_JPA_DATABASE: "POSTGRESQL"
@@ -127,7 +127,7 @@ services:
       postgres:
         condition: service_healthy
     networks:
-      - cinema-network
+      - myrc-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       interval: 30s
@@ -140,7 +140,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: cinema-web-dev
+    container_name: myrc-web-dev
     hostname: web
     ports:
       - "4200:4200"
@@ -150,7 +150,7 @@ services:
     depends_on:
       - api
     networks:
-      - cinema-network
+      - myrc-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4200/"]
       interval: 30s
@@ -167,5 +167,5 @@ volumes:
     driver: local
 
 networks:
-  cinema-network:
+  myrc-network:
     driver: bridge

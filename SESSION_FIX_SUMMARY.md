@@ -49,7 +49,7 @@ Added `{ withCredentials: true }` to authentication methods:
 
 ### Backend Changes
 
-#### UserController (src/main/java/com/boxoffice/controller/UserController.java)
+#### UserController (src/main/java/com/myrc/controller/UserController.java)
 **Updated `authenticate()` method:**
 
 ```java
@@ -84,7 +84,7 @@ public ResponseEntity<UserDTO> authenticate(
 
 **Key Addition:** `repository.saveContext()` explicitly saves the security context to HttpSession
 
-#### AuthenticationConfig (src/main/java/com/boxoffice/config/AuthenticationConfig.java)
+#### AuthenticationConfig (src/main/java/com/myrc/config/AuthenticationConfig.java)
 Added two key configurations:
 
 1. **HttpSessionSecurityContextRepository Bean:**
@@ -142,18 +142,18 @@ curl -b /tmp/cookies.txt -X GET http://localhost:8080/api/responsibility-centres
 
 ## Containers Status
 
-✅ **API Container** (cinema-box-office-api-dev)
+✅ **API Container** (myrc-api-dev)
 - Status: Running and healthy
 - Port: 8080
 - Java: 25.0.1
 - Spring Boot: 3.4.1
 
-✅ **Frontend Container** (cinema-box-office-web-dev)
+✅ **Frontend Container** (myrc-web-dev)
 - Status: Running and healthy  
 - Port: 4200
 - Framework: Angular 19
 
-✅ **Database Container** (cinema-box-office-db-dev)
+✅ **Database Container** (myrc-db-dev)
 - Status: Running and healthy
 - Port: 5432
 - Database: PostgreSQL 16.11
@@ -197,14 +197,14 @@ Frontend:
   ✅ src/app/components/rc-selection/rc-selection.component.ts
 
 Backend:
-  ✅ src/main/java/com/boxoffice/controller/UserController.java
-  ✅ src/main/java/com/boxoffice/config/AuthenticationConfig.java
-  ✅ src/main/java/com/boxoffice/controller/ResponsibilityCentreController.java
-  ✅ src/main/java/com/boxoffice/service/ResponsibilityCentreService.java
-  ✅ src/main/java/com/boxoffice/dto/ResponsibilityCentreDTO.java
-  ✅ src/main/java/com/boxoffice/dto/RCAccessDTO.java
-  ✅ src/test/java/com/boxoffice/controller/ResponsibilityCentreControllerTest.java
-  ✅ src/test/java/com/boxoffice/service/ResponsibilityCentreServiceImplTest.java
+  ✅ src/main/java/com/myrc/controller/UserController.java
+  ✅ src/main/java/com/myrc/config/AuthenticationConfig.java
+  ✅ src/main/java/com/myrc/controller/ResponsibilityCentreController.java
+  ✅ src/main/java/com/myrc/service/ResponsibilityCentreService.java
+  ✅ src/main/java/com/myrc/dto/ResponsibilityCentreDTO.java
+  ✅ src/main/java/com/myrc/dto/RCAccessDTO.java
+  ✅ src/test/java/com/myrc/controller/ResponsibilityCentreControllerTest.java
+  ✅ src/test/java/com/myrc/service/ResponsibilityCentreServiceImplTest.java
 ```
 
 ## Deployment Status

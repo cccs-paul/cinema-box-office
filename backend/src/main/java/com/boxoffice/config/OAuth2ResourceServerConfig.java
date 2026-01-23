@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - OAuth2 Resource Server Configuration
- * Copyright (c) 2026 Box Office Team
+ * myRC - OAuth2 Resource Server Configuration
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.config;
@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Bean;
  * OAuth2 Resource Server configuration for the application.
  * Enables OAuth2 JWT token validation when configured.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-16
  */

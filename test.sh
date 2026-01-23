@@ -1,12 +1,12 @@
 #!/bin/bash
-# Test script for Cinema Box Office project
-# Author: Box Office Team
+# Test script for myRC project
+# Author: myRC Team
 # License: MIT
 
 set -e
 
 echo "========================================="
-echo "Cinema Box Office - Test Script"
+echo "myRC - Test Script"
 echo "========================================="
 echo ""
 

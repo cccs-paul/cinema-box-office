@@ -90,7 +90,7 @@ Use this checklist to ensure proper deployment and operation of myRC on Kubernet
 - [ ] PVC size appropriate (10Gi default)
 - [ ] Database deployed: `./k8s-deploy.sh install`
 - [ ] Database health verified: `./k8s-health.sh`
-- [ ] Database tested: `./k8s-deploy.sh exec postgres psql -U boxoffice`
+- [ ] Database tested: `./k8s-deploy.sh exec postgres psql -U myrc`
 
 ### Network Configuration
 - [ ] Network policies reviewed (if using)
@@ -107,7 +107,7 @@ Use this checklist to ensure proper deployment and operation of myRC on Kubernet
 - [ ] Resource requests/limits appropriate
 - [ ] Health check endpoints configured
 - [ ] Backend deployed: `./k8s-deploy.sh install`
-- [ ] Backend pods running: `kubectl get pods -n cinema-box-office`
+- [ ] Backend pods running: `kubectl get pods -n myrc`
 - [ ] Backend logs checked: `./k8s-deploy.sh logs api`
 - [ ] Backend health verified: `curl http://localhost:8080/api/health` (port-forwarded)
 - [ ] API connectivity to database verified
@@ -129,7 +129,7 @@ Use this checklist to ensure proper deployment and operation of myRC on Kubernet
 - [ ] Horizontal Pod Autoscaler configured
 - [ ] Min/max replica counts appropriate
 - [ ] CPU/memory thresholds reasonable
-- [ ] HPA status verified: `kubectl get hpa -n cinema-box-office`
+- [ ] HPA status verified: `kubectl get hpa -n myrc`
 
 ## Ingress and External Access
 
@@ -139,7 +139,7 @@ Use this checklist to ensure proper deployment and operation of myRC on Kubernet
 - [ ] TLS certificate secret created
 - [ ] Path routing verified
 - [ ] Ingress deployed: `kubectl apply -f k8s/ingress.yaml`
-- [ ] Ingress status checked: `kubectl get ingress -n cinema-box-office`
+- [ ] Ingress status checked: `kubectl get ingress -n myrc`
 - [ ] Ingress IP/hostname obtained
 - [ ] DNS updated with Ingress IP/hostname
 

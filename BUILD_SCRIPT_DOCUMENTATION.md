@@ -2,11 +2,11 @@
 
 ## Overview
 
-The `build-and-start.sh` script provides automated orchestration for building Docker images and managing containers in the Cinema Box Office application. It streamlines the development workflow by combining image building, container management, and health verification in a single command.
+The `build-and-start.sh` script provides automated orchestration for building Docker images and managing containers in the myRC application. It streamlines the development workflow by combining image building, container management, and health verification in a single command.
 
 **Version:** 1.0  
 **Last Updated:** January 17, 2025  
-**Location:** `/home/paul/git/cinema-box-office/build-and-start.sh`
+**Location:** `/home/paul/git/myrc/build-and-start.sh`
 
 ## Quick Start
 
@@ -69,7 +69,7 @@ The script performs 4 main steps:
 #### Step 1: Build Backend Docker Image
 - Compiles Java source code with Maven
 - Creates optimized runtime image
-- Tags as `cinema-box-office-api:latest`
+- Tags as `myrc-api:latest`
 
 ```
 [1/4] Building Backend Docker Image...
@@ -78,7 +78,7 @@ The script performs 4 main steps:
 #### Step 2: Build Frontend Docker Image
 - Builds Angular application
 - Optimizes assets and bundles
-- Tags as `cinema-box-office-web:latest`
+- Tags as `myrc-web:latest`
 
 ```
 [2/4] Building Frontend Docker Image...
@@ -117,10 +117,10 @@ Both backend and frontend images are built from the repository root:
 
 ```bash
 # Backend: Finds backend/Dockerfile and backend/pom.xml
-docker build -f backend/Dockerfile -t cinema-box-office-api:latest .
+docker build -f backend/Dockerfile -t myrc-api:latest .
 
 # Frontend: Finds frontend/Dockerfile and frontend/src/
-docker build -f frontend/Dockerfile -t cinema-box-office-web:latest .
+docker build -f frontend/Dockerfile -t myrc-web:latest .
 ```
 
 This ensures:
@@ -132,7 +132,7 @@ This ensures:
 
 ```
 ╔════════════════════════════════════════════════════════════════╗
-║    Cinema Box Office - Build and Start Script                  ║
+║    myRC - Build and Start Script                  ║
 ║    Environment: dev                                              ║
 ╚════════════════════════════════════════════════════════════════╝
 
@@ -182,8 +182,8 @@ Stopping containers...
 
 🔑 Database Credentials:
   • Host: localhost:5432
-  • User: boxoffice
-  • DB:   cinema_box_office
+  • User: myrc
+  • DB:   myrc_box_office
 
 📝 Useful Commands:
   • View logs:     docker-compose -f docker-compose.dev.yml logs -f
@@ -200,7 +200,7 @@ Stopping containers...
 
 **Solution**: Ensure you're running the script from the repository root:
 ```bash
-cd /home/paul/git/cinema-box-office
+cd /home/paul/git/myrc
 ./build-and-start.sh
 ```
 
@@ -212,7 +212,7 @@ cd /home/paul/git/cinema-box-office
 ```bash
 docker-compose stop
 # or
-docker kill cinema-box-office-api-dev cinema-box-office-web-dev
+docker kill myrc-api-dev myrc-web-dev
 ```
 
 ### Health Checks Timeout
@@ -243,8 +243,8 @@ sudo systemctl start docker
 
 To rebuild images without stopping/starting containers:
 ```bash
-docker build -f backend/Dockerfile -t cinema-box-office-api:latest .
-docker build -f frontend/Dockerfile -t cinema-box-office-web:latest .
+docker build -f backend/Dockerfile -t myrc-api:latest .
+docker build -f frontend/Dockerfile -t myrc-web:latest .
 ```
 
 ### View Build Output
@@ -260,10 +260,10 @@ cat build.log
 Build images in separate terminals:
 ```bash
 # Terminal 1
-docker build -f backend/Dockerfile -t cinema-box-office-api:latest .
+docker build -f backend/Dockerfile -t myrc-api:latest .
 
 # Terminal 2
-docker build -f frontend/Dockerfile -t cinema-box-office-web:latest .
+docker build -f frontend/Dockerfile -t myrc-web:latest .
 ```
 
 ## Performance Notes
@@ -301,7 +301,7 @@ Future enhancements could include:
 ## File Structure Reference
 
 ```
-/home/paul/git/cinema-box-office/
+/home/paul/git/myrc/
 ├── build-and-start.sh          ← This script
 ├── backend/
 │   ├── Dockerfile
@@ -320,7 +320,7 @@ Future enhancements could include:
 
 ## License
 
-Copyright (c) 2025 Box Office Team  
+Copyright (c) 2025 myRC Team  
 Licensed under MIT License
 
 ## Support

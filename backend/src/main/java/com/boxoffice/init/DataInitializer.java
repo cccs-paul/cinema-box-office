@@ -1,8 +1,8 @@
 /*
- * Cinema Box Office User Management System
+ * myRC User Management System
  * Data Initialization Component
  * 
- * Author: Box Office Team
+ * Author: myRC Team
  * Date: 2026-01-17
  * Version: 1.0.0
  * 
@@ -69,7 +69,7 @@ public class DataInitializer implements ApplicationRunner {
             
             CreateUserRequest adminRequest = new CreateUserRequest();
             adminRequest.setUsername("admin");
-            adminRequest.setEmail("admin@boxoffice.local");
+            adminRequest.setEmail("admin@myrc.local");
             adminRequest.setFullName("Administrator");
             adminRequest.setPassword("Admin@123");
             adminRequest.setAuthProvider("LOCAL");
@@ -97,7 +97,7 @@ public class DataInitializer implements ApplicationRunner {
             
             CreateUserRequest defaultRequest = new CreateUserRequest();
             defaultRequest.setUsername("default-user");
-            defaultRequest.setEmail("default@boxoffice.local");
+            defaultRequest.setEmail("default@myrc.local");
             defaultRequest.setFullName("Default User");
             defaultRequest.setPassword("DefaultPass@123");
             defaultRequest.setAuthProvider("LOCAL");

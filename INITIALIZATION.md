@@ -1,12 +1,12 @@
 # Project Initialization Summary
 
-**Project**: Cinema Box Office Management System  
+**Project**: myRC Management System  
 **Date**: January 16, 2026  
 **Status**: ✓ Project Structure Initialized  
 
 ## Overview
 
-A complete, production-ready Box Office management system with:
+A complete, production-ready myRC management system with:
 - **Backend**: Java 25 Spring Boot REST API
 - **Frontend**: Angular 17 Single Page Application
 - **Database**: PostgreSQL
@@ -16,13 +16,13 @@ A complete, production-ready Box Office management system with:
 ## Project Structure
 
 ```
-cinema-box-office/
+myrc/
 ├── backend/                           # Java Spring Boot API
-│   ├── src/main/java/com/boxoffice/
-│   │   ├── BoxOfficeApplication.java  # Main application class
+│   ├── src/main/java/com/myrc/
+│   │   ├── MyRCApplication.java  # Main application class
 │   │   └── controller/
 │   │       └── HealthController.java  # Health check endpoint
-│   ├── src/test/java/com/boxoffice/
+│   ├── src/test/java/com/myrc/
 │   │   └── controller/
 │   │       └── HealthControllerTest.java  # Integration tests
 │   ├── src/main/resources/

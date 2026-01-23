@@ -29,7 +29,7 @@ k8s/
 ### Installation
 
 ```bash
-# Install to default cinema-box-office namespace
+# Install to default myrc namespace
 ./k8s-deploy.sh install
 
 # Verify deployment
@@ -49,7 +49,7 @@ k8s/
 
 ### namespace.yaml
 
-Creates the `cinema-box-office` namespace with appropriate labels for organization and tracking.
+Creates the `myrc` namespace with appropriate labels for organization and tracking.
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
@@ -70,7 +70,7 @@ Update before deployment:
 data:
   SPRING_PROFILES_ACTIVE: "prod,oauth2"
   CORS_ALLOWED_ORIGINS: "https://your-domain.com"
-  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/boxoffice"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/myrc"
 ```
 
 ### secrets.yaml (TEMPLATE)
@@ -79,13 +79,13 @@ Contains sensitive data that must be updated before deployment:
 
 ```bash
 # Create secrets from template
-kubectl create secret generic cinema-box-office-secrets \
+kubectl create secret generic myrc-secrets \
   --from-literal=db-password="your-secure-password" \
-  --from-literal=db-user="boxoffice" \
+  --from-literal=db-user="myrc" \
   --from-literal=oauth2-client-id="your-client-id" \
   --from-literal=oauth2-client-secret="your-client-secret" \
   --from-literal=ldap-password="your-ldap-password" \
-  -n cinema-box-office
+  -n myrc
 ```
 
 **Important**: Never commit actual secrets to version control. Always use:
@@ -155,7 +155,7 @@ Update before deployment:
 
 ```yaml
 hosts:
-  - host: cinema-box-office.example.com
+  - host: myrc.example.com
     paths:
       - path: /
         pathType: Prefix
@@ -199,8 +199,8 @@ Edit backend.yaml and frontend.yaml to use your Docker registry:
 
 ```yaml
 # Update image references
-image: your-registry.com/cinema-box-office-api:v1.0
-image: your-registry.com/cinema-box-office-frontend:v1.0
+image: your-registry.com/myrc-api:v1.0
+image: your-registry.com/myrc-frontend:v1.0
 ```
 
 ### 3. Create Secrets
@@ -210,10 +210,10 @@ image: your-registry.com/cinema-box-office-frontend:v1.0
 kubectl apply -f k8s/namespace.yaml
 
 # Create secrets
-kubectl create secret generic cinema-box-office-secrets \
+kubectl create secret generic myrc-secrets \
   --from-literal=db-password="$(openssl rand -base64 32)" \
   --from-literal=oauth2-client-secret="$(openssl rand -base64 32)" \
-  -n cinema-box-office
+  -n myrc
 ```
 
 ### 4. Deploy Application
@@ -245,7 +245,7 @@ kubectl apply -k k8s/
 
 ```bash
 # Get Ingress IP/hostname
-kubectl get ingress cinema-box-office-ingress -n cinema-box-office
+kubectl get ingress myrc-ingress -n myrc
 
 # Port forward for local testing
 ./k8s-deploy.sh port-forward web 4200 80
@@ -298,10 +298,10 @@ open http://localhost:4200
 
 ```bash
 # Update API to new version
-./k8s-deploy.sh update api cinema-box-office-api:v1.1
+./k8s-deploy.sh update api myrc-api:v1.1
 
 # Update frontend to new version
-./k8s-deploy.sh update web cinema-box-office-frontend:v1.1
+./k8s-deploy.sh update web myrc-frontend:v1.1
 ```
 
 ### Rollback Deployment
@@ -321,14 +321,14 @@ open http://localhost:4200
 ./k8s-deploy.sh backup
 
 # Restore from backup
-./k8s-deploy.sh restore boxoffice-backup-20260117-120000.sql.gz
+./k8s-deploy.sh restore myrc-backup-20260117-120000.sql.gz
 ```
 
 ### Execute Commands in Pods
 
 ```bash
 # Execute in database pod
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc
 
 # Execute in API pod
 ./k8s-deploy.sh exec api sh
@@ -389,8 +389,8 @@ Adjust based on your load and cluster capacity.
 ### View HPA Status
 
 ```bash
-kubectl get hpa -n cinema-box-office
-kubectl describe hpa api -n cinema-box-office
+kubectl get hpa -n myrc
+kubectl describe hpa api -n myrc
 ```
 
 ## Persistence
@@ -421,7 +421,7 @@ For production deployments, consider adding:
 - NGINX Ingress Controller
 - Path-based routing to services
 - TLS/SSL support
-- Hostname: cinema-box-office.example.com (update as needed)
+- Hostname: myrc.example.com (update as needed)
 
 ### Network Policies
 
@@ -466,23 +466,23 @@ Restrict traffic between components:
 
 ```bash
 # Check pod status
-kubectl get pods -n cinema-box-office
+kubectl get pods -n myrc
 
 # Check pod events
-kubectl describe pod <pod-name> -n cinema-box-office
+kubectl describe pod <pod-name> -n myrc
 
 # View logs
-kubectl logs <pod-name> -n cinema-box-office
+kubectl logs <pod-name> -n myrc
 ```
 
 ### Persistent volume issues
 
 ```bash
 # Check PVCs
-kubectl get pvc -n cinema-box-office
+kubectl get pvc -n myrc
 
 # Describe PVC
-kubectl describe pvc <pvc-name> -n cinema-box-office
+kubectl describe pvc <pvc-name> -n myrc
 
 # Check PVs
 kubectl get pv
@@ -493,20 +493,20 @@ kubectl get pv
 ```bash
 # Test database connection
 ./k8s-deploy.sh port-forward postgres 5432 5432
-psql -h localhost -U boxoffice -d boxoffice
+psql -h localhost -U myrc -d myrc
 
 # Check database pod
-./k8s-deploy.sh exec postgres psql -U boxoffice -d boxoffice
+./k8s-deploy.sh exec postgres psql -U myrc -d myrc
 ```
 
 ### Ingress not working
 
 ```bash
 # Check ingress status
-kubectl get ingress -n cinema-box-office
+kubectl get ingress -n myrc
 
 # Describe ingress
-kubectl describe ingress cinema-box-office-ingress -n cinema-box-office
+kubectl describe ingress myrc-ingress -n myrc
 
 # Check NGINX controller logs
 kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx
@@ -526,5 +526,5 @@ See additional documentation:
 For issues or questions:
 - Check the logs: `./k8s-deploy.sh logs <component>`
 - Use health check: `./k8s-health.sh`
-- Review events: `kubectl get events -n cinema-box-office`
+- Review events: `kubectl get events -n myrc`
 - Check documentation in docs/ directory

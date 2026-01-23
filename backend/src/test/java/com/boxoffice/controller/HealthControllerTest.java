@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Health Controller Tests
- * Copyright (c) 2026 Box Office Team
+ * myRC - Health Controller Tests
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.controller;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * Integration tests for HealthController.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-16
  */

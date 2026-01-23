@@ -2,7 +2,7 @@
 
 ## Summary
 
-Cinema Box Office now includes comprehensive Kubernetes deployment infrastructure and extensive documentation for enterprise integration with LDAP and OAuth2 authentication.
+myRC now includes comprehensive Kubernetes deployment infrastructure and extensive documentation for enterprise integration with LDAP and OAuth2 authentication.
 
 ## What Was Created
 
@@ -10,7 +10,7 @@ Cinema Box Office now includes comprehensive Kubernetes deployment infrastructur
 
 Located in `./k8s/`:
 
-1. **namespace.yaml** - Cinema Box Office Kubernetes namespace
+1. **namespace.yaml** - myRC Kubernetes namespace
 2. **configmap.yaml** - Application configuration and environment variables
 3. **secrets.yaml** - Template for sensitive credentials (DB, OAuth2, LDAP passwords)
 4. **postgres.yaml** - PostgreSQL database with PersistentVolume and health checks
@@ -273,7 +273,7 @@ open http://localhost:4200
 ```bash
 # See docs/LDAP.md for detailed setup
 # Then configure via ConfigMap or environment variables
-kubectl edit configmap cinema-box-office-config -n cinema-box-office
+kubectl edit configmap myrc-config -n myrc
 
 # Set SPRING_PROFILES_ACTIVE to include "ldap"
 ```
@@ -282,10 +282,10 @@ kubectl edit configmap cinema-box-office-config -n cinema-box-office
 ```bash
 # See docs/OAUTH2.md for provider-specific setup
 # Create OAuth2 secrets
-kubectl create secret generic cinema-box-office-oauth2 \
+kubectl create secret generic myrc-oauth2 \
   --from-literal=client-id="your-id" \
   --from-literal=client-secret="your-secret" \
-  -n cinema-box-office
+  -n myrc
 ```
 
 ## Documentation Structure

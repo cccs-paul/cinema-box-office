@@ -1,14 +1,14 @@
 #!/bin/bash
 #
 # Kubernetes Deployment Helper Script
-# Simplifies common Kubernetes operations for Cinema Box Office
+# Simplifies common Kubernetes operations for myRC
 #
 # Usage: ./k8s-deploy.sh [command] [options]
 #
 
 set -e
 
-NAMESPACE="cinema-box-office"
+NAMESPACE="myrc"
 KUSTOMIZE_DIR="k8s"
 
 # Colors for output
@@ -60,7 +60,7 @@ check_prerequisites() {
 
 # Install command
 install() {
-    log_info "Installing Cinema Box Office to Kubernetes cluster..."
+    log_info "Installing myRC to Kubernetes cluster..."
     
     # Create namespace if it doesn't exist
     log_info "Creating namespace: $NAMESPACE"
@@ -83,7 +83,7 @@ update() {
     
     if [ -z "$component" ] || [ -z "$image" ]; then
         log_error "Usage: $0 update <component> <image>"
-        log_info "Example: $0 update api cinema-box-office-api:v1.1"
+        log_info "Example: $0 update api myrc-api:v1.1"
         exit 1
     fi
     
@@ -191,7 +191,7 @@ exec_pod() {
     
     if [ -z "$component" ]; then
         log_error "Usage: $0 exec <component> <command>"
-        log_info "Example: $0 exec postgres psql -U boxoffice -d boxoffice"
+        log_info "Example: $0 exec postgres psql -U myrc -d myrc"
         exit 1
     fi
     
@@ -211,7 +211,7 @@ exec_pod() {
 backup_database() {
     log_info "Creating database backup..."
     
-    local backup_file="boxoffice-backup-$(date +%Y%m%d-%H%M%S).sql.gz"
+    local backup_file="myrc-backup-$(date +%Y%m%d-%H%M%S).sql.gz"
     
     # Get postgres pod
     local pod=$(kubectl get pod -n $NAMESPACE -l "component=database" -o jsonpath='{.items[0].metadata.name}')
@@ -223,7 +223,7 @@ backup_database() {
     
     # Create backup
     kubectl exec -n $NAMESPACE "$pod" -- \
-        pg_dump -U boxoffice boxoffice | gzip > "$backup_file"
+        pg_dump -U myrc myrc | gzip > "$backup_file"
     
     log_success "Backup created: $backup_file"
 }
@@ -257,7 +257,7 @@ restore_database() {
     
     # Restore backup
     zcat "$backup_file" | kubectl exec -i -n $NAMESPACE "$pod" -- \
-        psql -U boxoffice boxoffice
+        psql -U myrc myrc
     
     log_success "Database restored successfully"
 }
@@ -273,7 +273,7 @@ uninstall() {
         exit 0
     fi
     
-    log_info "Uninstalling Cinema Box Office..."
+    log_info "Uninstalling myRC..."
     kubectl delete namespace "$NAMESPACE"
     
     log_success "Uninstall complete"
@@ -282,7 +282,7 @@ uninstall() {
 # Show help
 show_help() {
     cat << EOF
-Cinema Box Office Kubernetes Deployment Helper
+myRC Kubernetes Deployment Helper
 
 Usage: $0 [command] [options]
 
@@ -307,11 +307,11 @@ Examples:
   $0 status
   $0 logs api
   $0 port-forward api 8080 8080
-  $0 update api cinema-box-office-api:v1.1
+  $0 update api myrc-api:v1.1
   $0 scale api 5
-  $0 exec postgres psql -U boxoffice -d boxoffice
+  $0 exec postgres psql -U myrc -d myrc
   $0 backup
-  $0 restore boxoffice-backup-20260117-120000.sql.gz
+  $0 restore myrc-backup-20260117-120000.sql.gz
 
 EOF
 }

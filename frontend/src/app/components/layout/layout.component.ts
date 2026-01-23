@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Layout Component
- * Copyright (c) 2026 Box Office Team
+ * myRC - Layout Component
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { Component } from '@angular/core';
@@ -12,7 +12,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
  * Layout component that wraps authenticated pages with header and sidebar.
  * Provides consistent layout for all authenticated routes.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-20
  */

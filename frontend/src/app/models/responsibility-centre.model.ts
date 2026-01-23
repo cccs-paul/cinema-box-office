@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Responsibility Centre DTO Model
- * Copyright (c) 2026 Box Office Team
+ * myRC - Responsibility Centre DTO Model
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 

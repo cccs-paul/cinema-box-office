@@ -1,4 +1,4 @@
-# Box Office RC Session Persistence - Final Status Report
+# myRC RC Session Persistence - Final Status Report
 
 ## Mission Accomplished ✅
 
@@ -104,10 +104,10 @@ Request executes with authenticated user context
 ### Docker Containers
 | Container | Status | Port | Health |
 |-----------|--------|------|--------|
-| cinema-box-office-api-dev | Running | 8080 | ✅ Healthy |
-| cinema-box-office-web-dev | Running | 4200 | ✅ Healthy |
-| cinema-box-office-db-dev | Running | 5432 | ✅ Healthy |
-| cinema-box-office-pgadmin-dev | Running | 5050 | ✅ Running |
+| myrc-api-dev | Running | 8080 | ✅ Healthy |
+| myrc-web-dev | Running | 4200 | ✅ Healthy |
+| myrc-db-dev | Running | 5432 | ✅ Healthy |
+| myrc-pgadmin-dev | Running | 5050 | ✅ Running |
 
 ### API Endpoints
 | Endpoint | Method | Status | Auth Required |
@@ -136,17 +136,17 @@ Request executes with authenticated user context
    - Added empty state display
 
 **Backend (5 files):**
-1. `src/main/java/com/boxoffice/controller/UserController.java`
+1. `src/main/java/com/myrc/controller/UserController.java`
    - Updated authenticate method to save SecurityContext to session
    
-2. `src/main/java/com/boxoffice/config/AuthenticationConfig.java`
+2. `src/main/java/com/myrc/config/AuthenticationConfig.java`
    - Added HttpSessionSecurityContextRepository bean
    - Added session management configuration
    
-3. `src/main/java/com/boxoffice/controller/ResponsibilityCentreController.java`
+3. `src/main/java/com/myrc/controller/ResponsibilityCentreController.java`
    - New file with 8 REST endpoints
    
-4. `src/main/java/com/boxoffice/service/ResponsibilityCentreService.java`
+4. `src/main/java/com/myrc/service/ResponsibilityCentreService.java`
    - New file with RC business logic
    
 5. DTOs (2 new files):
@@ -235,7 +235,7 @@ curl -b /tmp/cookies.txt -X GET http://localhost:8080/api/responsibility-centres
 
 **Status:** ✅ **COMPLETE AND VERIFIED**
 
-The Box Office application now has fully functional session-based authentication with proper security context persistence. Users can:
+The myRC application now has fully functional session-based authentication with proper security context persistence. Users can:
 - ✅ Authenticate with credentials
 - ✅ Maintain session across requests
 - ✅ Create responsibility centres

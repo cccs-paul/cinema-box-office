@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Responsibility Centre DTO
- * Copyright (c) 2026 Box Office Team
+ * myRC - Responsibility Centre DTO
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.dto;
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * Data Transfer Object for ResponsibilityCentre.
  * Used for API responses and requests related to responsibility centres.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Theme Service
- * Copyright (c) 2026 Box Office Team
+ * myRC - Theme Service
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { Injectable } from '@angular/core';
@@ -14,7 +14,7 @@ export type Theme = 'light' | 'dark';
  * Theme service for managing light/dark theme preferences.
  * Persists theme choice to database via API and localStorage.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

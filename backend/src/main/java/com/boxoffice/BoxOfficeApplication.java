@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Backend API
- * Copyright (c) 2026 Box Office Team
+ * myRC - Backend API
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice;
@@ -9,10 +9,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Main application entry point for Box Office Management System API.
+ * Main application entry point for myRC Management System API.
  * Provides RESTful API endpoints for managing box office operations.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-16
  */

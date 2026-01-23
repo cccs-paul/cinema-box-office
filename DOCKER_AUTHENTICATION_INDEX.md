@@ -206,20 +206,20 @@ docker-compose -f docker-compose.oauth2.yml down
 docker-compose logs | grep healthcheck
 
 # Test LDAP connectivity
-docker exec cinema-ldap ldapsearch \
+docker exec myrc-ldap ldapsearch \
   -x -H ldap://localhost:389 \
-  -b "dc=cinema,dc=local" \
-  -D "cn=admin,dc=cinema,dc=local" \
+  -b "dc=myrc,dc=local" \
+  -D "cn=admin,dc=myrc,dc=local" \
   -w admin
 
 # Test API health
 curl http://localhost:8080/actuator/health
 
 # View API logs for authentication
-docker logs cinema-api | grep -i auth
+docker logs myrc-api | grep -i auth
 
 # Connect to database
-docker exec cinema-postgres psql -U cinema_user -d cinema_db -c "SELECT 1"
+docker exec myrc-postgres psql -U myrc_user -d myrc_db -c "SELECT 1"
 ```
 
 ---

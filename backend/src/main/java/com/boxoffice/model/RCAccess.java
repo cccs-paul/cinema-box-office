@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - RC Access Entity
- * Copyright (c) 2026 Box Office Team
+ * myRC - RC Access Entity
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.model;
@@ -13,7 +13,7 @@ import org.hibernate.annotations.CreationTimestamp;
  * Entity representing access to a Responsibility Centre.
  * Defines the relationship between users and responsibility centres with specific access levels.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

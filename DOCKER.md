@@ -16,7 +16,7 @@ The backend Dockerfile uses a two-stage build process:
 **Stage 2: Runtime**
 - Base: `eclipse-temurin:25-jre-noble` (Java 25 Runtime)
 - Copies JAR from builder stage
-- Creates non-root user (`boxoffice:1000`)
+- Creates non-root user (`myrc:1000`)
 - Configures health check
 - Exposes port 8080
 
@@ -28,7 +28,7 @@ The backend Dockerfile uses a two-stage build process:
 
 ### Build Command
 ```bash
-docker build -f backend/Dockerfile -t cinema-box-office-api .
+docker build -f backend/Dockerfile -t myrc-api .
 ```
 
 ## Frontend Dockerfile
@@ -59,7 +59,7 @@ The frontend Dockerfile uses a two-stage build process:
 
 ### Build Command
 ```bash
-docker build -f frontend/Dockerfile -t cinema-box-office-web .
+docker build -f frontend/Dockerfile -t myrc-web .
 ```
 
 ## Image Sizes

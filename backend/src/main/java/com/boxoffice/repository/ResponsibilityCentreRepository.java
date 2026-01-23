@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Responsibility Centre Repository
- * Copyright (c) 2026 Box Office Team
+ * myRC - Responsibility Centre Repository
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.repository;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Repository;
  * Repository interface for ResponsibilityCentre entity.
  * Provides CRUD operations and custom queries for responsibility centres.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

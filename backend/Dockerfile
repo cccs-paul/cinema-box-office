@@ -1,4 +1,4 @@
-# Multi-stage build for Box Office Backend API
+# Multi-stage build for myRC Backend API
 # Stage 1: Build stage
 FROM ubuntu:24.04 AS builder
 
@@ -35,14 +35,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 
 # Create non-root user (use different UID)
-RUN useradd -m -u 1001 boxoffice && \
-    chown -R boxoffice:boxoffice /app
+RUN useradd -m -u 1001 myrc && \
+    chown -R myrc:myrc /app
 
 # Copy JAR from builder stage
-COPY --from=builder --chown=boxoffice:boxoffice /build/target/*.jar app.jar
+COPY --from=builder --chown=myrc:myrc /build/target/*.jar app.jar
 
 # Switch to non-root user
-USER boxoffice
+USER myrc
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \

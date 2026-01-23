@@ -1,8 +1,8 @@
 /*
- * Cinema Box Office User Management System
+ * myRC User Management System
  * User Service Implementation
  * 
- * Author: Box Office Team
+ * Author: myRC Team
  * Date: 2026-01-17
  * Version: 1.0.0
  * 

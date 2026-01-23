@@ -1,13 +1,13 @@
 ---
-# Cinema Box Office - Backend API Deployment
+# myRC - Backend API Deployment
 # License: MIT
 apiVersion: v1
 kind: Service
 metadata:
   name: api
-  namespace: cinema-box-office
+  namespace: myrc
   labels:
-    app: cinema-box-office
+    app: myrc
     component: backend
 spec:
   ports:
@@ -16,7 +16,7 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: cinema-box-office
+    app: myrc
     component: backend
   type: ClusterIP
 
@@ -25,9 +25,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
-  namespace: cinema-box-office
+  namespace: myrc
   labels:
-    app: cinema-box-office
+    app: myrc
     component: backend
 spec:
   replicas: 2
@@ -38,18 +38,18 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: cinema-box-office
+      app: myrc
       component: backend
   template:
     metadata:
       labels:
-        app: cinema-box-office
+        app: myrc
         component: backend
     spec:
-      serviceAccountName: cinema-box-office
+      serviceAccountName: myrc
       containers:
       - name: api
-        image: cinema-box-office-api:latest
+        image: myrc-api:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -57,36 +57,36 @@ spec:
           name: http
         env:
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:postgresql://postgres:5432/boxoffice"
+          value: "jdbc:postgresql://postgres:5432/myrc"
         - name: SPRING_DATASOURCE_USERNAME
           valueFrom:
             secretKeyRef:
-              name: cinema-box-office-db-secret
+              name: myrc-db-secret
               key: db-user
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: cinema-box-office-db-secret
+              name: myrc-db-secret
               key: db-password
         - name: SPRING_JPA_HIBERNATE_DDL_AUTO
           valueFrom:
             configMapKeyRef:
-              name: cinema-box-office-config
+              name: myrc-config
               key: SPRING_JPA_HIBERNATE_DDL_AUTO
         - name: SPRING_PROFILES_ACTIVE
           valueFrom:
             configMapKeyRef:
-              name: cinema-box-office-config
+              name: myrc-config
               key: SPRING_PROFILES_ACTIVE
         - name: LOGGING_LEVEL_ROOT
           valueFrom:
             configMapKeyRef:
-              name: cinema-box-office-config
+              name: myrc-config
               key: LOGGING_LEVEL_ROOT
         - name: LOGGING_LEVEL_COM_BOXOFFICE
           valueFrom:
             configMapKeyRef:
-              name: cinema-box-office-config
+              name: myrc-config
               key: LOGGING_LEVEL_COM_BOXOFFICE
         resources:
           requests:
@@ -121,7 +121,7 @@ spec:
                 - key: app
                   operator: In
                   values:
-                  - cinema-box-office
+                  - myrc
                 - key: component
                   operator: In
                   values:
@@ -134,7 +134,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: api-hpa
-  namespace: cinema-box-office
+  namespace: myrc
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Authentication Configuration
- * Copyright (c) 2026 Box Office Team
+ * myRC - Authentication Configuration
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.config;
@@ -24,7 +24,7 @@ import java.util.Arrays;
  * Core authentication configuration for the application.
  * Supports multiple authentication mechanisms including LDAP and OAuth2.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-16
  */

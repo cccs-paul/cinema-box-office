@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - App Config
- * Copyright (c) 2026 Box Office Team
+ * myRC - App Config
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { ApplicationConfig } from '@angular/core';
@@ -12,7 +12,7 @@ import { routes } from './app.routes';
  * Application configuration for Bootstrap.
  * Provides router, HTTP client, and other essential services.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */

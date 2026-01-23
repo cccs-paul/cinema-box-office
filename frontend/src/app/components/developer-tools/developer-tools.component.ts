@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Developer Tools Component
- * Copyright (c) 2026 Box Office Team
+ * myRC - Developer Tools Component
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 import { Component, OnInit } from '@angular/core';
@@ -11,7 +11,7 @@ import { HttpClient } from '@angular/common/http';
 /**
  * Developer tools page providing links to API documentation, health checks, and database management.
  *
- * @author Box Office Team
+ * @author myRC Team
  * @version 1.0.0
  * @since 2026-01-17
  */
@@ -23,7 +23,7 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./developer-tools.component.scss'],
 })
 export class DeveloperToolsComponent implements OnInit {
-  title = 'Cinema Box Office - Developer Tools';
+  title = 'myRC - Developer Tools';
   apiStatus = 'Checking...';
   isApiHealthy = false;
   databaseStatus = 'Checking...';

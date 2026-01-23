@@ -1,10 +1,10 @@
 ---
-# Cinema Box Office - Kubernetes Namespace
+# myRC - Kubernetes Namespace
 # License: MIT
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: cinema-box-office
+  name: myrc
   labels:
-    app: cinema-box-office
+    app: myrc
     version: "1.0.0"

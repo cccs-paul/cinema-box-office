@@ -30,20 +30,20 @@ Three new tables have been created via Liquibase migration `V3__add_responsibili
 
 #### Entity Classes
 
-**ResponsibilityCentre.java** (`src/main/java/com/boxoffice/model/`)
+**ResponsibilityCentre.java** (`src/main/java/com/myrc/model/`)
 - JPA entity with automatic timestamp management
 - Relations:
   - Many-to-One with User (owner)
   - Cascade delete when owner is deleted
 
-**RCAccess.java** (`src/main/java/com/boxoffice/model/`)
+**RCAccess.java** (`src/main/java/com/myrc/model/`)
 - Enum: AccessLevel (READ_ONLY, READ_WRITE)
 - Tracks access grants and revocations
 - Timestamp of when access was granted
 
 #### DTOs
 
-**ResponsibilityCentreDTO.java** (`src/main/java/com/boxoffice/dto/`)
+**ResponsibilityCentreDTO.java** (`src/main/java/com/myrc/dto/`)
 - Serializes RC with access level information
 - Includes `isOwner` flag for UI logic
 - Factory methods: `fromEntity()` and `fromEntityWithAccess()`
@@ -84,7 +84,7 @@ Three new tables have been created via Liquibase migration `V3__add_responsibili
 
 #### REST Controller
 
-**ResponsibilityCentreController.java** (`src/main/java/com/boxoffice/controller/`)
+**ResponsibilityCentreController.java** (`src/main/java/com/myrc/controller/`)
 - Base path: `/api/responsibility-centres`
 - Endpoints:
   - `GET /`: List all accessible RCs
@@ -310,7 +310,7 @@ Backend:
 │   └── db/migration/
 │       └── V3__add_responsibility_centres.sql (NEW)
 └── test/
-    └── java/com/boxoffice/
+    └── java/com/myrc/
         ├── service/ResponsibilityCentreServiceImplTest.java (NEW)
         └── controller/ResponsibilityCentreControllerTest.java (NEW)
 

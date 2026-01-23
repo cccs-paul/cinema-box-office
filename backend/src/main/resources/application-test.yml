@@ -1,6 +1,6 @@
 spring:
   application:
-    name: cinema-box-office-api-test
+    name: myrc-api-test
   classformat:
     ignore: true
   jpa:

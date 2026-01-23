@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ################################################################################
-# Cinema Box Office - Build and Start Script
-# Copyright (c) 2026 Box Office Team
+# myRC - Build and Start Script
+# Copyright (c) 2026 myRC Team
 # Licensed under MIT License
 #
 # Description: Builds code locally and starts containers with docker-compose
@@ -21,7 +21,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 ENVIRONMENT="${1:-dev}"
-PROJECT_NAME="cinema-box-office"
+PROJECT_NAME="myrc"
 
 # Validate environment parameter
 if [ "$ENVIRONMENT" != "dev" ] && [ "$ENVIRONMENT" != "prod" ]; then
@@ -31,7 +31,7 @@ if [ "$ENVIRONMENT" != "dev" ] && [ "$ENVIRONMENT" != "prod" ]; then
 fi
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║    Cinema Box Office - Build and Start Script                  ║${NC}"
+echo -e "${BLUE}║    myRC - Build and Start Script                  ║${NC}"
 echo -e "${BLUE}║    Environment: ${ENVIRONMENT}                                              ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
@@ -98,11 +98,11 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     exit 1
 fi
 
-RUNNING_CONTAINERS=$(docker compose -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
+RUNNING_CONTAINERS=$(docker compose --project-name "$PROJECT_NAME" -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
 
 if [ "$RUNNING_CONTAINERS" -gt 0 ]; then
     echo -e "${GREEN}Stopping containers...${NC}"
-    docker compose -f "$COMPOSE_FILE" down
+    docker compose --project-name "$PROJECT_NAME" -f "$COMPOSE_FILE" down
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}✓ Containers stopped successfully${NC}"
     else
@@ -120,7 +120,7 @@ echo -e "${YELLOW}[4/4] Starting Services...${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 echo -e "${GREEN}Starting all services...${NC}"
-docker compose -f "$COMPOSE_FILE" up -d
+docker compose --project-name "$PROJECT_NAME" -f "$COMPOSE_FILE" up -d
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Services started successfully${NC}"
@@ -193,9 +193,9 @@ echo -e "  Password: ${BLUE}Admin@123${NC}"
 echo ""
 echo -e "${YELLOW}Database Console Credentials:${NC}"
 echo -e "  Host:     ${BLUE}localhost:5432${NC}"
-echo -e "  Database: ${BLUE}boxoffice${NC}"
-echo -e "  User:     ${BLUE}boxoffice${NC}"
-echo -e "  Password: ${BLUE}boxoffice_password${NC}"
+echo -e "  Database: ${BLUE}myrc${NC}"
+echo -e "  User:     ${BLUE}myrc${NC}"
+echo -e "  Password: ${BLUE}myrc_password${NC}"
 echo ""
 echo -e "${YELLOW}pgAdmin Credentials:${NC}"
 echo -e "  URL:      ${BLUE}http://localhost:5050${NC}"

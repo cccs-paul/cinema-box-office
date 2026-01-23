@@ -60,8 +60,8 @@ Edit `k8s/secrets.yaml`:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: cinema-box-office-oauth2-secret
-  namespace: cinema-box-office
+  name: myrc-oauth2-secret
+  namespace: myrc
 type: Opaque
 data:
   client-id: eW91ci1jbGllbnQtaWQ=
@@ -81,27 +81,27 @@ containers:
   - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CUSTOM_CLIENT_ID
     valueFrom:
       secretKeyRef:
-        name: cinema-box-office-oauth2-secret
+        name: myrc-oauth2-secret
         key: client-id
   - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_CUSTOM_CLIENT_SECRET
     valueFrom:
       secretKeyRef:
-        name: cinema-box-office-oauth2-secret
+        name: myrc-oauth2-secret
         key: client-secret
   - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_CUSTOM_AUTHORIZATION_URI
     valueFrom:
       configMapKeyRef:
-        name: cinema-box-office-config
+        name: myrc-config
         key: OAUTH2_AUTHORIZATION_URI
   - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_CUSTOM_TOKEN_URI
     valueFrom:
       configMapKeyRef:
-        name: cinema-box-office-config
+        name: myrc-config
         key: OAUTH2_TOKEN_URI
   - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_CUSTOM_USER_INFO_URI
     valueFrom:
       configMapKeyRef:
-        name: cinema-box-office-config
+        name: myrc-config
         key: OAUTH2_USER_INFO_URI
 ```
 
@@ -115,7 +115,7 @@ OAUTH2_PROVIDER_URL: "https://accounts.google.com"
 OAUTH2_AUTHORIZATION_URI: "https://accounts.google.com/o/oauth2/v2/auth"
 OAUTH2_TOKEN_URI: "https://oauth2.googleapis.com/token"
 OAUTH2_USER_INFO_URI: "https://openidconnect.googleapis.com/v1/userinfo"
-OAUTH2_REDIRECT_URI: "http://cinema-box-office.example.com/login/oauth2/code/google"
+OAUTH2_REDIRECT_URI: "http://myrc.example.com/login/oauth2/code/google"
 ```
 
 **Setup Instructions:**
@@ -134,7 +134,7 @@ OAUTH2_CLIENT_SECRET: "your-github-client-secret"
 OAUTH2_AUTHORIZATION_URI: "https://github.com/login/oauth/authorize"
 OAUTH2_TOKEN_URI: "https://github.com/login/oauth/access_token"
 OAUTH2_USER_INFO_URI: "https://api.github.com/user"
-OAUTH2_REDIRECT_URI: "http://cinema-box-office.example.com/login/oauth2/code/github"
+OAUTH2_REDIRECT_URI: "http://myrc.example.com/login/oauth2/code/github"
 ```
 
 **Setup Instructions:**
@@ -152,7 +152,7 @@ OAUTH2_CLIENT_SECRET: "your-app-secret"
 OAUTH2_AUTHORIZATION_URI: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize"
 OAUTH2_TOKEN_URI: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token"
 OAUTH2_USER_INFO_URI: "https://graph.microsoft.com/oidc/userinfo"
-OAUTH2_REDIRECT_URI: "http://cinema-box-office.example.com/login/oauth2/code/azure"
+OAUTH2_REDIRECT_URI: "http://myrc.example.com/login/oauth2/code/azure"
 ```
 
 **Setup Instructions:**
@@ -166,14 +166,14 @@ OAUTH2_REDIRECT_URI: "http://cinema-box-office.example.com/login/oauth2/code/azu
 ### Keycloak
 
 ```yaml
-OAUTH2_REALM: "cinema-box-office"
+OAUTH2_REALM: "myrc"
 OAUTH2_SERVER_URL: "https://keycloak.example.com"
-OAUTH2_CLIENT_ID: "cinema-box-office-client"
+OAUTH2_CLIENT_ID: "myrc-client"
 OAUTH2_CLIENT_SECRET: "your-client-secret"
-OAUTH2_AUTHORIZATION_URI: "https://keycloak.example.com/realms/cinema-box-office/protocol/openid-connect/auth"
-OAUTH2_TOKEN_URI: "https://keycloak.example.com/realms/cinema-box-office/protocol/openid-connect/token"
-OAUTH2_USER_INFO_URI: "https://keycloak.example.com/realms/cinema-box-office/protocol/openid-connect/userinfo"
-OAUTH2_REDIRECT_URI: "http://cinema-box-office.example.com/login/oauth2/code/keycloak"
+OAUTH2_AUTHORIZATION_URI: "https://keycloak.example.com/realms/myrc/protocol/openid-connect/auth"
+OAUTH2_TOKEN_URI: "https://keycloak.example.com/realms/myrc/protocol/openid-connect/token"
+OAUTH2_USER_INFO_URI: "https://keycloak.example.com/realms/myrc/protocol/openid-connect/userinfo"
+OAUTH2_REDIRECT_URI: "http://myrc.example.com/login/oauth2/code/keycloak"
 ```
 
 **Setup Instructions:**
@@ -193,7 +193,7 @@ OAUTH2_CLIENT_SECRET: "your-client-secret"
 OAUTH2_AUTHORIZATION_URI: "https://your-domain.okta.com/oauth2/v1/authorize"
 OAUTH2_TOKEN_URI: "https://your-domain.okta.com/oauth2/v1/token"
 OAUTH2_USER_INFO_URI: "https://your-domain.okta.com/oauth2/v1/userinfo"
-OAUTH2_REDIRECT_URI: "http://cinema-box-office.example.com/login/oauth2/code/okta"
+OAUTH2_REDIRECT_URI: "http://myrc.example.com/login/oauth2/code/okta"
 ```
 
 **Setup Instructions:**
@@ -209,7 +209,7 @@ OAUTH2_REDIRECT_URI: "http://cinema-box-office.example.com/login/oauth2/code/okt
 
 ```bash
 # Check backend logs for OAuth2 initialization
-kubectl logs -f deployment/api -n cinema-box-office | grep -i oauth
+kubectl logs -f deployment/api -n myrc | grep -i oauth
 
 # Look for successful OAuth2 provider registration
 ```
@@ -218,7 +218,7 @@ kubectl logs -f deployment/api -n cinema-box-office | grep -i oauth
 
 ```bash
 # Get authorization code (in browser)
-# https://cinema-box-office.example.com/oauth2/authorize?client_id=xxx&redirect_uri=xxx
+# https://myrc.example.com/oauth2/authorize?client_id=xxx&redirect_uri=xxx
 
 # Exchange code for token
 curl -X POST https://provider.example.com/oauth/token \
@@ -250,10 +250,10 @@ kubectl apply -f k8s/secrets.yaml
 kubectl apply -f k8s/configmap.yaml
 
 # Restart backend deployment
-kubectl rollout restart deployment/api -n cinema-box-office
+kubectl rollout restart deployment/api -n myrc
 
 # Check rollout status
-kubectl rollout status deployment/api -n cinema-box-office
+kubectl rollout status deployment/api -n myrc
 ```
 
 ## Troubleshooting
@@ -262,10 +262,10 @@ kubectl rollout status deployment/api -n cinema-box-office
 
 ```bash
 # Check backend logs
-kubectl logs deployment/api -n cinema-box-office | grep -i "oauth\|provider"
+kubectl logs deployment/api -n myrc | grep -i "oauth\|provider"
 
 # Verify provider URL is accessible
-kubectl exec -it deployment/api -n cinema-box-office -- \
+kubectl exec -it deployment/api -n myrc -- \
   curl -I https://provider.example.com/oauth/authorize
 ```
 
@@ -285,7 +285,7 @@ Common issues and solutions:
 
 ```bash
 # Check user info response
-kubectl exec -it deployment/api -n cinema-box-office -- bash
+kubectl exec -it deployment/api -n myrc -- bash
 curl -H "Authorization: Bearer TOKEN" https://provider.example.com/oauth/userinfo | jq .
 ```
 
@@ -367,7 +367,7 @@ OAUTH2_TOKEN_INTROSPECTION_ENABLED: "true"
 ## Support
 
 For issues or questions about OAuth2 integration:
-1. Check the backend logs: `kubectl logs -f deployment/api -n cinema-box-office`
+1. Check the backend logs: `kubectl logs -f deployment/api -n myrc`
 2. Verify OAuth2 provider configuration
 3. Review configuration against this guide
 4. Contact OAuth2 provider support

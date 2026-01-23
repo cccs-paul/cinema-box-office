@@ -1,6 +1,6 @@
 spring:
   application:
-    name: cinema-box-office-api
+    name: myrc-api
   jpa:
     hibernate:
       ddl-auto: update
@@ -10,9 +10,9 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
   datasource:
-    url: jdbc:postgresql://postgres:5432/boxoffice
-    username: boxoffice
-    password: boxoffice_password
+    url: jdbc:postgresql://postgres:5432/myrc
+    username: myrc
+    password: myrc_password
     driver-class-name: org.postgresql.Driver
   security:
     oauth2:

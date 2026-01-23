@@ -9,8 +9,8 @@ This guide covers deploying myRC to Kubernetes clusters. The application is cont
 - Kubernetes cluster (v1.19+)
 - kubectl configured to access your cluster
 - Docker images built and pushed to a registry:
-  - `cinema-box-office-api:latest`
-  - `cinema-box-office-web:latest`
+  - `myrc-api:latest`
+  - `myrc-web:latest`
 - (Optional) NGINX Ingress Controller for external access
 - (Optional) cert-manager for TLS certificates
 
@@ -36,31 +36,31 @@ kubectl apply -k k8s/
 
 ```bash
 # Check namespace
-kubectl get namespace cinema-box-office
+kubectl get namespace myrc
 
 # Check deployments
-kubectl get deployments -n cinema-box-office
+kubectl get deployments -n myrc
 
 # Check pods
-kubectl get pods -n cinema-box-office
+kubectl get pods -n myrc
 
 # Check services
-kubectl get svc -n cinema-box-office
+kubectl get svc -n myrc
 
 # Check ingress
-kubectl get ingress -n cinema-box-office
+kubectl get ingress -n myrc
 ```
 
 ### 3. Access the Application
 
 ```bash
 # Port-forward to access locally
-kubectl port-forward -n cinema-box-office svc/frontend 8000:80
+kubectl port-forward -n myrc svc/frontend 8000:80
 
 # Then open http://localhost:8000 in your browser
 
 # Or port-forward the API
-kubectl port-forward -n cinema-box-office svc/api 8080:8080
+kubectl port-forward -n myrc svc/api 8080:8080
 ```
 
 ## Deployment Architecture
@@ -125,13 +125,13 @@ Both API and Frontend deployments include HPA configurations:
 
 ```bash
 # View HPA status
-kubectl get hpa -n cinema-box-office
+kubectl get hpa -n myrc
 
 # View detailed HPA status
-kubectl describe hpa api-hpa -n cinema-box-office
+kubectl describe hpa api-hpa -n myrc
 
 # Manually scale (overrides HPA)
-kubectl scale deployment api --replicas=5 -n cinema-box-office
+kubectl scale deployment api --replicas=5 -n myrc
 ```
 
 ### Vertical Pod Autoscaling (Optional)
@@ -164,19 +164,19 @@ resources:
 
 ```bash
 # Get pod status
-kubectl get pods -n cinema-box-office
+kubectl get pods -n myrc
 
 # Get detailed pod information
-kubectl describe pod <pod-name> -n cinema-box-office
+kubectl describe pod <pod-name> -n myrc
 
 # View pod logs
-kubectl logs <pod-name> -n cinema-box-office
+kubectl logs <pod-name> -n myrc
 
 # Stream logs
-kubectl logs -f <pod-name> -n cinema-box-office
+kubectl logs -f <pod-name> -n myrc
 
 # View logs from a specific container
-kubectl logs <pod-name> -c <container-name> -n cinema-box-office
+kubectl logs <pod-name> -c <container-name> -n myrc
 ```
 
 ### Common Issues
@@ -184,7 +184,7 @@ kubectl logs <pod-name> -c <container-name> -n cinema-box-office
 **Pods not starting:**
 ```bash
 # Check events
-kubectl describe pod <pod-name> -n cinema-box-office
+kubectl describe pod <pod-name> -n myrc
 
 # Check node status
 kubectl get nodes
@@ -196,17 +196,17 @@ kubectl top nodes
 **Database connectivity issues:**
 ```bash
 # Test database connection from a pod
-kubectl exec -it <backend-pod> -n cinema-box-office -- \
-  psql -h postgres -U boxoffice -d boxoffice -c "SELECT 1;"
+kubectl exec -it <backend-pod> -n myrc -- \
+  psql -h postgres -U myrc -d myrc -c "SELECT 1;"
 ```
 
 **API health check failures:**
 ```bash
 # Check API logs
-kubectl logs -f deployment/api -n cinema-box-office
+kubectl logs -f deployment/api -n myrc
 
 # Test API endpoint
-kubectl exec -it <backend-pod> -n cinema-box-office -- \
+kubectl exec -it <backend-pod> -n myrc -- \
   curl http://localhost:8080/api/health
 ```
 
@@ -216,16 +216,16 @@ kubectl exec -it <backend-pod> -n cinema-box-office -- \
 
 ```bash
 # Backup PostgreSQL data
-kubectl exec -it deployment/postgres -n cinema-box-office -- \
-  pg_dump -U boxoffice boxoffice > backup.sql
+kubectl exec -it deployment/postgres -n myrc -- \
+  pg_dump -U myrc myrc > backup.sql
 ```
 
 ### Restore Database
 
 ```bash
 # Restore PostgreSQL data
-kubectl exec -it deployment/postgres -n cinema-box-office -- \
-  psql -U boxoffice boxoffice < backup.sql
+kubectl exec -it deployment/postgres -n myrc -- \
+  psql -U myrc myrc < backup.sql
 ```
 
 ### Update Deployment
@@ -233,14 +233,14 @@ kubectl exec -it deployment/postgres -n cinema-box-office -- \
 ```bash
 # Update image
 kubectl set image deployment/api \
-  api=cinema-box-office-api:v1.1 \
-  -n cinema-box-office
+  api=myrc-api:v1.1 \
+  -n myrc
 
 # Check rollout status
-kubectl rollout status deployment/api -n cinema-box-office
+kubectl rollout status deployment/api -n myrc
 
 # Rollback if needed
-kubectl rollout undo deployment/api -n cinema-box-office
+kubectl rollout undo deployment/api -n myrc
 ```
 
 ## Monitoring and Logging

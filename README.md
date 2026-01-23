@@ -1,17 +1,17 @@
-# Cinema Box Office - Project README
+# myRC - Project README
 
 ## Overview
 
-Cinema Box Office is a comprehensive box office management system built with a **Java 25 Spring Boot REST API backend** and an **Angular frontend**. The project includes Docker support for containerized deployment.
+myRC is a comprehensive box office management system built with a **Java 25 Spring Boot REST API backend** and an **Angular frontend**. The project includes Docker support for containerized deployment.
 
 ## Project Structure
 
 ```
-cinema-box-office/
+myrc/
 ├── backend/                          # Java Spring Boot REST API
 │   ├── src/
-│   │   ├── main/java/com/boxoffice/  # Application source code
-│   │   └── test/java/com/boxoffice/  # Unit and integration tests
+│   │   ├── main/java/com/myrc/  # Application source code
+│   │   └── test/java/com/myrc/  # Unit and integration tests
 │   ├── pom.xml                        # Maven configuration
 │   ├── Dockerfile                     # Backend container image
 │   └── .dockerignore                  # Docker build exclusions
@@ -40,9 +40,9 @@ cinema-box-office/
 ## Backend (Java 25 Spring Boot)
 
 ### Directory Structure
-- `backend/src/main/java/com/boxoffice/` - Application source code
+- `backend/src/main/java/com/myrc/` - Application source code
 - `backend/src/main/resources/` - Configuration files
-- `backend/src/test/java/com/boxoffice/` - Unit and integration tests
+- `backend/src/test/java/com/myrc/` - Unit and integration tests
 
 ### Key Technologies
 - **Framework**: Spring Boot 3.3.0
@@ -60,7 +60,7 @@ Response:
 ```json
 {
   "status": "UP",
-  "message": "Box Office API is running"
+  "message": "myRC API is running"
 }
 ```
 
@@ -86,16 +86,16 @@ mvn test
 
 **Build Backend Image:**
 ```bash
-docker build -f backend/Dockerfile -t cinema-box-office-api .
+docker build -f backend/Dockerfile -t myrc-api .
 ```
 
 **Run Backend Container:**
 ```bash
 docker run -p 8080:8080 \
-  -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/boxoffice \
-  -e SPRING_DATASOURCE_USERNAME=boxoffice \
-  -e SPRING_DATASOURCE_PASSWORD=boxoffice_password \
-  cinema-box-office-api
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/myrc \
+  -e SPRING_DATASOURCE_USERNAME=myrc \
+  -e SPRING_DATASOURCE_PASSWORD=myrc_password \
+  myrc-api
 ```
 
 ## Frontend (Angular 17)
@@ -128,7 +128,7 @@ npm start
 **Production Build:**
 ```bash
 npm run build
-# Output: dist/cinema-box-office/
+# Output: dist/myrc/
 ```
 
 **Run Tests:**
@@ -140,12 +140,12 @@ npm test
 
 **Build Frontend Image:**
 ```bash
-docker build -f frontend/Dockerfile -t cinema-box-office-web .
+docker build -f frontend/Dockerfile -t myrc-web .
 ```
 
 **Run Frontend Container:**
 ```bash
-docker run -p 80:80 cinema-box-office-web
+docker run -p 80:80 myrc-web
 ```
 
 ## Docker Compose Setup
@@ -183,13 +183,13 @@ docker-compose logs -f postgres
 
 **Connect to PostgreSQL:**
 ```bash
-docker exec -it cinema-box-office-db psql -U boxoffice -d boxoffice
+docker exec -it myrc-db psql -U myrc -d myrc
 ```
 
 **Default Credentials:**
-- Username: `boxoffice`
-- Password: `boxoffice_password`
-- Database: `boxoffice`
+- Username: `myrc`
+- Password: `myrc_password`
+- Database: `myrc`
 
 ## Development Workflow
 
@@ -333,10 +333,10 @@ http://localhost:8080/api
 lsof -i :8080
 
 # View application logs
-docker logs cinema-box-office-api
+docker logs myrc-api
 
 # Verify database connectivity
-docker logs cinema-box-office-db
+docker logs myrc-db
 ```
 
 ### Frontend Won't Load
@@ -345,7 +345,7 @@ docker logs cinema-box-office-db
 lsof -i :80
 
 # Verify Nginx is running
-docker logs cinema-box-office-web
+docker logs myrc-web
 
 # Check API connectivity
 curl http://localhost:8080/api/health
@@ -354,10 +354,10 @@ curl http://localhost:8080/api/health
 ### Database Connection Issues
 ```bash
 # Test database connectivity
-docker exec cinema-box-office-db pg_isready -U boxoffice
+docker exec myrc-db pg_isready -U myrc
 
 # Check PostgreSQL logs
-docker logs cinema-box-office-db
+docker logs myrc-db
 ```
 
 ## CI/CD Integration

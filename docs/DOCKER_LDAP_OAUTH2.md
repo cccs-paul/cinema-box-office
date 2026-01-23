@@ -35,7 +35,7 @@ services:
   # OpenLDAP Server for testing
   ldap:
     image: osixia/openldap:latest
-    container_name: cinema-ldap
+    container_name: myrc-ldap
     ports:
       - "389:389"
       - "636:636"
@@ -51,12 +51,12 @@ services:
       - ldap_data:/var/lib/ldap
       - ldap_config:/etc/ldap/slapd.d
     networks:
-      - cinema-network
+      - myrc-network
 
   # LDAP Admin UI (optional, for easy management)
   phpldapadmin:
     image: osixia/phpldapadmin:latest
-    container_name: cinema-phpldapadmin
+    container_name: myrc-phpldapadmin
     ports:
       - "6443:443"
     environment:
@@ -65,19 +65,19 @@ services:
     depends_on:
       - ldap
     networks:
-      - cinema-network
+      - myrc-network
 
   # Backend API with LDAP support
   api:
-    image: cinema-box-office-api:latest
-    container_name: cinema-api
+    image: myrc-api:latest
+    container_name: myrc-api
     ports:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: "dev,ldap"
       SPRING_LDAP_URLS: "ldap://ldap:389"
-      SPRING_LDAP_BASE: "dc=cinema,dc=local"
-      SPRING_LDAP_USERNAME: "cn=admin,dc=cinema,dc=local"
+      SPRING_LDAP_BASE: "dc=myrc,dc=local"
+      SPRING_LDAP_USERNAME: "cn=admin,dc=myrc,dc=local"
       SPRING_LDAP_PASSWORD: "admin-password-123"
       SPRING_LDAP_USER_SEARCH_FILTER: "(uid={0})"
       SPRING_LDAP_USER_SEARCH_BASE: "ou=users"
@@ -86,14 +86,14 @@ services:
     depends_on:
       - ldap
     networks:
-      - cinema-network
+      - myrc-network
 
 volumes:
   ldap_data:
   ldap_config:
 
 networks:
-  cinema-network:
+  myrc-network:
     driver: bridge
 ```
 
@@ -101,52 +101,52 @@ networks:
 
 ```bash
 # Save as init-ldap.ldif
-dn: ou=users,dc=cinema,dc=local
+dn: ou=users,dc=myrc,dc=local
 objectClass: organizationalUnit
 ou: users
 
-dn: cn=Test User,ou=users,dc=cinema,dc=local
+dn: cn=Test User,ou=users,dc=myrc,dc=local
 objectClass: person
 objectClass: inetOrgPerson
 cn: Test User
 sn: User
 uid: testuser
 userPassword: testpassword123
-mail: testuser@cinema.local
+mail: testuser@myrc.local
 
-dn: cn=Admin User,ou=users,dc=cinema,dc=local
+dn: cn=Admin User,ou=users,dc=myrc,dc=local
 objectClass: person
 objectClass: inetOrgPerson
 cn: Admin User
 sn: User
 uid: adminuser
 userPassword: adminpassword123
-mail: admin@cinema.local
+mail: admin@myrc.local
 
-dn: ou=groups,dc=cinema,dc=local
+dn: ou=groups,dc=myrc,dc=local
 objectClass: organizationalUnit
 ou: groups
 
-dn: cn=users,ou=groups,dc=cinema,dc=local
+dn: cn=users,ou=groups,dc=myrc,dc=local
 objectClass: groupOfNames
 cn: users
-member: cn=Test User,ou=users,dc=cinema,dc=local
-member: cn=Admin User,ou=users,dc=cinema,dc=local
+member: cn=Test User,ou=users,dc=myrc,dc=local
+member: cn=Admin User,ou=users,dc=myrc,dc=local
 
-dn: cn=admins,ou=groups,dc=cinema,dc=local
+dn: cn=admins,ou=groups,dc=myrc,dc=local
 objectClass: groupOfNames
 cn: admins
-member: cn=Admin User,ou=users,dc=cinema,dc=local
+member: cn=Admin User,ou=users,dc=myrc,dc=local
 ```
 
 Load LDAP data:
 
 ```bash
 # Copy init-ldap.ldif into container
-docker cp init-ldap.ldif cinema-ldap:/tmp/
+docker cp init-ldap.ldif myrc-ldap:/tmp/
 
 # Load into LDAP
-docker exec cinema-ldap ldapadd -x -D "cn=admin,dc=cinema,dc=local" \
+docker exec myrc-ldap ldapadd -x -D "cn=admin,dc=myrc,dc=local" \
   -w "admin-password-123" -f /tmp/init-ldap.ldif
 ```
 
@@ -161,8 +161,8 @@ version: '3.9'
 
 services:
   api:
-    image: cinema-box-office-api:latest
-    container_name: cinema-api
+    image: myrc-api:latest
+    container_name: myrc-api
     ports:
       - "8080:8080"
     environment:
@@ -186,42 +186,42 @@ services:
       SPRING_LDAP_ACTIVE_DIRECTORY_DOMAIN: "company.com"
       
       # Database
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/boxoffice"
-      SPRING_DATASOURCE_USERNAME: "boxoffice"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/myrc"
+      SPRING_DATASOURCE_USERNAME: "myrc"
       SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD}"
       
     depends_on:
       - postgres
     networks:
-      - cinema-network
+      - myrc-network
 
   postgres:
     image: postgres:16-alpine
-    container_name: cinema-postgres
+    container_name: myrc-postgres
     environment:
-      POSTGRES_DB: boxoffice
-      POSTGRES_USER: boxoffice
+      POSTGRES_DB: myrc
+      POSTGRES_USER: myrc
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - cinema-network
+      - myrc-network
 
   frontend:
-    image: cinema-box-office-frontend:latest
-    container_name: cinema-web
+    image: myrc-frontend:latest
+    container_name: myrc-web
     ports:
       - "4200:80"
     depends_on:
       - api
     networks:
-      - cinema-network
+      - myrc-network
 
 volumes:
   postgres_data:
 
 networks:
-  cinema-network:
+  myrc-network:
     driver: bridge
 ```
 
@@ -276,8 +276,8 @@ version: '3.9'
 
 services:
   api:
-    image: cinema-box-office-api:latest
-    container_name: cinema-api
+    image: myrc-api:latest
+    container_name: myrc-api
     ports:
       - "8080:8080"
     environment:
@@ -295,42 +295,42 @@ services:
       SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_GOOGLE_USER_INFO_URI: "https://www.googleapis.com/oauth2/v3/userinfo"
       
       # Database
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/boxoffice"
-      SPRING_DATASOURCE_USERNAME: "boxoffice"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/myrc"
+      SPRING_DATASOURCE_USERNAME: "myrc"
       SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD}"
       
     depends_on:
       - postgres
     networks:
-      - cinema-network
+      - myrc-network
 
   postgres:
     image: postgres:16-alpine
-    container_name: cinema-postgres
+    container_name: myrc-postgres
     environment:
-      POSTGRES_DB: boxoffice
-      POSTGRES_USER: boxoffice
+      POSTGRES_DB: myrc
+      POSTGRES_USER: myrc
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - cinema-network
+      - myrc-network
 
   frontend:
-    image: cinema-box-office-frontend:latest
-    container_name: cinema-web
+    image: myrc-frontend:latest
+    container_name: myrc-web
     ports:
       - "4200:80"
     depends_on:
       - api
     networks:
-      - cinema-network
+      - myrc-network
 
 volumes:
   postgres_data:
 
 networks:
-  cinema-network:
+  myrc-network:
     driver: bridge
 ```
 
@@ -364,8 +364,8 @@ version: '3.9'
 
 services:
   api:
-    image: cinema-box-office-api:latest
-    container_name: cinema-api
+    image: myrc-api:latest
+    container_name: myrc-api
     ports:
       - "8080:8080"
     environment:
@@ -378,14 +378,14 @@ services:
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_REDIRECT_URI: "http://localhost:8080/login/oauth2/code/github"
       
       # Database
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/boxoffice"
-      SPRING_DATASOURCE_USERNAME: "boxoffice"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/myrc"
+      SPRING_DATASOURCE_USERNAME: "myrc"
       SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD}"
       
     depends_on:
       - postgres
     networks:
-      - cinema-network
+      - myrc-network
 
   # ... rest of services
 ```
@@ -408,7 +408,7 @@ services:
 ```yaml
 services:
   api:
-    image: cinema-box-office-api:latest
+    image: myrc-api:latest
     environment:
       SPRING_PROFILES_ACTIVE: "prod,oauth2"
       
@@ -425,8 +425,8 @@ services:
       SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_AZURE_JWK_SET_URI: "https://login.microsoftonline.com/common/discovery/v2.0/keys"
       
       # Database
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/boxoffice"
-      SPRING_DATASOURCE_USERNAME: "boxoffice"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/myrc"
+      SPRING_DATASOURCE_USERNAME: "myrc"
       SPRING_DATASOURCE_PASSWORD: "${DB_PASSWORD}"
 ```
 
@@ -468,14 +468,14 @@ services:
   # OpenLDAP for development
   ldap:
     image: osixia/openldap:latest
-    container_name: cinema-ldap-dev
+    container_name: myrc-ldap-dev
     ports:
       - "389:389"
       - "636:636"
     environment:
       LDAP_ORGANISATION: "myRC Dev"
-      LDAP_DOMAIN: "cinema.local"
-      LDAP_BASE_DN: "dc=cinema,dc=local"
+      LDAP_DOMAIN: "myrc.local"
+      LDAP_BASE_DN: "dc=myrc,dc=local"
       LDAP_ADMIN_PASSWORD: "admin-password"
       LDAP_READONLY_USER: "true"
       LDAP_READONLY_USER_USERNAME: "readonly"
@@ -484,12 +484,12 @@ services:
       - ldap_data:/var/lib/ldap
       - ldap_config:/etc/ldap/slapd.d
     networks:
-      - cinema-network
+      - myrc-network
 
   # LDAP Admin UI
   phpldapadmin:
     image: osixia/phpldapadmin:latest
-    container_name: cinema-ldap-admin
+    container_name: myrc-ldap-admin
     ports:
       - "6443:443"
     environment:
@@ -498,29 +498,29 @@ services:
     depends_on:
       - ldap
     networks:
-      - cinema-network
+      - myrc-network
 
   # PostgreSQL
   postgres:
     image: postgres:16-alpine
-    container_name: cinema-postgres-dev
+    container_name: myrc-postgres-dev
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: boxoffice
-      POSTGRES_USER: boxoffice
+      POSTGRES_DB: myrc
+      POSTGRES_USER: myrc
       POSTGRES_PASSWORD: devpassword
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - cinema-network
+      - myrc-network
 
   # Backend API with LDAP support
   api:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: cinema-api-dev
+    container_name: myrc-api-dev
     ports:
       - "8080:8080"
     environment:
@@ -528,8 +528,8 @@ services:
       
       # LDAP
       SPRING_LDAP_URLS: "ldap://ldap:389"
-      SPRING_LDAP_BASE: "dc=cinema,dc=local"
-      SPRING_LDAP_USERNAME: "cn=admin,dc=cinema,dc=local"
+      SPRING_LDAP_BASE: "dc=myrc,dc=local"
+      SPRING_LDAP_USERNAME: "cn=admin,dc=myrc,dc=local"
       SPRING_LDAP_PASSWORD: "admin-password"
       SPRING_LDAP_USER_SEARCH_FILTER: "(uid={0})"
       SPRING_LDAP_USER_SEARCH_BASE: "ou=users"
@@ -541,8 +541,8 @@ services:
       SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: "dev-google-secret"
       
       # Database
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/boxoffice"
-      SPRING_DATASOURCE_USERNAME: "boxoffice"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/myrc"
+      SPRING_DATASOURCE_USERNAME: "myrc"
       SPRING_DATASOURCE_PASSWORD: "devpassword"
       SPRING_JPA_HIBERNATE_DDL_AUTO: "create-drop"
       
@@ -550,14 +550,14 @@ services:
       - ldap
       - postgres
     networks:
-      - cinema-network
+      - myrc-network
 
   # Frontend with API proxy
   web:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
-    container_name: cinema-web-dev
+    container_name: myrc-web-dev
     ports:
       - "4200:4200"
     environment:
@@ -565,7 +565,7 @@ services:
     depends_on:
       - api
     networks:
-      - cinema-network
+      - myrc-network
 
 volumes:
   ldap_data:
@@ -573,7 +573,7 @@ volumes:
   postgres_data:
 
 networks:
-  cinema-network:
+  myrc-network:
     driver: bridge
 ```
 
@@ -606,13 +606,13 @@ docker-compose -f docker-compose.dev-ldap-oauth.yml down
 
 ```bash
 # From container
-docker exec cinema-api-dev bash
+docker exec myrc-api-dev bash
 
 # Inside container, test LDAP connection
 ldapsearch -x -H ldap://ldap:389 \
-  -D "cn=admin,dc=cinema,dc=local" \
+  -D "cn=admin,dc=myrc,dc=local" \
   -w "admin-password" \
-  -b "dc=cinema,dc=local" \
+  -b "dc=myrc,dc=local" \
   "(uid=testuser)"
 
 # Should return user details
@@ -635,7 +635,7 @@ curl -X POST http://localhost:8080/api/auth/login \
 #   "expiresIn": 3600,
 #   "user": {
 #     "username": "testuser",
-#     "email": "testuser@cinema.local",
+#     "email": "testuser@myrc.local",
 #     "groups": ["users"]
 #   }
 # }
@@ -662,13 +662,13 @@ open http://localhost:4200
 
 ```bash
 # API logs
-docker logs -f cinema-api-dev
+docker logs -f myrc-api-dev
 
 # LDAP logs
-docker logs -f cinema-ldap-dev
+docker logs -f myrc-ldap-dev
 
 # PostgreSQL logs
-docker logs -f cinema-postgres-dev
+docker logs -f myrc-postgres-dev
 
 # All logs
 docker-compose logs -f
@@ -685,13 +685,13 @@ docker-compose logs -f
 docker ps | grep ldap
 
 # Test connection
-docker exec cinema-ldap ldapwhoami -x -D "cn=admin,dc=cinema,dc=local" -w "admin-password"
+docker exec myrc-ldap ldapwhoami -x -D "cn=admin,dc=myrc,dc=local" -w "admin-password"
 
 # Check LDAP logs
-docker logs cinema-ldap
+docker logs myrc-ldap
 
 # Verify environment variables
-docker exec cinema-api env | grep LDAP
+docker exec myrc-api env | grep LDAP
 ```
 
 ### LDAP Authentication Not Working
@@ -701,8 +701,8 @@ docker exec cinema-api env | grep LDAP
 **Solution**:
 1. Verify LDAP users exist:
    ```bash
-   docker exec cinema-ldap ldapsearch -x -D "cn=admin,dc=cinema,dc=local" \
-     -w "admin-password" -b "ou=users,dc=cinema,dc=local" "(uid=testuser)"
+   docker exec myrc-ldap ldapsearch -x -D "cn=admin,dc=myrc,dc=local" \
+     -w "admin-password" -b "ou=users,dc=myrc,dc=local" "(uid=testuser)"
    ```
 
 2. Check user search filter:
@@ -713,7 +713,7 @@ docker exec cinema-api env | grep LDAP
 
 3. Verify base DN:
    ```bash
-   docker exec cinema-ldap ldapsearch -x -s base -b "dc=cinema,dc=local"
+   docker exec myrc-ldap ldapsearch -x -s base -b "dc=myrc,dc=local"
    ```
 
 ### OAuth2 Redirect URI Mismatch
@@ -733,14 +733,14 @@ docker exec cinema-api env | grep LDAP
 
 ```bash
 # Test PostgreSQL connection from API
-docker exec cinema-api bash -c \
-  "psql -h postgres -U boxoffice -d boxoffice -c 'SELECT version();'"
+docker exec myrc-api bash -c \
+  "psql -h postgres -U myrc -d myrc -c 'SELECT version();'"
 
 # Check PostgreSQL is running
 docker ps | grep postgres
 
 # View PostgreSQL logs
-docker logs cinema-postgres-dev
+docker logs myrc-postgres-dev
 ```
 
 ### Port Conflicts

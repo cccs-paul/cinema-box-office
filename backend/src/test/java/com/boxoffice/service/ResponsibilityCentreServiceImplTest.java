@@ -1,6 +1,6 @@
 /*
- * Cinema Box Office - Responsibility Centre Service Tests
- * Copyright (c) 2026 Box Office Team
+ * myRC - Responsibility Centre Service Tests
+ * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
 package com.boxoffice.service;

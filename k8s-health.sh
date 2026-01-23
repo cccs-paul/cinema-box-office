@@ -8,7 +8,7 @@
 
 set -e
 
-NAMESPACE="cinema-box-office"
+NAMESPACE="myrc"
 WATCH=false
 INTERVAL=5
 
@@ -105,7 +105,7 @@ get_pod_events() {
 perform_health_check() {
     clear
     echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
-    echo -e "${BLUE}Cinema Box Office - Kubernetes Health Check${NC}"
+    echo -e "${BLUE}myRC - Kubernetes Health Check${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════════${NC}"
     echo ""
     
@@ -139,8 +139,8 @@ perform_health_check() {
     
     # Check ingress
     echo -e "${BLUE}Ingress:${NC}"
-    echo -n "  cinema-box-office: "
-    check_ingress_health "cinema-box-office-ingress" "$NAMESPACE"
+    echo -n "  myrc: "
+    check_ingress_health "myrc-ingress" "$NAMESPACE"
     echo ""
     
     # Check pods

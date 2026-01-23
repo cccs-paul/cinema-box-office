@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /etc/nginx/sites-available/*
 
 # Copy built Angular app to Nginx
-COPY --from=builder /build/dist/cinema-box-office ./
+COPY --from=builder /build/dist/myrc ./
 
 # Copy Nginx configuration
 COPY frontend/nginx.conf /etc/nginx/nginx.conf

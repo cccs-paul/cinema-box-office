@@ -93,7 +93,7 @@ curl -X POST http://localhost:8080/api/auth/login \
 
 # 4. Access LDAP administration UI
 # Open: https://localhost:6443
-# Login DN: cn=admin,dc=cinema,dc=local
+# Login DN: cn=admin,dc=myrc,dc=local
 # Password: admin
 
 # 5. Access application
@@ -120,8 +120,8 @@ docker-compose -f docker-compose.oauth2.yml up -d
 # Login: admin / admin_password
 
 # 4. Create OAuth2 realm (optional - Keycloak)
-# Realm name: cinema
-# Client ID: cinema-api
+# Realm name: myrc
+# Client ID: myrc-api
 
 # 5. Access application
 # Frontend: http://localhost:4200
@@ -208,13 +208,13 @@ SPRING_LDAP_URLS=ldap://ldap:389              # OpenLDAP
 # or
 SPRING_LDAP_URLS=ldaps://ldap.company.com:636 # Corporate LDAP
 
-SPRING_LDAP_BASE=dc=cinema,dc=local
-SPRING_LDAP_USERNAME=cn=admin,dc=cinema,dc=local
+SPRING_LDAP_BASE=dc=myrc,dc=local
+SPRING_LDAP_USERNAME=cn=admin,dc=myrc,dc=local
 SPRING_LDAP_PASSWORD=admin
 
 # User Search (OpenLDAP)
 SPRING_SECURITY_LDAP_AUTHENTICATION_USER_SEARCH_FILTER=(uid={0})
-SPRING_SECURITY_LDAP_AUTHENTICATION_USER_SEARCH_BASE=ou=users,dc=cinema,dc=local
+SPRING_SECURITY_LDAP_AUTHENTICATION_USER_SEARCH_BASE=ou=users,dc=myrc,dc=local
 
 # User Search (Active Directory)
 SPRING_SECURITY_LDAP_AUTHENTICATION_USER_SEARCH_FILTER=(&(objectClass=person)(sAMAccountName={0}))
@@ -241,8 +241,8 @@ AZURE_TENANT=your-tenant-id
 AZURE_REDIRECT_URI=http://localhost:4200/oauth2/callback/azure
 
 # Keycloak
-KEYCLOAK_CLIENT_SECRET=cinema-secret
-KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/cinema
+KEYCLOAK_CLIENT_SECRET=myrc-secret
+KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/myrc
 ```
 
 ## Supported Scenarios
@@ -368,7 +368,7 @@ Before deploying to production, verify:
 ## Project Structure
 
 ```
-cinema-box-office/
+myrc/
 ├── docker-compose.dev-full.yml      ✅ LDAP + All services
 ├── docker-compose.oauth2.yml        ✅ OAuth2 + Keycloak
 ├── docker-compose.dev.yml           ✅ Basic dev stack

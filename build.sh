@@ -1,12 +1,12 @@
 #!/bin/bash
-# Build script for Cinema Box Office project
-# Author: Box Office Team
+# Build script for myRC project
+# Author: myRC Team
 # License: MIT
 
 set -e
 
 echo "========================================="
-echo "Cinema Box Office - Build Script"
+echo "myRC - Build Script"
 echo "========================================="
 echo ""
 

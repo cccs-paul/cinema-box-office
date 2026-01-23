@@ -1,12 +1,12 @@
 #!/bin/bash
-# Start script for Cinema Box Office project
-# Author: Box Office Team
+# Start script for myRC project
+# Author: myRC Team
 # License: MIT
 
 set -e
 
 echo "========================================="
-echo "Cinema Box Office - Start Script"
+echo "myRC - Start Script"
 echo "========================================="
 echo ""
 
@@ -19,7 +19,7 @@ NC='\033[0m' # No Color
 # Parse arguments
 if [ "$1" = "dev" ]; then
     echo "Starting in development mode..."
-    docker compose -f docker-compose.dev.yml up -d
+    docker compose --project-name myrc -f docker-compose.dev.yml up -d
     echo ""
     echo -e "${GREEN}✓ Development environment started${NC}"
     echo ""
@@ -31,9 +31,9 @@ if [ "$1" = "dev" ]; then
     echo ""
     echo "Database Console Credentials:"
     echo "  - Host:     localhost:5432"
-    echo "  - Database: boxoffice"
-    echo "  - User:     boxoffice"
-    echo "  - Password: boxoffice_password"
+    echo "  - Database: myrc"
+    echo "  - User:     myrc"
+    echo "  - Password: myrc_password"
     echo ""
     echo "pgAdmin Credentials:"
     echo "  - URL:      http://localhost:5050"
@@ -43,7 +43,7 @@ if [ "$1" = "dev" ]; then
     echo "View logs with: docker compose -f docker-compose.dev.yml logs -f"
 elif [ "$1" = "prod" ]; then
     echo "Starting in production mode..."
-    docker compose up -d
+    docker compose --project-name myrc up -d
     echo ""
     echo -e "${GREEN}✓ Production environment started${NC}"
     echo ""
@@ -54,9 +54,9 @@ elif [ "$1" = "prod" ]; then
     echo ""
     echo "Database Console Credentials:"
     echo "  - Host:     localhost:5432"
-    echo "  - Database: boxoffice"
-    echo "  - User:     boxoffice"
-    echo "  - Password: boxoffice_password"
+    echo "  - Database: myrc"
+    echo "  - User:     myrc"
+    echo "  - Password: myrc_password"
     echo ""
     echo "pgAdmin Credentials:"
     echo "  - URL:      http://localhost:5050"

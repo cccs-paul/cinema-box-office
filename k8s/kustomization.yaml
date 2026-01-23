@@ -1,9 +1,9 @@
-# Cinema Box Office - Kustomize Configuration
+# myRC - Kustomize Configuration
 # License: MIT
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: cinema-box-office
+namespace: myrc
 
 resources:
   - namespace.yaml
@@ -15,9 +15,9 @@ resources:
   - ingress.yaml
 
 commonLabels:
-  app: cinema-box-office
+  app: myrc
   version: "1.0.0"
 
 commonAnnotations:
   managed-by: "kustomize"
-  documentation: "https://github.com/boxoffice/cinema-box-office"
+  documentation: "https://github.com/myrc/myrc"
