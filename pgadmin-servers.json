@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "myRC DB",
+      "Group": "Servers",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "myrc",
+      "Username": "myrc",
+      "SSLMode": "prefer",
+      "PassFile": "/pgpass"
+    }
+  }
+}

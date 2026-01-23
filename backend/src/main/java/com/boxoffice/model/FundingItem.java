@@ -1,0 +1,203 @@
+/*
+ * myRC - Funding Item Entity
+ * Copyright (c) 2026 myRC Team
+ * Licensed under MIT License
+ *
+ * Author: myRC Team
+ * Date: 2026-01-23
+ * Version: 1.0.0
+ *
+ * Description:
+ * Entity representing a Funding Item associated with a Fiscal Year.
+ * Each fiscal year can have 0..n funding items.
+ */
+package com.boxoffice.model;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+
+/**
+ * Entity representing a Funding Item associated with a Fiscal Year.
+ * Funding items represent budgetary allocations or line items within a fiscal year.
+ *
+ * @author myRC Team
+ * @version 1.0.0
+ * @since 2026-01-23
+ */
+@Entity
+@Table(name = "funding_items", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"name", "fiscal_year_id"}, name = "uk_fi_name_fy")
+})
+public class FundingItem {
+
+  /**
+   * Enumeration of funding item status values.
+   */
+  public enum Status {
+    DRAFT,
+    PENDING,
+    APPROVED,
+    ACTIVE,
+    CLOSED
+  }
+
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
+
+  @Column(nullable = false, length = 100)
+  private String name;
+
+  @Column(length = 1000)
+  private String description;
+
+  @Column(precision = 15, scale = 2)
+  private BigDecimal budgetAmount;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private Status status = Status.DRAFT;
+
+  @ManyToOne(optional = false)
+  @JoinColumn(name = "fiscal_year_id", nullable = false)
+  private FiscalYear fiscalYear;
+
+  @CreationTimestamp
+  @Column(nullable = false, updatable = false)
+  private LocalDateTime createdAt;
+
+  @UpdateTimestamp
+  @Column(nullable = false)
+  private LocalDateTime updatedAt;
+
+  @Column(nullable = false)
+  private Boolean active = true;
+
+  // Constructors
+  public FundingItem() {}
+
+  public FundingItem(String name, String description, BigDecimal budgetAmount, 
+                     Status status, FiscalYear fiscalYear) {
+    this.name = name;
+    this.description = description;
+    this.budgetAmount = budgetAmount;
+    this.status = status != null ? status : Status.DRAFT;
+    this.fiscalYear = fiscalYear;
+  }
+
+  public FundingItem(String name, String description, FiscalYear fiscalYear) {
+    this(name, description, null, Status.DRAFT, fiscalYear);
+  }
+
+  // Getters and Setters
+  public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  public BigDecimal getBudgetAmount() {
+    return budgetAmount;
+  }
+
+  public void setBudgetAmount(BigDecimal budgetAmount) {
+    this.budgetAmount = budgetAmount;
+  }
+
+  public Status getStatus() {
+    return status;
+  }
+
+  public void setStatus(Status status) {
+    this.status = status;
+  }
+
+  public FiscalYear getFiscalYear() {
+    return fiscalYear;
+  }
+
+  public void setFiscalYear(FiscalYear fiscalYear) {
+    this.fiscalYear = fiscalYear;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
+
+  public LocalDateTime getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(LocalDateTime updatedAt) {
+    this.updatedAt = updatedAt;
+  }
+
+  public Boolean getActive() {
+    return active;
+  }
+
+  public void setActive(Boolean active) {
+    this.active = active;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    FundingItem that = (FundingItem) o;
+    return id != null && id.equals(that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return getClass().hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return "FundingItem{" +
+        "id=" + id +
+        ", name='" + name + '\'' +
+        ", budgetAmount=" + budgetAmount +
+        ", status=" + status +
+        ", active=" + active +
+        '}';
+  }
+}

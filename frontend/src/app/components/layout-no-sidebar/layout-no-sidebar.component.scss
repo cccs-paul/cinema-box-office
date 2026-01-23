@@ -1,0 +1,19 @@
+/*
+ * myRC - Layout Without Sidebar Styling
+ * Copyright (c) 2026 myRC Team
+ * Licensed under MIT License
+ */
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--background-primary);
+}
+
+.app-main-no-sidebar {
+  flex: 1;
+  padding-top: 60px; /* Header height */
+  background: var(--background-primary);
+  min-height: calc(100vh - 60px);
+}
