@@ -24,13 +24,8 @@
   border-bottom: 1px solid var(--border-color);
   background-color: rgba(var(--primary-rgb, 25, 118, 210), 0.05);
 
-  .context-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary);
-    margin-bottom: 0.5rem;
+  .context-info {
+    margin-bottom: 0.75rem;
   }
 
   .context-rc,
@@ -58,6 +53,30 @@
   .context-rc {
     .context-value {
       color: var(--primary-gradient-start);
+    }
+  }
+
+  .change-context-btn {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--primary-gradient-start);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+
+    &:hover {
+      background: var(--primary-gradient-end);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      transform: translateY(0);
     }
   }
 }

@@ -339,24 +339,8 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           this.isCreating = false;
-          const httpError = error as { status?: number; error?: { message?: string } };
-          if (httpError.status === 401) {
-            this.errorMessage = 'Your session has expired. Please log in again.';
-          } else if (httpError.status === 400) {
-            const errorMsg = httpError.error?.message || '';
-            if (errorMsg.toLowerCase().includes('already exists') ||
-                errorMsg.toLowerCase().includes('duplicate')) {
-              this.errorMessage = `A Responsibility Centre named "${this.newRCName}" already exists. Please choose a different name.`;
-            } else {
-              this.errorMessage = errorMsg || 'Invalid RC details. Please check your input.';
-            }
-          } else if (httpError.status === 409) {
-            this.errorMessage = `A Responsibility Centre named "${this.newRCName}" already exists. Please choose a different name.`;
-          } else if (httpError.status === 500) {
-            this.errorMessage = 'Server error occurred while creating RC. Please try again later.';
-          } else {
-            this.errorMessage = httpError.error?.message || 'Failed to create responsibility centre. Please try again.';
-          }
+          const err = error as Error;
+          this.errorMessage = err.message || 'Failed to create responsibility centre. Please try again.';
         }
       });
   }
@@ -433,14 +417,8 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           this.isRenaming = false;
-          const httpError = error as { status?: number };
-          if (httpError.status === 400) {
-            this.errorMessage = `A Responsibility Centre with this name already exists.`;
-          } else if (httpError.status === 403) {
-            this.errorMessage = 'Only the owner can rename this RC.';
-          } else {
-            this.errorMessage = 'Failed to rename responsibility centre. Please try again.';
-          }
+          const err = error as Error;
+          this.errorMessage = err.message || 'Failed to rename responsibility centre. Please try again.';
         }
       });
   }

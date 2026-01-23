@@ -5,7 +5,7 @@
  */
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, switchMap, filter } from 'rxjs/operators';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
@@ -57,7 +57,8 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   constructor(
     private rcService: ResponsibilityCentreService,
-    private fyService: FiscalYearService
+    private fyService: FiscalYearService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -100,5 +101,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Navigate to RC selection page.
+   */
+  navigateToRCSelection(): void {
+    this.router.navigate(['/rc-selection']);
   }
 }

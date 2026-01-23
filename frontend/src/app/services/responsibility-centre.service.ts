@@ -5,8 +5,9 @@
  */
 
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { ResponsibilityCentreDTO } from '../models/responsibility-centre.model';
 
 @Injectable({
@@ -27,11 +28,13 @@ export class ResponsibilityCentreService {
   constructor(private http: HttpClient) {}
 
   getAllResponsibilityCentres(): Observable<ResponsibilityCentreDTO[]> {
-    return this.http.get<ResponsibilityCentreDTO[]>(this.apiUrl, { withCredentials: true });
+    return this.http.get<ResponsibilityCentreDTO[]>(this.apiUrl, { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   getResponsibilityCentre(id: number): Observable<ResponsibilityCentreDTO> {
-    return this.http.get<ResponsibilityCentreDTO>(`${this.apiUrl}/${id}`, { withCredentials: true });
+    return this.http.get<ResponsibilityCentreDTO>(`${this.apiUrl}/${id}`, { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   createResponsibilityCentre(
@@ -41,7 +44,8 @@ export class ResponsibilityCentreService {
     return this.http.post<ResponsibilityCentreDTO>(this.apiUrl, {
       name,
       description
-    }, { withCredentials: true });
+    }, { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   updateResponsibilityCentre(
@@ -52,17 +56,20 @@ export class ResponsibilityCentreService {
     return this.http.put<ResponsibilityCentreDTO>(`${this.apiUrl}/${id}`, {
       name,
       description
-    }, { withCredentials: true });
+    }, { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   deleteResponsibilityCentre(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, { withCredentials: true });
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   cloneResponsibilityCentre(id: number, newName: string): Observable<ResponsibilityCentreDTO> {
     return this.http.post<ResponsibilityCentreDTO>(`${this.apiUrl}/${id}/clone`, {
       newName
-    }, { withCredentials: true });
+    }, { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   grantAccess(
@@ -73,17 +80,20 @@ export class ResponsibilityCentreService {
     return this.http.post(`${this.apiUrl}/${rcId}/access/grant`, {
       username,
       accessLevel
-    }, { withCredentials: true });
+    }, { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   revokeAccess(rcId: number, username: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/${rcId}/access/revoke`, {
       username
-    }, { withCredentials: true });
+    }, { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   getResponsibilityCentreAccess(rcId: number): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/${rcId}/access`, { withCredentials: true });
+    return this.http.get<any[]>(`${this.apiUrl}/${rcId}/access`, { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   setSelectedRC(rcId: number): void {
@@ -119,5 +129,56 @@ export class ResponsibilityCentreService {
   private getStoredSelectedFY(): number | null {
     const stored = localStorage.getItem('selectedFY');
     return stored ? parseInt(stored, 10) : null;
+  }
+
+  /**
+   * Handle HTTP errors.
+   *
+   * @param error The HTTP error response
+   * @returns Observable that throws an error
+   */
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage = 'An unknown error occurred';
+
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Client error: ${error.error.message}`;
+    } else {
+      // Server-side error - check for specific error messages from backend
+      const backendMessage = error.error?.message || error.error?.error || '';
+      
+      switch (error.status) {
+        case 400:
+          // Check if it's a duplicate name error
+          if (backendMessage.toLowerCase().includes('already exists') || 
+              backendMessage.toLowerCase().includes('duplicate')) {
+            errorMessage = backendMessage;
+          } else {
+            errorMessage = backendMessage || 'Invalid request. Please check your input.';
+          }
+          break;
+        case 401:
+          errorMessage = 'Your session has expired. Please log in again.';
+          break;
+        case 403:
+          errorMessage = 'You do not have permission to perform this action.';
+          break;
+        case 404:
+          errorMessage = 'Responsibility Centre not found.';
+          break;
+        case 409:
+          // Conflict - typically duplicate name
+          errorMessage = backendMessage || 'A Responsibility Centre with this name already exists.';
+          break;
+        case 500:
+          errorMessage = 'Server error occurred. Please try again later.';
+          break;
+        default:
+          errorMessage = backendMessage || `Server error: ${error.status} - ${error.statusText}`;
+      }
+    }
+
+    console.error('RC Service Error:', errorMessage);
+    return throwError(() => new Error(errorMessage));
   }
 }

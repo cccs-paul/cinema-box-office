@@ -6,15 +6,19 @@
 <aside class="app-sidebar">
   <!-- Context Display -->
   <div class="sidebar-context" *ngIf="selectedRC">
-    <div class="context-label">Current Selection</div>
-    <div class="context-rc">
-      <span class="context-icon">📋</span>
-      <span class="context-value">{{ selectedRC.name }}</span>
+    <div class="context-info">
+      <div class="context-rc">
+        <span class="context-icon">📋</span>
+        <span class="context-value">{{ selectedRC.name }}</span>
+      </div>
+      <div class="context-fy" *ngIf="selectedFY">
+        <span class="context-icon">📅</span>
+        <span class="context-value">{{ selectedFY.name }}</span>
+      </div>
     </div>
-    <div class="context-fy" *ngIf="selectedFY">
-      <span class="context-icon">📅</span>
-      <span class="context-value">{{ selectedFY.name }}</span>
-    </div>
+    <button class="change-context-btn" (click)="navigateToRCSelection()" title="Change RC and Fiscal Year">
+      Change RC / Fiscal Year
+    </button>
   </div>
 
   <nav class="sidebar-nav">
