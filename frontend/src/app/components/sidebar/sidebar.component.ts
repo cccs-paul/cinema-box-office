@@ -31,7 +31,7 @@ export class SidebarComponent implements OnInit {
       badge: null,
     },
     {
-      label: 'Dashboard',
+      label: 'Funding',
       icon: '📊',
       route: '/app/dashboard',
       badge: null,

@@ -7,6 +7,7 @@ package com.boxoffice.dto;
 
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 
 /**
@@ -28,6 +29,7 @@ public class ResponsibilityCentreDTO {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
+  private static final String DEMO_RC_NAME = "Demo";  // Name of the demo RC
 
   // Constructors
   public ResponsibilityCentreDTO() {}
@@ -185,10 +187,16 @@ public class ResponsibilityCentreDTO {
 
   /**
    * Check if the current user is the owner of this responsibility centre.
+   * Note: Demo RC always returns false as it's read-only for all users.
    *
-   * @return true if current user is the owner, false otherwise
+   * @return true if current user is the owner, false otherwise (always false for Demo RC)
    */
+  @JsonProperty("isOwner")
   public boolean isOwner() {
+    // Demo RC is always read-only, so isOwner is always false
+    if (DEMO_RC_NAME.equals(name)) {
+      return false;
+    }
     return currentUsername != null && currentUsername.equals(ownerUsername);
   }
 

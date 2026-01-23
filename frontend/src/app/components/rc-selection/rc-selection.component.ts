@@ -95,12 +95,15 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get sorted list of responsibility centres (alphabetical by name).
+   * Get sorted list of responsibility centres (alphabetical by name, Demo at bottom).
    */
   get sortedResponsibilityCentres(): ResponsibilityCentreDTO[] {
-    return [...this.responsibilityCentres].sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-    );
+    return [...this.responsibilityCentres].sort((a, b) => {
+      // Demo RC always goes to the bottom
+      if (a.name === 'Demo') return 1;
+      if (b.name === 'Demo') return -1;
+      return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    });
   }
 
   /**

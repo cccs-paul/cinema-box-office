@@ -39,6 +39,8 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     this.userRepository = userRepository;
   }
 
+  private static final String DEMO_RC_NAME = "Demo";
+
   @Override
   @Transactional(readOnly = true)
   public List<ResponsibilityCentreDTO> getUserResponsibilityCentres(String username) {
@@ -53,7 +55,9 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     // Get RCs owned by the user
     List<ResponsibilityCentre> ownedRCs = rcRepository.findByOwner(user);
     for (ResponsibilityCentre rc : ownedRCs) {
-      result.add(ResponsibilityCentreDTO.fromEntity(rc, username, "READ_WRITE"));
+      // Demo RC is always read-only for all users
+      String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "READ_WRITE";
+      result.add(ResponsibilityCentreDTO.fromEntity(rc, username, accessLevel));
     }
 
     // Get RCs shared with the user
@@ -106,7 +110,9 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
     // Check if user is the owner
     if (rc.getOwner().getId().equals(user.getId())) {
-      return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, "READ_WRITE"));
+      // Demo RC is always read-only for all users
+      String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "READ_WRITE";
+      return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, accessLevel));
     }
 
     // Check if user has access

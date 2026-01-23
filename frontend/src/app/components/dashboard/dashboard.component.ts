@@ -8,11 +8,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { HttpClient } from '@angular/common/http';
 import { User } from '../../models/user.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { ThemeService, Theme } from '../../services/theme.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { FundingItemService } from '../../services/funding-item.service';
@@ -35,11 +33,7 @@ import { FundingItem, FundingItemCreateRequest, getStatusLabel, getStatusClass, 
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-  title = 'Cinema Box Office';
   currentUser: User | null = null;
-  currentTheme: Theme = 'light';
-  isLoggingOut = false;
-  isUserMenuOpen = false;
 
   // Selected RC and FY
   selectedRC: ResponsibilityCentreDTO | null = null;
@@ -69,8 +63,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private http: HttpClient,
-    private themeService: ThemeService,
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
     private fundingItemService: FundingItemService
@@ -84,22 +76,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.router.navigate(['/login']);
       } else {
         this.loadSelectedContext();
-        // Load user's theme preference from server
-        this.themeService.getUserTheme(user.username).subscribe({
-          next: (response) => {
-            this.currentTheme = response.theme;
-            this.themeService.setTheme(response.theme);
-          },
-          error: (error) => {
-            console.error('Failed to load theme preference:', error);
-          },
-        });
       }
-    });
-
-    // Subscribe to theme changes
-    this.themeService.currentTheme$.pipe(takeUntil(this.destroy$)).subscribe((theme: Theme) => {
-      this.currentTheme = theme;
     });
   }
 
@@ -321,60 +298,5 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   clearSuccess(): void {
     this.successMessage = null;
-  }
-
-  /**
-   * Toggle user menu dropdown.
-   */
-  toggleUserMenu(): void {
-    this.isUserMenuOpen = !this.isUserMenuOpen;
-  }
-
-  /**
-   * Close user menu.
-   */
-  closeUserMenu(): void {
-    this.isUserMenuOpen = false;
-  }
-
-  /**
-   * Toggle between light and dark theme.
-   */
-  toggleTheme(): void {
-    if (!this.currentUser) {
-      return;
-    }
-
-    const newTheme: Theme = this.currentTheme === 'light' ? 'dark' : 'light';
-    this.themeService.setTheme(newTheme);
-
-    this.themeService.updateUserTheme(this.currentUser.username, newTheme).subscribe({
-      next: () => {
-        console.log(`Theme updated to ${newTheme}`);
-      },
-      error: (error) => {
-        console.error('Failed to update theme:', error);
-        this.themeService.setTheme(this.currentTheme === 'light' ? 'dark' : 'light');
-      },
-    });
-    this.closeUserMenu();
-  }
-
-  /**
-   * Get theme icon based on current theme.
-   */
-  getThemeIcon(): string {
-    return this.currentTheme === 'light' ? '🌙' : '☀️';
-  }
-
-  /**
-   * Handle user logout.
-   */
-  logout(): void {
-    this.isLoggingOut = true;
-    setTimeout(() => {
-      this.authService.logout();
-      this.router.navigate(['/login']);
-    }, 300);
   }
 }

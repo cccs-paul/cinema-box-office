@@ -10,7 +10,7 @@ export interface ResponsibilityCentreDTO {
   description?: string;
   ownerUsername: string;
   accessLevel: 'READ_ONLY' | 'READ_WRITE';
-  isOwner: boolean;
+  isOwner: boolean;  // Backend uses @JsonProperty("isOwner")
   createdAt?: string;
   updatedAt?: string;
 }

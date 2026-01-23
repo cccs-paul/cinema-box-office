@@ -3,53 +3,18 @@
   Copyright (c) 2026 Box Office Team
   Licensed under MIT License
 -->
-<div class="dashboard-container" [class.logging-out]="isLoggingOut">
-  <!-- Header Navigation -->
-  <header class="dashboard-header">
-    <div class="header-content">
-      <div class="header-title">
-        <button class="btn-back" (click)="navigateToRCSelection()" title="Back to RC Selection">
-          ← Change RC/FY
-        </button>
-        <h1>{{ title }}</h1>
-      </div>
-      <div class="context-info" *ngIf="selectedRC && selectedFY">
-        <span class="context-rc">{{ selectedRC.name }}</span>
-        <span class="context-separator">›</span>
-        <span class="context-fy">{{ selectedFY.name }}</span>
-      </div>
-      <nav class="header-nav">
-        <div class="user-menu-container">
-          <button (click)="toggleUserMenu()" class="btn-user-menu" title="User menu">
-            <span class="user-avatar">👤</span>
-            <span class="user-name">{{ currentUser?.fullName || currentUser?.username }}</span>
-            <span class="menu-arrow" [class.open]="isUserMenuOpen">▼</span>
-          </button>
-          <div *ngIf="isUserMenuOpen" class="user-menu-dropdown" (click)="$event.stopPropagation()">
-            <div class="menu-header">
-              <div class="menu-user-info">
-                <span class="menu-username">{{ currentUser?.username }}</span>
-                <span class="menu-email">{{ currentUser?.email }}</span>
-              </div>
-            </div>
-            <div class="menu-divider"></div>
-            <div class="menu-items">
-              <button (click)="toggleTheme()" class="menu-item">
-                <span class="menu-icon">{{ getThemeIcon() }}</span>
-                <span>{{ currentTheme === 'light' ? 'Dark' : 'Light' }} Theme</span>
-              </button>
-              <div class="menu-divider"></div>
-              <button (click)="logout()" class="menu-item logout-item" [disabled]="isLoggingOut">
-                <span class="menu-icon">🚪</span>
-                <span *ngIf="!isLoggingOut">Sign Out</span>
-                <span *ngIf="isLoggingOut">Signing Out...</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+<div class="dashboard-container">
+  <!-- Context Bar -->
+  <div class="context-bar" *ngIf="selectedRC && selectedFY">
+    <button class="btn-back" (click)="navigateToRCSelection()" title="Back to RC Selection">
+      ← Change RC/FY
+    </button>
+    <div class="context-info">
+      <span class="context-rc">{{ selectedRC.name }}</span>
+      <span class="context-separator">›</span>
+      <span class="context-fy">{{ selectedFY.name }}</span>
     </div>
-  </header>
+  </div>
 
   <!-- Main Content -->
   <main class="dashboard-main">
