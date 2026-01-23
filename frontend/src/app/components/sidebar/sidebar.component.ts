@@ -32,12 +32,6 @@ import { FiscalYear } from '../../models/fiscal-year.model';
 export class SidebarComponent implements OnInit, OnDestroy {
   menuItems = [
     {
-      label: 'RC Selection',
-      icon: '📋',
-      route: '/rc-selection',
-      badge: null,
-    },
-    {
       label: 'Funding',
       icon: '📊',
       route: '/app/dashboard',
