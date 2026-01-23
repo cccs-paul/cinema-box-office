@@ -12,9 +12,11 @@
 package com.boxoffice.init;
 
 import com.boxoffice.dto.CreateUserRequest;
+import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
+import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
@@ -50,6 +52,9 @@ public class DataInitializer implements ApplicationRunner {
 
     @Autowired
     private RCAccessRepository rcAccessRepository;
+
+    @Autowired
+    private FiscalYearRepository fiscalYearRepository;
 
     @Override
     public void run(org.springframework.boot.ApplicationArguments args) throws Exception {
@@ -116,6 +121,7 @@ public class DataInitializer implements ApplicationRunner {
     /**
      * Initialize the Demo RC with read-only access for all users.
      * The Demo RC is owned by admin and all other users get read-only access.
+     * Also creates a Demo FY "FY 2025-2026" for the Demo RC.
      */
     private void initializeDemoRC() {
         User adminUser = userRepository.findByUsername("admin").orElse(null);
@@ -124,27 +130,60 @@ public class DataInitializer implements ApplicationRunner {
             return;
         }
 
+        ResponsibilityCentre demoRC;
+
         // Check if Demo RC already exists
         if (rcRepository.findByNameAndOwner("Demo", adminUser).isPresent()) {
             logger.info("Demo RC already exists, ensuring all users have read-only access");
+            demoRC = rcRepository.findByNameAndOwner("Demo", adminUser).get();
             grantDemoAccessToAllUsers();
+        } else {
+            logger.info("Creating Demo RC...");
+            try {
+                demoRC = new ResponsibilityCentre(
+                    "Demo",
+                    "Demo responsibility centre for exploring the application. All users have read-only access.",
+                    adminUser
+                );
+                demoRC = rcRepository.save(demoRC);
+                logger.info("Demo RC created successfully");
+
+                // Grant read-only access to all non-admin users
+                grantDemoAccessToAllUsers();
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create Demo RC: " + e.getMessage());
+                return;
+            }
+        }
+
+        // Create Demo FY if it doesn't exist
+        initializeDemoFY(demoRC);
+    }
+
+    /**
+     * Initialize the Demo FY "FY 2025-2026" for the Demo RC.
+     *
+     * @param demoRC the Demo responsibility centre
+     */
+    private void initializeDemoFY(ResponsibilityCentre demoRC) {
+        String demoFYName = "FY 2025-2026";
+
+        if (fiscalYearRepository.existsByNameAndResponsibilityCentre(demoFYName, demoRC)) {
+            logger.info("Demo FY already exists, skipping creation");
             return;
         }
 
-        logger.info("Creating Demo RC...");
+        logger.info("Creating Demo FY...");
         try {
-            ResponsibilityCentre demoRC = new ResponsibilityCentre(
-                "Demo",
-                "Demo responsibility centre for exploring the application. All users have read-only access.",
-                adminUser
+            FiscalYear demoFY = new FiscalYear(
+                demoFYName,
+                "Demo fiscal year for exploring the application.",
+                demoRC
             );
-            rcRepository.save(demoRC);
-            logger.info("Demo RC created successfully");
-
-            // Grant read-only access to all non-admin users
-            grantDemoAccessToAllUsers();
+            fiscalYearRepository.save(demoFY);
+            logger.info("Demo FY created successfully: " + demoFYName);
         } catch (Exception e) {
-            logger.warning(() -> "Failed to create Demo RC: " + e.getMessage());
+            logger.warning(() -> "Failed to create Demo FY: " + e.getMessage());
         }
     }
 

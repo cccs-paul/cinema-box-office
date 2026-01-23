@@ -1,26 +1,13 @@
 <!--
-  Cinema Box Office - Dashboard Component Template
+  Cinema Box Office - Funding Component Template
   Copyright (c) 2026 Box Office Team
   Licensed under MIT License
 -->
 <div class="dashboard-container">
-  <!-- Context Bar -->
-  <div class="context-bar" *ngIf="selectedRC && selectedFY">
-    <button class="btn-back" (click)="navigateToRCSelection()" title="Back to RC Selection">
-      ← Change RC/FY
-    </button>
-    <div class="context-info">
-      <span class="context-rc">{{ selectedRC.name }}</span>
-      <span class="context-separator">›</span>
-      <span class="context-fy">{{ selectedFY.name }}</span>
-    </div>
-  </div>
-
   <!-- Main Content -->
   <main class="dashboard-main">
-    <!-- Page Header -->
-    <div class="page-header">
-      <h2>Funding Items</h2>
+    <!-- Action Bar -->
+    <div class="action-bar">
       <button class="btn btn-primary" (click)="toggleCreateForm()" *ngIf="canWrite && !showCreateForm">
         + Add Funding Item
       </button>
