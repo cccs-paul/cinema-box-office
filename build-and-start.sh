@@ -98,20 +98,30 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     exit 1
 fi
 
+# First, try to stop using docker compose
 RUNNING_CONTAINERS=$(docker compose --project-name "$PROJECT_NAME" -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
 
 if [ "$RUNNING_CONTAINERS" -gt 0 ]; then
-    echo -e "${GREEN}Stopping containers...${NC}"
-    docker compose --project-name "$PROJECT_NAME" -f "$COMPOSE_FILE" down
-    if [ $? -eq 0 ]; then
-        echo -e "${GREEN}✓ Containers stopped successfully${NC}"
-    else
-        echo -e "${RED}✗ Failed to stop containers${NC}"
-        exit 1
-    fi
-else
-    echo -e "${GREEN}✓ No running containers to stop${NC}"
+    echo -e "${GREEN}Stopping containers via docker compose...${NC}"
+    docker compose --project-name "$PROJECT_NAME" -f "$COMPOSE_FILE" down 2>/dev/null || true
 fi
+
+# Force remove containers by name to handle conflicts
+if [ "$ENVIRONMENT" = "dev" ]; then
+    CONTAINER_NAMES="myrc-db-dev myrc-api-dev myrc-pgadmin-dev myrc-web-dev"
+else
+    CONTAINER_NAMES="myrc-db myrc-api myrc-pgadmin myrc-web"
+fi
+
+echo -e "${GREEN}Ensuring no conflicting containers exist...${NC}"
+for container in $CONTAINER_NAMES; do
+    if docker ps -a --format '{{.Names}}' | grep -q "^${container}$"; then
+        echo -e "${YELLOW}  Removing container: $container${NC}"
+        docker rm -f "$container" 2>/dev/null || true
+    fi
+done
+
+echo -e "${GREEN}✓ Environment cleaned${NC}"
 echo ""
 
 # Step 4: Start Services

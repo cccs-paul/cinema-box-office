@@ -5,7 +5,7 @@
  */
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, throwError, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { User, AuthResponse } from '../models/user.model';
 
@@ -45,13 +45,19 @@ export class AuthService {
    */
   private checkSession(): void {
     this.http.get<User>(`${this.API_URL}/users/me`, { withCredentials: true })
+      .pipe(
+        catchError(() => {
+          // No active session, user needs to login - this is expected, don't propagate error
+          return of(null);
+        })
+      )
       .subscribe({
         next: (user) => {
-          this.setCurrentUser(user);
-        },
-        error: () => {
-          // No active session, user needs to login
-          this.currentUserSubject.next(null);
+          if (user) {
+            this.setCurrentUser(user);
+          } else {
+            this.currentUserSubject.next(null);
+          }
         }
       });
   }
