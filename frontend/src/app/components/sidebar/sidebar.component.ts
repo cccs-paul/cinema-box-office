@@ -37,6 +37,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
       route: '/app/dashboard',
       badge: null,
     },
+  ];
+
+  bottomMenuItems = [
+    {
+      label: 'Configuration',
+      icon: '⚙️',
+      route: '/app/configuration',
+      badge: null,
+    },
     {
       label: 'Developer Tools',
       icon: '🛠️',
@@ -102,5 +111,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
    */
   navigateToRCSelection(): void {
     this.router.navigate(['/rc-selection']);
+  }
+
+  /**
+   * Navigate to configuration page.
+   */
+  navigateToConfiguration(): void {
+    this.router.navigate(['/app/configuration']);
   }
 }
