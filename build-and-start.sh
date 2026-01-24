@@ -38,7 +38,7 @@ echo ""
 
 # Step 1: Build Backend
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}[1/4] Building Backend with Maven...${NC}"
+echo -e "${YELLOW}[1/5] Building Backend with Maven...${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 if [ ! -d "backend" ]; then
@@ -60,7 +60,7 @@ echo ""
 
 # Step 2: Build Frontend
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}[2/4] Building Frontend with npm...${NC}"
+echo -e "${YELLOW}[2/5] Building Frontend with npm...${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 if [ ! -d "frontend" ]; then
@@ -84,7 +84,7 @@ echo ""
 
 # Step 3: Stop Existing Services
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}[3/4] Stopping Existing Services...${NC}"
+echo -e "${YELLOW}[3/5] Stopping Existing Services...${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 if [ "$ENVIRONMENT" = "dev" ]; then
@@ -124,9 +124,41 @@ done
 echo -e "${GREEN}✓ Environment cleaned${NC}"
 echo ""
 
-# Step 4: Start Services
+# Step 4: Remove and Rebuild Docker Images
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${YELLOW}[4/4] Starting Services...${NC}"
+echo -e "${YELLOW}[4/5] Removing Existing Images and Rebuilding...${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+# Remove existing images
+if [ "$ENVIRONMENT" = "dev" ]; then
+    IMAGE_NAMES="cinema-box-office-api cinema-box-office-web"
+else
+    IMAGE_NAMES="cinema-box-office-api cinema-box-office-web"
+fi
+
+echo -e "${GREEN}Removing existing Docker images...${NC}"
+for image in $IMAGE_NAMES; do
+    if docker images -q "$image" 2>/dev/null | grep -q .; then
+        echo -e "${YELLOW}  Removing image: $image${NC}"
+        docker rmi -f "$image" 2>/dev/null || true
+    fi
+done
+
+# Rebuild images
+echo -e "${GREEN}Building fresh Docker images...${NC}"
+docker compose -f "$COMPOSE_FILE" build --no-cache
+
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✓ Images rebuilt successfully${NC}"
+else
+    echo -e "${RED}✗ Failed to rebuild images${NC}"
+    exit 1
+fi
+echo ""
+
+# Step 5: Start Services
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}[5/5] Starting Services...${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 echo -e "${GREEN}Starting all services...${NC}"

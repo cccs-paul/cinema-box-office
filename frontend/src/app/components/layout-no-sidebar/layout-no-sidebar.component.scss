@@ -13,7 +13,6 @@
 
 .app-main-no-sidebar {
   flex: 1;
-  padding-top: 60px; /* Header height */
   background: var(--background-primary);
   min-height: calc(100vh - 60px);
 }

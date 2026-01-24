@@ -46,8 +46,15 @@ export class AuthService {
   private checkSession(): void {
     this.http.get<User>(`${this.API_URL}/users/me`, { withCredentials: true })
       .pipe(
-        catchError(() => {
-          // No active session, user needs to login - this is expected, don't propagate error
+        catchError((error) => {
+          // No active session, user needs to login - this is expected behavior
+          // Suppress 401 errors in console as they're normal for unauthenticated users
+          if (error.status === 401) {
+            // Silently handle - user is not logged in, which is expected
+            return of(null);
+          }
+          // For other errors, log them as they might indicate a real problem
+          console.error('Session check error:', error);
           return of(null);
         })
       )
@@ -58,6 +65,10 @@ export class AuthService {
           } else {
             this.currentUserSubject.next(null);
           }
+        },
+        error: () => {
+          // Shouldn't reach here due to catchError, but handle just in case
+          this.currentUserSubject.next(null);
         }
       });
   }
