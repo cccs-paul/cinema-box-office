@@ -53,10 +53,13 @@ public interface FundingItemService {
    * @param description the funding item description
    * @param budgetAmount the budget amount
    * @param status the status
+   * @param currency the currency code (defaults to CAD if null)
+   * @param exchangeRate the exchange rate to CAD (required if currency is not CAD)
    * @return the created funding item DTO
    */
   FundingItemDTO createFundingItem(Long fiscalYearId, String username, String name,
-                                    String description, BigDecimal budgetAmount, String status);
+                                    String description, BigDecimal budgetAmount, String status,
+                                    String currency, BigDecimal exchangeRate);
 
   /**
    * Update an existing funding item.
@@ -67,10 +70,13 @@ public interface FundingItemService {
    * @param description the funding item description
    * @param budgetAmount the budget amount
    * @param status the status
+   * @param currency the currency code (defaults to CAD if null)
+   * @param exchangeRate the exchange rate to CAD (required if currency is not CAD)
    * @return optional updated funding item DTO
    */
   Optional<FundingItemDTO> updateFundingItem(Long fundingItemId, String username, String name,
-                                              String description, BigDecimal budgetAmount, String status);
+                                              String description, BigDecimal budgetAmount, String status,
+                                              String currency, BigDecimal exchangeRate);
 
   /**
    * Delete a funding item.

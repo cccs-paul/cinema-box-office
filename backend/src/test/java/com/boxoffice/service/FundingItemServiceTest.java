@@ -173,7 +173,9 @@ class FundingItemServiceTest {
         "Test Funding Item",
         "Test description",
         new BigDecimal("10000.00"),
-        "DRAFT"
+        "DRAFT",
+        "CAD",
+        null
     );
 
     assertNotNull(result);
@@ -197,7 +199,9 @@ class FundingItemServiceTest {
             "Test Funding Item",
             "Test description",
             new BigDecimal("10000.00"),
-            "DRAFT"
+            "DRAFT",
+            "CAD",
+            null
         ));
   }
 
@@ -226,7 +230,9 @@ class FundingItemServiceTest {
             "Test Funding Item",
             "Test description",
             new BigDecimal("10000.00"),
-            "DRAFT"
+            "DRAFT",
+            "CAD",
+            null
         ));
   }
 
@@ -244,7 +250,9 @@ class FundingItemServiceTest {
         "Updated Name",
         "Updated description",
         new BigDecimal("20000.00"),
-        "APPROVED"
+        "APPROVED",
+        "CAD",
+        null
     );
 
     assertTrue(result.isPresent());

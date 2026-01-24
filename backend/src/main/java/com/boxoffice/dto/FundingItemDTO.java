@@ -31,6 +31,8 @@ public class FundingItemDTO {
   private String description;
   private BigDecimal budgetAmount;
   private String status;
+  private String currency;
+  private BigDecimal exchangeRate;
   private Long fiscalYearId;
   private String fiscalYearName;
   private Long responsibilityCentreId;
@@ -43,7 +45,8 @@ public class FundingItemDTO {
   public FundingItemDTO() {}
 
   public FundingItemDTO(Long id, String name, String description, BigDecimal budgetAmount,
-                        String status, Long fiscalYearId, String fiscalYearName,
+                        String status, String currency, BigDecimal exchangeRate,
+                        Long fiscalYearId, String fiscalYearName,
                         Long responsibilityCentreId, String responsibilityCentreName,
                         LocalDateTime createdAt, LocalDateTime updatedAt, Boolean active) {
     this.id = id;
@@ -51,6 +54,8 @@ public class FundingItemDTO {
     this.description = description;
     this.budgetAmount = budgetAmount;
     this.status = status;
+    this.currency = currency;
+    this.exchangeRate = exchangeRate;
     this.fiscalYearId = fiscalYearId;
     this.fiscalYearName = fiscalYearName;
     this.responsibilityCentreId = responsibilityCentreId;
@@ -76,6 +81,8 @@ public class FundingItemDTO {
         fundingItem.getDescription(),
         fundingItem.getBudgetAmount(),
         fundingItem.getStatus() != null ? fundingItem.getStatus().name() : null,
+        fundingItem.getCurrency() != null ? fundingItem.getCurrency().getCode() : "CAD",
+        fundingItem.getExchangeRate(),
         fundingItem.getFiscalYear() != null ? fundingItem.getFiscalYear().getId() : null,
         fundingItem.getFiscalYear() != null ? fundingItem.getFiscalYear().getName() : null,
         fundingItem.getFiscalYear() != null && fundingItem.getFiscalYear().getResponsibilityCentre() != null
@@ -127,6 +134,22 @@ public class FundingItemDTO {
 
   public void setStatus(String status) {
     this.status = status;
+  }
+
+  public String getCurrency() {
+    return currency;
+  }
+
+  public void setCurrency(String currency) {
+    this.currency = currency;
+  }
+
+  public BigDecimal getExchangeRate() {
+    return exchangeRate;
+  }
+
+  public void setExchangeRate(BigDecimal exchangeRate) {
+    this.exchangeRate = exchangeRate;
   }
 
   public Long getFiscalYearId() {

@@ -13,6 +13,7 @@
 package com.boxoffice.service;
 
 import com.boxoffice.dto.FundingItemDTO;
+import com.boxoffice.model.Currency;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.FundingItem;
 import com.boxoffice.model.RCAccess;
@@ -103,7 +104,8 @@ public class FundingItemServiceImpl implements FundingItemService {
 
   @Override
   public FundingItemDTO createFundingItem(Long fiscalYearId, String username, String name,
-      String description, BigDecimal budgetAmount, String status) {
+      String description, BigDecimal budgetAmount, String status,
+      String currency, BigDecimal exchangeRate) {
     // Get fiscal year and verify write access to its RC
     Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);
     if (fyOpt.isEmpty()) {
@@ -140,7 +142,27 @@ public class FundingItemServiceImpl implements FundingItemService {
       }
     }
 
+    // Parse currency (default to CAD)
+    Currency itemCurrency = Currency.CAD;
+    if (currency != null && !currency.trim().isEmpty()) {
+      itemCurrency = Currency.fromCode(currency);
+      if (itemCurrency == null) {
+        throw new IllegalArgumentException("Invalid currency: " + currency);
+      }
+    }
+
+    // Validate exchange rate for non-CAD currencies
+    if (itemCurrency != Currency.CAD && exchangeRate == null) {
+      throw new IllegalArgumentException("Exchange rate is required for non-CAD currencies");
+    }
+    if (itemCurrency != Currency.CAD && exchangeRate != null && 
+        exchangeRate.compareTo(BigDecimal.ZERO) <= 0) {
+      throw new IllegalArgumentException("Exchange rate must be greater than zero");
+    }
+
     FundingItem fi = new FundingItem(name, description, budgetAmount, itemStatus, fy);
+    fi.setCurrency(itemCurrency);
+    fi.setExchangeRate(itemCurrency == Currency.CAD ? null : exchangeRate);
     FundingItem saved = fundingItemRepository.save(fi);
 
     return FundingItemDTO.fromEntity(saved);
@@ -148,7 +170,8 @@ public class FundingItemServiceImpl implements FundingItemService {
 
   @Override
   public Optional<FundingItemDTO> updateFundingItem(Long fundingItemId, String username, String name,
-      String description, BigDecimal budgetAmount, String status) {
+      String description, BigDecimal budgetAmount, String status,
+      String currency, BigDecimal exchangeRate) {
     Optional<FundingItem> fiOpt = fundingItemRepository.findById(fundingItemId);
     if (fiOpt.isEmpty()) {
       return Optional.empty();
@@ -184,6 +207,40 @@ public class FundingItemServiceImpl implements FundingItemService {
         fi.setStatus(FundingItem.Status.valueOf(status.toUpperCase()));
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("Invalid status: " + status);
+      }
+    }
+
+    // Handle currency update
+    if (currency != null && !currency.trim().isEmpty()) {
+      Currency itemCurrency = Currency.fromCode(currency);
+      if (itemCurrency == null) {
+        throw new IllegalArgumentException("Invalid currency: " + currency);
+      }
+      fi.setCurrency(itemCurrency);
+
+      // Validate exchange rate for non-CAD currencies
+      if (itemCurrency != Currency.CAD) {
+        if (exchangeRate == null && fi.getExchangeRate() == null) {
+          throw new IllegalArgumentException("Exchange rate is required for non-CAD currencies");
+        }
+        if (exchangeRate != null) {
+          if (exchangeRate.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Exchange rate must be greater than zero");
+          }
+          fi.setExchangeRate(exchangeRate);
+        }
+      } else {
+        // Clear exchange rate for CAD
+        fi.setExchangeRate(null);
+      }
+    } else if (exchangeRate != null) {
+      // Updating exchange rate without changing currency
+      Currency currentCurrency = fi.getCurrency() != null ? fi.getCurrency() : Currency.CAD;
+      if (currentCurrency != Currency.CAD) {
+        if (exchangeRate.compareTo(BigDecimal.ZERO) <= 0) {
+          throw new IllegalArgumentException("Exchange rate must be greater than zero");
+        }
+        fi.setExchangeRate(exchangeRate);
       }
     }
 

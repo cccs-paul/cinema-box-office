@@ -53,6 +53,19 @@ app:
             client-id: ${OAUTH2_GITHUB_CLIENT_ID:}
             client-secret: ${OAUTH2_GITHUB_CLIENT_SECRET:}
             scope: user:email
+    # Currency configuration
+    currency:
+      # Default currency (must be one of the supported currencies)
+      default: CAD
+      # List of supported currencies (ISO 4217 codes)
+      # Available options: CAD, GBP, AUD, NZD, USD, EUR
+      supported:
+        - CAD
+        - GBP
+        - AUD
+        - NZD
+        - USD
+        - EUR
 
 management:
   endpoints:

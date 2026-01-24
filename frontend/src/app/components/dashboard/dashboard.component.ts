@@ -14,9 +14,11 @@ import { takeUntil } from 'rxjs/operators';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { FundingItemService } from '../../services/funding-item.service';
+import { CurrencyService } from '../../services/currency.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { FundingItem, FundingItemCreateRequest, getStatusLabel, getStatusClass, FundingItemStatus } from '../../models/funding-item.model';
+import { Currency, DEFAULT_CURRENCY } from '../../models/currency.model';
 
 /**
  * Dashboard component showing funding items for the selected RC and FY.
@@ -43,6 +45,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   fundingItems: FundingItem[] = [];
   isLoadingItems = false;
 
+  // Currencies
+  currencies: Currency[] = [];
+  isLoadingCurrencies = false;
+
   // Create Form
   showCreateForm = false;
   isCreating = false;
@@ -50,6 +56,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   newItemDescription = '';
   newItemBudget: number | null = null;
   newItemStatus: FundingItemStatus = 'DRAFT';
+  newItemCurrency = DEFAULT_CURRENCY;
+  newItemExchangeRate: number | null = null;
 
   // Messages
   errorMessage: string | null = null;
@@ -65,10 +73,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private router: Router,
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
-    private fundingItemService: FundingItemService
+    private fundingItemService: FundingItemService,
+    private currencyService: CurrencyService
   ) {}
 
   ngOnInit(): void {
+    // Load currencies
+    this.loadCurrencies();
+
     // Subscribe to current user
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe((user: User | null) => {
       this.currentUser = user;
@@ -78,6 +90,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.loadSelectedContext();
       }
     });
+  }
+
+  /**
+   * Load supported currencies from the backend.
+   */
+  private loadCurrencies(): void {
+    this.isLoadingCurrencies = true;
+    this.currencyService.getCurrencies()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (currencies) => {
+          this.currencies = currencies;
+          this.isLoadingCurrencies = false;
+        },
+        error: (error) => {
+          console.error('Failed to load currencies:', error);
+          this.isLoadingCurrencies = false;
+          // Default to CAD if currencies fail to load
+          this.currencies = [{
+            code: 'CAD',
+            name: 'Canadian Dollar',
+            symbol: '$',
+            isDefault: true
+          }];
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -187,6 +225,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validate exchange rate for non-CAD currencies
+    if (this.newItemCurrency !== DEFAULT_CURRENCY && 
+        (this.newItemExchangeRate === null || this.newItemExchangeRate <= 0)) {
+      this.errorMessage = 'Exchange rate is required for non-CAD currencies and must be greater than zero';
+      return;
+    }
+
     this.isCreating = true;
     this.errorMessage = null;
     this.successMessage = null;
@@ -195,7 +240,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
       name: this.newItemName.trim(),
       description: this.newItemDescription.trim(),
       budgetAmount: this.newItemBudget || undefined,
-      status: this.newItemStatus
+      status: this.newItemStatus,
+      currency: this.newItemCurrency,
+      exchangeRate: this.newItemCurrency !== DEFAULT_CURRENCY ? this.newItemExchangeRate || undefined : undefined
     };
 
     this.fundingItemService.createFundingItem(this.selectedFY.id, request)
@@ -250,6 +297,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.newItemDescription = '';
     this.newItemBudget = null;
     this.newItemStatus = 'DRAFT';
+    this.newItemCurrency = DEFAULT_CURRENCY;
+    this.newItemExchangeRate = null;
   }
 
   /**
@@ -269,14 +318,62 @@ export class DashboardComponent implements OnInit, OnDestroy {
   /**
    * Format currency for display.
    */
-  formatCurrency(amount: number | null): string {
+  formatCurrency(amount: number | null, currencyCode?: string): string {
     if (amount === null || amount === undefined) {
       return '-';
     }
-    return new Intl.NumberFormat('en-CA', {
+    const code = currencyCode || DEFAULT_CURRENCY;
+    const locale = this.getLocaleForCurrency(code);
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: 'CAD'
+      currency: code
     }).format(amount);
+  }
+
+  /**
+   * Get the appropriate locale for a currency.
+   */
+  private getLocaleForCurrency(currencyCode: string): string {
+    switch (currencyCode) {
+      case 'CAD':
+        return 'en-CA';
+      case 'USD':
+        return 'en-US';
+      case 'GBP':
+        return 'en-GB';
+      case 'EUR':
+        return 'de-DE';
+      case 'AUD':
+        return 'en-AU';
+      case 'NZD':
+        return 'en-NZ';
+      default:
+        return 'en-CA';
+    }
+  }
+
+  /**
+   * Check if a currency requires an exchange rate (non-CAD currencies).
+   */
+  requiresExchangeRate(currencyCode: string): boolean {
+    return currencyCode !== DEFAULT_CURRENCY;
+  }
+
+  /**
+   * Handle currency change in the form.
+   */
+  onCurrencyChange(): void {
+    if (this.newItemCurrency === DEFAULT_CURRENCY) {
+      this.newItemExchangeRate = null;
+    }
+  }
+
+  /**
+   * Get the currency symbol for a currency code.
+   */
+  getCurrencySymbol(currencyCode: string): string {
+    const currency = this.currencies.find(c => c.code === currencyCode);
+    return currency?.symbol || '$';
   }
 
   /**

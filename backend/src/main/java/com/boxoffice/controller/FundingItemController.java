@@ -163,7 +163,9 @@ public class FundingItemController {
           request.getName(),
           request.getDescription() != null ? request.getDescription() : "",
           request.getBudgetAmount(),
-          request.getStatus()
+          request.getStatus(),
+          request.getCurrency(),
+          request.getExchangeRate()
       );
       return ResponseEntity.status(HttpStatus.CREATED).body(createdFI);
     } catch (IllegalArgumentException e) {
@@ -214,7 +216,9 @@ public class FundingItemController {
           request.getName(),
           request.getDescription(),
           request.getBudgetAmount(),
-          request.getStatus()
+          request.getStatus(),
+          request.getCurrency(),
+          request.getExchangeRate()
       );
       return updatedFI.map(ResponseEntity::ok)
           .orElseGet(() -> ResponseEntity.notFound().build());
@@ -273,14 +277,19 @@ public class FundingItemController {
     private String description;
     private BigDecimal budgetAmount;
     private String status;
+    private String currency;
+    private BigDecimal exchangeRate;
 
     public FundingItemCreateRequest() {}
 
-    public FundingItemCreateRequest(String name, String description, BigDecimal budgetAmount, String status) {
+    public FundingItemCreateRequest(String name, String description, BigDecimal budgetAmount, 
+        String status, String currency, BigDecimal exchangeRate) {
       this.name = name;
       this.description = description;
       this.budgetAmount = budgetAmount;
       this.status = status;
+      this.currency = currency;
+      this.exchangeRate = exchangeRate;
     }
 
     public String getName() {
@@ -313,6 +322,22 @@ public class FundingItemController {
 
     public void setStatus(String status) {
       this.status = status;
+    }
+
+    public String getCurrency() {
+      return currency;
+    }
+
+    public void setCurrency(String currency) {
+      this.currency = currency;
+    }
+
+    public BigDecimal getExchangeRate() {
+      return exchangeRate;
+    }
+
+    public void setExchangeRate(BigDecimal exchangeRate) {
+      this.exchangeRate = exchangeRate;
     }
   }
 }

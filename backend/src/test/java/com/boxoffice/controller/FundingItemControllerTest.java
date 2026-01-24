@@ -57,6 +57,8 @@ class FundingItemControllerTest {
         "Test description",
         new BigDecimal("10000.00"),
         "DRAFT",
+        "CAD",
+        null,
         1L,
         "FY 2025-2026",
         1L,
@@ -127,7 +129,7 @@ class FundingItemControllerTest {
   @DisplayName("createFundingItem - Creates new funding item")
   void createFundingItem_CreatesNewFundingItem() {
     when(fundingItemService.createFundingItem(anyLong(), anyString(), anyString(), anyString(),
-        any(), anyString()))
+        any(), anyString(), anyString(), any()))
         .thenReturn(testFundingItem);
 
     FundingItemController.FundingItemCreateRequest request =
@@ -135,7 +137,9 @@ class FundingItemControllerTest {
             "Test Funding Item",
             "Test description",
             new BigDecimal("10000.00"),
-            "DRAFT"
+            "DRAFT",
+            "CAD",
+            null
         );
 
     ResponseEntity<FundingItemDTO> response = controller.createFundingItem(1L, null, request);
@@ -153,7 +157,9 @@ class FundingItemControllerTest {
             "",  // Empty name
             "Description",
             new BigDecimal("10000.00"),
-            "DRAFT"
+            "DRAFT",
+            "CAD",
+            null
         );
 
     ResponseEntity<FundingItemDTO> response = controller.createFundingItem(1L, null, request);
@@ -169,7 +175,9 @@ class FundingItemControllerTest {
             null,  // Null name
             "Description",
             new BigDecimal("10000.00"),
-            "DRAFT"
+            "DRAFT",
+            "CAD",
+            null
         );
 
     ResponseEntity<FundingItemDTO> response = controller.createFundingItem(1L, null, request);
@@ -181,7 +189,7 @@ class FundingItemControllerTest {
   @DisplayName("createFundingItem - Returns 400 on duplicate name")
   void createFundingItem_ReturnsBadRequestOnDuplicateName() {
     when(fundingItemService.createFundingItem(anyLong(), anyString(), anyString(), anyString(),
-        any(), anyString()))
+        any(), anyString(), anyString(), any()))
         .thenThrow(new IllegalArgumentException("A Funding Item with this name already exists"));
 
     FundingItemController.FundingItemCreateRequest request =
@@ -189,7 +197,9 @@ class FundingItemControllerTest {
             "Test Funding Item",
             "Description",
             new BigDecimal("10000.00"),
-            "DRAFT"
+            "DRAFT",
+            "CAD",
+            null
         );
 
     ResponseEntity<FundingItemDTO> response = controller.createFundingItem(1L, null, request);
@@ -206,6 +216,8 @@ class FundingItemControllerTest {
         "Updated description",
         new BigDecimal("20000.00"),
         "APPROVED",
+        "CAD",
+        null,
         1L,
         "FY 2025-2026",
         1L,
@@ -216,7 +228,7 @@ class FundingItemControllerTest {
     );
 
     when(fundingItemService.updateFundingItem(anyLong(), anyString(), anyString(), anyString(),
-        any(), anyString()))
+        any(), anyString(), anyString(), any()))
         .thenReturn(Optional.of(updatedItem));
 
     FundingItemController.FundingItemCreateRequest request =
@@ -224,7 +236,9 @@ class FundingItemControllerTest {
             "Updated Funding Item",
             "Updated description",
             new BigDecimal("20000.00"),
-            "APPROVED"
+            "APPROVED",
+            "CAD",
+            null
         );
 
     ResponseEntity<FundingItemDTO> response = controller.updateFundingItem(1L, 1L, null, request);
@@ -238,7 +252,7 @@ class FundingItemControllerTest {
   @DisplayName("updateFundingItem - Returns 404 when not found")
   void updateFundingItem_ReturnsNotFoundWhenMissing() {
     when(fundingItemService.updateFundingItem(anyLong(), anyString(), anyString(), anyString(),
-        any(), anyString()))
+        any(), anyString(), anyString(), any()))
         .thenReturn(Optional.empty());
 
     FundingItemController.FundingItemCreateRequest request =
@@ -246,7 +260,9 @@ class FundingItemControllerTest {
             "Test Funding Item",
             "Description",
             new BigDecimal("10000.00"),
-            "DRAFT"
+            "DRAFT",
+            "CAD",
+            null
         );
 
     ResponseEntity<FundingItemDTO> response = controller.updateFundingItem(1L, 999L, null, request);

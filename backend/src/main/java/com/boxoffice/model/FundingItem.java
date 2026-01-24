@@ -73,6 +73,20 @@ public class FundingItem {
   @Column(nullable = false, length = 20)
   private Status status = Status.DRAFT;
 
+  /**
+   * The currency for this funding item. Defaults to CAD.
+   */
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 3)
+  private Currency currency = Currency.CAD;
+
+  /**
+   * The exchange rate to convert to CAD. Required when currency is not CAD.
+   * A value of 1.0 means 1 unit of the currency equals 1 CAD.
+   */
+  @Column(precision = 15, scale = 6)
+  private java.math.BigDecimal exchangeRate;
+
   @ManyToOne(optional = false)
   @JoinColumn(name = "fiscal_year_id", nullable = false)
   private FiscalYear fiscalYear;
@@ -145,6 +159,22 @@ public class FundingItem {
     this.status = status;
   }
 
+  public Currency getCurrency() {
+    return currency;
+  }
+
+  public void setCurrency(Currency currency) {
+    this.currency = currency != null ? currency : Currency.CAD;
+  }
+
+  public BigDecimal getExchangeRate() {
+    return exchangeRate;
+  }
+
+  public void setExchangeRate(BigDecimal exchangeRate) {
+    this.exchangeRate = exchangeRate;
+  }
+
   public FiscalYear getFiscalYear() {
     return fiscalYear;
   }
@@ -196,6 +226,8 @@ public class FundingItem {
         "id=" + id +
         ", name='" + name + '\'' +
         ", budgetAmount=" + budgetAmount +
+        ", currency=" + currency +
+        ", exchangeRate=" + exchangeRate +
         ", status=" + status +
         ", active=" + active +
         '}';

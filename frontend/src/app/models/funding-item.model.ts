@@ -31,6 +31,12 @@ export interface FundingItem {
   /** Current status of the funding item */
   status: FundingItemStatus;
 
+  /** Currency code (ISO 4217) for this funding item */
+  currency: string;
+
+  /** Exchange rate to CAD (required when currency is not CAD) */
+  exchangeRate: number | null;
+
   /** ID of the parent fiscal year */
   fiscalYearId: number;
 
@@ -68,6 +74,12 @@ export interface FundingItemCreateRequest {
 
   /** Initial status of the funding item */
   status?: FundingItemStatus;
+
+  /** Currency code (ISO 4217) for this funding item */
+  currency?: string;
+
+  /** Exchange rate to CAD (required when currency is not CAD) */
+  exchangeRate?: number;
 }
 
 /**
@@ -85,6 +97,12 @@ export interface FundingItemUpdateRequest {
 
   /** Status of the funding item */
   status?: FundingItemStatus;
+
+  /** Currency code (ISO 4217) for this funding item */
+  currency?: string;
+
+  /** Exchange rate to CAD (required when currency is not CAD) */
+  exchangeRate?: number;
 }
 
 /**

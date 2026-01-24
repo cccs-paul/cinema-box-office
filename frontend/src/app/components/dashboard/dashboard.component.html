@@ -51,6 +51,38 @@
             />
           </div>
           <div class="form-group">
+            <label for="itemCurrency">Currency</label>
+            <select 
+              id="itemCurrency" 
+              [(ngModel)]="newItemCurrency" 
+              [disabled]="isCreating || isLoadingCurrencies"
+              (change)="onCurrencyChange()"
+            >
+              <option *ngFor="let currency of currencies" [value]="currency.code">
+                {{ currency.code }} - {{ currency.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" *ngIf="requiresExchangeRate(newItemCurrency)">
+          <div class="form-group full-width">
+            <label for="itemExchangeRate">Exchange Rate to CAD *</label>
+            <div class="exchange-rate-help">
+              1 {{ newItemCurrency }} = <input
+                id="itemExchangeRate"
+                type="number"
+                [(ngModel)]="newItemExchangeRate"
+                placeholder="Enter exchange rate"
+                [disabled]="isCreating"
+                step="0.000001"
+                min="0.000001"
+                class="exchange-rate-input"
+              /> CAD
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
             <label for="itemStatus">Status</label>
             <select id="itemStatus" [(ngModel)]="newItemStatus" [disabled]="isCreating">
               <option *ngFor="let status of statusOptions" [value]="status">
@@ -60,7 +92,7 @@
           </div>
         </div>
         <div class="form-actions">
-          <button class="btn btn-primary" (click)="createFundingItem()" [disabled]="isCreating || !newItemName.trim()">
+          <button class="btn btn-primary" (click)="createFundingItem()" [disabled]="isCreating || !newItemName.trim() || (requiresExchangeRate(newItemCurrency) && (!newItemExchangeRate || newItemExchangeRate <= 0))">
             {{ isCreating ? 'Creating...' : 'Create' }}
           </button>
           <button class="btn btn-secondary" (click)="toggleCreateForm()" [disabled]="isCreating">
@@ -98,6 +130,7 @@
             <th>Name</th>
             <th>Description</th>
             <th>Budget</th>
+            <th>Currency</th>
             <th>Status</th>
             <th *ngIf="canWrite">Actions</th>
           </tr>
@@ -106,7 +139,15 @@
           <tr *ngFor="let item of sortedFundingItems">
             <td class="item-name">{{ item.name }}</td>
             <td class="item-description">{{ item.description || '-' }}</td>
-            <td class="item-budget">{{ formatCurrency(item.budgetAmount) }}</td>
+            <td class="item-budget">{{ formatCurrency(item.budgetAmount, item.currency) }}</td>
+            <td class="item-currency">
+              <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
+                {{ item.currency }}
+              </span>
+              <span class="exchange-rate" *ngIf="item.currency !== 'CAD' && item.exchangeRate">
+                (1 {{ item.currency }} = {{ item.exchangeRate }} CAD)
+              </span>
+            </td>
             <td class="item-status">
               <span class="status-badge" [ngClass]="getStatusClass(item.status)">
                 {{ getStatusLabel(item.status) }}
