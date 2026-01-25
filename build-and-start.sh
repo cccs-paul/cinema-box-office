@@ -98,23 +98,20 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     exit 1
 fi
 
-# First, try to stop using docker compose
-RUNNING_CONTAINERS=$(docker compose --project-name "$PROJECT_NAME" -f "$COMPOSE_FILE" ps -q 2>/dev/null | wc -l)
+# First, try to stop using docker compose for both possible configurations
+echo -e "${GREEN}Stopping containers via docker compose...${NC}"
 
-if [ "$RUNNING_CONTAINERS" -gt 0 ]; then
-    echo -e "${GREEN}Stopping containers via docker compose...${NC}"
-    docker compose --project-name "$PROJECT_NAME" -f "$COMPOSE_FILE" down 2>/dev/null || true
-fi
+# Stop regular containers
+docker compose down 2>/dev/null || true
 
-# Force remove containers by name to handle conflicts
-if [ "$ENVIRONMENT" = "dev" ]; then
-    CONTAINER_NAMES="myrc-db-dev myrc-api-dev myrc-pgadmin-dev myrc-web-dev"
-else
-    CONTAINER_NAMES="myrc-db myrc-api myrc-pgadmin myrc-web"
-fi
+# Stop dev containers  
+docker compose --project-name "$PROJECT_NAME" -f "docker-compose.dev.yml" down 2>/dev/null || true
+
+# Force remove all possible containers by name
+ALL_CONTAINER_NAMES="myrc-db myrc-api myrc-pgadmin myrc-web myrc-db-dev myrc-api-dev myrc-pgadmin-dev myrc-web-dev"
 
 echo -e "${GREEN}Ensuring no conflicting containers exist...${NC}"
-for container in $CONTAINER_NAMES; do
+for container in $ALL_CONTAINER_NAMES; do
     if docker ps -a --format '{{.Names}}' | grep -q "^${container}$"; then
         echo -e "${YELLOW}  Removing container: $container${NC}"
         docker rm -f "$container" 2>/dev/null || true

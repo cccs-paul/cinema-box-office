@@ -1,0 +1,241 @@
+<!--
+  myRC - Configuration Component Template
+  Copyright (c) 2026 myRC Team
+  Licensed under MIT License
+-->
+<div class="configuration-page">
+  <div class="page-header">
+    <h1>Configuration</h1>
+    <p class="context-info" *ngIf="selectedRC && selectedFY">
+      <span class="rc-name">{{ selectedRC.name }}</span>
+      <span class="separator">›</span>
+      <span class="fy-name">{{ selectedFY.name }}</span>
+    </p>
+  </div>
+
+  <!-- Success Message -->
+  <div class="success-message" *ngIf="successMessage">
+    <span class="success-icon">✓</span>
+    {{ successMessage }}
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-message" *ngIf="moneyError">
+    <span class="error-icon">⚠️</span>
+    {{ moneyError }}
+    <button class="dismiss-btn" (click)="clearError()">×</button>
+  </div>
+
+  <!-- Configuration Tabs -->
+  <div class="config-tabs">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'monies'"
+      (click)="setActiveTab('monies')">
+      <span class="tab-icon">💰</span>
+      <span class="tab-label">Monies</span>
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'general'"
+      (click)="setActiveTab('general')">
+      <span class="tab-icon">⚙️</span>
+      <span class="tab-label">General</span>
+    </button>
+  </div>
+
+  <!-- Monies Tab Content -->
+  <div class="tab-content" *ngIf="activeTab === 'monies'">
+    <div class="section-header">
+      <h2>Money Types</h2>
+      <p class="section-description">
+        Configure money types for this fiscal year. Each money type has two parts: Capital (CAP) and O&M (OM).
+        The default "AB" money type cannot be deleted.
+      </p>
+    </div>
+
+    <!-- Add Money Button -->
+    <div class="action-bar">
+      <button 
+        class="btn btn-primary" 
+        (click)="startAddMoney()"
+        [disabled]="isAddingMoney || isSaving">
+        <span class="btn-icon">+</span>
+        Add Money Type
+      </button>
+    </div>
+
+    <!-- Add Money Form -->
+    <div class="money-form" *ngIf="isAddingMoney">
+      <h3>Add New Money Type</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="new-code">Code *</label>
+          <input 
+            type="text" 
+            id="new-code"
+            [(ngModel)]="newMoney.code"
+            placeholder="e.g., OA, WCF"
+            maxlength="10"
+            [disabled]="isSaving">
+          <span class="form-hint">Short code (max 10 characters)</span>
+        </div>
+        <div class="form-group">
+          <label for="new-name">Name *</label>
+          <input 
+            type="text" 
+            id="new-name"
+            [(ngModel)]="newMoney.name"
+            placeholder="e.g., Operating Allotment"
+            maxlength="100"
+            [disabled]="isSaving">
+        </div>
+      </div>
+      <div class="form-group full-width">
+        <label for="new-description">Description</label>
+        <textarea 
+          id="new-description"
+          [(ngModel)]="newMoney.description"
+          placeholder="Optional description"
+          rows="2"
+          maxlength="500"
+          [disabled]="isSaving"></textarea>
+      </div>
+      <div class="form-preview" *ngIf="newMoney.code">
+        <span class="preview-label">Preview:</span>
+        <span class="preview-tag">{{ newMoney.code | uppercase }} (CAP)</span>
+        <span class="preview-tag">{{ newMoney.code | uppercase }} (OM)</span>
+      </div>
+      <div class="form-actions">
+        <button 
+          class="btn btn-secondary" 
+          (click)="cancelAddMoney()"
+          [disabled]="isSaving">
+          Cancel
+        </button>
+        <button 
+          class="btn btn-primary" 
+          (click)="saveMoney()"
+          [disabled]="isSaving || !newMoney.code || !newMoney.name">
+          <span *ngIf="isSaving">Saving...</span>
+          <span *ngIf="!isSaving">Save Money Type</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Money List -->
+    <div class="money-list" *ngIf="!isLoadingMonies">
+      <div 
+        class="money-card" 
+        *ngFor="let money of monies; trackBy: trackByMoneyId"
+        [class.is-default]="money.isDefault"
+        [class.is-editing]="editingMoneyId === money.id">
+        
+        <!-- View Mode -->
+        <div class="money-content" *ngIf="editingMoneyId !== money.id">
+          <div class="money-header">
+            <span class="money-code">{{ money.code }}</span>
+            <span class="default-badge" *ngIf="money.isDefault">Default</span>
+          </div>
+          <div class="money-name">{{ money.name }}</div>
+          <div class="money-description" *ngIf="money.description">{{ money.description }}</div>
+          <div class="money-parts">
+            <span class="part-tag cap">{{ money.capLabel }}</span>
+            <span class="part-tag om">{{ money.omLabel }}</span>
+          </div>
+          <div class="money-actions">
+            <button 
+              class="btn btn-small btn-secondary" 
+              (click)="startEditMoney(money)"
+              [disabled]="isSaving || isDeleting">
+              Edit
+            </button>
+            <button 
+              class="btn btn-small btn-danger" 
+              (click)="deleteMoney(money)"
+              [disabled]="money.isDefault || isSaving || isDeleting"
+              [title]="money.isDefault ? 'Cannot delete default money type' : 'Delete'">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div class="money-edit-form" *ngIf="editingMoneyId === money.id">
+          <h4>Edit Money Type</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Code</label>
+              <input 
+                type="text" 
+                [(ngModel)]="editMoney.code"
+                maxlength="10"
+                [disabled]="money.isDefault || isSaving">
+              <span class="form-hint" *ngIf="money.isDefault">Cannot change default code</span>
+            </div>
+            <div class="form-group">
+              <label>Name *</label>
+              <input 
+                type="text" 
+                [(ngModel)]="editMoney.name"
+                maxlength="100"
+                [disabled]="isSaving">
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label>Description</label>
+            <textarea 
+              [(ngModel)]="editMoney.description"
+              rows="2"
+              maxlength="500"
+              [disabled]="isSaving"></textarea>
+          </div>
+          <div class="form-actions">
+            <button 
+              class="btn btn-secondary" 
+              (click)="cancelEditMoney()"
+              [disabled]="isSaving">
+              Cancel
+            </button>
+            <button 
+              class="btn btn-primary" 
+              (click)="updateMoney(money)"
+              [disabled]="isSaving || !editMoney.name">
+              <span *ngIf="isSaving">Saving...</span>
+              <span *ngIf="!isSaving">Update</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="monies.length === 0 && !isAddingMoney">
+        <span class="empty-icon">💰</span>
+        <p>No money types configured yet.</p>
+        <button class="btn btn-primary" (click)="startAddMoney()">
+          Add Your First Money Type
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoadingMonies">
+      <span class="loading-spinner"></span>
+      <p>Loading money types...</p>
+    </div>
+  </div>
+
+  <!-- General Tab Content -->
+  <div class="tab-content" *ngIf="activeTab === 'general'">
+    <div class="section-header">
+      <h2>General Settings</h2>
+      <p class="section-description">
+        Additional configuration options will be available here in future releases.
+      </p>
+    </div>
+    <div class="coming-soon">
+      <span class="coming-soon-icon">🚧</span>
+      <p>More configuration options coming soon!</p>
+    </div>
+  </div>
+</div>

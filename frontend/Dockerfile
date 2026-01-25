@@ -37,8 +37,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /etc/nginx/sites-enabled/* && \
     rm -rf /etc/nginx/sites-available/*
 
-# Copy built Angular app to Nginx
-COPY --from=builder /build/dist/myrc ./
+# Copy built Angular app to Nginx (Angular 17+ outputs to browser subfolder)
+COPY --from=builder /build/dist/myrc/browser ./
 
 # Copy Nginx configuration
 COPY frontend/nginx.conf /etc/nginx/nginx.conf
