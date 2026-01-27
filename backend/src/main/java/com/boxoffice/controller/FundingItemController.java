@@ -13,6 +13,7 @@
 package com.boxoffice.controller;
 
 import com.boxoffice.dto.FundingItemDTO;
+import com.boxoffice.dto.MoneyAllocationDTO;
 import com.boxoffice.service.FundingItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -165,7 +166,8 @@ public class FundingItemController {
           request.getBudgetAmount(),
           request.getStatus(),
           request.getCurrency(),
-          request.getExchangeRate()
+          request.getExchangeRate(),
+          request.getMoneyAllocations()
       );
       return ResponseEntity.status(HttpStatus.CREATED).body(createdFI);
     } catch (IllegalArgumentException e) {
@@ -218,7 +220,8 @@ public class FundingItemController {
           request.getBudgetAmount(),
           request.getStatus(),
           request.getCurrency(),
-          request.getExchangeRate()
+          request.getExchangeRate(),
+          request.getMoneyAllocations()
       );
       return updatedFI.map(ResponseEntity::ok)
           .orElseGet(() -> ResponseEntity.notFound().build());
@@ -279,17 +282,20 @@ public class FundingItemController {
     private String status;
     private String currency;
     private BigDecimal exchangeRate;
+    private List<MoneyAllocationDTO> moneyAllocations;
 
     public FundingItemCreateRequest() {}
 
     public FundingItemCreateRequest(String name, String description, BigDecimal budgetAmount, 
-        String status, String currency, BigDecimal exchangeRate) {
+        String status, String currency, BigDecimal exchangeRate,
+        List<MoneyAllocationDTO> moneyAllocations) {
       this.name = name;
       this.description = description;
       this.budgetAmount = budgetAmount;
       this.status = status;
       this.currency = currency;
       this.exchangeRate = exchangeRate;
+      this.moneyAllocations = moneyAllocations;
     }
 
     public String getName() {
@@ -338,6 +344,14 @@ public class FundingItemController {
 
     public void setExchangeRate(BigDecimal exchangeRate) {
       this.exchangeRate = exchangeRate;
+    }
+
+    public List<MoneyAllocationDTO> getMoneyAllocations() {
+      return moneyAllocations;
+    }
+
+    public void setMoneyAllocations(List<MoneyAllocationDTO> moneyAllocations) {
+      this.moneyAllocations = moneyAllocations;
     }
   }
 }

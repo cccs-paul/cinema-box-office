@@ -183,7 +183,7 @@ Stopping containers...
 🔑 Database Credentials:
   • Host: localhost:5432
   • User: myrc
-  • DB:   myrc_box_office
+  • DB:   myrc
 
 📝 Useful Commands:
   • View logs:     docker-compose -f docker-compose.dev.yml logs -f

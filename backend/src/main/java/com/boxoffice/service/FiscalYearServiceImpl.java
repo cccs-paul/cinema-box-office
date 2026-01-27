@@ -14,6 +14,7 @@ import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
+import java.util.logging.Logger;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,18 +32,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class FiscalYearServiceImpl implements FiscalYearService {
 
+  private static final Logger logger = Logger.getLogger(FiscalYearServiceImpl.class.getName());
+
   private final FiscalYearRepository fiscalYearRepository;
   private final ResponsibilityCentreRepository rcRepository;
   private final RCAccessRepository accessRepository;
   private final UserRepository userRepository;
+  private final MoneyService moneyService;
 
   public FiscalYearServiceImpl(FiscalYearRepository fiscalYearRepository,
       ResponsibilityCentreRepository rcRepository, RCAccessRepository accessRepository,
-      UserRepository userRepository) {
+      UserRepository userRepository, MoneyService moneyService) {
     this.fiscalYearRepository = fiscalYearRepository;
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
     this.userRepository = userRepository;
+    this.moneyService = moneyService;
   }
 
   @Override
@@ -106,6 +111,10 @@ public class FiscalYearServiceImpl implements FiscalYearService {
 
     FiscalYear fy = new FiscalYear(name, description, rc);
     FiscalYear saved = fiscalYearRepository.save(fy);
+
+    // Create default AB money for the new fiscal year
+    moneyService.ensureDefaultMoneyExists(saved.getId());
+    logger.info("Created fiscal year '" + name + "' with default AB money for RC: " + rc.getName());
 
     return FiscalYearDTO.fromEntity(saved);
   }

@@ -16,6 +16,9 @@ package com.boxoffice.dto;
 import com.boxoffice.model.FundingItem;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Data Transfer Object for Funding Item.
@@ -40,15 +43,19 @@ public class FundingItemDTO {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
+  private List<MoneyAllocationDTO> moneyAllocations;
 
   // Constructors
-  public FundingItemDTO() {}
+  public FundingItemDTO() {
+    this.moneyAllocations = new ArrayList<>();
+  }
 
   public FundingItemDTO(Long id, String name, String description, BigDecimal budgetAmount,
                         String status, String currency, BigDecimal exchangeRate,
                         Long fiscalYearId, String fiscalYearName,
                         Long responsibilityCentreId, String responsibilityCentreName,
-                        LocalDateTime createdAt, LocalDateTime updatedAt, Boolean active) {
+                        LocalDateTime createdAt, LocalDateTime updatedAt, Boolean active,
+                        List<MoneyAllocationDTO> moneyAllocations) {
     this.id = id;
     this.name = name;
     this.description = description;
@@ -63,6 +70,7 @@ public class FundingItemDTO {
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.active = active;
+    this.moneyAllocations = moneyAllocations != null ? moneyAllocations : new ArrayList<>();
   }
 
   /**
@@ -74,6 +82,12 @@ public class FundingItemDTO {
   public static FundingItemDTO fromEntity(FundingItem fundingItem) {
     if (fundingItem == null) {
       return null;
+    }
+    List<MoneyAllocationDTO> allocations = new ArrayList<>();
+    if (fundingItem.getMoneyAllocations() != null) {
+      allocations = fundingItem.getMoneyAllocations().stream()
+          .map(MoneyAllocationDTO::fromEntity)
+          .collect(Collectors.toList());
     }
     return new FundingItemDTO(
         fundingItem.getId(),
@@ -91,7 +105,8 @@ public class FundingItemDTO {
             ? fundingItem.getFiscalYear().getResponsibilityCentre().getName() : null,
         fundingItem.getCreatedAt(),
         fundingItem.getUpdatedAt(),
-        fundingItem.getActive()
+        fundingItem.getActive(),
+        allocations
     );
   }
 
@@ -206,5 +221,13 @@ public class FundingItemDTO {
 
   public void setActive(Boolean active) {
     this.active = active;
+  }
+
+  public List<MoneyAllocationDTO> getMoneyAllocations() {
+    return moneyAllocations;
+  }
+
+  public void setMoneyAllocations(List<MoneyAllocationDTO> moneyAllocations) {
+    this.moneyAllocations = moneyAllocations != null ? moneyAllocations : new ArrayList<>();
   }
 }

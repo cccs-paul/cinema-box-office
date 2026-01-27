@@ -15,7 +15,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.boxoffice.dto.FundingItemDTO;
+import com.boxoffice.dto.MoneyAllocationDTO;
 import com.boxoffice.model.FiscalYear;
+import java.util.Collections;
 import com.boxoffice.model.FundingItem;
 import com.boxoffice.model.FundingItem.Status;
 import com.boxoffice.model.RCAccess;
@@ -23,6 +25,8 @@ import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.FundingItemRepository;
+import com.boxoffice.repository.MoneyAllocationRepository;
+import com.boxoffice.repository.MoneyRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
@@ -63,6 +67,12 @@ class FundingItemServiceTest {
 
   @Mock
   private UserRepository userRepository;
+
+  @Mock
+  private MoneyRepository moneyRepository;
+
+  @Mock
+  private MoneyAllocationRepository moneyAllocationRepository;
 
   @InjectMocks
   private FundingItemServiceImpl fundingItemService;
@@ -166,6 +176,7 @@ class FundingItemServiceTest {
     when(fundingItemRepository.existsByNameAndFiscalYear(anyString(), any()))
         .thenReturn(false);
     when(fundingItemRepository.save(any(FundingItem.class))).thenReturn(testFundingItem);
+    when(moneyRepository.findByFiscalYearId(1L)).thenReturn(Collections.emptyList());
 
     FundingItemDTO result = fundingItemService.createFundingItem(
         1L,
@@ -175,12 +186,14 @@ class FundingItemServiceTest {
         new BigDecimal("10000.00"),
         "DRAFT",
         "CAD",
-        null
+        null,
+        Collections.emptyList()
     );
 
     assertNotNull(result);
     assertEquals("Test Funding Item", result.getName());
-    verify(fundingItemRepository).save(any(FundingItem.class));
+    // save is called twice: once for initial save, once after adding money allocations
+    verify(fundingItemRepository, org.mockito.Mockito.atLeastOnce()).save(any(FundingItem.class));
   }
 
   @Test
@@ -201,7 +214,8 @@ class FundingItemServiceTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
-            null
+            null,
+            Collections.emptyList()
         ));
   }
 
@@ -232,7 +246,8 @@ class FundingItemServiceTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
-            null
+            null,
+            Collections.emptyList()
         ));
   }
 
@@ -252,7 +267,8 @@ class FundingItemServiceTest {
         new BigDecimal("20000.00"),
         "APPROVED",
         "CAD",
-        null
+        null,
+        Collections.emptyList()
     );
 
     assertTrue(result.isPresent());

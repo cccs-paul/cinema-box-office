@@ -54,75 +54,6 @@
       </p>
     </div>
 
-    <!-- Add Money Button -->
-    <div class="action-bar">
-      <button 
-        class="btn btn-primary" 
-        (click)="startAddMoney()"
-        [disabled]="isAddingMoney || isSaving">
-        <span class="btn-icon">+</span>
-        Add Money Type
-      </button>
-    </div>
-
-    <!-- Add Money Form -->
-    <div class="money-form" *ngIf="isAddingMoney">
-      <h3>Add New Money Type</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="new-code">Code *</label>
-          <input 
-            type="text" 
-            id="new-code"
-            [(ngModel)]="newMoney.code"
-            placeholder="e.g., OA, WCF"
-            maxlength="10"
-            [disabled]="isSaving">
-          <span class="form-hint">Short code (max 10 characters)</span>
-        </div>
-        <div class="form-group">
-          <label for="new-name">Name *</label>
-          <input 
-            type="text" 
-            id="new-name"
-            [(ngModel)]="newMoney.name"
-            placeholder="e.g., Operating Allotment"
-            maxlength="100"
-            [disabled]="isSaving">
-        </div>
-      </div>
-      <div class="form-group full-width">
-        <label for="new-description">Description</label>
-        <textarea 
-          id="new-description"
-          [(ngModel)]="newMoney.description"
-          placeholder="Optional description"
-          rows="2"
-          maxlength="500"
-          [disabled]="isSaving"></textarea>
-      </div>
-      <div class="form-preview" *ngIf="newMoney.code">
-        <span class="preview-label">Preview:</span>
-        <span class="preview-tag">{{ newMoney.code | uppercase }} (CAP)</span>
-        <span class="preview-tag">{{ newMoney.code | uppercase }} (OM)</span>
-      </div>
-      <div class="form-actions">
-        <button 
-          class="btn btn-secondary" 
-          (click)="cancelAddMoney()"
-          [disabled]="isSaving">
-          Cancel
-        </button>
-        <button 
-          class="btn btn-primary" 
-          (click)="saveMoney()"
-          [disabled]="isSaving || !newMoney.code || !newMoney.name">
-          <span *ngIf="isSaving">Saving...</span>
-          <span *ngIf="!isSaving">Save Money Type</span>
-        </button>
-      </div>
-    </div>
-
     <!-- Money List -->
     <div class="money-list" *ngIf="!isLoadingMonies">
       <div 
@@ -214,6 +145,75 @@
         <p>No money types configured yet.</p>
         <button class="btn btn-primary" (click)="startAddMoney()">
           Add Your First Money Type
+        </button>
+      </div>
+    </div>
+
+    <!-- Add Money Button -->
+    <div class="action-bar" *ngIf="!isLoadingMonies">
+      <button 
+        class="btn btn-primary" 
+        (click)="startAddMoney()"
+        [disabled]="isAddingMoney || isSaving">
+        <span class="btn-icon">+</span>
+        Add Money Type
+      </button>
+    </div>
+
+    <!-- Add Money Form -->
+    <div class="money-form" *ngIf="isAddingMoney">
+      <h3>Add New Money Type</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="new-code">Code *</label>
+          <input 
+            type="text" 
+            id="new-code"
+            [(ngModel)]="newMoney.code"
+            placeholder="e.g., OA, WCF"
+            maxlength="10"
+            [disabled]="isSaving">
+          <span class="form-hint">Short code (max 10 characters)</span>
+        </div>
+        <div class="form-group">
+          <label for="new-name">Name *</label>
+          <input 
+            type="text" 
+            id="new-name"
+            [(ngModel)]="newMoney.name"
+            placeholder="e.g., Operating Allotment"
+            maxlength="100"
+            [disabled]="isSaving">
+        </div>
+      </div>
+      <div class="form-group full-width">
+        <label for="new-description">Description</label>
+        <textarea 
+          id="new-description"
+          [(ngModel)]="newMoney.description"
+          placeholder="Optional description"
+          rows="2"
+          maxlength="500"
+          [disabled]="isSaving"></textarea>
+      </div>
+      <div class="form-preview" *ngIf="newMoney.code">
+        <span class="preview-label">Preview:</span>
+        <span class="preview-tag">{{ newMoney.code | uppercase }} (CAP)</span>
+        <span class="preview-tag">{{ newMoney.code | uppercase }} (OM)</span>
+      </div>
+      <div class="form-actions">
+        <button 
+          class="btn btn-secondary" 
+          (click)="cancelAddMoney()"
+          [disabled]="isSaving">
+          Cancel
+        </button>
+        <button 
+          class="btn btn-primary" 
+          (click)="saveMoney()"
+          [disabled]="isSaving || !newMoney.code || !newMoney.name">
+          <span *ngIf="isSaving">Saving...</span>
+          <span *ngIf="!isSaving">Save Money Type</span>
         </button>
       </div>
     </div>

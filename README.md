@@ -1,8 +1,12 @@
-# myRC - Project README
+# myRC - My Responsibility Centre
 
 ## Overview
 
-myRC is a comprehensive box office management system built with a **Java 25 Spring Boot REST API backend** and an **Angular frontend**. The project includes Docker support for containerized deployment.
+myRC is a comprehensive fiscal year and responsibility centre management system built with a **Java 25 Spring Boot REST API backend** and an **Angular frontend**. The application enables organizations to track funding items, budgets, and allocations across multiple responsibility centres and fiscal years.
+
+## Quick Start
+
+For comprehensive instructions on running the application in development, production, Docker, Kubernetes, and VSCode, see **[RUNNING_THE_APPLICATION.md](RUNNING_THE_APPLICATION.md)**.
 
 ## Project Structure
 

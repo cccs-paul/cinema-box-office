@@ -15,19 +15,24 @@ package com.boxoffice.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
@@ -90,6 +95,13 @@ public class FundingItem {
   @ManyToOne(optional = false)
   @JoinColumn(name = "fiscal_year_id", nullable = false)
   private FiscalYear fiscalYear;
+
+  /**
+   * Money allocations for this funding item.
+   * Each allocation tracks CAP and OM amounts for a specific money type.
+   */
+  @OneToMany(mappedBy = "fundingItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<MoneyAllocation> moneyAllocations = new ArrayList<>();
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
@@ -205,6 +217,39 @@ public class FundingItem {
 
   public void setActive(Boolean active) {
     this.active = active;
+  }
+
+  public List<MoneyAllocation> getMoneyAllocations() {
+    return moneyAllocations;
+  }
+
+  public void setMoneyAllocations(List<MoneyAllocation> moneyAllocations) {
+    this.moneyAllocations = moneyAllocations != null ? moneyAllocations : new ArrayList<>();
+  }
+
+  /**
+   * Add a money allocation to this funding item.
+   *
+   * @param allocation the money allocation to add
+   */
+  public void addMoneyAllocation(MoneyAllocation allocation) {
+    if (moneyAllocations == null) {
+      moneyAllocations = new ArrayList<>();
+    }
+    moneyAllocations.add(allocation);
+    allocation.setFundingItem(this);
+  }
+
+  /**
+   * Remove a money allocation from this funding item.
+   *
+   * @param allocation the money allocation to remove
+   */
+  public void removeMoneyAllocation(MoneyAllocation allocation) {
+    if (moneyAllocations != null) {
+      moneyAllocations.remove(allocation);
+      allocation.setFundingItem(null);
+    }
   }
 
   @Override

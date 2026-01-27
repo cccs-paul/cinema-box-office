@@ -13,20 +13,26 @@
 package com.boxoffice.service;
 
 import com.boxoffice.dto.FundingItemDTO;
+import com.boxoffice.dto.MoneyAllocationDTO;
 import com.boxoffice.model.Currency;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.FundingItem;
+import com.boxoffice.model.Money;
+import com.boxoffice.model.MoneyAllocation;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.FundingItemRepository;
+import com.boxoffice.repository.MoneyAllocationRepository;
+import com.boxoffice.repository.MoneyRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,22 +48,30 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class FundingItemServiceImpl implements FundingItemService {
 
+  private static final Logger logger = Logger.getLogger(FundingItemServiceImpl.class.getName());
+
   private final FundingItemRepository fundingItemRepository;
   private final FiscalYearRepository fiscalYearRepository;
   private final ResponsibilityCentreRepository rcRepository;
   private final RCAccessRepository accessRepository;
   private final UserRepository userRepository;
+  private final MoneyRepository moneyRepository;
+  private final MoneyAllocationRepository moneyAllocationRepository;
 
   public FundingItemServiceImpl(FundingItemRepository fundingItemRepository,
       FiscalYearRepository fiscalYearRepository,
       ResponsibilityCentreRepository rcRepository,
       RCAccessRepository accessRepository,
-      UserRepository userRepository) {
+      UserRepository userRepository,
+      MoneyRepository moneyRepository,
+      MoneyAllocationRepository moneyAllocationRepository) {
     this.fundingItemRepository = fundingItemRepository;
     this.fiscalYearRepository = fiscalYearRepository;
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
     this.userRepository = userRepository;
+    this.moneyRepository = moneyRepository;
+    this.moneyAllocationRepository = moneyAllocationRepository;
   }
 
   @Override
@@ -105,7 +119,8 @@ public class FundingItemServiceImpl implements FundingItemService {
   @Override
   public FundingItemDTO createFundingItem(Long fiscalYearId, String username, String name,
       String description, BigDecimal budgetAmount, String status,
-      String currency, BigDecimal exchangeRate) {
+      String currency, BigDecimal exchangeRate,
+      List<MoneyAllocationDTO> moneyAllocations) {
     // Get fiscal year and verify write access to its RC
     Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);
     if (fyOpt.isEmpty()) {
@@ -165,13 +180,52 @@ public class FundingItemServiceImpl implements FundingItemService {
     fi.setExchangeRate(itemCurrency == Currency.CAD ? null : exchangeRate);
     FundingItem saved = fundingItemRepository.save(fi);
 
+    // Process money allocations - create default allocations for all FY monies
+    createDefaultMoneyAllocations(saved, fy, moneyAllocations);
+
+    // Reload to get allocations
+    saved = fundingItemRepository.findById(saved.getId()).orElse(saved);
+    logger.info("Created funding item '" + name + "' with money allocations for FY: " + fy.getName());
+
     return FundingItemDTO.fromEntity(saved);
+  }
+
+  /**
+   * Create default money allocations for a funding item based on FY's configured monies.
+   * Each allocation defaults to $0.00 CAD for both CAP and OM unless provided in the request.
+   */
+  private void createDefaultMoneyAllocations(FundingItem fundingItem, FiscalYear fy,
+      List<MoneyAllocationDTO> requestedAllocations) {
+    // Get all monies for this fiscal year
+    List<Money> fyMonies = moneyRepository.findByFiscalYearId(fy.getId());
+
+    for (Money money : fyMonies) {
+      BigDecimal capAmount = BigDecimal.ZERO;
+      BigDecimal omAmount = BigDecimal.ZERO;
+
+      // Check if allocation was provided for this money
+      if (requestedAllocations != null) {
+        for (MoneyAllocationDTO reqAlloc : requestedAllocations) {
+          if (reqAlloc.getMoneyId() != null && reqAlloc.getMoneyId().equals(money.getId())) {
+            capAmount = reqAlloc.getCapAmount() != null ? reqAlloc.getCapAmount() : BigDecimal.ZERO;
+            omAmount = reqAlloc.getOmAmount() != null ? reqAlloc.getOmAmount() : BigDecimal.ZERO;
+            break;
+          }
+        }
+      }
+
+      MoneyAllocation allocation = new MoneyAllocation(fundingItem, money, capAmount, omAmount);
+      fundingItem.addMoneyAllocation(allocation);
+    }
+
+    fundingItemRepository.save(fundingItem);
   }
 
   @Override
   public Optional<FundingItemDTO> updateFundingItem(Long fundingItemId, String username, String name,
       String description, BigDecimal budgetAmount, String status,
-      String currency, BigDecimal exchangeRate) {
+      String currency, BigDecimal exchangeRate,
+      List<MoneyAllocationDTO> moneyAllocations) {
     Optional<FundingItem> fiOpt = fundingItemRepository.findById(fundingItemId);
     if (fiOpt.isEmpty()) {
       return Optional.empty();
@@ -244,8 +298,49 @@ public class FundingItemServiceImpl implements FundingItemService {
       }
     }
 
+    // Update money allocations if provided
+    if (moneyAllocations != null && !moneyAllocations.isEmpty()) {
+      updateMoneyAllocations(fi, moneyAllocations);
+    }
+
     FundingItem saved = fundingItemRepository.save(fi);
+    logger.info("Updated funding item '" + fi.getName() + "'");
     return Optional.of(FundingItemDTO.fromEntity(saved));
+  }
+
+  /**
+   * Update money allocations for a funding item.
+   */
+  private void updateMoneyAllocations(FundingItem fundingItem, List<MoneyAllocationDTO> allocationDTOs) {
+    for (MoneyAllocationDTO dto : allocationDTOs) {
+      if (dto.getMoneyId() == null) {
+        continue;
+      }
+
+      // Find existing allocation or create new one
+      Optional<MoneyAllocation> existingAlloc = fundingItem.getMoneyAllocations().stream()
+          .filter(a -> a.getMoney().getId().equals(dto.getMoneyId()))
+          .findFirst();
+
+      if (existingAlloc.isPresent()) {
+        // Update existing allocation
+        MoneyAllocation allocation = existingAlloc.get();
+        allocation.setCapAmount(dto.getCapAmount() != null ? dto.getCapAmount() : BigDecimal.ZERO);
+        allocation.setOmAmount(dto.getOmAmount() != null ? dto.getOmAmount() : BigDecimal.ZERO);
+      } else {
+        // Create new allocation
+        Optional<Money> moneyOpt = moneyRepository.findById(dto.getMoneyId());
+        if (moneyOpt.isPresent()) {
+          MoneyAllocation newAlloc = new MoneyAllocation(
+              fundingItem,
+              moneyOpt.get(),
+              dto.getCapAmount() != null ? dto.getCapAmount() : BigDecimal.ZERO,
+              dto.getOmAmount() != null ? dto.getOmAmount() : BigDecimal.ZERO
+          );
+          fundingItem.addMoneyAllocation(newAlloc);
+        }
+      }
+    }
   }
 
   @Override

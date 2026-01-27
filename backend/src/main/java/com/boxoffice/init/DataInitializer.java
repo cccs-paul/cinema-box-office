@@ -13,18 +13,25 @@ package com.boxoffice.init;
 
 import com.boxoffice.dto.CreateUserRequest;
 import com.boxoffice.model.FiscalYear;
+import com.boxoffice.model.FundingItem;
+import com.boxoffice.model.Money;
+import com.boxoffice.model.MoneyAllocation;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
 import com.boxoffice.repository.FiscalYearRepository;
+import com.boxoffice.repository.FundingItemRepository;
+import com.boxoffice.repository.MoneyRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
+import com.boxoffice.service.MoneyService;
 import com.boxoffice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,6 +62,15 @@ public class DataInitializer implements ApplicationRunner {
 
     @Autowired
     private FiscalYearRepository fiscalYearRepository;
+
+    @Autowired
+    private MoneyService moneyService;
+
+    @Autowired
+    private MoneyRepository moneyRepository;
+
+    @Autowired
+    private FundingItemRepository fundingItemRepository;
 
     @Override
     public void run(org.springframework.boot.ApplicationArguments args) throws Exception {
@@ -168,23 +184,102 @@ public class DataInitializer implements ApplicationRunner {
     private void initializeDemoFY(ResponsibilityCentre demoRC) {
         String demoFYName = "FY 2025-2026";
 
+        FiscalYear demoFY;
         if (fiscalYearRepository.existsByNameAndResponsibilityCentre(demoFYName, demoRC)) {
-            logger.info("Demo FY already exists, skipping creation");
+            logger.info("Demo FY already exists, ensuring default money exists");
+            // Ensure default money exists for existing demo FY
+            demoFY = fiscalYearRepository.findByNameAndResponsibilityCentre(demoFYName, demoRC).orElse(null);
+            if (demoFY != null) {
+                moneyService.ensureDefaultMoneyExists(demoFY.getId());
+                // Also ensure demo funding items exist
+                initializeDemoFundingItems(demoFY);
+            }
             return;
         }
 
         logger.info("Creating Demo FY...");
         try {
-            FiscalYear demoFY = new FiscalYear(
+            demoFY = new FiscalYear(
                 demoFYName,
                 "Demo fiscal year for exploring the application.",
                 demoRC
             );
-            fiscalYearRepository.save(demoFY);
+            FiscalYear savedFY = fiscalYearRepository.save(demoFY);
             logger.info("Demo FY created successfully: " + demoFYName);
+
+            // Create default AB money for the demo FY
+            moneyService.ensureDefaultMoneyExists(savedFY.getId());
+            logger.info("Default AB money created for Demo FY");
+
+            // Create demo funding items
+            initializeDemoFundingItems(savedFY);
         } catch (Exception e) {
             logger.warning(() -> "Failed to create Demo FY: " + e.getMessage());
         }
+    }
+
+    /**
+     * Initialize demo funding items for the Demo FY.
+     * Creates sample funding items with realistic money allocations.
+     *
+     * @param demoFY the Demo fiscal year
+     */
+    private void initializeDemoFundingItems(FiscalYear demoFY) {
+        // Get the AB money for this fiscal year
+        List<Money> fyMonies = moneyRepository.findByFiscalYearId(demoFY.getId());
+        if (fyMonies.isEmpty()) {
+            logger.warning("No money types found for Demo FY, skipping funding item creation");
+            return;
+        }
+
+        Money abMoney = fyMonies.stream()
+            .filter(m -> "AB".equals(m.getCode()))
+            .findFirst()
+            .orElse(fyMonies.get(0));
+
+        // Demo Funding Items with sample data
+        String[][] demoItems = {
+            // {name, description, budgetAmount, status, capAmount, omAmount}
+            {"IT Infrastructure", "Annual IT infrastructure maintenance and upgrades", "250000.00", "APPROVED", "150000.00", "100000.00"},
+            {"Staff Training", "Employee professional development and training programs", "75000.00", "ACTIVE", "25000.00", "50000.00"},
+            {"Office Supplies", "General office supplies and consumables", "15000.00", "ACTIVE", "0.00", "15000.00"},
+            {"Software Licenses", "Annual software license renewals and new acquisitions", "120000.00", "APPROVED", "80000.00", "40000.00"},
+            {"Consulting Services", "External consulting and advisory services", "200000.00", "PENDING", "0.00", "200000.00"},
+            {"Equipment Purchase", "New equipment and hardware purchases", "175000.00", "DRAFT", "175000.00", "0.00"},
+            {"Travel & Accommodation", "Business travel and accommodation expenses", "50000.00", "ACTIVE", "0.00", "50000.00"},
+            {"Building Maintenance", "Facility maintenance and repairs", "85000.00", "APPROVED", "35000.00", "50000.00"}
+        };
+
+        for (String[] item : demoItems) {
+            String name = item[0];
+            String description = item[1];
+            BigDecimal budgetAmount = new BigDecimal(item[2]);
+            FundingItem.Status status = FundingItem.Status.valueOf(item[3]);
+            BigDecimal capAmount = new BigDecimal(item[4]);
+            BigDecimal omAmount = new BigDecimal(item[5]);
+
+            // Check if funding item already exists
+            if (fundingItemRepository.existsByNameAndFiscalYear(name, demoFY)) {
+                logger.info("Demo funding item '" + name + "' already exists, skipping");
+                continue;
+            }
+
+            try {
+                FundingItem fundingItem = new FundingItem(name, description, budgetAmount, status, demoFY);
+                fundingItem = fundingItemRepository.save(fundingItem);
+
+                // Create money allocation with CAP and OM values
+                MoneyAllocation allocation = new MoneyAllocation(fundingItem, abMoney, capAmount, omAmount);
+                fundingItem.addMoneyAllocation(allocation);
+                fundingItemRepository.save(fundingItem);
+
+                logger.info("Created demo funding item: " + name + " (CAP: $" + capAmount + ", OM: $" + omAmount + ")");
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create demo funding item '" + name + "': " + e.getMessage());
+            }
+        }
+
+        logger.info("Demo funding items initialized for FY: " + demoFY.getName());
     }
 
     /**

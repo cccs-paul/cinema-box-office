@@ -24,6 +24,10 @@ import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
+
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +61,9 @@ class FiscalYearServiceTest {
 
   @Mock
   private UserRepository userRepository;
+
+  @Mock
+  private MoneyService moneyService;
 
   @InjectMocks
   private FiscalYearServiceImpl fiscalYearService;
@@ -177,6 +184,7 @@ class FiscalYearServiceTest {
     when(fiscalYearRepository.existsByNameAndResponsibilityCentre(anyString(), any()))
         .thenReturn(false);
     when(fiscalYearRepository.save(any(FiscalYear.class))).thenReturn(testFiscalYear);
+    doNothing().when(moneyService).ensureDefaultMoneyExists(anyLong());
 
     FiscalYearDTO result = fiscalYearService.createFiscalYear(
         1L,

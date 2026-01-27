@@ -128,9 +128,9 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 
 # Remove existing images
 if [ "$ENVIRONMENT" = "dev" ]; then
-    IMAGE_NAMES="cinema-box-office-api cinema-box-office-web"
+    IMAGE_NAMES="myrc-api myrc-web"
 else
-    IMAGE_NAMES="cinema-box-office-api cinema-box-office-web"
+    IMAGE_NAMES="myrc-api myrc-web"
 fi
 
 echo -e "${GREEN}Removing existing Docker images...${NC}"

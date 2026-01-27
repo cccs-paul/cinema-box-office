@@ -130,7 +130,7 @@ services:
 
       # Logging
       LOGGING_LEVEL_ROOT: INFO
-      LOGGING_LEVEL_COM_BOXOFFICE: DEBUG
+      LOGGING_LEVEL_COM_MYRC: DEBUG
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
 
     ports:
@@ -196,7 +196,7 @@ services:
 # 4. Keycloak Setup (Local OAuth2 Provider):
 #    - Access at http://localhost:8180
 #    - Login with: admin / admin_password
-#    - Create realm: cinema
+#    - Create realm: myrc
 #    - Create client: myrc-api
 #    - Set "Valid Redirect URIs" to http://localhost:4200/oauth2/callback/*
 #

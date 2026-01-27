@@ -13,6 +13,7 @@
 package com.boxoffice.service;
 
 import com.boxoffice.dto.FundingItemDTO;
+import com.boxoffice.dto.MoneyAllocationDTO;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -55,11 +56,13 @@ public interface FundingItemService {
    * @param status the status
    * @param currency the currency code (defaults to CAD if null)
    * @param exchangeRate the exchange rate to CAD (required if currency is not CAD)
+   * @param moneyAllocations the money allocations for CAP/OM amounts (optional)
    * @return the created funding item DTO
    */
   FundingItemDTO createFundingItem(Long fiscalYearId, String username, String name,
                                     String description, BigDecimal budgetAmount, String status,
-                                    String currency, BigDecimal exchangeRate);
+                                    String currency, BigDecimal exchangeRate,
+                                    List<MoneyAllocationDTO> moneyAllocations);
 
   /**
    * Update an existing funding item.
@@ -72,11 +75,13 @@ public interface FundingItemService {
    * @param status the status
    * @param currency the currency code (defaults to CAD if null)
    * @param exchangeRate the exchange rate to CAD (required if currency is not CAD)
+   * @param moneyAllocations the money allocations for CAP/OM amounts (optional)
    * @return optional updated funding item DTO
    */
   Optional<FundingItemDTO> updateFundingItem(Long fundingItemId, String username, String name,
                                               String description, BigDecimal budgetAmount, String status,
-                                              String currency, BigDecimal exchangeRate);
+                                              String currency, BigDecimal exchangeRate,
+                                              List<MoneyAllocationDTO> moneyAllocations);
 
   /**
    * Delete a funding item.

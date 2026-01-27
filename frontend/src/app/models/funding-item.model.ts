@@ -8,6 +8,27 @@
  */
 
 /**
+ * Money allocation for a funding item.
+ * Represents the CAP and OM amounts for a specific money type.
+ */
+export interface MoneyAllocation {
+  /** ID of the money type */
+  moneyId: number;
+  
+  /** Code of the money type (e.g., AB, OA, WCF) */
+  moneyCode: string;
+  
+  /** Name of the money type */
+  moneyName: string;
+  
+  /** Capital (CAP) amount */
+  capAmount: number;
+  
+  /** Operations and Maintenance (OM) amount */
+  omAmount: number;
+}
+
+/**
  * Enum for funding item status values.
  */
 export type FundingItemStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'ACTIVE' | 'CLOSED';
@@ -52,6 +73,9 @@ export interface FundingItem {
   /** Whether the funding item is active */
   active: boolean;
 
+  /** Money allocations for this funding item */
+  moneyAllocations?: MoneyAllocation[];
+
   /** Creation timestamp */
   createdAt?: string;
 
@@ -80,6 +104,9 @@ export interface FundingItemCreateRequest {
 
   /** Exchange rate to CAD (required when currency is not CAD) */
   exchangeRate?: number;
+
+  /** Money allocations for this funding item */
+  moneyAllocations?: MoneyAllocation[];
 }
 
 /**
@@ -103,6 +130,9 @@ export interface FundingItemUpdateRequest {
 
   /** Exchange rate to CAD (required when currency is not CAD) */
   exchangeRate?: number;
+
+  /** Money allocations for this funding item */
+  moneyAllocations?: MoneyAllocation[];
 }
 
 /**

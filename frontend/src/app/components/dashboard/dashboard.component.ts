@@ -15,10 +15,12 @@ import { ResponsibilityCentreService } from '../../services/responsibility-centr
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { FundingItemService } from '../../services/funding-item.service';
 import { CurrencyService } from '../../services/currency.service';
+import { MoneyService } from '../../services/money.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
-import { FundingItem, FundingItemCreateRequest, getStatusLabel, getStatusClass, FundingItemStatus } from '../../models/funding-item.model';
+import { FundingItem, FundingItemCreateRequest, getStatusLabel, getStatusClass, FundingItemStatus, MoneyAllocation } from '../../models/funding-item.model';
 import { Currency, DEFAULT_CURRENCY } from '../../models/currency.model';
+import { Money } from '../../models/money.model';
 
 /**
  * Dashboard component showing funding items for the selected RC and FY.
@@ -49,6 +51,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   currencies: Currency[] = [];
   isLoadingCurrencies = false;
 
+  // Monies
+  monies: Money[] = [];
+  isLoadingMonies = false;
+
   // Create Form
   showCreateForm = false;
   isCreating = false;
@@ -58,6 +64,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   newItemStatus: FundingItemStatus = 'DRAFT';
   newItemCurrency = DEFAULT_CURRENCY;
   newItemExchangeRate: number | null = null;
+  newItemMoneyAllocations: MoneyAllocation[] = [];
 
   // Messages
   errorMessage: string | null = null;
@@ -74,7 +81,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
     private fundingItemService: FundingItemService,
-    private currencyService: CurrencyService
+    private currencyService: CurrencyService,
+    private moneyService: MoneyService
   ) {}
 
   ngOnInit(): void {
@@ -156,12 +164,51 @@ export class DashboardComponent implements OnInit, OnDestroy {
         next: (fy) => {
           this.selectedFY = fy;
           this.loadFundingItems();
+          this.loadMonies();
         },
         error: (error) => {
           console.error('Failed to load FY:', error);
           this.router.navigate(['/rc-selection']);
         }
       });
+  }
+
+  /**
+   * Load money types for the selected FY.
+   */
+  loadMonies(): void {
+    if (!this.selectedRC || !this.selectedFY) {
+      return;
+    }
+
+    this.isLoadingMonies = true;
+    this.moneyService.getMoniesByFiscalYear(this.selectedRC.id, this.selectedFY.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (monies) => {
+          this.monies = monies;
+          this.isLoadingMonies = false;
+          this.initializeMoneyAllocations();
+        },
+        error: (error) => {
+          console.error('Failed to load monies:', error);
+          this.isLoadingMonies = false;
+          this.monies = [];
+        }
+      });
+  }
+
+  /**
+   * Initialize money allocations for new funding item with default values.
+   */
+  private initializeMoneyAllocations(): void {
+    this.newItemMoneyAllocations = this.monies.map(money => ({
+      moneyId: money.id,
+      moneyCode: money.code,
+      moneyName: money.name,
+      capAmount: 0,
+      omAmount: 0
+    }));
   }
 
   /**
@@ -242,7 +289,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       budgetAmount: this.newItemBudget || undefined,
       status: this.newItemStatus,
       currency: this.newItemCurrency,
-      exchangeRate: this.newItemCurrency !== DEFAULT_CURRENCY ? this.newItemExchangeRate || undefined : undefined
+      exchangeRate: this.newItemCurrency !== DEFAULT_CURRENCY ? this.newItemExchangeRate || undefined : undefined,
+      moneyAllocations: this.newItemMoneyAllocations
     };
 
     this.fundingItemService.createFundingItem(this.selectedFY.id, request)
@@ -299,6 +347,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.newItemStatus = 'DRAFT';
     this.newItemCurrency = DEFAULT_CURRENCY;
     this.newItemExchangeRate = null;
+    this.initializeMoneyAllocations();
   }
 
   /**

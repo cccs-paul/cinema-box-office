@@ -12,6 +12,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 import com.boxoffice.dto.FundingItemDTO;
@@ -65,7 +66,8 @@ class FundingItemControllerTest {
         "Test RC",
         LocalDateTime.now(),
         LocalDateTime.now(),
-        true
+        true,
+        null
     );
   }
 
@@ -129,7 +131,7 @@ class FundingItemControllerTest {
   @DisplayName("createFundingItem - Creates new funding item")
   void createFundingItem_CreatesNewFundingItem() {
     when(fundingItemService.createFundingItem(anyLong(), anyString(), anyString(), anyString(),
-        any(), anyString(), anyString(), any()))
+        any(BigDecimal.class), anyString(), anyString(), any(), any()))
         .thenReturn(testFundingItem);
 
     FundingItemController.FundingItemCreateRequest request =
@@ -139,6 +141,7 @@ class FundingItemControllerTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
+            null,
             null
         );
 
@@ -159,6 +162,7 @@ class FundingItemControllerTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
+            null,
             null
         );
 
@@ -177,6 +181,7 @@ class FundingItemControllerTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
+            null,
             null
         );
 
@@ -189,7 +194,7 @@ class FundingItemControllerTest {
   @DisplayName("createFundingItem - Returns 400 on duplicate name")
   void createFundingItem_ReturnsBadRequestOnDuplicateName() {
     when(fundingItemService.createFundingItem(anyLong(), anyString(), anyString(), anyString(),
-        any(), anyString(), anyString(), any()))
+        any(BigDecimal.class), anyString(), anyString(), any(), any()))
         .thenThrow(new IllegalArgumentException("A Funding Item with this name already exists"));
 
     FundingItemController.FundingItemCreateRequest request =
@@ -199,6 +204,7 @@ class FundingItemControllerTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
+            null,
             null
         );
 
@@ -224,11 +230,12 @@ class FundingItemControllerTest {
         "Test RC",
         LocalDateTime.now(),
         LocalDateTime.now(),
-        true
+        true,
+        null
     );
 
     when(fundingItemService.updateFundingItem(anyLong(), anyString(), anyString(), anyString(),
-        any(), anyString(), anyString(), any()))
+        any(BigDecimal.class), anyString(), anyString(), any(), any()))
         .thenReturn(Optional.of(updatedItem));
 
     FundingItemController.FundingItemCreateRequest request =
@@ -238,6 +245,7 @@ class FundingItemControllerTest {
             new BigDecimal("20000.00"),
             "APPROVED",
             "CAD",
+            null,
             null
         );
 
@@ -252,7 +260,7 @@ class FundingItemControllerTest {
   @DisplayName("updateFundingItem - Returns 404 when not found")
   void updateFundingItem_ReturnsNotFoundWhenMissing() {
     when(fundingItemService.updateFundingItem(anyLong(), anyString(), anyString(), anyString(),
-        any(), anyString(), anyString(), any()))
+        any(BigDecimal.class), anyString(), anyString(), any(), any()))
         .thenReturn(Optional.empty());
 
     FundingItemController.FundingItemCreateRequest request =
@@ -262,6 +270,7 @@ class FundingItemControllerTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
+            null,
             null
         );
 
