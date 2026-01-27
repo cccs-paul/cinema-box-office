@@ -1,0 +1,257 @@
+<!--
+  myRC - Spending Component Template
+  Copyright (c) 2026 myRC Team
+  Licensed under MIT License
+-->
+<div class="spending-container">
+  <!-- Header -->
+  <div class="spending-header">
+    <div class="header-content">
+      <h1>Spending</h1>
+      <p class="subtitle" *ngIf="selectedFY">
+        Manage spending items for {{ selectedFY.name }}
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="showCreate()" [disabled]="categories.length === 0">
+        <span class="btn-icon">+</span>
+        New Spending Item
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages">
+    <div class="alert alert-danger" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+    <div class="alert alert-success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+  </div>
+
+  <!-- Category Filter -->
+  <div class="category-filter" *ngIf="categories.length > 0">
+    <span class="filter-label">Filter by Category:</span>
+    <button 
+      class="filter-btn"
+      [class.active]="selectedCategoryId === null"
+      (click)="filterByCategory(null)">
+      All
+    </button>
+    <button 
+      *ngFor="let category of categories"
+      class="filter-btn"
+      [class.active]="selectedCategoryId === category.id"
+      (click)="filterByCategory(category.id)">
+      {{ category.name }}
+      <span class="default-badge" *ngIf="category.isDefault">default</span>
+    </button>
+  </div>
+
+  <!-- Create Form -->
+  <div class="create-form-container" *ngIf="showCreateForm">
+    <div class="create-form">
+      <h2>New Spending Item</h2>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Name *</label>
+          <input 
+            type="text" 
+            id="name" 
+            [(ngModel)]="newItemName"
+            placeholder="Enter spending item name"
+            class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="category">Category *</label>
+          <select id="category" [(ngModel)]="newItemCategoryId" class="form-control">
+            <option *ngFor="let category of categories" [value]="category.id">
+              {{ category.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea 
+          id="description" 
+          [(ngModel)]="newItemDescription"
+          placeholder="Enter description"
+          class="form-control"
+          rows="2"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="vendor">Vendor</label>
+          <input 
+            type="text" 
+            id="vendor" 
+            [(ngModel)]="newItemVendor"
+            placeholder="Vendor name"
+            class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="referenceNumber">Reference Number</label>
+          <input 
+            type="text" 
+            id="referenceNumber" 
+            [(ngModel)]="newItemReferenceNumber"
+            placeholder="PO/Invoice #"
+            class="form-control">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" [(ngModel)]="newItemStatus" class="form-control">
+            <option *ngFor="let status of statusOptions" [value]="status">
+              {{ getStatusLabel(status) }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="currency">Currency</label>
+          <select id="currency" [(ngModel)]="newItemCurrency" class="form-control">
+            <option *ngFor="let currency of currencies" [value]="currency.code">
+              {{ currency.code }} - {{ currency.name }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group" *ngIf="newItemCurrency !== 'CAD'">
+          <label for="exchangeRate">Exchange Rate</label>
+          <input 
+            type="number" 
+            id="exchangeRate" 
+            [(ngModel)]="newItemExchangeRate"
+            placeholder="Rate to CAD"
+            step="0.0001"
+            min="0"
+            class="form-control">
+        </div>
+      </div>
+
+      <!-- Money Allocations -->
+      <div class="money-allocations-section">
+        <h3>Money Allocations</h3>
+        <p class="allocation-hint">
+          <span class="info-icon">ℹ️</span>
+          At least one money type must have a CAP or OM amount greater than $0.00
+        </p>
+        <div class="allocations-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Money Type</th>
+                <th>CAP Amount</th>
+                <th>OM Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let allocation of newItemMoneyAllocations">
+                <td class="money-name">
+                  {{ allocation.moneyName }}
+                  <span class="default-badge" *ngIf="allocation.isDefault">default</span>
+                </td>
+                <td>
+                  <input 
+                    type="number" 
+                    [(ngModel)]="allocation.capAmount"
+                    min="0"
+                    step="0.01"
+                    class="form-control amount-input">
+                </td>
+                <td>
+                  <input 
+                    type="number" 
+                    [(ngModel)]="allocation.omAmount"
+                    min="0"
+                    step="0.01"
+                    class="form-control amount-input">
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-secondary" (click)="cancelCreate()">Cancel</button>
+        <button 
+          class="btn btn-primary" 
+          (click)="createSpendingItem()"
+          [disabled]="!newItemName.trim() || !newItemCategoryId || isCreating || !hasValidMoneyAllocation()">
+          {{ isCreating ? 'Creating...' : 'Create Spending Item' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading" *ngIf="isLoadingItems">
+    <div class="loading-spinner"></div>
+    <p>Loading spending items...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoadingItems && spendingItems.length === 0 && !showCreateForm">
+    <div class="empty-icon">💰</div>
+    <h3>No Spending Items</h3>
+    <p>
+      {{ selectedCategoryId 
+        ? 'No spending items found in this category.' 
+        : 'No spending items have been created for this fiscal year yet.' }}
+    </p>
+    <button class="btn btn-primary" (click)="showCreate()" *ngIf="categories.length > 0">
+      Create First Spending Item
+    </button>
+    <p class="hint" *ngIf="categories.length === 0">
+      Configure spending categories first in the Configuration page.
+    </p>
+  </div>
+
+  <!-- Spending Items Table -->
+  <div class="spending-table-container" *ngIf="!isLoadingItems && spendingItems.length > 0">
+    <table class="spending-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Vendor</th>
+          <th>Reference</th>
+          <th class="text-right">Total</th>
+          <th class="text-center">Status</th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of spendingItems">
+          <td class="item-name">
+            <span class="name">{{ item.name }}</span>
+            <span class="description" *ngIf="item.description">{{ item.description }}</span>
+          </td>
+          <td>{{ item.categoryName || getCategoryName(item.categoryId) }}</td>
+          <td>{{ item.vendor || '-' }}</td>
+          <td>{{ item.referenceNumber || '-' }}</td>
+          <td class="text-right amount">
+            {{ formatCurrency(calculateTotal(item), item.currency) }}
+          </td>
+          <td class="text-center">
+            <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+              {{ getStatusLabel(item.status) }}
+            </span>
+          </td>
+          <td class="text-center actions">
+            <button class="btn-icon-action" title="Delete" (click)="deleteSpendingItem(item)">
+              🗑️
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -11,17 +11,19 @@ import { takeUntil, filter, switchMap } from 'rxjs/operators';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { MoneyService } from '../../services/money.service';
+import { SpendingCategoryService, CategoryCreateRequest, CategoryUpdateRequest } from '../../services/spending-category.service';
 import { Money, MoneyCreateRequest, MoneyUpdateRequest } from '../../models/money.model';
+import { SpendingCategory } from '../../models/spending-category.model';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 
 /**
  * Configuration component for managing RC settings.
- * Currently supports Money type configuration.
+ * Supports Money type configuration and Spending Categories.
  * Accessible from the sidebar "Configuration" menu item.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-24
  */
 @Component({
@@ -39,7 +41,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   fyId: number | null = null;
 
   // Configuration tabs
-  activeTab: 'monies' | 'general' = 'monies';
+  activeTab: 'monies' | 'categories' | 'general' = 'monies';
 
   // Money management state
   monies: Money[] = [];
@@ -52,6 +54,17 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   newMoney: MoneyCreateRequest = { code: '', name: '', description: '' };
   editMoney: MoneyUpdateRequest = { code: '', name: '', description: '' };
 
+  // Spending Category management state
+  categories: SpendingCategory[] = [];
+  isLoadingCategories = false;
+  categoryError: string | null = null;
+
+  // Category form state
+  isAddingCategory = false;
+  editingCategoryId: number | null = null;
+  newCategory: CategoryCreateRequest = { name: '', description: '' };
+  editCategory: CategoryUpdateRequest = { name: '', description: '' };
+
   // Operation state
   isSaving = false;
   isDeleting = false;
@@ -62,7 +75,8 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   constructor(
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
-    private moneyService: MoneyService
+    private moneyService: MoneyService,
+    private spendingCategoryService: SpendingCategoryService
   ) {}
 
   ngOnInit(): void {
@@ -77,6 +91,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
         this.fyId = fyId;
         this.loadContext();
         this.loadMonies();
+        this.loadCategories();
       });
   }
 
@@ -138,7 +153,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   /**
    * Switch to a configuration tab.
    */
-  setActiveTab(tab: 'monies' | 'general'): void {
+  setActiveTab(tab: 'monies' | 'categories' | 'general'): void {
     this.activeTab = tab;
   }
 
@@ -301,5 +316,182 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    */
   trackByMoneyId(index: number, money: Money): number {
     return money.id;
+  }
+
+  // =====================
+  // Spending Categories
+  // =====================
+
+  /**
+   * Load spending categories for the current fiscal year.
+   */
+  loadCategories(): void {
+    if (!this.rcId || !this.fyId) {
+      return;
+    }
+
+    this.isLoadingCategories = true;
+    this.categoryError = null;
+
+    this.spendingCategoryService.getCategoriesByFY(this.rcId, this.fyId).subscribe({
+      next: (categories) => {
+        this.categories = categories;
+        this.isLoadingCategories = false;
+      },
+      error: (error) => {
+        this.categoryError = error.message || 'Failed to load spending categories';
+        this.isLoadingCategories = false;
+      }
+    });
+  }
+
+  /**
+   * Start adding a new spending category.
+   */
+  startAddCategory(): void {
+    this.isAddingCategory = true;
+    this.newCategory = { name: '', description: '' };
+    this.editingCategoryId = null;
+  }
+
+  /**
+   * Cancel adding a new spending category.
+   */
+  cancelAddCategory(): void {
+    this.isAddingCategory = false;
+    this.newCategory = { name: '', description: '' };
+  }
+
+  /**
+   * Save a new spending category.
+   */
+  saveCategory(): void {
+    if (!this.rcId || !this.fyId) {
+      return;
+    }
+
+    if (!this.newCategory.name?.trim()) {
+      this.categoryError = 'Name is required';
+      return;
+    }
+
+    this.isSaving = true;
+    this.categoryError = null;
+
+    this.spendingCategoryService.createCategory(this.rcId, this.fyId, this.newCategory).subscribe({
+      next: (created) => {
+        this.categories.push(created);
+        this.categories.sort((a, b) => a.displayOrder - b.displayOrder);
+        this.isAddingCategory = false;
+        this.newCategory = { name: '', description: '' };
+        this.isSaving = false;
+        this.showSuccess(`Spending category "${created.name}" created successfully`);
+      },
+      error: (error) => {
+        this.categoryError = error.message || 'Failed to create spending category';
+        this.isSaving = false;
+      }
+    });
+  }
+
+  /**
+   * Start editing a spending category.
+   */
+  startEditCategory(category: SpendingCategory): void {
+    this.editingCategoryId = category.id;
+    this.editCategory = {
+      name: category.name,
+      description: category.description || ''
+    };
+    this.isAddingCategory = false;
+  }
+
+  /**
+   * Cancel editing a spending category.
+   */
+  cancelEditCategory(): void {
+    this.editingCategoryId = null;
+    this.editCategory = { name: '', description: '' };
+  }
+
+  /**
+   * Update a spending category.
+   */
+  updateCategory(category: SpendingCategory): void {
+    if (!this.rcId || !this.fyId) {
+      return;
+    }
+
+    if (!this.editCategory.name?.trim()) {
+      this.categoryError = 'Name is required';
+      return;
+    }
+
+    this.isSaving = true;
+    this.categoryError = null;
+
+    this.spendingCategoryService.updateCategory(this.rcId, this.fyId, category.id, this.editCategory).subscribe({
+      next: (updated) => {
+        const index = this.categories.findIndex(c => c.id === category.id);
+        if (index !== -1) {
+          this.categories[index] = updated;
+        }
+        this.editingCategoryId = null;
+        this.editCategory = { name: '', description: '' };
+        this.isSaving = false;
+        this.showSuccess(`Spending category "${updated.name}" updated successfully`);
+      },
+      error: (error) => {
+        this.categoryError = error.message || 'Failed to update spending category';
+        this.isSaving = false;
+      }
+    });
+  }
+
+  /**
+   * Delete a spending category.
+   */
+  deleteCategory(category: SpendingCategory): void {
+    if (!this.rcId || !this.fyId) {
+      return;
+    }
+
+    if (category.isDefault) {
+      this.categoryError = 'Cannot delete a default spending category';
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
+      return;
+    }
+
+    this.isDeleting = true;
+    this.categoryError = null;
+
+    this.spendingCategoryService.deleteCategory(this.rcId, this.fyId, category.id).subscribe({
+      next: () => {
+        this.categories = this.categories.filter(c => c.id !== category.id);
+        this.isDeleting = false;
+        this.showSuccess(`Spending category "${category.name}" deleted successfully`);
+      },
+      error: (error) => {
+        this.categoryError = error.message || 'Failed to delete spending category';
+        this.isDeleting = false;
+      }
+    });
+  }
+
+  /**
+   * Clear category error message.
+   */
+  clearCategoryError(): void {
+    this.categoryError = null;
+  }
+
+  /**
+   * Track function for ngFor optimization.
+   */
+  trackByCategoryId(index: number, category: SpendingCategory): number {
+    return category.id;
   }
 }

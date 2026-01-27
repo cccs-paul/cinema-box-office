@@ -175,6 +175,12 @@ public class FundingItemServiceImpl implements FundingItemService {
       throw new IllegalArgumentException("Exchange rate must be greater than zero");
     }
 
+    // Validate that at least one money allocation has a value > $0.00
+    if (!hasValidMoneyAllocation(moneyAllocations)) {
+      throw new IllegalArgumentException(
+          "At least one money type must have a CAP or OM amount greater than $0.00");
+    }
+
     FundingItem fi = new FundingItem(name, description, budgetAmount, itemStatus, fy);
     fi.setCurrency(itemCurrency);
     fi.setExchangeRate(itemCurrency == Currency.CAD ? null : exchangeRate);
@@ -414,5 +420,21 @@ public class FundingItemServiceImpl implements FundingItemService {
     // Check if has READ_WRITE access record
     Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
     return accessOpt.isPresent() && RCAccess.AccessLevel.READ_WRITE.equals(accessOpt.get().getAccessLevel());
+  }
+
+  /**
+   * Check if at least one money allocation has a CAP or OM value greater than $0.00.
+   *
+   * @param moneyAllocations the list of money allocation DTOs
+   * @return true if at least one allocation has a positive value, false otherwise
+   */
+  private boolean hasValidMoneyAllocation(List<MoneyAllocationDTO> moneyAllocations) {
+    if (moneyAllocations == null || moneyAllocations.isEmpty()) {
+      return false;
+    }
+    return moneyAllocations.stream().anyMatch(allocation ->
+        (allocation.getCapAmount() != null && allocation.getCapAmount().compareTo(BigDecimal.ZERO) > 0) ||
+        (allocation.getOmAmount() != null && allocation.getOmAmount().compareTo(BigDecimal.ZERO) > 0)
+    );
   }
 }

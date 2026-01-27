@@ -170,6 +170,12 @@ class FundingItemServiceTest {
   @Test
   @DisplayName("createFundingItem - Creates funding item for owner")
   void createFundingItem_CreatesForOwner() {
+    // Create a valid money allocation with non-zero amounts
+    MoneyAllocationDTO validAllocation = new MoneyAllocationDTO();
+    validAllocation.setMoneyId(1L);
+    validAllocation.setCapAmount(new BigDecimal("5000.00"));
+    validAllocation.setOmAmount(new BigDecimal("5000.00"));
+
     when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
     when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
     when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
@@ -187,7 +193,7 @@ class FundingItemServiceTest {
         "DRAFT",
         "CAD",
         null,
-        Collections.emptyList()
+        Arrays.asList(validAllocation)
     );
 
     assertNotNull(result);
@@ -197,8 +203,153 @@ class FundingItemServiceTest {
   }
 
   @Test
+  @DisplayName("createFundingItem - Throws exception when all money allocations are zero")
+  void createFundingItem_ThrowsWhenAllAllocationsZero() {
+    // Create an allocation with zero amounts
+    MoneyAllocationDTO zeroAllocation = new MoneyAllocationDTO();
+    zeroAllocation.setMoneyId(1L);
+    zeroAllocation.setCapAmount(BigDecimal.ZERO);
+    zeroAllocation.setOmAmount(BigDecimal.ZERO);
+
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        () -> fundingItemService.createFundingItem(
+            1L,
+            "testuser",
+            "Test Funding Item",
+            "Test description",
+            new BigDecimal("10000.00"),
+            "DRAFT",
+            "CAD",
+            null,
+            Arrays.asList(zeroAllocation)
+        ));
+
+    assertTrue(exception.getMessage().contains("At least one money type must have a CAP or OM amount greater than $0.00"));
+  }
+
+  @Test
+  @DisplayName("createFundingItem - Throws exception when money allocations are empty")
+  void createFundingItem_ThrowsWhenAllocationsEmpty() {
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        () -> fundingItemService.createFundingItem(
+            1L,
+            "testuser",
+            "Test Funding Item",
+            "Test description",
+            new BigDecimal("10000.00"),
+            "DRAFT",
+            "CAD",
+            null,
+            Collections.emptyList()
+        ));
+
+    assertTrue(exception.getMessage().contains("At least one money type must have a CAP or OM amount greater than $0.00"));
+  }
+
+  @Test
+  @DisplayName("createFundingItem - Throws exception when money allocations are null")
+  void createFundingItem_ThrowsWhenAllocationsNull() {
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+
+    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        () -> fundingItemService.createFundingItem(
+            1L,
+            "testuser",
+            "Test Funding Item",
+            "Test description",
+            new BigDecimal("10000.00"),
+            "DRAFT",
+            "CAD",
+            null,
+            null
+        ));
+
+    assertTrue(exception.getMessage().contains("At least one money type must have a CAP or OM amount greater than $0.00"));
+  }
+
+  @Test
+  @DisplayName("createFundingItem - Succeeds when only CAP amount is positive")
+  void createFundingItem_SucceedsWithPositiveCapOnly() {
+    // Create an allocation with only CAP amount positive
+    MoneyAllocationDTO capOnlyAllocation = new MoneyAllocationDTO();
+    capOnlyAllocation.setMoneyId(1L);
+    capOnlyAllocation.setCapAmount(new BigDecimal("5000.00"));
+    capOnlyAllocation.setOmAmount(BigDecimal.ZERO);
+
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+    when(fundingItemRepository.existsByNameAndFiscalYear(anyString(), any()))
+        .thenReturn(false);
+    when(fundingItemRepository.save(any(FundingItem.class))).thenReturn(testFundingItem);
+    when(moneyRepository.findByFiscalYearId(1L)).thenReturn(Collections.emptyList());
+
+    FundingItemDTO result = fundingItemService.createFundingItem(
+        1L,
+        "testuser",
+        "Test Funding Item",
+        "Test description",
+        new BigDecimal("5000.00"),
+        "DRAFT",
+        "CAD",
+        null,
+        Arrays.asList(capOnlyAllocation)
+    );
+
+    assertNotNull(result);
+  }
+
+  @Test
+  @DisplayName("createFundingItem - Succeeds when only OM amount is positive")
+  void createFundingItem_SucceedsWithPositiveOmOnly() {
+    // Create an allocation with only OM amount positive
+    MoneyAllocationDTO omOnlyAllocation = new MoneyAllocationDTO();
+    omOnlyAllocation.setMoneyId(1L);
+    omOnlyAllocation.setCapAmount(BigDecimal.ZERO);
+    omOnlyAllocation.setOmAmount(new BigDecimal("3000.00"));
+
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+    when(fundingItemRepository.existsByNameAndFiscalYear(anyString(), any()))
+        .thenReturn(false);
+    when(fundingItemRepository.save(any(FundingItem.class))).thenReturn(testFundingItem);
+    when(moneyRepository.findByFiscalYearId(1L)).thenReturn(Collections.emptyList());
+
+    FundingItemDTO result = fundingItemService.createFundingItem(
+        1L,
+        "testuser",
+        "Test Funding Item",
+        "Test description",
+        new BigDecimal("3000.00"),
+        "DRAFT",
+        "CAD",
+        null,
+        Arrays.asList(omOnlyAllocation)
+    );
+
+    assertNotNull(result);
+  }
+
+  @Test
   @DisplayName("createFundingItem - Throws exception on duplicate name")
   void createFundingItem_ThrowsOnDuplicateName() {
+    // Create a valid money allocation
+    MoneyAllocationDTO validAllocation = new MoneyAllocationDTO();
+    validAllocation.setMoneyId(1L);
+    validAllocation.setCapAmount(new BigDecimal("1000.00"));
+    validAllocation.setOmAmount(BigDecimal.ZERO);
+
     when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
     when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
     when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
@@ -215,7 +366,7 @@ class FundingItemServiceTest {
             "DRAFT",
             "CAD",
             null,
-            Collections.emptyList()
+            Arrays.asList(validAllocation)
         ));
   }
 
@@ -230,6 +381,12 @@ class FundingItemServiceTest {
     readOnlyAccess.setAccessLevel(RCAccess.AccessLevel.READ_ONLY);
     readOnlyAccess.setUser(anotherUser);
     readOnlyAccess.setResponsibilityCentre(testRC);
+
+    // Create a valid money allocation
+    MoneyAllocationDTO validAllocation = new MoneyAllocationDTO();
+    validAllocation.setMoneyId(1L);
+    validAllocation.setCapAmount(new BigDecimal("1000.00"));
+    validAllocation.setOmAmount(BigDecimal.ZERO);
 
     when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
     when(userRepository.findByUsername("anotheruser")).thenReturn(Optional.of(anotherUser));
@@ -247,7 +404,7 @@ class FundingItemServiceTest {
             "DRAFT",
             "CAD",
             null,
-            Collections.emptyList()
+            Arrays.asList(validAllocation)
         ));
   }
 

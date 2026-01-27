@@ -26,6 +26,7 @@ import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
 import com.boxoffice.service.MoneyService;
+import com.boxoffice.service.SpendingCategoryService;
 import com.boxoffice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -65,6 +66,9 @@ public class DataInitializer implements ApplicationRunner {
 
     @Autowired
     private MoneyService moneyService;
+
+    @Autowired
+    private SpendingCategoryService spendingCategoryService;
 
     @Autowired
     private MoneyRepository moneyRepository;
@@ -186,11 +190,12 @@ public class DataInitializer implements ApplicationRunner {
 
         FiscalYear demoFY;
         if (fiscalYearRepository.existsByNameAndResponsibilityCentre(demoFYName, demoRC)) {
-            logger.info("Demo FY already exists, ensuring default money exists");
+            logger.info("Demo FY already exists, ensuring default money and spending categories exist");
             // Ensure default money exists for existing demo FY
             demoFY = fiscalYearRepository.findByNameAndResponsibilityCentre(demoFYName, demoRC).orElse(null);
             if (demoFY != null) {
                 moneyService.ensureDefaultMoneyExists(demoFY.getId());
+                spendingCategoryService.initializeDefaultCategories(demoFY.getId());
                 // Also ensure demo funding items exist
                 initializeDemoFundingItems(demoFY);
             }
@@ -210,6 +215,10 @@ public class DataInitializer implements ApplicationRunner {
             // Create default AB money for the demo FY
             moneyService.ensureDefaultMoneyExists(savedFY.getId());
             logger.info("Default AB money created for Demo FY");
+
+            // Create default spending categories for the demo FY
+            spendingCategoryService.initializeDefaultCategories(savedFY.getId());
+            logger.info("Default spending categories created for Demo FY");
 
             // Create demo funding items
             initializeDemoFundingItems(savedFY);

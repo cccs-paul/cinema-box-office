@@ -65,6 +65,9 @@ class FiscalYearServiceTest {
   @Mock
   private MoneyService moneyService;
 
+  @Mock
+  private SpendingCategoryService spendingCategoryService;
+
   @InjectMocks
   private FiscalYearServiceImpl fiscalYearService;
 

@@ -26,6 +26,12 @@
     <button class="dismiss-btn" (click)="clearError()">×</button>
   </div>
 
+  <div class="error-message" *ngIf="categoryError">
+    <span class="error-icon">⚠️</span>
+    {{ categoryError }}
+    <button class="dismiss-btn" (click)="clearCategoryError()">×</button>
+  </div>
+
   <!-- Configuration Tabs -->
   <div class="config-tabs">
     <button 
@@ -34,6 +40,13 @@
       (click)="setActiveTab('monies')">
       <span class="tab-icon">💰</span>
       <span class="tab-label">Monies</span>
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'categories'"
+      (click)="setActiveTab('categories')">
+      <span class="tab-icon">📁</span>
+      <span class="tab-label">Spending Categories</span>
     </button>
     <button 
       class="tab-btn" 
@@ -67,6 +80,7 @@
           <div class="money-header">
             <span class="money-code">{{ money.code }}</span>
             <span class="default-badge" *ngIf="money.isDefault">Default</span>
+            <span class="readonly-badge" *ngIf="money.isDefault">Read-only</span>
           </div>
           <div class="money-name">{{ money.name }}</div>
           <div class="money-description" *ngIf="money.description">{{ money.description }}</div>
@@ -74,7 +88,11 @@
             <span class="part-tag cap">{{ money.capLabel }}</span>
             <span class="part-tag om">{{ money.omLabel }}</span>
           </div>
-          <div class="money-actions">
+          <div class="money-info" *ngIf="money.isDefault">
+            <span class="info-icon">ℹ️</span>
+            <span class="info-text">The default AB money type is system-managed and cannot be modified or deleted.</span>
+          </div>
+          <div class="money-actions" *ngIf="!money.isDefault">
             <button 
               class="btn btn-small btn-secondary" 
               (click)="startEditMoney(money)"
@@ -84,8 +102,8 @@
             <button 
               class="btn btn-small btn-danger" 
               (click)="deleteMoney(money)"
-              [disabled]="money.isDefault || isSaving || isDeleting"
-              [title]="money.isDefault ? 'Cannot delete default money type' : 'Delete'">
+              [disabled]="isSaving || isDeleting"
+              title="Delete">
               Delete
             </button>
           </div>
@@ -222,6 +240,154 @@
     <div class="loading-state" *ngIf="isLoadingMonies">
       <span class="loading-spinner"></span>
       <p>Loading money types...</p>
+    </div>
+  </div>
+
+  <!-- Spending Categories Tab Content -->
+  <div class="tab-content" *ngIf="activeTab === 'categories'">
+    <div class="section-header">
+      <h2>Spending Categories</h2>
+      <p class="section-description">
+        Configure spending categories for this fiscal year. Categories are used to group and organize spending items.
+        Default categories cannot be deleted.
+      </p>
+    </div>
+
+    <!-- Category List -->
+    <div class="category-list" *ngIf="!isLoadingCategories">
+      <div 
+        class="category-card" 
+        *ngFor="let category of categories; trackBy: trackByCategoryId"
+        [class.is-default]="category.isDefault"
+        [class.is-editing]="editingCategoryId === category.id">
+        
+        <!-- View Mode -->
+        <div class="category-content" *ngIf="editingCategoryId !== category.id">
+          <div class="category-header">
+            <span class="category-name">{{ category.name }}</span>
+            <span class="default-badge" *ngIf="category.isDefault">Default</span>
+          </div>
+          <div class="category-description" *ngIf="category.description">{{ category.description }}</div>
+          <div class="category-actions" *ngIf="!category.isDefault">
+            <button 
+              class="btn btn-small btn-secondary" 
+              (click)="startEditCategory(category)"
+              [disabled]="isSaving || isDeleting">
+              Edit
+            </button>
+            <button 
+              class="btn btn-small btn-danger" 
+              (click)="deleteCategory(category)"
+              [disabled]="isSaving || isDeleting"
+              title="Delete">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <!-- Edit Mode -->
+        <div class="category-edit-form" *ngIf="editingCategoryId === category.id">
+          <h4>Edit Spending Category</h4>
+          <div class="form-group">
+            <label>Name *</label>
+            <input 
+              type="text" 
+              [(ngModel)]="editCategory.name"
+              maxlength="100"
+              [disabled]="category.isDefault || isSaving">
+            <span class="form-hint" *ngIf="category.isDefault">Cannot change default category name</span>
+          </div>
+          <div class="form-group full-width">
+            <label>Description</label>
+            <textarea 
+              [(ngModel)]="editCategory.description"
+              rows="2"
+              maxlength="500"
+              [disabled]="isSaving"></textarea>
+          </div>
+          <div class="form-actions">
+            <button 
+              class="btn btn-secondary" 
+              (click)="cancelEditCategory()"
+              [disabled]="isSaving">
+              Cancel
+            </button>
+            <button 
+              class="btn btn-primary" 
+              (click)="updateCategory(category)"
+              [disabled]="isSaving || !editCategory.name">
+              <span *ngIf="isSaving">Saving...</span>
+              <span *ngIf="!isSaving">Update</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="categories.length === 0 && !isAddingCategory">
+        <span class="empty-icon">📁</span>
+        <p>No spending categories configured yet.</p>
+        <button class="btn btn-primary" (click)="startAddCategory()">
+          Add Your First Category
+        </button>
+      </div>
+    </div>
+
+    <!-- Add Category Button -->
+    <div class="action-bar" *ngIf="!isLoadingCategories">
+      <button 
+        class="btn btn-primary" 
+        (click)="startAddCategory()"
+        [disabled]="isAddingCategory || isSaving">
+        <span class="btn-icon">+</span>
+        Add Category
+      </button>
+    </div>
+
+    <!-- Add Category Form -->
+    <div class="category-form" *ngIf="isAddingCategory">
+      <h3>Add New Spending Category</h3>
+      <div class="form-group">
+        <label for="new-category-name">Name *</label>
+        <input 
+          type="text" 
+          id="new-category-name"
+          [(ngModel)]="newCategory.name"
+          placeholder="e.g., Cloud Services, Maintenance"
+          maxlength="100"
+          [disabled]="isSaving">
+      </div>
+      <div class="form-group full-width">
+        <label for="new-category-description">Description</label>
+        <textarea 
+          id="new-category-description"
+          [(ngModel)]="newCategory.description"
+          placeholder="Optional description"
+          rows="2"
+          maxlength="500"
+          [disabled]="isSaving"></textarea>
+      </div>
+      <div class="form-actions">
+        <button 
+          class="btn btn-secondary" 
+          (click)="cancelAddCategory()"
+          [disabled]="isSaving">
+          Cancel
+        </button>
+        <button 
+          class="btn btn-primary" 
+          (click)="saveCategory()"
+          [disabled]="isSaving || !newCategory.name">
+          <span *ngIf="isSaving">Saving...</span>
+          <span *ngIf="!isSaving">Save Category</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoadingCategories">
+      <span class="loading-spinner"></span>
+      <p>Loading spending categories...</p>
     </div>
   </div>
 

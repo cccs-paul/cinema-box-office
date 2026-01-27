@@ -95,11 +95,15 @@
         <!-- Money Allocations -->
         <div class="money-allocations" *ngIf="monies.length > 0">
           <h4>Money Allocations</h4>
-          <p class="allocation-hint">Enter budget amounts for each money type (defaults to $0.00)</p>
+          <p class="allocation-hint">
+            Enter budget amounts for each money type. 
+            <strong>At least one money type must have a CAP or OM amount greater than $0.00.</strong>
+          </p>
           <div class="allocations-grid">
-            <div class="allocation-row" *ngFor="let allocation of newItemMoneyAllocations; let i = index">
+            <div class="allocation-row" *ngFor="let allocation of newItemMoneyAllocations; let i = index" [class.is-default]="allocation.isDefault">
               <div class="allocation-header">
                 <span class="money-code">{{ allocation.moneyCode }}</span>
+                <span class="default-badge" *ngIf="allocation.isDefault">Default</span>
                 <span class="money-name">{{ allocation.moneyName }}</span>
               </div>
               <div class="allocation-inputs">
@@ -135,7 +139,7 @@
         </div>
 
         <div class="form-actions">
-          <button class="btn btn-primary" (click)="createFundingItem()" [disabled]="isCreating || !newItemName.trim() || (requiresExchangeRate(newItemCurrency) && (!newItemExchangeRate || newItemExchangeRate <= 0))">
+          <button class="btn btn-primary" (click)="createFundingItem()" [disabled]="isCreating || !newItemName.trim() || (requiresExchangeRate(newItemCurrency) && (!newItemExchangeRate || newItemExchangeRate <= 0)) || !hasValidMoneyAllocation()">
             {{ isCreating ? 'Creating...' : 'Create' }}
           </button>
           <button class="btn btn-secondary" (click)="toggleCreateForm()" [disabled]="isCreating">

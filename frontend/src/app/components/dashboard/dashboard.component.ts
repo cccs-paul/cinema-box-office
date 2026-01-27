@@ -207,7 +207,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       moneyCode: money.code,
       moneyName: money.name,
       capAmount: 0,
-      omAmount: 0
+      omAmount: 0,
+      isDefault: money.isDefault
     }));
   }
 
@@ -276,6 +277,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.newItemCurrency !== DEFAULT_CURRENCY && 
         (this.newItemExchangeRate === null || this.newItemExchangeRate <= 0)) {
       this.errorMessage = 'Exchange rate is required for non-CAD currencies and must be greater than zero';
+      return;
+    }
+
+    // Validate that at least one money allocation has a value > $0.00
+    if (!this.hasValidMoneyAllocation()) {
+      this.errorMessage = 'At least one money type must have a CAP or OM amount greater than $0.00';
       return;
     }
 
@@ -423,6 +430,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
   getCurrencySymbol(currencyCode: string): string {
     const currency = this.currencies.find(c => c.code === currencyCode);
     return currency?.symbol || '$';
+  }
+
+  /**
+   * Check if at least one money allocation has a CAP or OM value greater than $0.00.
+   *
+   * @returns true if valid allocation exists, false otherwise
+   */
+  hasValidMoneyAllocation(): boolean {
+    if (!this.newItemMoneyAllocations || this.newItemMoneyAllocations.length === 0) {
+      return false;
+    }
+    return this.newItemMoneyAllocations.some(
+      allocation => (allocation.capAmount && allocation.capAmount > 0) || 
+                   (allocation.omAmount && allocation.omAmount > 0)
+    );
   }
 
   /**

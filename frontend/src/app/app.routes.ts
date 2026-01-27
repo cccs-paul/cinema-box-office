@@ -9,6 +9,7 @@ import { LayoutComponent } from './components/layout/layout.component';
 import { LayoutNoSidebarComponent } from './components/layout-no-sidebar/layout-no-sidebar.component';
 import { RCSelectionComponent } from './components/rc-selection/rc-selection.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { SpendingComponent } from './components/spending/spending.component';
 import { DeveloperToolsComponent } from './components/developer-tools/developer-tools.component';
 import { ConfigurationComponent } from './components/configuration/configuration.component';
 import { AuthGuardService } from './guards/auth.guard';
@@ -52,6 +53,10 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         component: DashboardComponent,
+      },
+      {
+        path: 'spending',
+        component: SpendingComponent,
       },
       {
         path: 'configuration',

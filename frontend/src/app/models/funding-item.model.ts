@@ -26,6 +26,9 @@ export interface MoneyAllocation {
   
   /** Operations and Maintenance (OM) amount */
   omAmount: number;
+
+  /** Whether this is the default money type (AB) - optional, used for display */
+  isDefault?: boolean;
 }
 
 /**

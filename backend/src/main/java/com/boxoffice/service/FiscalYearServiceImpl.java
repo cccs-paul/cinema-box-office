@@ -39,15 +39,18 @@ public class FiscalYearServiceImpl implements FiscalYearService {
   private final RCAccessRepository accessRepository;
   private final UserRepository userRepository;
   private final MoneyService moneyService;
+  private final SpendingCategoryService spendingCategoryService;
 
   public FiscalYearServiceImpl(FiscalYearRepository fiscalYearRepository,
       ResponsibilityCentreRepository rcRepository, RCAccessRepository accessRepository,
-      UserRepository userRepository, MoneyService moneyService) {
+      UserRepository userRepository, MoneyService moneyService,
+      SpendingCategoryService spendingCategoryService) {
     this.fiscalYearRepository = fiscalYearRepository;
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
     this.userRepository = userRepository;
     this.moneyService = moneyService;
+    this.spendingCategoryService = spendingCategoryService;
   }
 
   @Override
@@ -114,7 +117,11 @@ public class FiscalYearServiceImpl implements FiscalYearService {
 
     // Create default AB money for the new fiscal year
     moneyService.ensureDefaultMoneyExists(saved.getId());
-    logger.info("Created fiscal year '" + name + "' with default AB money for RC: " + rc.getName());
+    
+    // Create default spending categories for the new fiscal year
+    spendingCategoryService.initializeDefaultCategories(saved.getId());
+    
+    logger.info("Created fiscal year '" + name + "' with default AB money and spending categories for RC: " + rc.getName());
 
     return FiscalYearDTO.fromEntity(saved);
   }

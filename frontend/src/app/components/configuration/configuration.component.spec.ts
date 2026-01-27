@@ -2,7 +2,7 @@
  * Configuration Component Tests for myRC application.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-24
  * @license MIT
  */
@@ -14,7 +14,9 @@ import { ConfigurationComponent } from './configuration.component';
 import { MoneyService } from '../../services/money.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
+import { SpendingCategoryService } from '../../services/spending-category.service';
 import { Money } from '../../models/money.model';
+import { SpendingCategory } from '../../models/spending-category.model';
 
 describe('ConfigurationComponent', () => {
   let component: ConfigurationComponent;
@@ -22,6 +24,7 @@ describe('ConfigurationComponent', () => {
   let moneyService: jasmine.SpyObj<MoneyService>;
   let rcService: jasmine.SpyObj<ResponsibilityCentreService>;
   let fyService: jasmine.SpyObj<FiscalYearService>;
+  let spendingCategoryService: jasmine.SpyObj<SpendingCategoryService>;
 
   const selectedRC$ = new BehaviorSubject<number | null>(1);
   const selectedFY$ = new BehaviorSubject<number | null>(1);
@@ -56,6 +59,26 @@ describe('ConfigurationComponent', () => {
     omLabel: 'OA (OM)'
   };
 
+  const mockDefaultCategory: SpendingCategory = {
+    id: 1,
+    name: 'Compute',
+    description: 'Compute resources',
+    isDefault: true,
+    fiscalYearId: 1,
+    displayOrder: 0,
+    active: true
+  };
+
+  const mockCustomCategory: SpendingCategory = {
+    id: 7,
+    name: 'Cloud Services',
+    description: 'External cloud services',
+    isDefault: false,
+    fiscalYearId: 1,
+    displayOrder: 6,
+    active: true
+  };
+
   beforeEach(async () => {
     const moneySpy = jasmine.createSpyObj('MoneyService', [
       'getMoniesByFiscalYear',
@@ -69,25 +92,35 @@ describe('ConfigurationComponent', () => {
       selectedFY$: selectedFY$.asObservable()
     });
     const fySpy = jasmine.createSpyObj('FiscalYearService', ['getFiscalYear']);
+    const categorySpy = jasmine.createSpyObj('SpendingCategoryService', [
+      'getCategoriesByFY',
+      'createCategory',
+      'updateCategory',
+      'deleteCategory',
+      'reorderCategories'
+    ]);
 
     await TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, FormsModule, ConfigurationComponent],
       providers: [
         { provide: MoneyService, useValue: moneySpy },
         { provide: ResponsibilityCentreService, useValue: rcSpy },
-        { provide: FiscalYearService, useValue: fySpy }
+        { provide: FiscalYearService, useValue: fySpy },
+        { provide: SpendingCategoryService, useValue: categorySpy }
       ]
     }).compileComponents();
 
     moneyService = TestBed.inject(MoneyService) as jasmine.SpyObj<MoneyService>;
     rcService = TestBed.inject(ResponsibilityCentreService) as jasmine.SpyObj<ResponsibilityCentreService>;
     fyService = TestBed.inject(FiscalYearService) as jasmine.SpyObj<FiscalYearService>;
+    spendingCategoryService = TestBed.inject(SpendingCategoryService) as jasmine.SpyObj<SpendingCategoryService>;
   });
 
   beforeEach(() => {
     rcService.getResponsibilityCentre.and.returnValue(of({ id: 1, name: 'Test RC', description: '', active: true } as any));
     fyService.getFiscalYear.and.returnValue(of({ id: 1, name: 'FY 2025-2026', description: '', active: true, responsibilityCentreId: 1 }));
     moneyService.getMoniesByFiscalYear.and.returnValue(of([mockDefaultMoney, mockCustomMoney]));
+    spendingCategoryService.getCategoriesByFY.and.returnValue(of([mockDefaultCategory, mockCustomCategory]));
 
     fixture = TestBed.createComponent(ConfigurationComponent);
     component = fixture.componentInstance;
@@ -263,6 +296,167 @@ describe('ConfigurationComponent', () => {
   describe('trackByMoneyId', () => {
     it('should return money id', () => {
       const result = component.trackByMoneyId(0, mockDefaultMoney);
+      expect(result).toBe(1);
+    });
+  });
+
+  // =====================
+  // Spending Categories Tests
+  // =====================
+
+  describe('spending categories initialization', () => {
+    it('should load categories on init', fakeAsync(() => {
+      tick();
+      expect(component.categories.length).toBe(2);
+      expect(component.categories[0].name).toBe('Compute');
+    }));
+  });
+
+  describe('tab switching to categories', () => {
+    it('should switch to categories tab', () => {
+      component.setActiveTab('categories');
+      expect(component.activeTab).toBe('categories');
+    });
+  });
+
+  describe('adding category', () => {
+    it('should show add form when startAddCategory is called', () => {
+      component.startAddCategory();
+      expect(component.isAddingCategory).toBe(true);
+    });
+
+    it('should hide add form when cancelAddCategory is called', () => {
+      component.startAddCategory();
+      component.cancelAddCategory();
+      expect(component.isAddingCategory).toBe(false);
+    });
+
+    it('should reset form when canceling', () => {
+      component.startAddCategory();
+      component.newCategory = { name: 'Test', description: 'Desc' };
+      component.cancelAddCategory();
+      expect(component.newCategory.name).toBe('');
+    });
+
+    it('should create category successfully', fakeAsync(() => {
+      const newCategory: SpendingCategory = {
+        ...mockCustomCategory,
+        id: 8,
+        name: 'New Category',
+        displayOrder: 7
+      };
+      spendingCategoryService.createCategory.and.returnValue(of(newCategory));
+
+      component.rcId = 1;
+      component.fyId = 1;
+      component.startAddCategory();
+      component.newCategory = { name: 'New Category', description: '' };
+      component.saveCategory();
+      tick();
+
+      expect(component.categories.length).toBe(3);
+      expect(component.isAddingCategory).toBe(false);
+    }));
+
+    it('should show error when name is empty', () => {
+      component.rcId = 1;
+      component.fyId = 1;
+      component.startAddCategory();
+      component.newCategory = { name: '', description: '' };
+      component.saveCategory();
+
+      expect(component.categoryError).toContain('required');
+    });
+  });
+
+  describe('editing category', () => {
+    it('should show edit form when startEditCategory is called', () => {
+      component.startEditCategory(mockCustomCategory);
+      expect(component.editingCategoryId).toBe(7);
+      expect(component.editCategory.name).toBe('Cloud Services');
+    });
+
+    it('should hide edit form when cancelEditCategory is called', () => {
+      component.startEditCategory(mockCustomCategory);
+      component.cancelEditCategory();
+      expect(component.editingCategoryId).toBeNull();
+    });
+
+    it('should update category successfully', fakeAsync(() => {
+      const updatedCategory: SpendingCategory = {
+        ...mockCustomCategory,
+        name: 'Updated Name'
+      };
+      spendingCategoryService.updateCategory.and.returnValue(of(updatedCategory));
+
+      component.rcId = 1;
+      component.fyId = 1;
+      component.startEditCategory(mockCustomCategory);
+      component.editCategory.name = 'Updated Name';
+      component.updateCategory(mockCustomCategory);
+      tick();
+
+      const category = component.categories.find(c => c.id === 7);
+      expect(category?.name).toBe('Updated Name');
+      expect(component.editingCategoryId).toBeNull();
+    }));
+  });
+
+  describe('deleting category', () => {
+    it('should not allow deleting default category', () => {
+      component.rcId = 1;
+      component.fyId = 1;
+      component.deleteCategory(mockDefaultCategory);
+
+      expect(component.categoryError).toContain('default');
+      expect(spendingCategoryService.deleteCategory).not.toHaveBeenCalled();
+    });
+
+    it('should delete custom category successfully', fakeAsync(() => {
+      spyOn(window, 'confirm').and.returnValue(true);
+      spendingCategoryService.deleteCategory.and.returnValue(of(void 0));
+
+      component.rcId = 1;
+      component.fyId = 1;
+      component.deleteCategory(mockCustomCategory);
+      tick();
+
+      expect(component.categories.length).toBe(1);
+      expect(component.categories[0].name).toBe('Compute');
+    }));
+
+    it('should not delete when user cancels confirmation', () => {
+      spyOn(window, 'confirm').and.returnValue(false);
+
+      component.rcId = 1;
+      component.fyId = 1;
+      component.deleteCategory(mockCustomCategory);
+
+      expect(spendingCategoryService.deleteCategory).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('category error handling', () => {
+    it('should display error when category load fails', fakeAsync(() => {
+      spendingCategoryService.getCategoriesByFY.and.returnValue(throwError(() => new Error('Network error')));
+
+      component.loadCategories();
+      tick();
+
+      expect(component.categoryError).toContain('Network error');
+      expect(component.isLoadingCategories).toBe(false);
+    }));
+
+    it('should clear category error when clearCategoryError is called', () => {
+      component.categoryError = 'Test error';
+      component.clearCategoryError();
+      expect(component.categoryError).toBeNull();
+    });
+  });
+
+  describe('trackByCategoryId', () => {
+    it('should return category id', () => {
+      const result = component.trackByCategoryId(0, mockDefaultCategory);
       expect(result).toBe(1);
     });
   });

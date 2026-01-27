@@ -37,6 +37,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
       route: '/app/dashboard',
       badge: null,
     },
+    {
+      label: 'Spending',
+      icon: '💰',
+      route: '/app/spending',
+      badge: null,
+    },
   ];
 
   bottomMenuItems = [
