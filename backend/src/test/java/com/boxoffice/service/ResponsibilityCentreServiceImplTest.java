@@ -138,7 +138,6 @@ class ResponsibilityCentreServiceImplTest {
     boolean result = service.deleteResponsibilityCentre(1L, "testuser");
 
     assertTrue(result);
-    verify(fiscalYearRepository).deleteByResponsibilityCentre(testRC);
     verify(accessRepository).deleteByResponsibilityCentre(testRC);
     verify(rcRepository).deleteById(1L);
   }

@@ -177,14 +177,13 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       throw new IllegalAccessError("Only the owner can delete this RC");
     }
 
-    // Delete related entities first to avoid foreign key constraint violations
-    // Fiscal years will cascade delete categories, funding items, spending items, and monies
-    fiscalYearRepository.deleteByResponsibilityCentre(rc);
-
-    // Delete access records
+    // Delete access records first (these don't have DB cascade)
     accessRepository.deleteByResponsibilityCentre(rc);
 
-    // Now delete the RC itself
+    // Delete the RC - database will cascade delete all related entities:
+    // fiscal_years -> categories, monies, funding_items, spending_items
+    // funding_items -> money_allocations
+    // spending_items -> spending_money_allocations
     rcRepository.deleteById(rcId);
     return true;
   }

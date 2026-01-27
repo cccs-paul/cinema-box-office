@@ -264,11 +264,17 @@
         <!-- View Mode -->
         <div class="category-content" *ngIf="editingCategoryId !== category.id">
           <div class="category-header">
-            <span class="category-name">{{ category.name }}</span>
+            <span class="category-code">{{ category.name }}</span>
             <span class="default-badge" *ngIf="category.isDefault">Default</span>
             <span class="readonly-badge" *ngIf="category.isDefault">Read-only</span>
           </div>
           <div class="category-description" *ngIf="category.description">{{ category.description }}</div>
+          <div class="category-tags">
+            <span class="category-tag" [class.default-category]="category.isDefault" [class.custom-category]="!category.isDefault">
+              {{ category.isDefault ? 'System' : 'Custom' }}
+            </span>
+            <span class="category-tag order-tag">Order: {{ category.displayOrder }}</span>
+          </div>
           <div class="category-info" *ngIf="category.isDefault">
             <span class="info-icon">ℹ️</span>
             <span class="info-text">This default category is system-managed and cannot be modified or deleted.</span>
