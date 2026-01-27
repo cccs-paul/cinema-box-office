@@ -26,20 +26,20 @@ import static org.mockito.Mockito.when;
 
 import com.boxoffice.dto.SpendingItemDTO;
 import com.boxoffice.dto.SpendingMoneyAllocationDTO;
+import com.boxoffice.model.Category;
 import com.boxoffice.model.Currency;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.Money;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
-import com.boxoffice.model.SpendingCategory;
 import com.boxoffice.model.SpendingItem;
 import com.boxoffice.model.SpendingMoneyAllocation;
 import com.boxoffice.model.User;
+import com.boxoffice.repository.CategoryRepository;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.MoneyRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
-import com.boxoffice.repository.SpendingCategoryRepository;
 import com.boxoffice.repository.SpendingItemRepository;
 import com.boxoffice.repository.SpendingMoneyAllocationRepository;
 import com.boxoffice.repository.UserRepository;
@@ -73,7 +73,7 @@ class SpendingItemServiceTest {
   private SpendingItemRepository spendingItemRepository;
 
   @Mock
-  private SpendingCategoryRepository categoryRepository;
+  private CategoryRepository categoryRepository;
 
   @Mock
   private FiscalYearRepository fiscalYearRepository;
@@ -98,7 +98,7 @@ class SpendingItemServiceTest {
   private User testUser;
   private ResponsibilityCentre rc;
   private FiscalYear fy;
-  private SpendingCategory gpuCategory;
+  private Category gpuCategory;
   private SpendingItem gpuPurchase;
   private Money aBaseMoney;
   private RCAccess rcAccess;
@@ -134,7 +134,7 @@ class SpendingItemServiceTest {
     fy.setResponsibilityCentre(rc);
 
     // Setup Category
-    gpuCategory = new SpendingCategory();
+    gpuCategory = new Category();
     gpuCategory.setId(2L);
     gpuCategory.setName("GPUs");
     gpuCategory.setDescription("Graphics Processing Units");

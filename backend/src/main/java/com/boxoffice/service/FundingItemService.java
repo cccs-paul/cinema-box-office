@@ -56,12 +56,13 @@ public interface FundingItemService {
    * @param status the status
    * @param currency the currency code (defaults to CAD if null)
    * @param exchangeRate the exchange rate to CAD (required if currency is not CAD)
+   * @param categoryId the category ID (optional)
    * @param moneyAllocations the money allocations for CAP/OM amounts (optional)
    * @return the created funding item DTO
    */
   FundingItemDTO createFundingItem(Long fiscalYearId, String username, String name,
                                     String description, BigDecimal budgetAmount, String status,
-                                    String currency, BigDecimal exchangeRate,
+                                    String currency, BigDecimal exchangeRate, Long categoryId,
                                     List<MoneyAllocationDTO> moneyAllocations);
 
   /**
@@ -75,12 +76,13 @@ public interface FundingItemService {
    * @param status the status
    * @param currency the currency code (defaults to CAD if null)
    * @param exchangeRate the exchange rate to CAD (required if currency is not CAD)
+   * @param categoryId the category ID (optional, null to not change, -1 to clear)
    * @param moneyAllocations the money allocations for CAP/OM amounts (optional)
    * @return optional updated funding item DTO
    */
   Optional<FundingItemDTO> updateFundingItem(Long fundingItemId, String username, String name,
                                               String description, BigDecimal budgetAmount, String status,
-                                              String currency, BigDecimal exchangeRate,
+                                              String currency, BigDecimal exchangeRate, Long categoryId,
                                               List<MoneyAllocationDTO> moneyAllocations);
 
   /**

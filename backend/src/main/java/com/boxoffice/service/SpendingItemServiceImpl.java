@@ -14,20 +14,20 @@ package com.boxoffice.service;
 
 import com.boxoffice.dto.SpendingItemDTO;
 import com.boxoffice.dto.SpendingMoneyAllocationDTO;
+import com.boxoffice.model.Category;
 import com.boxoffice.model.Currency;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.Money;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
-import com.boxoffice.model.SpendingCategory;
 import com.boxoffice.model.SpendingItem;
 import com.boxoffice.model.SpendingMoneyAllocation;
 import com.boxoffice.model.User;
+import com.boxoffice.repository.CategoryRepository;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.MoneyRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
-import com.boxoffice.repository.SpendingCategoryRepository;
 import com.boxoffice.repository.SpendingItemRepository;
 import com.boxoffice.repository.SpendingMoneyAllocationRepository;
 import com.boxoffice.repository.UserRepository;
@@ -53,7 +53,7 @@ public class SpendingItemServiceImpl implements SpendingItemService {
   private static final Logger logger = Logger.getLogger(SpendingItemServiceImpl.class.getName());
 
   private final SpendingItemRepository spendingItemRepository;
-  private final SpendingCategoryRepository categoryRepository;
+  private final CategoryRepository categoryRepository;
   private final FiscalYearRepository fiscalYearRepository;
   private final ResponsibilityCentreRepository rcRepository;
   private final RCAccessRepository accessRepository;
@@ -62,7 +62,7 @@ public class SpendingItemServiceImpl implements SpendingItemService {
   private final SpendingMoneyAllocationRepository allocationRepository;
 
   public SpendingItemServiceImpl(SpendingItemRepository spendingItemRepository,
-      SpendingCategoryRepository categoryRepository,
+      CategoryRepository categoryRepository,
       FiscalYearRepository fiscalYearRepository,
       ResponsibilityCentreRepository rcRepository,
       RCAccessRepository accessRepository,
@@ -169,12 +169,12 @@ public class SpendingItemServiceImpl implements SpendingItemService {
     }
 
     // Get category
-    Optional<SpendingCategory> categoryOpt = categoryRepository.findById(dto.getCategoryId());
+    Optional<Category> categoryOpt = categoryRepository.findById(dto.getCategoryId());
     if (categoryOpt.isEmpty()) {
       throw new IllegalArgumentException("Category not found");
     }
 
-    SpendingCategory category = categoryOpt.get();
+    Category category = categoryOpt.get();
 
     // Verify category belongs to the same fiscal year
     if (!category.getFiscalYear().getId().equals(fy.getId())) {
@@ -343,11 +343,11 @@ public class SpendingItemServiceImpl implements SpendingItemService {
 
     // Handle category update
     if (dto.getCategoryId() != null) {
-      Optional<SpendingCategory> categoryOpt = categoryRepository.findById(dto.getCategoryId());
+      Optional<Category> categoryOpt = categoryRepository.findById(dto.getCategoryId());
       if (categoryOpt.isEmpty()) {
         throw new IllegalArgumentException("Category not found");
       }
-      SpendingCategory category = categoryOpt.get();
+      Category category = categoryOpt.get();
       if (!category.getFiscalYear().getId().equals(si.getFiscalYear().getId())) {
         throw new IllegalArgumentException("Category does not belong to the specified Fiscal Year");
       }

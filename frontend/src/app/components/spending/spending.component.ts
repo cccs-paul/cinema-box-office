@@ -14,13 +14,13 @@ import { takeUntil } from 'rxjs/operators';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { SpendingItemService, SpendingItemCreateRequest } from '../../services/spending-item.service';
-import { SpendingCategoryService } from '../../services/spending-category.service';
+import { CategoryService } from '../../services/category.service';
 import { MoneyService } from '../../services/money.service';
 import { CurrencyService } from '../../services/currency.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { SpendingItem, SpendingMoneyAllocation, SpendingItemStatus, SPENDING_STATUS_INFO } from '../../models/spending-item.model';
-import { SpendingCategory } from '../../models/spending-category.model';
+import { Category } from '../../models/category.model';
 import { Money } from '../../models/money.model';
 import { Currency, DEFAULT_CURRENCY } from '../../models/currency.model';
 
@@ -50,7 +50,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
   isLoadingItems = false;
 
   // Categories
-  categories: SpendingCategory[] = [];
+  categories: Category[] = [];
   isLoadingCategories = false;
   selectedCategoryId: number | null = null;
 
@@ -91,7 +91,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
     private spendingItemService: SpendingItemService,
-    private spendingCategoryService: SpendingCategoryService,
+    private categoryService: CategoryService,
     private moneyService: MoneyService,
     private currencyService: CurrencyService
   ) {}
@@ -192,13 +192,13 @@ export class SpendingComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load spending categories for the current FY.
+   * Load categories for the current FY.
    */
   private loadCategories(): void {
     if (!this.selectedRC || !this.selectedFY) return;
 
     this.isLoadingCategories = true;
-    this.spendingCategoryService.getCategoriesByFY(this.selectedRC.id, this.selectedFY.id).subscribe({
+    this.categoryService.getCategoriesByFY(this.selectedRC.id, this.selectedFY.id).subscribe({
       next: (categories) => {
         this.categories = categories;
         this.isLoadingCategories = false;

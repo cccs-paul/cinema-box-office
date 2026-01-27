@@ -16,11 +16,13 @@ import { FiscalYearService } from '../../services/fiscal-year.service';
 import { FundingItemService } from '../../services/funding-item.service';
 import { CurrencyService } from '../../services/currency.service';
 import { MoneyService } from '../../services/money.service';
+import { CategoryService } from '../../services/category.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { FundingItem, FundingItemCreateRequest, getStatusLabel, getStatusClass, FundingItemStatus, MoneyAllocation } from '../../models/funding-item.model';
 import { Currency, DEFAULT_CURRENCY } from '../../models/currency.model';
 import { Money } from '../../models/money.model';
+import { Category } from '../../models/category.model';
 
 /**
  * Dashboard component showing funding items for the selected RC and FY.
@@ -55,6 +57,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
   monies: Money[] = [];
   isLoadingMonies = false;
 
+  // Categories
+  categories: Category[] = [];
+  isLoadingCategories = false;
+
   // Create Form
   showCreateForm = false;
   isCreating = false;
@@ -64,6 +70,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   newItemStatus: FundingItemStatus = 'DRAFT';
   newItemCurrency = DEFAULT_CURRENCY;
   newItemExchangeRate: number | null = null;
+  newItemCategoryId: number | null = null;
   newItemMoneyAllocations: MoneyAllocation[] = [];
 
   // Messages
@@ -82,7 +89,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private fyService: FiscalYearService,
     private fundingItemService: FundingItemService,
     private currencyService: CurrencyService,
-    private moneyService: MoneyService
+    private moneyService: MoneyService,
+    private categoryService: CategoryService
   ) {}
 
   ngOnInit(): void {
@@ -165,6 +173,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.selectedFY = fy;
           this.loadFundingItems();
           this.loadMonies();
+          this.loadCategories();
         },
         error: (error) => {
           console.error('Failed to load FY:', error);
@@ -194,6 +203,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
           console.error('Failed to load monies:', error);
           this.isLoadingMonies = false;
           this.monies = [];
+        }
+      });
+  }
+
+  /**
+   * Load categories for the selected FY.
+   */
+  loadCategories(): void {
+    if (!this.selectedRC || !this.selectedFY) {
+      return;
+    }
+
+    this.isLoadingCategories = true;
+    this.categoryService.getCategoriesByFY(this.selectedRC.id, this.selectedFY.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (categories) => {
+          this.categories = categories;
+          this.isLoadingCategories = false;
+        },
+        error: (error) => {
+          console.error('Failed to load categories:', error);
+          this.isLoadingCategories = false;
+          this.categories = [];
         }
       });
   }
@@ -297,6 +330,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       status: this.newItemStatus,
       currency: this.newItemCurrency,
       exchangeRate: this.newItemCurrency !== DEFAULT_CURRENCY ? this.newItemExchangeRate || undefined : undefined,
+      categoryId: this.newItemCategoryId,
       moneyAllocations: this.newItemMoneyAllocations
     };
 
@@ -354,6 +388,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.newItemStatus = 'DRAFT';
     this.newItemCurrency = DEFAULT_CURRENCY;
     this.newItemExchangeRate = null;
+    this.newItemCategoryId = null;
     this.initializeMoneyAllocations();
   }
 

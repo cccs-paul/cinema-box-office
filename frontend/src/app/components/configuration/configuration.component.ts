@@ -11,9 +11,9 @@ import { takeUntil, filter, switchMap } from 'rxjs/operators';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { MoneyService } from '../../services/money.service';
-import { SpendingCategoryService, CategoryCreateRequest, CategoryUpdateRequest } from '../../services/spending-category.service';
+import { CategoryService, CategoryCreateRequest, CategoryUpdateRequest } from '../../services/category.service';
 import { Money, MoneyCreateRequest, MoneyUpdateRequest } from '../../models/money.model';
-import { SpendingCategory } from '../../models/spending-category.model';
+import { Category } from '../../models/category.model';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 
@@ -54,8 +54,8 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   newMoney: MoneyCreateRequest = { code: '', name: '', description: '' };
   editMoney: MoneyUpdateRequest = { code: '', name: '', description: '' };
 
-  // Spending Category management state
-  categories: SpendingCategory[] = [];
+  // Category management state
+  categories: Category[] = [];
   isLoadingCategories = false;
   categoryError: string | null = null;
 
@@ -76,7 +76,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
     private moneyService: MoneyService,
-    private spendingCategoryService: SpendingCategoryService
+    private categoryService: CategoryService
   ) {}
 
   ngOnInit(): void {
@@ -319,11 +319,11 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   }
 
   // =====================
-  // Spending Categories
+  // Categories
   // =====================
 
   /**
-   * Load spending categories for the current fiscal year.
+   * Load categories for the current fiscal year.
    */
   loadCategories(): void {
     if (!this.rcId || !this.fyId) {
@@ -333,20 +333,20 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     this.isLoadingCategories = true;
     this.categoryError = null;
 
-    this.spendingCategoryService.getCategoriesByFY(this.rcId, this.fyId).subscribe({
+    this.categoryService.getCategoriesByFY(this.rcId, this.fyId).subscribe({
       next: (categories) => {
         this.categories = categories;
         this.isLoadingCategories = false;
       },
       error: (error) => {
-        this.categoryError = error.message || 'Failed to load spending categories';
+        this.categoryError = error.message || 'Failed to load categories';
         this.isLoadingCategories = false;
       }
     });
   }
 
   /**
-   * Start adding a new spending category.
+   * Start adding a new category.
    */
   startAddCategory(): void {
     this.isAddingCategory = true;
@@ -355,7 +355,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Cancel adding a new spending category.
+   * Cancel adding a new category.
    */
   cancelAddCategory(): void {
     this.isAddingCategory = false;
@@ -363,7 +363,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Save a new spending category.
+   * Save a new category.
    */
   saveCategory(): void {
     if (!this.rcId || !this.fyId) {
@@ -378,26 +378,30 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     this.isSaving = true;
     this.categoryError = null;
 
-    this.spendingCategoryService.createCategory(this.rcId, this.fyId, this.newCategory).subscribe({
+    this.categoryService.createCategory(this.rcId, this.fyId, this.newCategory).subscribe({
       next: (created) => {
         this.categories.push(created);
         this.categories.sort((a, b) => a.displayOrder - b.displayOrder);
         this.isAddingCategory = false;
         this.newCategory = { name: '', description: '' };
         this.isSaving = false;
-        this.showSuccess(`Spending category "${created.name}" created successfully`);
+        this.showSuccess(`Category "${created.name}" created successfully`);
       },
       error: (error) => {
-        this.categoryError = error.message || 'Failed to create spending category';
+        this.categoryError = error.message || 'Failed to create category';
         this.isSaving = false;
       }
     });
   }
 
   /**
-   * Start editing a spending category.
+   * Start editing a category.
    */
-  startEditCategory(category: SpendingCategory): void {
+  startEditCategory(category: Category): void {
+    if (category.isDefault) {
+      this.categoryError = 'Default categories cannot be edited';
+      return;
+    }
     this.editingCategoryId = category.id;
     this.editCategory = {
       name: category.name,
@@ -407,7 +411,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Cancel editing a spending category.
+   * Cancel editing a category.
    */
   cancelEditCategory(): void {
     this.editingCategoryId = null;
@@ -415,10 +419,15 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Update a spending category.
+   * Update a category.
    */
-  updateCategory(category: SpendingCategory): void {
+  updateCategory(category: Category): void {
     if (!this.rcId || !this.fyId) {
+      return;
+    }
+
+    if (category.isDefault) {
+      this.categoryError = 'Default categories cannot be updated';
       return;
     }
 
@@ -430,7 +439,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     this.isSaving = true;
     this.categoryError = null;
 
-    this.spendingCategoryService.updateCategory(this.rcId, this.fyId, category.id, this.editCategory).subscribe({
+    this.categoryService.updateCategory(this.rcId, this.fyId, category.id, this.editCategory).subscribe({
       next: (updated) => {
         const index = this.categories.findIndex(c => c.id === category.id);
         if (index !== -1) {
@@ -439,25 +448,25 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
         this.editingCategoryId = null;
         this.editCategory = { name: '', description: '' };
         this.isSaving = false;
-        this.showSuccess(`Spending category "${updated.name}" updated successfully`);
+        this.showSuccess(`Category "${updated.name}" updated successfully`);
       },
       error: (error) => {
-        this.categoryError = error.message || 'Failed to update spending category';
+        this.categoryError = error.message || 'Failed to update category';
         this.isSaving = false;
       }
     });
   }
 
   /**
-   * Delete a spending category.
+   * Delete a category.
    */
-  deleteCategory(category: SpendingCategory): void {
+  deleteCategory(category: Category): void {
     if (!this.rcId || !this.fyId) {
       return;
     }
 
     if (category.isDefault) {
-      this.categoryError = 'Cannot delete a default spending category';
+      this.categoryError = 'Cannot delete a default category';
       return;
     }
 
@@ -468,14 +477,14 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     this.isDeleting = true;
     this.categoryError = null;
 
-    this.spendingCategoryService.deleteCategory(this.rcId, this.fyId, category.id).subscribe({
+    this.categoryService.deleteCategory(this.rcId, this.fyId, category.id).subscribe({
       next: () => {
         this.categories = this.categories.filter(c => c.id !== category.id);
         this.isDeleting = false;
-        this.showSuccess(`Spending category "${category.name}" deleted successfully`);
+        this.showSuccess(`Category "${category.name}" deleted successfully`);
       },
       error: (error) => {
-        this.categoryError = error.message || 'Failed to delete spending category';
+        this.categoryError = error.message || 'Failed to delete category';
         this.isDeleting = false;
       }
     });
@@ -491,7 +500,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   /**
    * Track function for ngFor optimization.
    */
-  trackByCategoryId(index: number, category: SpendingCategory): number {
+  trackByCategoryId(index: number, category: Category): number {
     return category.id;
   }
 }

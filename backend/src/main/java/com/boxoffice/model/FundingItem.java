@@ -97,6 +97,14 @@ public class FundingItem {
   private FiscalYear fiscalYear;
 
   /**
+   * The category this funding item belongs to.
+   * Optional - funding items can exist without a category.
+   */
+  @ManyToOne(optional = true)
+  @JoinColumn(name = "category_id", nullable = true)
+  private Category category;
+
+  /**
    * Money allocations for this funding item.
    * Each allocation tracks CAP and OM amounts for a specific money type.
    */
@@ -193,6 +201,14 @@ public class FundingItem {
 
   public void setFiscalYear(FiscalYear fiscalYear) {
     this.fiscalYear = fiscalYear;
+  }
+
+  public Category getCategory() {
+    return category;
+  }
+
+  public void setCategory(Category category) {
+    this.category = category;
   }
 
   public LocalDateTime getCreatedAt() {

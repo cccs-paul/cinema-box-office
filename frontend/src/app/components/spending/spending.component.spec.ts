@@ -16,13 +16,13 @@ import { AuthService } from '../../services/auth.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { SpendingItemService } from '../../services/spending-item.service';
-import { SpendingCategoryService } from '../../services/spending-category.service';
+import { CategoryService } from '../../services/category.service';
 import { MoneyService } from '../../services/money.service';
 import { CurrencyService } from '../../services/currency.service';
 import { User } from '../../models/user.model';
 import { Money } from '../../models/money.model';
 import { SpendingItem, SpendingMoneyAllocation } from '../../models/spending-item.model';
-import { SpendingCategory } from '../../models/spending-category.model';
+import { Category } from '../../models/category.model';
 import { Router } from '@angular/router';
 
 describe('SpendingComponent', () => {
@@ -32,7 +32,7 @@ describe('SpendingComponent', () => {
   let rcService: jasmine.SpyObj<ResponsibilityCentreService>;
   let fyService: jasmine.SpyObj<FiscalYearService>;
   let spendingItemService: jasmine.SpyObj<SpendingItemService>;
-  let spendingCategoryService: jasmine.SpyObj<SpendingCategoryService>;
+  let categoryService: jasmine.SpyObj<CategoryService>;
   let moneyService: jasmine.SpyObj<MoneyService>;
   let currencyService: jasmine.SpyObj<CurrencyService>;
   let router: jasmine.SpyObj<Router>;
@@ -85,7 +85,7 @@ describe('SpendingComponent', () => {
     omLabel: 'OA (OM)'
   };
 
-  const mockCategories: SpendingCategory[] = [
+  const mockCategories: Category[] = [
     {
       id: 1,
       name: 'Compute',
@@ -148,7 +148,7 @@ describe('SpendingComponent', () => {
       'deleteSpendingItem',
       'updateSpendingItemStatus'
     ]);
-    const spendingCategorySpy = jasmine.createSpyObj('SpendingCategoryService', [
+    const spendingCategorySpy = jasmine.createSpyObj('CategoryService', [
       'getCategoriesByFY'
     ]);
     const moneySpy = jasmine.createSpyObj('MoneyService', ['getMoniesByFiscalYear']);
@@ -167,7 +167,7 @@ describe('SpendingComponent', () => {
         { provide: ResponsibilityCentreService, useValue: rcSpy },
         { provide: FiscalYearService, useValue: fySpy },
         { provide: SpendingItemService, useValue: spendingItemSpy },
-        { provide: SpendingCategoryService, useValue: spendingCategorySpy },
+        { provide: CategoryService, useValue: spendingCategorySpy },
         { provide: MoneyService, useValue: moneySpy },
         { provide: CurrencyService, useValue: currencySpy },
         { provide: Router, useValue: routerSpy }
@@ -178,7 +178,7 @@ describe('SpendingComponent', () => {
     rcService = TestBed.inject(ResponsibilityCentreService) as jasmine.SpyObj<ResponsibilityCentreService>;
     fyService = TestBed.inject(FiscalYearService) as jasmine.SpyObj<FiscalYearService>;
     spendingItemService = TestBed.inject(SpendingItemService) as jasmine.SpyObj<SpendingItemService>;
-    spendingCategoryService = TestBed.inject(SpendingCategoryService) as jasmine.SpyObj<SpendingCategoryService>;
+    categoryService = TestBed.inject(CategoryService) as jasmine.SpyObj<CategoryService>;
     moneyService = TestBed.inject(MoneyService) as jasmine.SpyObj<MoneyService>;
     currencyService = TestBed.inject(CurrencyService) as jasmine.SpyObj<CurrencyService>;
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
@@ -206,7 +206,7 @@ describe('SpendingComponent', () => {
       { code: 'CAD', name: 'Canadian Dollar', symbol: '$', isDefault: true }
     ]));
     moneyService.getMoniesByFiscalYear.and.returnValue(of([mockDefaultMoney, mockCustomMoney]));
-    spendingCategoryService.getCategoriesByFY.and.returnValue(of(mockCategories));
+    categoryService.getCategoriesByFY.and.returnValue(of(mockCategories));
     spendingItemService.getSpendingItemsByFY.and.returnValue(of(mockSpendingItems));
 
     fixture = TestBed.createComponent(SpendingComponent);
@@ -266,7 +266,7 @@ describe('SpendingComponent', () => {
     });
 
     it('should load spending categories for the selected FY', () => {
-      expect(spendingCategoryService.getCategoriesByFY).toHaveBeenCalledWith(1, 1);
+      expect(categoryService.getCategoriesByFY).toHaveBeenCalledWith(1, 1);
     });
 
     it('should load spending items for the selected FY', () => {
@@ -509,7 +509,7 @@ describe('SpendingComponent', () => {
     }));
 
     it('should handle category load error', fakeAsync(() => {
-      spendingCategoryService.getCategoriesByFY.and.returnValue(
+      categoryService.getCategoriesByFY.and.returnValue(
         throwError(() => ({ error: { message: 'Failed to load categories' } }))
       );
 

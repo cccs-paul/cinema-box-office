@@ -26,7 +26,7 @@ import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
 import com.boxoffice.service.MoneyService;
-import com.boxoffice.service.SpendingCategoryService;
+import com.boxoffice.service.CategoryService;
 import com.boxoffice.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -68,7 +68,7 @@ public class DataInitializer implements ApplicationRunner {
     private MoneyService moneyService;
 
     @Autowired
-    private SpendingCategoryService spendingCategoryService;
+    private CategoryService categoryService;
 
     @Autowired
     private MoneyRepository moneyRepository;
@@ -195,7 +195,7 @@ public class DataInitializer implements ApplicationRunner {
             demoFY = fiscalYearRepository.findByNameAndResponsibilityCentre(demoFYName, demoRC).orElse(null);
             if (demoFY != null) {
                 moneyService.ensureDefaultMoneyExists(demoFY.getId());
-                spendingCategoryService.initializeDefaultCategories(demoFY.getId());
+                categoryService.initializeDefaultCategories(demoFY.getId());
                 // Also ensure demo funding items exist
                 initializeDemoFundingItems(demoFY);
             }
@@ -216,9 +216,9 @@ public class DataInitializer implements ApplicationRunner {
             moneyService.ensureDefaultMoneyExists(savedFY.getId());
             logger.info("Default AB money created for Demo FY");
 
-            // Create default spending categories for the demo FY
-            spendingCategoryService.initializeDefaultCategories(savedFY.getId());
-            logger.info("Default spending categories created for Demo FY");
+            // Create default categories for the demo FY
+            categoryService.initializeDefaultCategories(savedFY.getId());
+            logger.info("Default categories created for Demo FY");
 
             // Create demo funding items
             initializeDemoFundingItems(savedFY);

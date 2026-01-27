@@ -167,6 +167,7 @@ public class FundingItemController {
           request.getStatus(),
           request.getCurrency(),
           request.getExchangeRate(),
+          request.getCategoryId(),
           request.getMoneyAllocations()
       );
       return ResponseEntity.status(HttpStatus.CREATED).body(createdFI);
@@ -221,6 +222,7 @@ public class FundingItemController {
           request.getStatus(),
           request.getCurrency(),
           request.getExchangeRate(),
+          request.getCategoryId(),
           request.getMoneyAllocations()
       );
       return updatedFI.map(ResponseEntity::ok)
@@ -282,12 +284,13 @@ public class FundingItemController {
     private String status;
     private String currency;
     private BigDecimal exchangeRate;
+    private Long categoryId;
     private List<MoneyAllocationDTO> moneyAllocations;
 
     public FundingItemCreateRequest() {}
 
     public FundingItemCreateRequest(String name, String description, BigDecimal budgetAmount, 
-        String status, String currency, BigDecimal exchangeRate,
+        String status, String currency, BigDecimal exchangeRate, Long categoryId,
         List<MoneyAllocationDTO> moneyAllocations) {
       this.name = name;
       this.description = description;
@@ -295,6 +298,7 @@ public class FundingItemController {
       this.status = status;
       this.currency = currency;
       this.exchangeRate = exchangeRate;
+      this.categoryId = categoryId;
       this.moneyAllocations = moneyAllocations;
     }
 
@@ -344,6 +348,14 @@ public class FundingItemController {
 
     public void setExchangeRate(BigDecimal exchangeRate) {
       this.exchangeRate = exchangeRate;
+    }
+
+    public Long getCategoryId() {
+      return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+      this.categoryId = categoryId;
     }
 
     public List<MoneyAllocationDTO> getMoneyAllocations() {

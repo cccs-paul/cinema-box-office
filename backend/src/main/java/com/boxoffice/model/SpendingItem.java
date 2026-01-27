@@ -110,8 +110,8 @@ public class SpendingItem {
    * The category this spending item belongs to.
    */
   @ManyToOne(optional = false)
-  @JoinColumn(name = "spending_category_id", nullable = false)
-  private SpendingCategory category;
+  @JoinColumn(name = "category_id", nullable = false)
+  private Category category;
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "fiscal_year_id", nullable = false)
@@ -139,7 +139,7 @@ public class SpendingItem {
   public SpendingItem() {}
 
   public SpendingItem(String name, String description, BigDecimal amount, 
-                      Status status, SpendingCategory category, FiscalYear fiscalYear) {
+                      Status status, Category category, FiscalYear fiscalYear) {
     this.name = name;
     this.description = description;
     this.amount = amount;
@@ -148,7 +148,7 @@ public class SpendingItem {
     this.fiscalYear = fiscalYear;
   }
 
-  public SpendingItem(String name, String description, SpendingCategory category, FiscalYear fiscalYear) {
+  public SpendingItem(String name, String description, Category category, FiscalYear fiscalYear) {
     this(name, description, null, Status.DRAFT, category, fiscalYear);
   }
 
@@ -225,11 +225,11 @@ public class SpendingItem {
     this.exchangeRate = exchangeRate;
   }
 
-  public SpendingCategory getCategory() {
+  public Category getCategory() {
     return category;
   }
 
-  public void setCategory(SpendingCategory category) {
+  public void setCategory(Category category) {
     this.category = category;
   }
 

@@ -73,6 +73,12 @@ export interface FundingItem {
   /** Name of the responsibility centre */
   responsibilityCentreName?: string;
 
+  /** ID of the category (optional) */
+  categoryId?: number | null;
+
+  /** Name of the category (optional) */
+  categoryName?: string | null;
+
   /** Whether the funding item is active */
   active: boolean;
 
@@ -108,6 +114,9 @@ export interface FundingItemCreateRequest {
   /** Exchange rate to CAD (required when currency is not CAD) */
   exchangeRate?: number;
 
+  /** ID of the category (optional) */
+  categoryId?: number | null;
+
   /** Money allocations for this funding item */
   moneyAllocations?: MoneyAllocation[];
 }
@@ -133,6 +142,9 @@ export interface FundingItemUpdateRequest {
 
   /** Exchange rate to CAD (required when currency is not CAD) */
   exchangeRate?: number;
+
+  /** ID of the category (optional) */
+  categoryId?: number | null;
 
   /** Money allocations for this funding item */
   moneyAllocations?: MoneyAllocation[];

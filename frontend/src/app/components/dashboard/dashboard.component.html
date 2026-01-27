@@ -90,6 +90,19 @@
               </option>
             </select>
           </div>
+          <div class="form-group">
+            <label for="itemCategory">Category</label>
+            <select 
+              id="itemCategory" 
+              [(ngModel)]="newItemCategoryId" 
+              [disabled]="isCreating || isLoadingCategories"
+            >
+              <option [ngValue]="null">-- No Category --</option>
+              <option *ngFor="let category of categories" [ngValue]="category.id">
+                {{ category.name }}
+              </option>
+            </select>
+          </div>
         </div>
 
         <!-- Money Allocations -->
@@ -175,6 +188,7 @@
         <thead>
           <tr>
             <th>Name</th>
+            <th>Category</th>
             <th>Description</th>
             <th>Money Allocations</th>
             <th>Budget</th>
@@ -186,6 +200,10 @@
         <tbody>
           <tr *ngFor="let item of sortedFundingItems">
             <td class="item-name">{{ item.name }}</td>
+            <td class="item-category">
+              <span class="category-badge" *ngIf="item.categoryName">{{ item.categoryName }}</span>
+              <span *ngIf="!item.categoryName">-</span>
+            </td>
             <td class="item-description">{{ item.description || '-' }}</td>
             <td class="item-money">
               <div class="money-allocations-display" *ngIf="item.moneyAllocations && item.moneyAllocations.length > 0">

@@ -192,6 +192,7 @@ class FundingItemServiceTest {
         new BigDecimal("10000.00"),
         "DRAFT",
         "CAD",
+        null,  // categoryId
         null,
         Arrays.asList(validAllocation)
     );
@@ -224,6 +225,7 @@ class FundingItemServiceTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
+        null,  // categoryId
             null,
             Arrays.asList(zeroAllocation)
         ));
@@ -247,6 +249,7 @@ class FundingItemServiceTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
+        null,  // categoryId
             null,
             Collections.emptyList()
         ));
@@ -270,6 +273,7 @@ class FundingItemServiceTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
+        null,  // categoryId
             null,
             null
         ));
@@ -302,6 +306,7 @@ class FundingItemServiceTest {
         new BigDecimal("5000.00"),
         "DRAFT",
         "CAD",
+        null,  // categoryId
         null,
         Arrays.asList(capOnlyAllocation)
     );
@@ -334,6 +339,7 @@ class FundingItemServiceTest {
         new BigDecimal("3000.00"),
         "DRAFT",
         "CAD",
+        null,  // categoryId
         null,
         Arrays.asList(omOnlyAllocation)
     );
@@ -365,6 +371,7 @@ class FundingItemServiceTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
+        null,  // categoryId
             null,
             Arrays.asList(validAllocation)
         ));
@@ -403,6 +410,7 @@ class FundingItemServiceTest {
             new BigDecimal("10000.00"),
             "DRAFT",
             "CAD",
+        null,  // categoryId
             null,
             Arrays.asList(validAllocation)
         ));
@@ -424,6 +432,7 @@ class FundingItemServiceTest {
         new BigDecimal("20000.00"),
         "APPROVED",
         "CAD",
+        null,  // categoryId
         null,
         Collections.emptyList()
     );

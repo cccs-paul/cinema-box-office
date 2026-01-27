@@ -14,6 +14,7 @@ package com.boxoffice.service;
 
 import com.boxoffice.dto.FundingItemDTO;
 import com.boxoffice.dto.MoneyAllocationDTO;
+import com.boxoffice.model.Category;
 import com.boxoffice.model.Currency;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.FundingItem;
@@ -22,6 +23,7 @@ import com.boxoffice.model.MoneyAllocation;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
+import com.boxoffice.repository.CategoryRepository;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.FundingItemRepository;
 import com.boxoffice.repository.MoneyAllocationRepository;
@@ -57,6 +59,7 @@ public class FundingItemServiceImpl implements FundingItemService {
   private final UserRepository userRepository;
   private final MoneyRepository moneyRepository;
   private final MoneyAllocationRepository moneyAllocationRepository;
+  private final CategoryRepository categoryRepository;
 
   public FundingItemServiceImpl(FundingItemRepository fundingItemRepository,
       FiscalYearRepository fiscalYearRepository,
@@ -64,7 +67,8 @@ public class FundingItemServiceImpl implements FundingItemService {
       RCAccessRepository accessRepository,
       UserRepository userRepository,
       MoneyRepository moneyRepository,
-      MoneyAllocationRepository moneyAllocationRepository) {
+      MoneyAllocationRepository moneyAllocationRepository,
+      CategoryRepository categoryRepository) {
     this.fundingItemRepository = fundingItemRepository;
     this.fiscalYearRepository = fiscalYearRepository;
     this.rcRepository = rcRepository;
@@ -72,6 +76,7 @@ public class FundingItemServiceImpl implements FundingItemService {
     this.userRepository = userRepository;
     this.moneyRepository = moneyRepository;
     this.moneyAllocationRepository = moneyAllocationRepository;
+    this.categoryRepository = categoryRepository;
   }
 
   @Override
@@ -119,7 +124,7 @@ public class FundingItemServiceImpl implements FundingItemService {
   @Override
   public FundingItemDTO createFundingItem(Long fiscalYearId, String username, String name,
       String description, BigDecimal budgetAmount, String status,
-      String currency, BigDecimal exchangeRate,
+      String currency, BigDecimal exchangeRate, Long categoryId,
       List<MoneyAllocationDTO> moneyAllocations) {
     // Get fiscal year and verify write access to its RC
     Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);
@@ -181,9 +186,24 @@ public class FundingItemServiceImpl implements FundingItemService {
           "At least one money type must have a CAP or OM amount greater than $0.00");
     }
 
+    // Get category if provided
+    Category category = null;
+    if (categoryId != null) {
+      Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+      if (categoryOpt.isEmpty()) {
+        throw new IllegalArgumentException("Category not found");
+      }
+      category = categoryOpt.get();
+      // Verify category belongs to the same fiscal year
+      if (!category.getFiscalYear().getId().equals(fy.getId())) {
+        throw new IllegalArgumentException("Category does not belong to the specified Fiscal Year");
+      }
+    }
+
     FundingItem fi = new FundingItem(name, description, budgetAmount, itemStatus, fy);
     fi.setCurrency(itemCurrency);
     fi.setExchangeRate(itemCurrency == Currency.CAD ? null : exchangeRate);
+    fi.setCategory(category);
     FundingItem saved = fundingItemRepository.save(fi);
 
     // Process money allocations - create default allocations for all FY monies
@@ -230,7 +250,7 @@ public class FundingItemServiceImpl implements FundingItemService {
   @Override
   public Optional<FundingItemDTO> updateFundingItem(Long fundingItemId, String username, String name,
       String description, BigDecimal budgetAmount, String status,
-      String currency, BigDecimal exchangeRate,
+      String currency, BigDecimal exchangeRate, Long categoryId,
       List<MoneyAllocationDTO> moneyAllocations) {
     Optional<FundingItem> fiOpt = fundingItemRepository.findById(fundingItemId);
     if (fiOpt.isEmpty()) {
@@ -267,6 +287,25 @@ public class FundingItemServiceImpl implements FundingItemService {
         fi.setStatus(FundingItem.Status.valueOf(status.toUpperCase()));
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("Invalid status: " + status);
+      }
+    }
+
+    // Handle category update
+    if (categoryId != null) {
+      if (categoryId == -1L) {
+        // Clear category
+        fi.setCategory(null);
+      } else {
+        Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
+        if (categoryOpt.isEmpty()) {
+          throw new IllegalArgumentException("Category not found");
+        }
+        Category category = categoryOpt.get();
+        // Verify category belongs to the same fiscal year
+        if (!category.getFiscalYear().getId().equals(fi.getFiscalYear().getId())) {
+          throw new IllegalArgumentException("Category does not belong to the specified Fiscal Year");
+        }
+        fi.setCategory(category);
       }
     }
 

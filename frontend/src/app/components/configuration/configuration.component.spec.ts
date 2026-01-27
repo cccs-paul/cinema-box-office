@@ -14,9 +14,9 @@ import { ConfigurationComponent } from './configuration.component';
 import { MoneyService } from '../../services/money.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
-import { SpendingCategoryService } from '../../services/spending-category.service';
+import { CategoryService } from '../../services/category.service';
 import { Money } from '../../models/money.model';
-import { SpendingCategory } from '../../models/spending-category.model';
+import { Category } from '../../models/category.model';
 
 describe('ConfigurationComponent', () => {
   let component: ConfigurationComponent;
@@ -24,7 +24,7 @@ describe('ConfigurationComponent', () => {
   let moneyService: jasmine.SpyObj<MoneyService>;
   let rcService: jasmine.SpyObj<ResponsibilityCentreService>;
   let fyService: jasmine.SpyObj<FiscalYearService>;
-  let spendingCategoryService: jasmine.SpyObj<SpendingCategoryService>;
+  let categoryService: jasmine.SpyObj<CategoryService>;
 
   const selectedRC$ = new BehaviorSubject<number | null>(1);
   const selectedFY$ = new BehaviorSubject<number | null>(1);
@@ -59,7 +59,7 @@ describe('ConfigurationComponent', () => {
     omLabel: 'OA (OM)'
   };
 
-  const mockDefaultCategory: SpendingCategory = {
+  const mockDefaultCategory: Category = {
     id: 1,
     name: 'Compute',
     description: 'Compute resources',
@@ -69,7 +69,7 @@ describe('ConfigurationComponent', () => {
     active: true
   };
 
-  const mockCustomCategory: SpendingCategory = {
+  const mockCustomCategory: Category = {
     id: 7,
     name: 'Cloud Services',
     description: 'External cloud services',
@@ -92,12 +92,13 @@ describe('ConfigurationComponent', () => {
       selectedFY$: selectedFY$.asObservable()
     });
     const fySpy = jasmine.createSpyObj('FiscalYearService', ['getFiscalYear']);
-    const categorySpy = jasmine.createSpyObj('SpendingCategoryService', [
+    const categorySpy = jasmine.createSpyObj('CategoryService', [
       'getCategoriesByFY',
       'createCategory',
       'updateCategory',
       'deleteCategory',
-      'reorderCategories'
+      'reorderCategories',
+      'ensureDefaults'
     ]);
 
     await TestBed.configureTestingModule({
@@ -106,21 +107,21 @@ describe('ConfigurationComponent', () => {
         { provide: MoneyService, useValue: moneySpy },
         { provide: ResponsibilityCentreService, useValue: rcSpy },
         { provide: FiscalYearService, useValue: fySpy },
-        { provide: SpendingCategoryService, useValue: categorySpy }
+        { provide: CategoryService, useValue: categorySpy }
       ]
     }).compileComponents();
 
     moneyService = TestBed.inject(MoneyService) as jasmine.SpyObj<MoneyService>;
     rcService = TestBed.inject(ResponsibilityCentreService) as jasmine.SpyObj<ResponsibilityCentreService>;
     fyService = TestBed.inject(FiscalYearService) as jasmine.SpyObj<FiscalYearService>;
-    spendingCategoryService = TestBed.inject(SpendingCategoryService) as jasmine.SpyObj<SpendingCategoryService>;
+    categoryService = TestBed.inject(CategoryService) as jasmine.SpyObj<CategoryService>;
   });
 
   beforeEach(() => {
     rcService.getResponsibilityCentre.and.returnValue(of({ id: 1, name: 'Test RC', description: '', active: true } as any));
     fyService.getFiscalYear.and.returnValue(of({ id: 1, name: 'FY 2025-2026', description: '', active: true, responsibilityCentreId: 1 }));
     moneyService.getMoniesByFiscalYear.and.returnValue(of([mockDefaultMoney, mockCustomMoney]));
-    spendingCategoryService.getCategoriesByFY.and.returnValue(of([mockDefaultCategory, mockCustomCategory]));
+    categoryService.getCategoriesByFY.and.returnValue(of([mockDefaultCategory, mockCustomCategory]));
 
     fixture = TestBed.createComponent(ConfigurationComponent);
     component = fixture.componentInstance;
@@ -339,13 +340,13 @@ describe('ConfigurationComponent', () => {
     });
 
     it('should create category successfully', fakeAsync(() => {
-      const newCategory: SpendingCategory = {
+      const newCategory: Category = {
         ...mockCustomCategory,
         id: 8,
         name: 'New Category',
         displayOrder: 7
       };
-      spendingCategoryService.createCategory.and.returnValue(of(newCategory));
+      categoryService.createCategory.and.returnValue(of(newCategory));
 
       component.rcId = 1;
       component.fyId = 1;
@@ -370,10 +371,16 @@ describe('ConfigurationComponent', () => {
   });
 
   describe('editing category', () => {
-    it('should show edit form when startEditCategory is called', () => {
+    it('should show edit form when startEditCategory is called for custom category', () => {
       component.startEditCategory(mockCustomCategory);
       expect(component.editingCategoryId).toBe(7);
       expect(component.editCategory.name).toBe('Cloud Services');
+    });
+
+    it('should not allow editing default category', () => {
+      component.startEditCategory(mockDefaultCategory);
+      expect(component.editingCategoryId).toBeNull();
+      expect(component.categoryError).toContain('Default categories cannot be edited');
     });
 
     it('should hide edit form when cancelEditCategory is called', () => {
@@ -383,11 +390,11 @@ describe('ConfigurationComponent', () => {
     });
 
     it('should update category successfully', fakeAsync(() => {
-      const updatedCategory: SpendingCategory = {
+      const updatedCategory: Category = {
         ...mockCustomCategory,
         name: 'Updated Name'
       };
-      spendingCategoryService.updateCategory.and.returnValue(of(updatedCategory));
+      categoryService.updateCategory.and.returnValue(of(updatedCategory));
 
       component.rcId = 1;
       component.fyId = 1;
@@ -409,12 +416,12 @@ describe('ConfigurationComponent', () => {
       component.deleteCategory(mockDefaultCategory);
 
       expect(component.categoryError).toContain('default');
-      expect(spendingCategoryService.deleteCategory).not.toHaveBeenCalled();
+      expect(categoryService.deleteCategory).not.toHaveBeenCalled();
     });
 
     it('should delete custom category successfully', fakeAsync(() => {
       spyOn(window, 'confirm').and.returnValue(true);
-      spendingCategoryService.deleteCategory.and.returnValue(of(void 0));
+      categoryService.deleteCategory.and.returnValue(of(void 0));
 
       component.rcId = 1;
       component.fyId = 1;
@@ -432,13 +439,13 @@ describe('ConfigurationComponent', () => {
       component.fyId = 1;
       component.deleteCategory(mockCustomCategory);
 
-      expect(spendingCategoryService.deleteCategory).not.toHaveBeenCalled();
+      expect(categoryService.deleteCategory).not.toHaveBeenCalled();
     });
   });
 
   describe('category error handling', () => {
     it('should display error when category load fails', fakeAsync(() => {
-      spendingCategoryService.getCategoriesByFY.and.returnValue(throwError(() => new Error('Network error')));
+      categoryService.getCategoriesByFY.and.returnValue(throwError(() => new Error('Network error')));
 
       component.loadCategories();
       tick();

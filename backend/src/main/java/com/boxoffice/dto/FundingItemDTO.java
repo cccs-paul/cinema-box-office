@@ -40,6 +40,8 @@ public class FundingItemDTO {
   private String fiscalYearName;
   private Long responsibilityCentreId;
   private String responsibilityCentreName;
+  private Long categoryId;
+  private String categoryName;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
@@ -54,6 +56,7 @@ public class FundingItemDTO {
                         String status, String currency, BigDecimal exchangeRate,
                         Long fiscalYearId, String fiscalYearName,
                         Long responsibilityCentreId, String responsibilityCentreName,
+                        Long categoryId, String categoryName,
                         LocalDateTime createdAt, LocalDateTime updatedAt, Boolean active,
                         List<MoneyAllocationDTO> moneyAllocations) {
     this.id = id;
@@ -67,6 +70,8 @@ public class FundingItemDTO {
     this.fiscalYearName = fiscalYearName;
     this.responsibilityCentreId = responsibilityCentreId;
     this.responsibilityCentreName = responsibilityCentreName;
+    this.categoryId = categoryId;
+    this.categoryName = categoryName;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.active = active;
@@ -103,6 +108,8 @@ public class FundingItemDTO {
             ? fundingItem.getFiscalYear().getResponsibilityCentre().getId() : null,
         fundingItem.getFiscalYear() != null && fundingItem.getFiscalYear().getResponsibilityCentre() != null
             ? fundingItem.getFiscalYear().getResponsibilityCentre().getName() : null,
+        fundingItem.getCategory() != null ? fundingItem.getCategory().getId() : null,
+        fundingItem.getCategory() != null ? fundingItem.getCategory().getName() : null,
         fundingItem.getCreatedAt(),
         fundingItem.getUpdatedAt(),
         fundingItem.getActive(),
@@ -197,6 +204,22 @@ public class FundingItemDTO {
 
   public void setResponsibilityCentreName(String responsibilityCentreName) {
     this.responsibilityCentreName = responsibilityCentreName;
+  }
+
+  public Long getCategoryId() {
+    return categoryId;
+  }
+
+  public void setCategoryId(Long categoryId) {
+    this.categoryId = categoryId;
+  }
+
+  public String getCategoryName() {
+    return categoryName;
+  }
+
+  public void setCategoryName(String categoryName) {
+    this.categoryName = categoryName;
   }
 
   public LocalDateTime getCreatedAt() {
