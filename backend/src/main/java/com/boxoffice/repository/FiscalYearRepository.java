@@ -68,4 +68,11 @@ public interface FiscalYearRepository extends JpaRepository<FiscalYear, Long> {
    * @return optional fiscal year
    */
   Optional<FiscalYear> findByNameAndResponsibilityCentre(String name, ResponsibilityCentre responsibilityCentre);
+
+  /**
+   * Delete all fiscal years for a specific responsibility centre.
+   *
+   * @param responsibilityCentre the responsibility centre
+   */
+  void deleteByResponsibilityCentre(ResponsibilityCentre responsibilityCentre);
 }

@@ -13,6 +13,7 @@ import com.boxoffice.dto.ResponsibilityCentreDTO;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
+import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
@@ -37,6 +38,9 @@ class ResponsibilityCentreServiceImplTest {
 
   @Mock
   private UserRepository userRepository;
+
+  @Mock
+  private FiscalYearRepository fiscalYearRepository;
 
   @InjectMocks
   private ResponsibilityCentreServiceImpl service;
@@ -134,6 +138,8 @@ class ResponsibilityCentreServiceImplTest {
     boolean result = service.deleteResponsibilityCentre(1L, "testuser");
 
     assertTrue(result);
+    verify(fiscalYearRepository).deleteByResponsibilityCentre(testRC);
+    verify(accessRepository).deleteByResponsibilityCentre(testRC);
     verify(rcRepository).deleteById(1L);
   }
 

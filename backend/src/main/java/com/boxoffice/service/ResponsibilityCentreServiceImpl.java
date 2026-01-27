@@ -9,6 +9,7 @@ import com.boxoffice.dto.ResponsibilityCentreDTO;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
+import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
@@ -31,12 +32,15 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
   private final ResponsibilityCentreRepository rcRepository;
   private final RCAccessRepository accessRepository;
   private final UserRepository userRepository;
+  private final FiscalYearRepository fiscalYearRepository;
 
   public ResponsibilityCentreServiceImpl(ResponsibilityCentreRepository rcRepository,
-      RCAccessRepository accessRepository, UserRepository userRepository) {
+      RCAccessRepository accessRepository, UserRepository userRepository,
+      FiscalYearRepository fiscalYearRepository) {
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
     this.userRepository = userRepository;
+    this.fiscalYearRepository = fiscalYearRepository;
   }
 
   private static final String DEMO_RC_NAME = "Demo";
@@ -173,6 +177,14 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       throw new IllegalAccessError("Only the owner can delete this RC");
     }
 
+    // Delete related entities first to avoid foreign key constraint violations
+    // Fiscal years will cascade delete categories, funding items, spending items, and monies
+    fiscalYearRepository.deleteByResponsibilityCentre(rc);
+
+    // Delete access records
+    accessRepository.deleteByResponsibilityCentre(rc);
+
+    // Now delete the RC itself
     rcRepository.deleteById(rcId);
     return true;
   }

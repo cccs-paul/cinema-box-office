@@ -45,7 +45,6 @@
       [class.active]="selectedCategoryId === category.id"
       (click)="filterByCategory(category.id)">
       {{ category.name }}
-      <span class="default-badge" *ngIf="category.isDefault">default</span>
     </button>
   </div>
 

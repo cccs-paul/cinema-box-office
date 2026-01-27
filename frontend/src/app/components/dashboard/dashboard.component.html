@@ -13,6 +13,24 @@
       </button>
     </div>
 
+    <!-- Category Filter -->
+    <div class="category-filter" *ngIf="categories.length > 0 && !showCreateForm">
+      <span class="filter-label">Filter by Category:</span>
+      <button 
+        class="filter-btn"
+        [class.active]="selectedCategoryId === null"
+        (click)="filterByCategory(null)">
+        All
+      </button>
+      <button 
+        *ngFor="let category of categories"
+        class="filter-btn"
+        [class.active]="selectedCategoryId === category.id"
+        (click)="filterByCategory(category.id)">
+        {{ category.name }}
+      </button>
+    </div>
+
     <!-- Create Form -->
     <div class="create-form" *ngIf="showCreateForm">
       <div class="form-container">

@@ -69,4 +69,11 @@ public interface RCAccessRepository extends JpaRepository<RCAccess, Long> {
    * @param user the user
    */
   void deleteByResponsibilityCentreAndUser(ResponsibilityCentre rc, User user);
+
+  /**
+   * Delete all access records for a responsibility centre.
+   *
+   * @param rc the responsibility centre
+   */
+  void deleteByResponsibilityCentre(ResponsibilityCentre rc);
 }

@@ -60,6 +60,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Categories
   categories: Category[] = [];
   isLoadingCategories = false;
+  selectedCategoryId: number | null = null;
 
   // Create Form
   showCreateForm = false;
@@ -269,12 +270,28 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get sorted list of funding items (alphabetical by name).
+   * Get sorted and filtered list of funding items.
+   * Filters by selected category (if any) and sorts alphabetically by name.
    */
   get sortedFundingItems(): FundingItem[] {
-    return [...this.fundingItems].sort((a, b) =>
+    let items = [...this.fundingItems];
+    
+    // Filter by category if selected
+    if (this.selectedCategoryId !== null) {
+      items = items.filter(item => item.categoryId === this.selectedCategoryId);
+    }
+    
+    return items.sort((a, b) =>
       a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
     );
+  }
+
+  /**
+   * Filter funding items by category.
+   * @param categoryId The category ID to filter by, or null for all categories
+   */
+  filterByCategory(categoryId: number | null): void {
+    this.selectedCategoryId = categoryId;
   }
 
   /**
