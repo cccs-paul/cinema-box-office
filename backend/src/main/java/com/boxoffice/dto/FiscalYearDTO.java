@@ -26,13 +26,16 @@ public class FiscalYearDTO {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
+  private Boolean showCategoryFilter;
+  private Boolean groupByCategory;
 
   // Constructors
   public FiscalYearDTO() {}
 
   public FiscalYearDTO(Long id, String name, String description,
                        Long responsibilityCentreId, String responsibilityCentreName,
-                       LocalDateTime createdAt, LocalDateTime updatedAt, Boolean active) {
+                       LocalDateTime createdAt, LocalDateTime updatedAt, Boolean active,
+                       Boolean showCategoryFilter, Boolean groupByCategory) {
     this.id = id;
     this.name = name;
     this.description = description;
@@ -41,6 +44,8 @@ public class FiscalYearDTO {
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.active = active;
+    this.showCategoryFilter = showCategoryFilter;
+    this.groupByCategory = groupByCategory;
   }
 
   /**
@@ -61,7 +66,9 @@ public class FiscalYearDTO {
         fiscalYear.getResponsibilityCentre() != null ? fiscalYear.getResponsibilityCentre().getName() : null,
         fiscalYear.getCreatedAt(),
         fiscalYear.getUpdatedAt(),
-        fiscalYear.getActive()
+        fiscalYear.getActive(),
+        fiscalYear.getShowCategoryFilter(),
+        fiscalYear.getGroupByCategory()
     );
   }
 
@@ -128,5 +135,21 @@ public class FiscalYearDTO {
 
   public void setActive(Boolean active) {
     this.active = active;
+  }
+
+  public Boolean getShowCategoryFilter() {
+    return showCategoryFilter;
+  }
+
+  public void setShowCategoryFilter(Boolean showCategoryFilter) {
+    this.showCategoryFilter = showCategoryFilter;
+  }
+
+  public Boolean getGroupByCategory() {
+    return groupByCategory;
+  }
+
+  public void setGroupByCategory(Boolean groupByCategory) {
+    this.groupByCategory = groupByCategory;
   }
 }

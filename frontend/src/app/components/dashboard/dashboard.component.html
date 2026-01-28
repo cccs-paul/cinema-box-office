@@ -14,7 +14,7 @@
     </div>
 
     <!-- Category Filter -->
-    <div class="category-filter" *ngIf="categories.length > 0 && !showCreateForm">
+    <div class="category-filter" *ngIf="categories.length > 0 && !showCreateForm && selectedFY?.showCategoryFilter !== false">
       <span class="filter-label">Filter by Category:</span>
       <button 
         class="filter-btn"
@@ -77,7 +77,7 @@
               (change)="onCurrencyChange()"
             >
               <option *ngFor="let currency of currencies" [value]="currency.code">
-                {{ currency.code }} - {{ currency.name }}
+                {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
               </option>
             </select>
           </div>
@@ -238,7 +238,7 @@
             <td class="item-budget">{{ formatCurrency(item.budgetAmount, item.currency) }}</td>
             <td class="item-currency">
               <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
-                {{ item.currency }}
+                {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
               </span>
               <span class="exchange-rate" *ngIf="item.currency !== 'CAD' && item.exchangeRate">
                 (1 {{ item.currency }} = {{ item.exchangeRate }} CAD)

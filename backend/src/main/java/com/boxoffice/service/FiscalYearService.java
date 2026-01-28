@@ -66,4 +66,16 @@ public interface FiscalYearService {
    * @param username the username
    */
   void deleteFiscalYear(Long fiscalYearId, String username);
+
+  /**
+   * Update display settings for a fiscal year.
+   *
+   * @param fiscalYearId the fiscal year ID
+   * @param username the username
+   * @param showCategoryFilter whether to show category filter
+   * @param groupByCategory whether to group items by category
+   * @return optional updated fiscal year DTO
+   */
+  Optional<FiscalYearDTO> updateDisplaySettings(Long fiscalYearId, String username,
+                                                  Boolean showCategoryFilter, Boolean groupByCategory);
 }

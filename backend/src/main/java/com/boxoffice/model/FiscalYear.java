@@ -59,6 +59,12 @@ public class FiscalYear {
   @Column(nullable = false)
   private Boolean active = true;
 
+  @Column(name = "show_category_filter", nullable = false)
+  private Boolean showCategoryFilter = true;
+
+  @Column(name = "group_by_category", nullable = false)
+  private Boolean groupByCategory = false;
+
   // Constructors
   public FiscalYear() {}
 
@@ -123,6 +129,22 @@ public class FiscalYear {
 
   public void setActive(Boolean active) {
     this.active = active;
+  }
+
+  public Boolean getShowCategoryFilter() {
+    return showCategoryFilter;
+  }
+
+  public void setShowCategoryFilter(Boolean showCategoryFilter) {
+    this.showCategoryFilter = showCategoryFilter;
+  }
+
+  public Boolean getGroupByCategory() {
+    return groupByCategory;
+  }
+
+  public void setGroupByCategory(Boolean groupByCategory) {
+    this.groupByCategory = groupByCategory;
   }
 
   @Override

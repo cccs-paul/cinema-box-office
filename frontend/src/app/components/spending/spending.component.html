@@ -4,20 +4,11 @@
   Licensed under MIT License
 -->
 <div class="spending-container">
-  <!-- Header -->
-  <div class="spending-header">
-    <div class="header-content">
-      <h1>Spending</h1>
-      <p class="subtitle" *ngIf="selectedFY">
-        Manage spending items for {{ selectedFY.name }}
-      </p>
-    </div>
-    <div class="header-actions">
-      <button class="btn btn-primary" (click)="showCreate()" [disabled]="categories.length === 0">
-        <span class="btn-icon">+</span>
-        New Spending Item
-      </button>
-    </div>
+  <!-- Action Bar -->
+  <div class="action-bar" *ngIf="canWrite">
+    <button class="btn btn-primary" (click)="showCreate()" [disabled]="categories.length === 0">
+      + Add Spending Item
+    </button>
   </div>
 
   <!-- Messages -->
@@ -31,7 +22,7 @@
   </div>
 
   <!-- Category Filter -->
-  <div class="category-filter" *ngIf="categories.length > 0">
+  <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
     <span class="filter-label">Filter by Category:</span>
     <button 
       class="filter-btn"
@@ -117,7 +108,7 @@
           <label for="currency">Currency</label>
           <select id="currency" [(ngModel)]="newItemCurrency" class="form-control">
             <option *ngFor="let currency of currencies" [value]="currency.code">
-              {{ currency.code }} - {{ currency.name }}
+              {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
             </option>
           </select>
         </div>
@@ -205,7 +196,7 @@
         ? 'No spending items found in this category.' 
         : 'No spending items have been created for this fiscal year yet.' }}
     </p>
-    <button class="btn btn-primary" (click)="showCreate()" *ngIf="categories.length > 0">
+    <button class="btn btn-primary" (click)="showCreate()" *ngIf="canWrite && categories.length > 0">
       Create First Spending Item
     </button>
     <p class="hint" *ngIf="categories.length === 0">
@@ -224,7 +215,7 @@
           <th>Reference</th>
           <th class="text-right">Total</th>
           <th class="text-center">Status</th>
-          <th class="text-center">Actions</th>
+          <th class="text-center" *ngIf="canWrite">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -244,7 +235,7 @@
               {{ getStatusLabel(item.status) }}
             </span>
           </td>
-          <td class="text-center actions">
+          <td class="text-center actions" *ngIf="canWrite">
             <button class="btn-icon-action" title="Delete" (click)="deleteSpendingItem(item)">
               🗑️
             </button>

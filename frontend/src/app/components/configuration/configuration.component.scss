@@ -508,6 +508,29 @@
     color: var(--text-primary);
   }
 
+  .default-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background: var(--primary-gradient-start);
+    color: white;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .readonly-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background: #757575;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-left: 0.25rem;
+  }
+
   .category-description {
     font-size: 0.85rem;
     color: var(--text-secondary);
@@ -668,6 +691,113 @@
     margin: 0;
     color: var(--text-secondary);
     font-size: 1rem;
+  }
+}
+
+// Settings Section
+.settings-section {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+
+  h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+}
+
+.setting-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border-color);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  &:first-of-type {
+    padding-top: 0.5rem;
+  }
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .setting-label {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+
+  .setting-description {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+}
+
+.setting-control {
+  flex-shrink: 0;
+}
+
+// Toggle Switch
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  cursor: pointer;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .toggle-slider {
+      background-color: var(--primary-gradient-start);
+    }
+
+    &:checked + .toggle-slider:before {
+      transform: translateX(22px);
+    }
+
+    &:focus + .toggle-slider {
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+    }
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color);
+    transition: 0.3s;
+    border-radius: 26px;
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
   }
 }
 

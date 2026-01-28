@@ -286,4 +286,60 @@ class FiscalYearServiceTest {
     assertThrows(IllegalArgumentException.class,
         () -> fiscalYearService.deleteFiscalYear(999L, "testuser"));
   }
+
+  @Test
+  @DisplayName("updateDisplaySettings - Updates display settings for owner")
+  void updateDisplaySettings_UpdatesForOwner() {
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+    when(fiscalYearRepository.save(any(FiscalYear.class))).thenReturn(testFiscalYear);
+
+    Optional<FiscalYearDTO> result = fiscalYearService.updateDisplaySettings(
+        1L,
+        "testuser",
+        true,
+        false
+    );
+
+    assertTrue(result.isPresent());
+    verify(fiscalYearRepository).save(any(FiscalYear.class));
+  }
+
+  @Test
+  @DisplayName("updateDisplaySettings - Returns empty when fiscal year not found")
+  void updateDisplaySettings_ReturnsEmptyWhenNotFound() {
+    when(fiscalYearRepository.findById(999L)).thenReturn(Optional.empty());
+
+    Optional<FiscalYearDTO> result = fiscalYearService.updateDisplaySettings(
+        999L,
+        "testuser",
+        true,
+        false
+    );
+
+    assertFalse(result.isPresent());
+  }
+
+  @Test
+  @DisplayName("updateDisplaySettings - Throws exception when user has no write access")
+  void updateDisplaySettings_ThrowsWhenNoWriteAccess() {
+    User anotherUser = new User();
+    anotherUser.setId(2L);
+    anotherUser.setUsername("anotheruser");
+
+    RCAccess access = new RCAccess();
+    access.setUser(anotherUser);
+    access.setResponsibilityCentre(testRC);
+    access.setAccessLevel(RCAccess.AccessLevel.READ_ONLY);
+
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(userRepository.findByUsername("anotheruser")).thenReturn(Optional.of(anotherUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+    when(accessRepository.findByResponsibilityCentreAndUser(testRC, anotherUser))
+        .thenReturn(Optional.of(access));
+
+    assertThrows(IllegalArgumentException.class,
+        () -> fiscalYearService.updateDisplaySettings(1L, "anotheruser", true, false));
+  }
 }

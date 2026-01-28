@@ -17,7 +17,9 @@ describe('FiscalYearService', () => {
     name: 'FY 2025-2026',
     description: 'Test Fiscal Year',
     active: true,
-    responsibilityCentreId: 1
+    responsibilityCentreId: 1,
+    showCategoryFilter: true,
+    groupByCategory: false
   };
 
   beforeEach(() => {

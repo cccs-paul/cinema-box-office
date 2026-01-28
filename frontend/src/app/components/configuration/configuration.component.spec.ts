@@ -119,7 +119,7 @@ describe('ConfigurationComponent', () => {
 
   beforeEach(() => {
     rcService.getResponsibilityCentre.and.returnValue(of({ id: 1, name: 'Test RC', description: '', active: true } as any));
-    fyService.getFiscalYear.and.returnValue(of({ id: 1, name: 'FY 2025-2026', description: '', active: true, responsibilityCentreId: 1 }));
+    fyService.getFiscalYear.and.returnValue(of({ id: 1, name: 'FY 2025-2026', description: '', active: true, responsibilityCentreId: 1, showCategoryFilter: true, groupByCategory: false }));
     moneyService.getMoniesByFiscalYear.and.returnValue(of([mockDefaultMoney, mockCustomMoney]));
     categoryService.getCategoriesByFY.and.returnValue(of([mockDefaultCategory, mockCustomCategory]));
 

@@ -12,18 +12,23 @@
 package com.boxoffice.init;
 
 import com.boxoffice.dto.CreateUserRequest;
+import com.boxoffice.model.Category;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.FundingItem;
 import com.boxoffice.model.Money;
 import com.boxoffice.model.MoneyAllocation;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
+import com.boxoffice.model.SpendingItem;
+import com.boxoffice.model.SpendingMoneyAllocation;
 import com.boxoffice.model.User;
+import com.boxoffice.repository.CategoryRepository;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.FundingItemRepository;
 import com.boxoffice.repository.MoneyRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
+import com.boxoffice.repository.SpendingItemRepository;
 import com.boxoffice.repository.UserRepository;
 import com.boxoffice.service.MoneyService;
 import com.boxoffice.service.CategoryService;
@@ -75,6 +80,12 @@ public class DataInitializer implements ApplicationRunner {
 
     @Autowired
     private FundingItemRepository fundingItemRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private SpendingItemRepository spendingItemRepository;
 
     @Override
     public void run(org.springframework.boot.ApplicationArguments args) throws Exception {
@@ -196,8 +207,14 @@ public class DataInitializer implements ApplicationRunner {
             if (demoFY != null) {
                 moneyService.ensureDefaultMoneyExists(demoFY.getId());
                 categoryService.initializeDefaultCategories(demoFY.getId());
+                // Ensure custom money types exist
+                initializeDemoMoneyTypes(demoFY);
+                // Ensure custom categories exist
+                initializeDemoCategories(demoFY);
                 // Also ensure demo funding items exist
                 initializeDemoFundingItems(demoFY);
+                // Also ensure demo spending items exist
+                initializeDemoSpendingItems(demoFY);
             }
             return;
         }
@@ -216,12 +233,23 @@ public class DataInitializer implements ApplicationRunner {
             moneyService.ensureDefaultMoneyExists(savedFY.getId());
             logger.info("Default AB money created for Demo FY");
 
+            // Create custom money types for demo
+            initializeDemoMoneyTypes(savedFY);
+            logger.info("Custom money types created for Demo FY");
+
             // Create default categories for the demo FY
             categoryService.initializeDefaultCategories(savedFY.getId());
             logger.info("Default categories created for Demo FY");
 
+            // Create custom categories for demo
+            initializeDemoCategories(savedFY);
+            logger.info("Custom categories created for Demo FY");
+
             // Create demo funding items
             initializeDemoFundingItems(savedFY);
+
+            // Create demo spending items
+            initializeDemoSpendingItems(savedFY);
         } catch (Exception e) {
             logger.warning(() -> "Failed to create Demo FY: " + e.getMessage());
         }
@@ -246,17 +274,22 @@ public class DataInitializer implements ApplicationRunner {
             .findFirst()
             .orElse(fyMonies.get(0));
 
+        // Get categories for this fiscal year
+        List<Category> categories = categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(demoFY.getId());
+        java.util.Map<String, Category> categoryMap = categories.stream()
+            .collect(java.util.stream.Collectors.toMap(Category::getName, c -> c, (a, b) -> a));
+
         // Demo Funding Items with sample data
+        // {name, description, budgetAmount, status, capAmount, omAmount, categoryName}
         String[][] demoItems = {
-            // {name, description, budgetAmount, status, capAmount, omAmount}
-            {"IT Infrastructure", "Annual IT infrastructure maintenance and upgrades", "250000.00", "APPROVED", "150000.00", "100000.00"},
-            {"Staff Training", "Employee professional development and training programs", "75000.00", "ACTIVE", "25000.00", "50000.00"},
-            {"Office Supplies", "General office supplies and consumables", "15000.00", "ACTIVE", "0.00", "15000.00"},
-            {"Software Licenses", "Annual software license renewals and new acquisitions", "120000.00", "APPROVED", "80000.00", "40000.00"},
-            {"Consulting Services", "External consulting and advisory services", "200000.00", "PENDING", "0.00", "200000.00"},
-            {"Equipment Purchase", "New equipment and hardware purchases", "175000.00", "DRAFT", "175000.00", "0.00"},
-            {"Travel & Accommodation", "Business travel and accommodation expenses", "50000.00", "ACTIVE", "0.00", "50000.00"},
-            {"Building Maintenance", "Facility maintenance and repairs", "85000.00", "APPROVED", "35000.00", "50000.00"}
+            {"IT Infrastructure", "Annual IT infrastructure maintenance and upgrades", "250000.00", "APPROVED", "150000.00", "100000.00", "Compute"},
+            {"Staff Training", "Employee professional development and training programs", "75000.00", "ACTIVE", "25000.00", "50000.00", "Professional Services"},
+            {"Office Supplies", "General office supplies and consumables", "15000.00", "ACTIVE", "0.00", "15000.00", "Small Procurement"},
+            {"Software Licenses", "Annual software license renewals and new acquisitions", "120000.00", "APPROVED", "80000.00", "40000.00", "Software Licenses"},
+            {"Consulting Services", "External consulting and advisory services", "200000.00", "PENDING", "0.00", "200000.00", "Contractors"},
+            {"Equipment Purchase", "New equipment and hardware purchases", "175000.00", "DRAFT", "175000.00", "0.00", "Compute"},
+            {"Travel & Accommodation", "Business travel and accommodation expenses", "50000.00", "ACTIVE", "0.00", "50000.00", "Small Procurement"},
+            {"Building Maintenance", "Facility maintenance and repairs", "85000.00", "APPROVED", "35000.00", "50000.00", "Small Procurement"}
         };
 
         for (String[] item : demoItems) {
@@ -266,6 +299,7 @@ public class DataInitializer implements ApplicationRunner {
             FundingItem.Status status = FundingItem.Status.valueOf(item[3]);
             BigDecimal capAmount = new BigDecimal(item[4]);
             BigDecimal omAmount = new BigDecimal(item[5]);
+            String categoryName = item[6];
 
             // Check if funding item already exists
             if (fundingItemRepository.existsByNameAndFiscalYear(name, demoFY)) {
@@ -273,8 +307,15 @@ public class DataInitializer implements ApplicationRunner {
                 continue;
             }
 
+            // Find the category (optional for funding items)
+            Category category = categoryMap.get(categoryName);
+            if (category == null) {
+                logger.info("Category '" + categoryName + "' not found for funding item '" + name + "', creating without category");
+            }
+
             try {
                 FundingItem fundingItem = new FundingItem(name, description, budgetAmount, status, demoFY);
+                fundingItem.setCategory(category);
                 fundingItem = fundingItemRepository.save(fundingItem);
 
                 // Create money allocation with CAP and OM values
@@ -282,13 +323,219 @@ public class DataInitializer implements ApplicationRunner {
                 fundingItem.addMoneyAllocation(allocation);
                 fundingItemRepository.save(fundingItem);
 
-                logger.info("Created demo funding item: " + name + " (CAP: $" + capAmount + ", OM: $" + omAmount + ")");
+                String categoryInfo = category != null ? " [" + categoryName + "]" : "";
+                logger.info("Created demo funding item: " + name + categoryInfo + " (CAP: $" + capAmount + ", OM: $" + omAmount + ")");
             } catch (Exception e) {
                 logger.warning(() -> "Failed to create demo funding item '" + name + "': " + e.getMessage());
             }
         }
 
         logger.info("Demo funding items initialized for FY: " + demoFY.getName());
+    }
+
+    /**
+     * Initialize custom money types for the Demo FY.
+     * Creates additional money types beyond the default AB.
+     *
+     * @param demoFY the Demo fiscal year
+     */
+    private void initializeDemoMoneyTypes(FiscalYear demoFY) {
+        // Custom money types for demo
+        String[][] demoMoneyTypes = {
+            // {code, name, description, displayOrder}
+            {"OA", "Operating Allotment", "Regular operating budget allocation", "1"},
+            {"WCF", "Working Capital Fund", "Revolving fund for operations", "2"},
+            {"GF", "Grant Funding", "External grant funding sources", "3"}
+        };
+
+        for (String[] moneyType : demoMoneyTypes) {
+            String code = moneyType[0];
+            String name = moneyType[1];
+            String description = moneyType[2];
+            int displayOrder = Integer.parseInt(moneyType[3]);
+
+            // Check if money type already exists
+            if (moneyRepository.existsByCodeAndFiscalYear(code, demoFY)) {
+                logger.info("Demo money type '" + code + "' already exists, skipping");
+                continue;
+            }
+
+            try {
+                Money money = new Money(code, name, description, demoFY);
+                money.setDisplayOrder(displayOrder);
+                money.setIsDefault(false);
+                moneyRepository.save(money);
+                logger.info("Created demo money type: " + code + " - " + name);
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create demo money type '" + code + "': " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Initialize custom categories for the Demo FY.
+     * Creates additional categories beyond the defaults.
+     *
+     * @param demoFY the Demo fiscal year
+     */
+    private void initializeDemoCategories(FiscalYear demoFY) {
+        // Custom categories for demo
+        String[][] demoCategories = {
+            // {name, description, displayOrder}
+            {"Cloud Services", "Cloud computing and hosting services (AWS, Azure, GCP)", "10"},
+            {"Security", "Cybersecurity tools, audits, and compliance", "11"},
+            {"Research Equipment", "Specialized equipment for research projects", "12"},
+            {"Data Services", "Data storage, backup, and analytics services", "13"},
+            {"Professional Services", "Consulting, legal, and accounting services", "14"}
+        };
+
+        for (String[] category : demoCategories) {
+            String name = category[0];
+            String description = category[1];
+            int displayOrder = Integer.parseInt(category[2]);
+
+            // Check if category already exists
+            if (categoryRepository.existsByNameAndFiscalYear(name, demoFY)) {
+                logger.info("Demo category '" + name + "' already exists, skipping");
+                continue;
+            }
+
+            try {
+                Category cat = new Category(name, description, demoFY);
+                cat.setDisplayOrder(displayOrder);
+                cat.setIsDefault(false);
+                categoryRepository.save(cat);
+                logger.info("Created demo category: " + name);
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create demo category '" + name + "': " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Initialize demo spending items for the Demo FY.
+     * Creates sample spending items with realistic money allocations.
+     *
+     * @param demoFY the Demo fiscal year
+     */
+    private void initializeDemoSpendingItems(FiscalYear demoFY) {
+        // Get all money types for this fiscal year
+        List<Money> fyMonies = moneyRepository.findByFiscalYearId(demoFY.getId());
+        if (fyMonies.isEmpty()) {
+            logger.warning("No money types found for Demo FY, skipping spending item creation");
+            return;
+        }
+
+        // Get specific money types
+        Money abMoney = fyMonies.stream()
+            .filter(m -> "AB".equals(m.getCode()))
+            .findFirst()
+            .orElse(fyMonies.get(0));
+        Money oaMoney = fyMonies.stream()
+            .filter(m -> "OA".equals(m.getCode()))
+            .findFirst()
+            .orElse(null);
+        Money wcfMoney = fyMonies.stream()
+            .filter(m -> "WCF".equals(m.getCode()))
+            .findFirst()
+            .orElse(null);
+
+        // Get categories
+        List<Category> categories = categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(demoFY.getId());
+        if (categories.isEmpty()) {
+            logger.warning("No categories found for Demo FY, skipping spending item creation");
+            return;
+        }
+
+        // Map category names to Category objects
+        java.util.Map<String, Category> categoryMap = categories.stream()
+            .collect(java.util.stream.Collectors.toMap(Category::getName, c -> c, (a, b) -> a));
+
+        // Demo Spending Items with sample data
+        // {name, description, amount, status, categoryName, vendor, reference, moneyCode, capAmount, omAmount}
+        String[][] demoItems = {
+            {"Dell PowerEdge Servers", "3x Dell PowerEdge R750 rack servers for data center", "45000.00", "APPROVED", 
+             "Compute", "Dell Technologies", "PO-2025-001", "AB", "45000.00", "0.00"},
+            {"NVIDIA A100 GPUs", "4x NVIDIA A100 80GB GPUs for ML workloads", "52000.00", "COMMITTED", 
+             "GPUs", "NVIDIA Corp", "PO-2025-002", "AB", "52000.00", "0.00"},
+            {"AWS Monthly Services", "AWS EC2, S3, and RDS services - January 2026", "8500.00", "PAID", 
+             "Cloud Services", "Amazon Web Services", "INV-AWS-JAN26", "OA", "0.00", "8500.00"},
+            {"Azure DevOps Licenses", "50 Azure DevOps user licenses - annual", "12000.00", "APPROVED", 
+             "Software Licenses", "Microsoft Corporation", "PO-2025-003", "AB", "0.00", "12000.00"},
+            {"NetApp Storage Array", "NetApp AFF A400 storage system with 50TB capacity", "78000.00", "PENDING", 
+             "Storage", "NetApp Inc", "PO-2025-004", "AB", "78000.00", "0.00"},
+            {"Security Assessment", "Annual penetration testing and security audit", "35000.00", "APPROVED", 
+             "Security", "CrowdStrike", "SO-2025-001", "OA", "0.00", "35000.00"},
+            {"Lab Equipment", "Oscilloscopes and signal generators for research lab", "28000.00", "DRAFT", 
+             "Research Equipment", "Keysight Technologies", "RQ-2025-001", "WCF", "28000.00", "0.00"},
+            {"Data Analytics Platform", "Snowflake data warehouse annual subscription", "42000.00", "APPROVED", 
+             "Data Services", "Snowflake Inc", "PO-2025-005", "OA", "0.00", "42000.00"},
+            {"Office Supplies Q1", "General office supplies and consumables for Q1", "3500.00", "PAID", 
+             "Small Procurement", "Staples", "INV-STP-JAN26", "AB", "0.00", "3500.00"},
+            {"IT Consulting", "Cloud migration consulting services", "65000.00", "COMMITTED", 
+             "Professional Services", "Accenture", "SO-2025-002", "OA", "0.00", "65000.00"},
+            {"Network Switches", "Cisco Catalyst 9300 switches for network upgrade", "32000.00", "APPROVED", 
+             "Compute", "Cisco Systems", "PO-2025-006", "AB", "32000.00", "0.00"},
+            {"GPU Cloud Credits", "Google Cloud GPU compute credits for training", "15000.00", "COMMITTED", 
+             "Cloud Services", "Google Cloud", "INV-GCP-JAN26", "WCF", "0.00", "15000.00"},
+            {"Adobe Creative Suite", "25 Adobe Creative Cloud licenses - annual", "18000.00", "APPROVED", 
+             "Software Licenses", "Adobe Inc", "PO-2025-007", "AB", "0.00", "18000.00"},
+            {"External Contractors", "3 contractors for data center migration project", "95000.00", "COMMITTED", 
+             "Contractors", "TechForce Solutions", "SO-2025-003", "AB", "0.00", "95000.00"},
+            {"Backup Storage", "Veeam backup infrastructure and licenses", "24000.00", "PENDING", 
+             "Storage", "Veeam Software", "PO-2025-008", "OA", "12000.00", "12000.00"}
+        };
+
+        for (String[] item : demoItems) {
+            String name = item[0];
+            String description = item[1];
+            BigDecimal amount = new BigDecimal(item[2]);
+            SpendingItem.Status status = SpendingItem.Status.valueOf(item[3]);
+            String categoryName = item[4];
+            String vendor = item[5];
+            String reference = item[6];
+            String moneyCode = item[7];
+            BigDecimal capAmount = new BigDecimal(item[8]);
+            BigDecimal omAmount = new BigDecimal(item[9]);
+
+            // Check if spending item already exists
+            if (spendingItemRepository.existsByNameAndFiscalYear(name, demoFY)) {
+                logger.info("Demo spending item '" + name + "' already exists, skipping");
+                continue;
+            }
+
+            // Find the category
+            Category category = categoryMap.get(categoryName);
+            if (category == null) {
+                logger.warning("Category '" + categoryName + "' not found for spending item '" + name + "', skipping");
+                continue;
+            }
+
+            // Find the money type
+            Money money = fyMonies.stream()
+                .filter(m -> moneyCode.equals(m.getCode()))
+                .findFirst()
+                .orElse(abMoney);
+
+            try {
+                SpendingItem spendingItem = new SpendingItem(name, description, amount, status, category, demoFY);
+                spendingItem.setVendor(vendor);
+                spendingItem.setReferenceNumber(reference);
+                spendingItem = spendingItemRepository.save(spendingItem);
+
+                // Create money allocation with CAP and OM values
+                SpendingMoneyAllocation allocation = new SpendingMoneyAllocation(spendingItem, money, capAmount, omAmount);
+                spendingItem.addMoneyAllocation(allocation);
+                spendingItemRepository.save(spendingItem);
+
+                logger.info("Created demo spending item: " + name + " (" + categoryName + ", " + moneyCode + 
+                           " CAP: $" + capAmount + ", OM: $" + omAmount + ")");
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create demo spending item '" + name + "': " + e.getMessage());
+            }
+        }
+
+        logger.info("Demo spending items initialized for FY: " + demoFY.getName());
     }
 
     /**

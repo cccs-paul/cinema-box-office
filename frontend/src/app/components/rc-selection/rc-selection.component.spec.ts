@@ -30,8 +30,8 @@ describe('RCSelectionComponent', () => {
   ];
 
   const createMockFiscalYears = (): FiscalYear[] => [
-    { id: 1, name: 'FY 2025-2026', description: 'Current year', active: true, responsibilityCentreId: 1 },
-    { id: 2, name: 'FY 2024-2025', description: 'Previous year', active: false, responsibilityCentreId: 1 }
+    { id: 1, name: 'FY 2025-2026', description: 'Current year', active: true, responsibilityCentreId: 1, showCategoryFilter: true, groupByCategory: false },
+    { id: 2, name: 'FY 2024-2025', description: 'Previous year', active: false, responsibilityCentreId: 1, showCategoryFilter: true, groupByCategory: false }
   ];
 
   beforeEach(async () => {
@@ -412,7 +412,9 @@ describe('RCSelectionComponent', () => {
         name: 'FY 2026-2027',
         description: 'Next year',
         active: true,
-        responsibilityCentreId: 1
+        responsibilityCentreId: 1,
+        showCategoryFilter: true,
+        groupByCategory: false
       };
 
       fyServiceMock.createFiscalYear.and.returnValue(of(newFY));
@@ -453,7 +455,9 @@ describe('RCSelectionComponent', () => {
         name: 'FY 2025-2026 (Updated)',
         description: 'Updated description',
         active: true,
-        responsibilityCentreId: 1
+        responsibilityCentreId: 1,
+        showCategoryFilter: true,
+        groupByCategory: false
       };
 
       fyServiceMock.updateFiscalYear.and.returnValue(of(updatedFY));

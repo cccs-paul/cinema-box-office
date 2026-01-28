@@ -255,6 +255,54 @@ public class FiscalYearController {
     }
   }
 
+  /**
+   * Update fiscal year display settings.
+   *
+   * @param rcId the responsibility centre ID
+   * @param fyId the fiscal year ID
+   * @param request the display settings request
+   * @param authentication the authentication principal
+   * @return the updated fiscal year
+   */
+  @PatchMapping("/{fyId}/display-settings")
+  @Operation(summary = "Update fiscal year display settings",
+      description = "Updates display settings like category filter visibility and grouping")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Display settings updated successfully"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied"),
+      @ApiResponse(responseCode = "404", description = "Fiscal year not found"),
+      @ApiResponse(responseCode = "500", description = "Internal server error")
+  })
+  public ResponseEntity<FiscalYearDTO> updateDisplaySettings(
+      @PathVariable Long rcId,
+      @PathVariable Long fyId,
+      @RequestBody DisplaySettingsRequest request,
+      Authentication authentication) {
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
+    }
+    logger.info("PATCH /responsibility-centres/" + rcId + "/fiscal-years/" + fyId + "/display-settings - Updating display settings for user: " + username);
+    
+    try {
+      Optional<FiscalYearDTO> updatedFY = fiscalYearService.updateDisplaySettings(
+          fyId,
+          username,
+          request.getShowCategoryFilter(),
+          request.getGroupByCategory()
+      );
+      return updatedFY.map(ResponseEntity::ok)
+          .orElseGet(() -> ResponseEntity.notFound().build());
+    } catch (IllegalArgumentException e) {
+      logger.warning("Display settings update failed: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    } catch (Exception e) {
+      logger.severe("Display settings update failed: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
   // Request DTOs
   public static class FiscalYearCreateRequest {
     private String name;
@@ -281,6 +329,34 @@ public class FiscalYearController {
 
     public void setDescription(String description) {
       this.description = description;
+    }
+  }
+
+  public static class DisplaySettingsRequest {
+    private Boolean showCategoryFilter;
+    private Boolean groupByCategory;
+
+    public DisplaySettingsRequest() {}
+
+    public DisplaySettingsRequest(Boolean showCategoryFilter, Boolean groupByCategory) {
+      this.showCategoryFilter = showCategoryFilter;
+      this.groupByCategory = groupByCategory;
+    }
+
+    public Boolean getShowCategoryFilter() {
+      return showCategoryFilter;
+    }
+
+    public void setShowCategoryFilter(Boolean showCategoryFilter) {
+      this.showCategoryFilter = showCategoryFilter;
+    }
+
+    public Boolean getGroupByCategory() {
+      return groupByCategory;
+    }
+
+    public void setGroupByCategory(Boolean groupByCategory) {
+      this.groupByCategory = groupByCategory;
     }
   }
 }

@@ -119,15 +119,15 @@ html[data-theme='dark'] {
   .user-menu-dropdown {
     position: absolute;
     top: calc(100% + 8px);
-    right: 0;
+    right: -8px;
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-    min-width: 250px;
+    min-width: 260px;
     animation: slideDown 0.2s ease-out;
     z-index: 1002;
     border: 1px solid #e0e0e0;
-    overflow: hidden;
+    overflow: visible;
     opacity: 1;
 
     .menu-header {

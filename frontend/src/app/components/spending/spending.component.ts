@@ -22,7 +22,7 @@ import { FiscalYear } from '../../models/fiscal-year.model';
 import { SpendingItem, SpendingMoneyAllocation, SpendingItemStatus, SPENDING_STATUS_INFO } from '../../models/spending-item.model';
 import { Category } from '../../models/category.model';
 import { Money } from '../../models/money.model';
-import { Currency, DEFAULT_CURRENCY } from '../../models/currency.model';
+import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 
 /**
  * Spending component showing spending items for the selected RC and FY.
@@ -253,6 +253,18 @@ export class SpendingComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Check if user can write to the selected RC.
+   *
+   * @returns true if user is owner or has READ_WRITE access
+   */
+  get canWrite(): boolean {
+    if (!this.selectedRC) {
+      return false;
+    }
+    return this.selectedRC.isOwner || this.selectedRC.accessLevel === 'READ_WRITE';
+  }
+
+  /**
    * Filter spending items by category.
    */
   filterByCategory(categoryId: number | null): void {
@@ -391,6 +403,16 @@ export class SpendingComponent implements OnInit, OnDestroy {
       style: 'currency',
       currency: currency
     }).format(value);
+  }
+
+  /**
+   * Get the flag emoji for a currency code.
+   *
+   * @param currencyCode ISO 4217 currency code
+   * @returns Flag emoji string representing the currency's country/region
+   */
+  getCurrencyFlag(currencyCode: string): string {
+    return getCurrencyFlag(currencyCode);
   }
 
   /**

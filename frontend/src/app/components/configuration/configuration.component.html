@@ -4,15 +4,6 @@
   Licensed under MIT License
 -->
 <div class="configuration-page">
-  <div class="page-header">
-    <h1>Configuration</h1>
-    <p class="context-info" *ngIf="selectedRC && selectedFY">
-      <span class="rc-name">{{ selectedRC.name }}</span>
-      <span class="separator">›</span>
-      <span class="fy-name">{{ selectedFY.name }}</span>
-    </p>
-  </div>
-
   <!-- Success Message -->
   <div class="success-message" *ngIf="successMessage">
     <span class="success-icon">✓</span>
@@ -87,10 +78,6 @@
           <div class="money-parts">
             <span class="part-tag cap">{{ money.capLabel }}</span>
             <span class="part-tag om">{{ money.omLabel }}</span>
-          </div>
-          <div class="money-info" *ngIf="money.isDefault">
-            <span class="info-icon">ℹ️</span>
-            <span class="info-text">The default AB money type is system-managed and cannot be modified or deleted.</span>
           </div>
           <div class="money-actions" *ngIf="!money.isDefault">
             <button 
@@ -273,11 +260,6 @@
             <span class="category-tag" [class.default-category]="category.isDefault" [class.custom-category]="!category.isDefault">
               {{ category.isDefault ? 'System' : 'Custom' }}
             </span>
-            <span class="category-tag order-tag">Order: {{ category.displayOrder }}</span>
-          </div>
-          <div class="category-info" *ngIf="category.isDefault">
-            <span class="info-icon">ℹ️</span>
-            <span class="info-text">This default category is system-managed and cannot be modified or deleted.</span>
           </div>
           <div class="category-actions" *ngIf="!category.isDefault">
             <button 
@@ -406,12 +388,45 @@
     <div class="section-header">
       <h2>General Settings</h2>
       <p class="section-description">
-        Additional configuration options will be available here in future releases.
+        Configure display options for funding and spending pages.
       </p>
     </div>
-    <div class="coming-soon">
-      <span class="coming-soon-icon">🚧</span>
-      <p>More configuration options coming soon!</p>
+
+    <!-- Display Settings -->
+    <div class="settings-section">
+      <h3>Display Settings</h3>
+      
+      <div class="setting-card">
+        <div class="setting-info">
+          <span class="setting-label">Show Category Filter</span>
+          <span class="setting-description">Display the category filter bar on funding and spending pages</span>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [checked]="selectedFY?.showCategoryFilter !== false"
+              (change)="updateDisplaySettings('showCategoryFilter', $any($event.target).checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-card">
+        <div class="setting-info">
+          <span class="setting-label">Group Items by Category</span>
+          <span class="setting-description">Group funding and spending items by their category with section headers</span>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [checked]="selectedFY?.groupByCategory === true"
+              (change)="updateDisplaySettings('groupByCategory', $any($event.target).checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
     </div>
   </div>
 </div>

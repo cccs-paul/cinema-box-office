@@ -137,7 +137,9 @@ describe('DashboardComponent', () => {
       name: 'FY 2025-2026',
       description: '',
       active: true,
-      responsibilityCentreId: 1
+      responsibilityCentreId: 1,
+      showCategoryFilter: true,
+      groupByCategory: false
     }));
     currencyService.getCurrencies.and.returnValue(of([
       { code: 'CAD', name: 'Canadian Dollar', symbol: '$', isDefault: true }

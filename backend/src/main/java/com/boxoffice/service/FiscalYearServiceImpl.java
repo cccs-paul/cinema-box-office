@@ -180,6 +180,38 @@ public class FiscalYearServiceImpl implements FiscalYearService {
     fiscalYearRepository.delete(fy);
   }
 
+  @Override
+  public Optional<FiscalYearDTO> updateDisplaySettings(Long fiscalYearId, String username,
+      Boolean showCategoryFilter, Boolean groupByCategory) {
+    Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);
+    if (fyOpt.isEmpty()) {
+      return Optional.empty();
+    }
+
+    FiscalYear fy = fyOpt.get();
+    Long rcId = fy.getResponsibilityCentre().getId();
+
+    // Verify user has write access to the RC
+    if (!hasWriteAccessToRC(rcId, username)) {
+      throw new IllegalArgumentException(
+          "User does not have write access to this Responsibility Centre");
+    }
+
+    // Update settings if provided
+    if (showCategoryFilter != null) {
+      fy.setShowCategoryFilter(showCategoryFilter);
+    }
+    if (groupByCategory != null) {
+      fy.setGroupByCategory(groupByCategory);
+    }
+
+    FiscalYear saved = fiscalYearRepository.save(fy);
+    logger.info("Updated display settings for fiscal year '" + fy.getName() + 
+        "' - showCategoryFilter: " + fy.getShowCategoryFilter() + 
+        ", groupByCategory: " + fy.getGroupByCategory());
+    return Optional.of(FiscalYearDTO.fromEntity(saved));
+  }
+
   /**
    * Check if user has any access to the RC.
    */

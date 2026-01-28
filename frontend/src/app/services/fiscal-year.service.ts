@@ -11,7 +11,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { FiscalYear, FiscalYearCreateRequest, FiscalYearUpdateRequest } from '../models/fiscal-year.model';
+import { FiscalYear, FiscalYearCreateRequest, FiscalYearUpdateRequest, DisplaySettingsRequest } from '../models/fiscal-year.model';
 
 /**
  * Service for managing fiscal years within responsibility centres.
@@ -81,6 +81,19 @@ export class FiscalYearService {
    */
   deleteFiscalYear(rcId: number, fyId: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${rcId}/fiscal-years/${fyId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Update display settings for a fiscal year.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param request The display settings request
+   * @returns Observable of the updated fiscal year
+   */
+  updateDisplaySettings(rcId: number, fyId: number, request: DisplaySettingsRequest): Observable<FiscalYear> {
+    return this.http.patch<FiscalYear>(`${this.baseUrl}/${rcId}/fiscal-years/${fyId}/display-settings`, request)
       .pipe(catchError(this.handleError));
   }
 

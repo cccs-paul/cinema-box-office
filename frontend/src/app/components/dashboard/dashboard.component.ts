@@ -20,7 +20,7 @@ import { CategoryService } from '../../services/category.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { FundingItem, FundingItemCreateRequest, getStatusLabel, getStatusClass, FundingItemStatus, MoneyAllocation } from '../../models/funding-item.model';
-import { Currency, DEFAULT_CURRENCY } from '../../models/currency.model';
+import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 import { Money } from '../../models/money.model';
 import { Category } from '../../models/category.model';
 
@@ -465,6 +465,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   requiresExchangeRate(currencyCode: string): boolean {
     return currencyCode !== DEFAULT_CURRENCY;
+  }
+
+  /**
+   * Get the flag emoji for a currency code.
+   *
+   * @param currencyCode ISO 4217 currency code
+   * @returns Flag emoji string representing the currency's country/region
+   */
+  getCurrencyFlag(currencyCode: string): string {
+    return getCurrencyFlag(currencyCode);
   }
 
   /**

@@ -82,3 +82,65 @@ function getLocaleForCurrency(currencyCode: string): string {
       return 'en-CA';
   }
 }
+
+/**
+ * Get the flag emoji for a currency code.
+ * Uses ISO 3166-1 alpha-2 country codes converted to Regional Indicator Symbols.
+ *
+ * @param currencyCode ISO 4217 currency code
+ * @returns Flag emoji string representing the currency's country/region
+ */
+export function getCurrencyFlag(currencyCode: string): string {
+  switch (currencyCode) {
+    case 'CAD':
+      return '🇨🇦'; // Canada
+    case 'USD':
+      return '🇺🇸'; // United States
+    case 'GBP':
+      return '🇬🇧'; // United Kingdom
+    case 'EUR':
+      return '🇪🇺'; // European Union
+    case 'AUD':
+      return '🇦🇺'; // Australia
+    case 'NZD':
+      return '🇳🇿'; // New Zealand
+    case 'JPY':
+      return '🇯🇵'; // Japan
+    case 'CHF':
+      return '🇨🇭'; // Switzerland
+    case 'CNY':
+      return '🇨🇳'; // China
+    case 'INR':
+      return '🇮🇳'; // India
+    case 'MXN':
+      return '🇲🇽'; // Mexico
+    case 'BRL':
+      return '🇧🇷'; // Brazil
+    case 'KRW':
+      return '🇰🇷'; // South Korea
+    case 'SEK':
+      return '🇸🇪'; // Sweden
+    case 'NOK':
+      return '🇳🇴'; // Norway
+    case 'DKK':
+      return '🇩🇰'; // Denmark
+    case 'SGD':
+      return '🇸🇬'; // Singapore
+    case 'HKD':
+      return '🇭🇰'; // Hong Kong
+    default:
+      return '🏳️'; // Default/Unknown flag
+  }
+}
+
+/**
+ * Get the display text for a currency with its flag.
+ *
+ * @param currencyCode ISO 4217 currency code
+ * @param includeName Whether to include the currency name
+ * @returns Formatted string with flag and currency code
+ */
+export function getCurrencyWithFlag(currencyCode: string, includeName = false): string {
+  const flag = getCurrencyFlag(currencyCode);
+  return `${flag} ${currencyCode}`;
+}

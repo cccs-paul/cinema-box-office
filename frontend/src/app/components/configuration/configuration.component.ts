@@ -498,6 +498,28 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Update display settings for the fiscal year.
+   */
+  updateDisplaySettings(setting: 'showCategoryFilter' | 'groupByCategory', value: boolean): void {
+    if (!this.rcId || !this.fyId || !this.selectedFY) {
+      return;
+    }
+
+    const request = { [setting]: value };
+    
+    this.fyService.updateDisplaySettings(this.rcId, this.fyId, request).subscribe({
+      next: (updatedFY) => {
+        this.selectedFY = updatedFY;
+        const settingLabel = setting === 'showCategoryFilter' ? 'Category filter' : 'Group by category';
+        this.showSuccess(`${settingLabel} setting updated`);
+      },
+      error: (error) => {
+        this.moneyError = error.message || 'Failed to update display settings';
+      }
+    });
+  }
+
+  /**
    * Track function for ngFor optimization.
    */
   trackByCategoryId(index: number, category: Category): number {
