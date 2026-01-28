@@ -213,7 +213,9 @@
           <th>Category</th>
           <th>Vendor</th>
           <th>Reference</th>
+          <th>Money Allocations</th>
           <th class="text-right">Total</th>
+          <th>Currency</th>
           <th class="text-center">Status</th>
           <th class="text-center" *ngIf="canWrite">Actions</th>
         </tr>
@@ -227,8 +229,28 @@
           <td>{{ item.categoryName || getCategoryName(item.categoryId) }}</td>
           <td>{{ item.vendor || '-' }}</td>
           <td>{{ item.referenceNumber || '-' }}</td>
+          <td class="item-money">
+            <div class="money-allocations-display" *ngIf="item.moneyAllocations && item.moneyAllocations.length > 0">
+              <div class="money-row" *ngFor="let allocation of item.moneyAllocations">
+                <span class="money-label">{{ allocation.moneyName || 'AB' }}:</span>
+                <span class="money-amounts">
+                  CAP: {{ formatCurrency(allocation.capAmount, item.currency) }},
+                  OM: {{ formatCurrency(allocation.omAmount, item.currency) }}
+                </span>
+              </div>
+            </div>
+            <span *ngIf="!item.moneyAllocations || item.moneyAllocations.length === 0">-</span>
+          </td>
           <td class="text-right amount">
             {{ formatCurrency(calculateTotal(item), item.currency) }}
+          </td>
+          <td class="item-currency">
+            <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
+              {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
+            </span>
+            <span class="exchange-rate" *ngIf="item.currency !== 'CAD' && item.exchangeRate">
+              (1 {{ item.currency }} = {{ item.exchangeRate }} CAD)
+            </span>
           </td>
           <td class="text-center">
             <span class="status-badge" [ngClass]="getStatusClass(item.status)">

@@ -525,6 +525,58 @@ textarea.form-control {
   }
 }
 
+/* Money Allocations Display in Table */
+.item-money {
+  .money-allocations-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .money-row {
+      display: flex;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+
+      .money-label {
+        font-weight: 600;
+        color: var(--text-primary);
+        min-width: 40px;
+      }
+
+      .money-amounts {
+        color: var(--text-secondary);
+      }
+    }
+  }
+}
+
+/* Currency Styles */
+.currency-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+
+  &.foreign-currency {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+  }
+}
+
+.exchange-rate {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.item-currency {
+  min-width: 120px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .spending-container {
