@@ -12,6 +12,7 @@
 .app-main {
   min-height: calc(100vh - 60px);
   padding: 20px;
+  padding-top: 80px; /* Account for sticky header */
   display: flex;
   flex-direction: column;
   margin-left: 250px;

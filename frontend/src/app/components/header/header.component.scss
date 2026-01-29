@@ -198,8 +198,10 @@ html[data-theme='dark'] {
         &.logout-item {
           color: #fff;
           background: #ff6b6b;
-          margin: 8px 8px 0 8px;
+          margin: 8px;
           border-radius: 4px;
+          width: calc(100% - 16px);
+          box-sizing: border-box;
 
           &:hover:not(:disabled) {
             background: #ff5252;
@@ -263,6 +265,8 @@ html[data-theme='dark'] {
 
         &.logout-item {
           background: #d32f2f;
+          width: calc(100% - 16px);
+          box-sizing: border-box;
 
           &:hover:not(:disabled) {
             background: #b71c1c;

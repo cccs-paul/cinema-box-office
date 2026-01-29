@@ -57,7 +57,7 @@
         <div class="form-group">
           <label for="category">Category *</label>
           <select id="category" [(ngModel)]="newItemCategoryId" (ngModelChange)="onCategoryChange()" class="form-control">
-            <option *ngFor="let category of categories" [value]="category.id">
+            <option *ngFor="let category of categories" [ngValue]="category.id">
               {{ category.name }}
             </option>
           </select>
