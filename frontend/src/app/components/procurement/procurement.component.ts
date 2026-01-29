@@ -7,6 +7,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { Subject } from 'rxjs';
@@ -78,6 +79,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   newItemDescription = '';
   newItemCurrency = DEFAULT_CURRENCY;
   newItemExchangeRate: number | null = null;
+  newItemPreferredVendor = '';
+  newItemContractNumber = '';
+  newItemContractStartDate = '';
+  newItemContractEndDate = '';
+  newItemProcurementCompleted = false;
+  newItemProcurementCompletedDate = '';
 
   // Create Quote Form
   showCreateQuoteForm = false;
@@ -97,6 +104,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   selectedFile: File | null = null;
   fileDescription = '';
 
+  // File Preview
+  previewingFile: ProcurementQuoteFile | null = null;
+  previewUrl: any = null;
+  previewTextContent: string = '';
+  isLoadingPreview = false;
+
   // Messages
   errorMessage: string | null = null;
   successMessage: string | null = null;
@@ -115,7 +128,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
     private procurementService: ProcurementService,
-    private currencyService: CurrencyService
+    private currencyService: CurrencyService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -254,6 +268,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newItemDescription = '';
     this.newItemCurrency = DEFAULT_CURRENCY;
     this.newItemExchangeRate = null;
+    this.newItemPreferredVendor = '';
+    this.newItemContractNumber = '';
+    this.newItemContractStartDate = '';
+    this.newItemContractEndDate = '';
+    this.newItemProcurementCompleted = false;
+    this.newItemProcurementCompletedDate = '';
   }
 
   createProcurementItem(): void {
@@ -270,7 +290,13 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       name: this.newItemName.trim(),
       description: this.newItemDescription.trim() || undefined,
       currency: this.newItemCurrency,
-      exchangeRate: this.newItemCurrency !== 'CAD' ? this.newItemExchangeRate : undefined
+      exchangeRate: this.newItemCurrency !== 'CAD' ? this.newItemExchangeRate : undefined,
+      preferredVendor: this.newItemPreferredVendor.trim() || undefined,
+      contractNumber: this.newItemContractNumber.trim() || undefined,
+      contractStartDate: this.newItemContractStartDate || undefined,
+      contractEndDate: this.newItemContractEndDate || undefined,
+      procurementCompleted: this.newItemProcurementCompleted,
+      procurementCompletedDate: this.newItemProcurementCompletedDate || undefined
     };
 
     this.procurementService.createProcurementItem(this.selectedRC.id, this.selectedFY.id, request).subscribe({
@@ -591,6 +617,58 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     if (contentType.includes('excel') || contentType.includes('spreadsheet')) return '📊';
     if (contentType.startsWith('text/')) return '📃';
     return '📎';
+  }
+
+  isPreviewable(contentType: string): boolean {
+    return contentType === 'application/pdf' ||
+           contentType.startsWith('image/') ||
+           contentType.startsWith('text/');
+  }
+
+  previewFile(file: ProcurementQuoteFile): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.selectedQuote) return;
+
+    this.previewingFile = file;
+    this.isLoadingPreview = true;
+    this.previewUrl = null;
+    this.previewTextContent = '';
+
+    const url = `/api${this.procurementService.getFileViewUrl(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      this.selectedQuote.id,
+      file.id
+    )}`;
+
+    // For PDFs and images, we can use the URL directly in an iframe/img
+    if (file.contentType === 'application/pdf' || file.contentType.startsWith('image/')) {
+      this.previewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      this.isLoadingPreview = false;
+    } else if (file.contentType.startsWith('text/')) {
+      // For text files, fetch the content
+      fetch(url, { credentials: 'include' })
+        .then(response => response.text())
+        .then(text => {
+          this.previewTextContent = text;
+          this.previewUrl = true; // Just to trigger display
+          this.isLoadingPreview = false;
+        })
+        .catch(() => {
+          this.showError('Failed to load file preview');
+          this.isLoadingPreview = false;
+          this.previewingFile = null;
+        });
+    } else {
+      this.isLoadingPreview = false;
+    }
+  }
+
+  closePreview(): void {
+    this.previewingFile = null;
+    this.previewUrl = null;
+    this.previewTextContent = '';
+    this.isLoadingPreview = false;
   }
 
   // ==========================

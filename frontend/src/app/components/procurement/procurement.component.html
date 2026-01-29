@@ -121,6 +121,71 @@
               />
             </div>
           </div>
+          
+          <!-- Contract & Vendor Fields -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newItemPreferredVendor">Preferred Vendor</label>
+              <input
+                type="text"
+                id="newItemPreferredVendor"
+                [(ngModel)]="newItemPreferredVendor"
+                name="newItemPreferredVendor"
+                placeholder="e.g., Acme Corp"
+              />
+            </div>
+            <div class="form-group">
+              <label for="newItemContractNumber">Contract Number</label>
+              <input
+                type="text"
+                id="newItemContractNumber"
+                [(ngModel)]="newItemContractNumber"
+                name="newItemContractNumber"
+                placeholder="e.g., CON-2026-001"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newItemContractStartDate">Contract Start Date</label>
+              <input
+                type="date"
+                id="newItemContractStartDate"
+                [(ngModel)]="newItemContractStartDate"
+                name="newItemContractStartDate"
+              />
+            </div>
+            <div class="form-group">
+              <label for="newItemContractEndDate">Contract End Date</label>
+              <input
+                type="date"
+                id="newItemContractEndDate"
+                [(ngModel)]="newItemContractEndDate"
+                name="newItemContractEndDate"
+              />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group form-checkbox">
+              <input
+                type="checkbox"
+                id="newItemProcurementCompleted"
+                [(ngModel)]="newItemProcurementCompleted"
+                name="newItemProcurementCompleted"
+              />
+              <label for="newItemProcurementCompleted">Procurement Completed</label>
+            </div>
+            <div class="form-group" *ngIf="newItemProcurementCompleted">
+              <label for="newItemProcurementCompletedDate">Completion Date</label>
+              <input
+                type="date"
+                id="newItemProcurementCompletedDate"
+                [(ngModel)]="newItemProcurementCompletedDate"
+                name="newItemProcurementCompletedDate"
+              />
+            </div>
+          </div>
+
           <div class="form-actions">
             <button type="button" class="btn-secondary" (click)="cancelCreateItem()">Cancel</button>
             <button
@@ -231,6 +296,31 @@
               <label>Status</label>
               <span class="status-badge" [ngClass]="getStatusClass(selectedItem.status)">
                 {{ getStatusLabel(selectedItem.status) }}
+              </span>
+            </div>
+            <div class="info-item" *ngIf="selectedItem.preferredVendor">
+              <label>Preferred Vendor</label>
+              <span>{{ selectedItem.preferredVendor }}</span>
+            </div>
+            <div class="info-item" *ngIf="selectedItem.contractNumber">
+              <label>Contract Number</label>
+              <span>{{ selectedItem.contractNumber }}</span>
+            </div>
+            <div class="info-item" *ngIf="selectedItem.contractStartDate || selectedItem.contractEndDate">
+              <label>Contract Period</label>
+              <span>
+                {{ selectedItem.contractStartDate | date:'mediumDate' }}
+                <ng-container *ngIf="selectedItem.contractStartDate && selectedItem.contractEndDate"> - </ng-container>
+                {{ selectedItem.contractEndDate | date:'mediumDate' }}
+              </span>
+            </div>
+            <div class="info-item">
+              <label>Procurement Completed</label>
+              <span class="completion-badge" [class.completed]="selectedItem.procurementCompleted">
+                {{ selectedItem.procurementCompleted ? '✅ Yes' : '⏳ No' }}
+              </span>
+              <span *ngIf="selectedItem.procurementCompleted && selectedItem.procurementCompletedDate" class="completion-date">
+                ({{ selectedItem.procurementCompletedDate | date:'mediumDate' }})
               </span>
             </div>
             <div class="info-item">
@@ -472,7 +562,8 @@
                 <span class="file-desc" *ngIf="file.description">{{ file.description }}</span>
               </div>
               <div class="file-actions">
-                <button class="btn-icon" title="View" (click)="viewFile(file)">👁️</button>
+                <button class="btn-icon" title="Preview" (click)="previewFile(file)" *ngIf="isPreviewable(file.contentType)">👁️</button>
+                <button class="btn-icon" title="Open in New Tab" (click)="viewFile(file)">🔗</button>
                 <button class="btn-icon" title="Download" (click)="downloadFile(file)">⬇️</button>
                 <button
                   class="btn-icon btn-danger"
@@ -489,6 +580,40 @@
               <p>No files uploaded.</p>
               <p *ngIf="canWrite">Click "Upload File" to add one.</p>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File Preview Modal -->
+    <div class="preview-overlay" *ngIf="previewingFile" (click)="closePreview()">
+      <div class="preview-modal" (click)="$event.stopPropagation()">
+        <div class="preview-header">
+          <h3>{{ previewingFile.fileName }}</h3>
+          <div class="preview-actions">
+            <button class="btn-icon" title="Open in New Tab" (click)="viewFile(previewingFile)">🔗</button>
+            <button class="btn-icon" title="Download" (click)="downloadFile(previewingFile)">⬇️</button>
+            <button class="btn-close" (click)="closePreview()">✕</button>
+          </div>
+        </div>
+        <div class="preview-content">
+          <div class="loading" *ngIf="isLoadingPreview">
+            <span class="spinner"></span> Loading preview...
+          </div>
+          <iframe 
+            *ngIf="!isLoadingPreview && previewUrl && previewingFile.contentType === 'application/pdf'" 
+            [src]="previewUrl" 
+            class="pdf-preview"
+            title="PDF Preview">
+          </iframe>
+          <img 
+            *ngIf="!isLoadingPreview && previewUrl && previewingFile.contentType.startsWith('image/')" 
+            [src]="previewUrl" 
+            class="image-preview"
+            alt="Image Preview"
+          />
+          <div class="text-preview" *ngIf="!isLoadingPreview && previewUrl && previewingFile.contentType.startsWith('text/')">
+            <pre>{{ previewTextContent }}</pre>
           </div>
         </div>
       </div>

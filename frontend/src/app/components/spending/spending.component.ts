@@ -273,6 +273,25 @@ export class SpendingComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Handle category change in the create form.
+   * Clears money allocations that don't match the new category's funding type.
+   */
+  onCategoryChange(): void {
+    const allowsCap = this.selectedCategoryAllowsCap();
+    const allowsOm = this.selectedCategoryAllowsOm();
+    
+    // Clear amounts that are not allowed by the new category
+    this.newItemMoneyAllocations.forEach(allocation => {
+      if (!allowsCap) {
+        allocation.capAmount = 0;
+      }
+      if (!allowsOm) {
+        allocation.omAmount = 0;
+      }
+    });
+  }
+
+  /**
    * Show the create form.
    */
   showCreate(): void {

@@ -184,6 +184,24 @@ export interface ProcurementItem {
   /** Exchange rate to CAD */
   exchangeRate?: number;
 
+  /** Preferred vendor name */
+  preferredVendor?: string;
+
+  /** Contract number */
+  contractNumber?: string;
+
+  /** Contract start date (ISO date string) */
+  contractStartDate?: string;
+
+  /** Contract end date (ISO date string) */
+  contractEndDate?: string;
+
+  /** Whether procurement is completed */
+  procurementCompleted?: boolean;
+
+  /** Date when procurement was completed (ISO date string) */
+  procurementCompletedDate?: string;
+
   /** ID of the parent fiscal year */
   fiscalYearId: number;
 

@@ -65,7 +65,7 @@ public class FundingItem {
    * Defaults to BUSINESS_PLAN.
    */
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 20)
+  @Column(length = 20)
   private FundingSource source = FundingSource.BUSINESS_PLAN;
 
   /**

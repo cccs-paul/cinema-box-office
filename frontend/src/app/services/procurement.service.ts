@@ -30,6 +30,12 @@ export interface ProcurementItemCreateRequest {
   status?: ProcurementItemStatus;
   currency?: string;
   exchangeRate?: number | null;
+  preferredVendor?: string;
+  contractNumber?: string;
+  contractStartDate?: string;
+  contractEndDate?: string;
+  procurementCompleted?: boolean;
+  procurementCompletedDate?: string;
 }
 
 /**

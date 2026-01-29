@@ -240,6 +240,15 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             item.setCurrency(com.boxoffice.model.Currency.CAD);
         }
         item.setExchangeRate(dto.getExchangeRate());
+        
+        // Set new procurement fields
+        item.setPreferredVendor(dto.getPreferredVendor());
+        item.setContractNumber(dto.getContractNumber());
+        item.setContractStartDate(dto.getContractStartDate());
+        item.setContractEndDate(dto.getContractEndDate());
+        item.setProcurementCompleted(dto.getProcurementCompleted() != null ? dto.getProcurementCompleted() : false);
+        item.setProcurementCompletedDate(dto.getProcurementCompletedDate());
+        
         item.setActive(true);
 
         ProcurementItem saved = procurementItemRepository.save(item);
@@ -303,6 +312,26 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         }
         if (dto.getExchangeRate() != null) {
             item.setExchangeRate(dto.getExchangeRate());
+        }
+        
+        // Update new procurement fields
+        if (dto.getPreferredVendor() != null) {
+            item.setPreferredVendor(dto.getPreferredVendor().trim().isEmpty() ? null : dto.getPreferredVendor().trim());
+        }
+        if (dto.getContractNumber() != null) {
+            item.setContractNumber(dto.getContractNumber().trim().isEmpty() ? null : dto.getContractNumber().trim());
+        }
+        if (dto.getContractStartDate() != null) {
+            item.setContractStartDate(dto.getContractStartDate());
+        }
+        if (dto.getContractEndDate() != null) {
+            item.setContractEndDate(dto.getContractEndDate());
+        }
+        if (dto.getProcurementCompleted() != null) {
+            item.setProcurementCompleted(dto.getProcurementCompleted());
+        }
+        if (dto.getProcurementCompletedDate() != null) {
+            item.setProcurementCompletedDate(dto.getProcurementCompletedDate());
         }
 
         ProcurementItem saved = procurementItemRepository.save(item);

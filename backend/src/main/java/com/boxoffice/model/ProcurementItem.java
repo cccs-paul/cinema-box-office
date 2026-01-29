@@ -13,6 +13,7 @@
  */
 package com.boxoffice.model;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,6 +105,43 @@ public class ProcurementItem {
      */
     @Column(name = "exchange_rate", precision = 10, scale = 6)
     private java.math.BigDecimal exchangeRate;
+
+    /**
+     * Preferred vendor name for this procurement.
+     * Typically set after a quote is selected.
+     */
+    @Column(name = "preferred_vendor", length = 200)
+    private String preferredVendor;
+
+    /**
+     * Contract number associated with this procurement.
+     */
+    @Column(name = "contract_number", length = 100)
+    private String contractNumber;
+
+    /**
+     * Contract start date.
+     */
+    @Column(name = "contract_start_date")
+    private LocalDate contractStartDate;
+
+    /**
+     * Contract end date.
+     */
+    @Column(name = "contract_end_date")
+    private LocalDate contractEndDate;
+
+    /**
+     * Whether the procurement has been completed.
+     */
+    @Column(name = "procurement_completed")
+    private Boolean procurementCompleted = false;
+
+    /**
+     * Date when the procurement was completed.
+     */
+    @Column(name = "procurement_completed_date")
+    private LocalDate procurementCompletedDate;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "fiscal_year_id", nullable = false)
@@ -207,6 +245,54 @@ public class ProcurementItem {
 
     public void setExchangeRate(java.math.BigDecimal exchangeRate) {
         this.exchangeRate = exchangeRate;
+    }
+
+    public String getPreferredVendor() {
+        return preferredVendor;
+    }
+
+    public void setPreferredVendor(String preferredVendor) {
+        this.preferredVendor = preferredVendor;
+    }
+
+    public String getContractNumber() {
+        return contractNumber;
+    }
+
+    public void setContractNumber(String contractNumber) {
+        this.contractNumber = contractNumber;
+    }
+
+    public LocalDate getContractStartDate() {
+        return contractStartDate;
+    }
+
+    public void setContractStartDate(LocalDate contractStartDate) {
+        this.contractStartDate = contractStartDate;
+    }
+
+    public LocalDate getContractEndDate() {
+        return contractEndDate;
+    }
+
+    public void setContractEndDate(LocalDate contractEndDate) {
+        this.contractEndDate = contractEndDate;
+    }
+
+    public Boolean getProcurementCompleted() {
+        return procurementCompleted;
+    }
+
+    public void setProcurementCompleted(Boolean procurementCompleted) {
+        this.procurementCompleted = procurementCompleted;
+    }
+
+    public LocalDate getProcurementCompletedDate() {
+        return procurementCompletedDate;
+    }
+
+    public void setProcurementCompletedDate(LocalDate procurementCompletedDate) {
+        this.procurementCompletedDate = procurementCompletedDate;
     }
 
     public FiscalYear getFiscalYear() {
