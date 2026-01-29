@@ -297,6 +297,74 @@
     gap: 0.5rem;
     margin-top: 0.5rem;
   }
+
+  /* File Attachment Section */
+  .file-attach-section {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #e2e8f0;
+
+    .file-input-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .file-hint {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .selected-file-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: #f8fafc;
+      border-radius: 0.375rem;
+      margin-top: 0.5rem;
+
+      .file-icon {
+        font-size: 1.1rem;
+      }
+
+      .file-name {
+        font-weight: 500;
+        color: #334155;
+      }
+
+      .file-size {
+        font-size: 0.75rem;
+        color: #64748b;
+      }
+
+      .btn-remove-file {
+        margin-left: auto;
+        padding: 0.125rem 0.375rem;
+        border: none;
+        background: #fee2e2;
+        color: #dc2626;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-size: 0.8125rem;
+
+        &:hover {
+          background: #fecaca;
+        }
+      }
+    }
+
+    .file-description {
+      margin-top: 0.5rem;
+    }
+  }
+}
+
+/* Disabled Button Style */
+.btn-select.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Completion Badge */

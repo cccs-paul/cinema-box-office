@@ -83,6 +83,13 @@ export class SpendingComponent implements OnInit, OnDestroy {
   // Status list for dropdown
   statusOptions: SpendingItemStatus[] = ['DRAFT', 'PENDING', 'APPROVED', 'COMMITTED', 'PAID', 'CANCELLED'];
 
+  // Summary data
+  summaryByMoneyType: { moneyCode: string; moneyName: string; totalCap: number; totalOm: number; total: number }[] = [];
+  summaryByCategory: { categoryName: string; totalCap: number; totalOm: number; total: number }[] = [];
+  grandTotalCap = 0;
+  grandTotalOm = 0;
+  grandTotal = 0;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -230,6 +237,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
       next: (items) => {
         this.spendingItems = items;
         this.isLoadingItems = false;
+        this.calculateSummaries();
       },
       error: (error) => {
         this.spendingItems = [];
@@ -237,6 +245,70 @@ export class SpendingComponent implements OnInit, OnDestroy {
         this.showError('Failed to load spending items: ' + error.message);
       }
     });
+  }
+
+  /**
+   * Calculate summary totals from spending items.
+   */
+  private calculateSummaries(): void {
+    // Reset summaries
+    this.summaryByMoneyType = [];
+    this.summaryByCategory = [];
+    this.grandTotalCap = 0;
+    this.grandTotalOm = 0;
+    this.grandTotal = 0;
+
+    // Maps for aggregation
+    const moneyMap = new Map<string, { moneyCode: string; moneyName: string; totalCap: number; totalOm: number }>();
+    const categoryMap = new Map<string, { categoryName: string; totalCap: number; totalOm: number }>();
+
+    for (const item of this.spendingItems) {
+      // Aggregate by category
+      const catName = item.categoryName || 'Uncategorized';
+      if (!categoryMap.has(catName)) {
+        categoryMap.set(catName, { categoryName: catName, totalCap: 0, totalOm: 0 });
+      }
+      const catEntry = categoryMap.get(catName)!;
+
+      // Aggregate by money type
+      if (item.moneyAllocations) {
+        for (const allocation of item.moneyAllocations) {
+          const moneyKey = allocation.moneyName || 'AB';
+          if (!moneyMap.has(moneyKey)) {
+            moneyMap.set(moneyKey, {
+              moneyCode: allocation.moneyName || 'AB',
+              moneyName: allocation.moneyName || 'AB',
+              totalCap: 0,
+              totalOm: 0
+            });
+          }
+          const moneyEntry = moneyMap.get(moneyKey)!;
+          moneyEntry.totalCap += allocation.capAmount || 0;
+          moneyEntry.totalOm += allocation.omAmount || 0;
+
+          // Also add to category totals
+          catEntry.totalCap += allocation.capAmount || 0;
+          catEntry.totalOm += allocation.omAmount || 0;
+
+          // Add to grand totals
+          this.grandTotalCap += allocation.capAmount || 0;
+          this.grandTotalOm += allocation.omAmount || 0;
+        }
+      }
+    }
+
+    // Convert maps to arrays
+    this.summaryByMoneyType = Array.from(moneyMap.values()).map(entry => ({
+      ...entry,
+      total: entry.totalCap + entry.totalOm
+    }));
+
+    this.summaryByCategory = Array.from(categoryMap.values()).map(entry => ({
+      ...entry,
+      total: entry.totalCap + entry.totalOm
+    }));
+
+    this.grandTotal = this.grandTotalCap + this.grandTotalOm;
   }
 
   /**

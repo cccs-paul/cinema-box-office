@@ -20,6 +20,7 @@ import com.boxoffice.model.FundingSource;
 import com.boxoffice.model.Money;
 import com.boxoffice.model.MoneyAllocation;
 import com.boxoffice.model.ProcurementItem;
+import com.boxoffice.model.ProcurementQuote;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.SpendingItem;
@@ -30,6 +31,7 @@ import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.FundingItemRepository;
 import com.boxoffice.repository.MoneyRepository;
 import com.boxoffice.repository.ProcurementItemRepository;
+import com.boxoffice.repository.ProcurementQuoteRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.SpendingItemRepository;
@@ -42,6 +44,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -93,6 +96,9 @@ public class DataInitializer implements ApplicationRunner {
 
     @Autowired
     private ProcurementItemRepository procurementItemRepository;
+
+    @Autowired
+    private ProcurementQuoteRepository procurementQuoteRepository;
 
     @Override
     public void run(org.springframework.boot.ApplicationArguments args) throws Exception {
@@ -626,7 +632,10 @@ public class DataInitializer implements ApplicationRunner {
                 procurementItem.setPurchaseOrder(po);
                 procurementItem.setCurrency(currency);
                 procurementItem.setExchangeRate(exchangeRate);
-                procurementItemRepository.save(procurementItem);
+                ProcurementItem savedItem = procurementItemRepository.save(procurementItem);
+
+                // Add demo quotes for certain procurement items
+                addDemoQuotes(savedItem);
 
                 String currencyInfo = currency != Currency.CAD ? 
                     " (" + currency + " @ " + exchangeRate + ")" : "";
@@ -638,6 +647,100 @@ public class DataInitializer implements ApplicationRunner {
         }
 
         logger.info("Demo procurement items initialized for FY: " + demoFY.getName());
+    }
+
+    /**
+     * Add demo quotes to a procurement item based on its status.
+     *
+     * @param procurementItem the procurement item to add quotes to
+     */
+    private void addDemoQuotes(ProcurementItem procurementItem) {
+        // Only add quotes to items that would have quotes (QUOTES_RECEIVED, UNDER_REVIEW, APPROVED, PO_ISSUED, COMPLETED)
+        ProcurementItem.Status status = procurementItem.getStatus();
+        if (status == ProcurementItem.Status.DRAFT || status == ProcurementItem.Status.PENDING_QUOTES) {
+            return;
+        }
+
+        // Demo quotes data based on the procurement item
+        String pr = procurementItem.getPurchaseRequisition();
+        Currency currency = procurementItem.getCurrency();
+
+        // Generate different quotes based on the PR
+        Object[][] quotes;
+        switch (pr) {
+            case "PR-2025-001": // Dell PowerEdge Servers - COMPLETED
+                quotes = new Object[][] {
+                    {"Dell Technologies", "Dell Sales Team", "Q-DELL-2025-001", new BigDecimal("43500.00"), 
+                     LocalDate.of(2025, 9, 15), LocalDate.of(2025, 12, 15), "3-year warranty included", 
+                     ProcurementQuote.Status.SELECTED, true},
+                    {"CDW Canada", "Enterprise Team", "CDW-Q-789456", new BigDecimal("45200.00"), 
+                     LocalDate.of(2025, 9, 18), LocalDate.of(2025, 12, 18), "Standard 1-year warranty", 
+                     ProcurementQuote.Status.REJECTED, false},
+                    {"Insight Canada", "Server Solutions", "INS-2025-4521", new BigDecimal("44100.00"), 
+                     LocalDate.of(2025, 9, 20), LocalDate.of(2025, 12, 20), "2-year warranty, on-site support", 
+                     ProcurementQuote.Status.REJECTED, false}
+                };
+                break;
+            case "PR-2025-002": // NVIDIA GPUs - PO_ISSUED
+                quotes = new Object[][] {
+                    {"NVIDIA Corp", "Partner Sales", "NV-Q-2025-8521", new BigDecimal("51200.00"), 
+                     LocalDate.of(2025, 10, 1), LocalDate.of(2026, 1, 1), "Direct from manufacturer", 
+                     ProcurementQuote.Status.SELECTED, true},
+                    {"Lambda Labs", "GPU Sales", "LAMBDA-2025-102", new BigDecimal("54000.00"), 
+                     LocalDate.of(2025, 10, 5), LocalDate.of(2026, 1, 5), "Includes installation support", 
+                     ProcurementQuote.Status.REJECTED, false}
+                };
+                break;
+            case "PR-2025-004": // NetApp Storage - QUOTES_RECEIVED
+                quotes = new Object[][] {
+                    {"NetApp Inc", "Storage Solutions", "NTA-Q-2025-741", new BigDecimal("76500.00"), 
+                     LocalDate.of(2026, 1, 10), LocalDate.of(2026, 4, 10), "5-year support included", 
+                     ProcurementQuote.Status.UNDER_REVIEW, false},
+                    {"Pure Storage", "Enterprise Team", "PURE-2025-3321", new BigDecimal("79000.00"), 
+                     LocalDate.of(2026, 1, 12), LocalDate.of(2026, 4, 12), "All-flash solution", 
+                     ProcurementQuote.Status.PENDING, false},
+                    {"Dell EMC", "Storage Division", "DEMC-Q-8852", new BigDecimal("74200.00"), 
+                     LocalDate.of(2026, 1, 15), LocalDate.of(2026, 4, 15), "Competitive pricing", 
+                     ProcurementQuote.Status.PENDING, false}
+                };
+                break;
+            case "PR-2025-012": // Security Assessment - QUOTES_RECEIVED
+                quotes = new Object[][] {
+                    {"CrowdStrike", "Professional Services", "CS-Q-2025-441", new BigDecimal("32000.00"), 
+                     LocalDate.of(2026, 1, 5), LocalDate.of(2026, 3, 5), "Comprehensive pen testing", 
+                     ProcurementQuote.Status.UNDER_REVIEW, false},
+                    {"Deloitte Cyber", "Security Practice", "DL-SEC-2025-112", new BigDecimal("38500.00"), 
+                     LocalDate.of(2026, 1, 8), LocalDate.of(2026, 3, 8), "Full assessment with remediation", 
+                     ProcurementQuote.Status.PENDING, false}
+                };
+                break;
+            default:
+                return; // No quotes for other items
+        }
+
+        // Create the quotes
+        for (Object[] quoteData : quotes) {
+            try {
+                ProcurementQuote quote = new ProcurementQuote(
+                    (String) quoteData[0], // vendorName
+                    (BigDecimal) quoteData[3], // amount
+                    currency,
+                    procurementItem
+                );
+                quote.setVendorContact((String) quoteData[1]);
+                quote.setQuoteReference((String) quoteData[2]);
+                quote.setReceivedDate((LocalDate) quoteData[4]);
+                quote.setExpiryDate((LocalDate) quoteData[5]);
+                quote.setNotes((String) quoteData[6]);
+                quote.setStatus((ProcurementQuote.Status) quoteData[7]);
+                quote.setSelected((Boolean) quoteData[8]);
+                
+                procurementQuoteRepository.save(quote);
+                logger.info("Created demo quote from " + quote.getVendorName() + " for " + pr);
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create demo quote for " + pr + ": " + e.getMessage());
+            }
+        }
     }
 
     /**

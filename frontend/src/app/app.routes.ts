@@ -11,6 +11,8 @@ import { RCSelectionComponent } from './components/rc-selection/rc-selection.com
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { SpendingComponent } from './components/spending/spending.component';
 import { ProcurementComponent } from './components/procurement/procurement.component';
+import { InsightsComponent } from './components/insights/insights.component';
+import { SummaryComponent } from './components/summary/summary.component';
 import { DeveloperToolsComponent } from './components/developer-tools/developer-tools.component';
 import { ConfigurationComponent } from './components/configuration/configuration.component';
 import { AuthGuardService } from './guards/auth.guard';
@@ -62,6 +64,14 @@ export const routes: Routes = [
       {
         path: 'procurement',
         component: ProcurementComponent,
+      },
+      {
+        path: 'insights',
+        component: InsightsComponent,
+      },
+      {
+        path: 'summary',
+        component: SummaryComponent,
       },
       {
         path: 'configuration',

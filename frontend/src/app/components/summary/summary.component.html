@@ -1,0 +1,223 @@
+<!--
+  myRC - Summary Component Template
+  Copyright (c) 2026 myRC Team
+  Licensed under MIT License
+-->
+<div class="summary-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>📈 Financial Summary</h1>
+    <p class="subtitle" *ngIf="selectedRC && selectedFY">
+      Overview for {{ selectedRC.name }} - {{ selectedFY.name }}
+    </p>
+  </div>
+
+  <!-- Error Message -->
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <span>❌</span> {{ errorMessage }}
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Loading financial summary...</p>
+  </div>
+
+  <!-- Summary Content -->
+  <div class="summary-content" *ngIf="!isLoading">
+    <!-- Health Status Banner -->
+    <div class="health-banner" [ngClass]="getStatusClass(spendingPercentTotal)">
+      <div class="health-indicator">{{ getHealthIndicator() }}</div>
+      <div class="health-info">
+        <span class="health-status">{{ getHealthText() }}</span>
+        <span class="health-detail">
+          Spending is at {{ spendingPercentTotal | number:'1.1-1' }}% of total funding
+        </span>
+      </div>
+    </div>
+
+    <!-- Main Comparison Table -->
+    <div class="comparison-section">
+      <h2>Funding vs Spending Comparison</h2>
+      
+      <div class="comparison-table-wrapper">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th class="amount-col">Total Funding</th>
+              <th class="amount-col">Total Spending</th>
+              <th class="amount-col">Remaining</th>
+              <th class="percent-col">% Used</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="category-label">
+                <span class="category-icon">💰</span>
+                Capital (CAP)
+              </td>
+              <td class="amount funding">{{ formatCurrency(totalFundingCap) }}</td>
+              <td class="amount spending">{{ formatCurrency(totalSpendingCap) }}</td>
+              <td class="amount" [class.negative]="remainingCap < 0">
+                {{ formatCurrency(remainingCap) }}
+              </td>
+              <td class="percent">
+                <div class="progress-bar">
+                  <div class="progress-fill" [ngClass]="getStatusClass(spendingPercentCap)"
+                       [style.width.%]="Math.min(spendingPercentCap, 100)"></div>
+                </div>
+                <span class="percent-value" [ngClass]="getStatusClass(spendingPercentCap)">
+                  {{ spendingPercentCap | number:'1.1-1' }}%
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <td class="category-label">
+                <span class="category-icon">🔧</span>
+                Operations & Maintenance (O&M)
+              </td>
+              <td class="amount funding">{{ formatCurrency(totalFundingOm) }}</td>
+              <td class="amount spending">{{ formatCurrency(totalSpendingOm) }}</td>
+              <td class="amount" [class.negative]="remainingOm < 0">
+                {{ formatCurrency(remainingOm) }}
+              </td>
+              <td class="percent">
+                <div class="progress-bar">
+                  <div class="progress-fill" [ngClass]="getStatusClass(spendingPercentOm)"
+                       [style.width.%]="Math.min(spendingPercentOm, 100)"></div>
+                </div>
+                <span class="percent-value" [ngClass]="getStatusClass(spendingPercentOm)">
+                  {{ spendingPercentOm | number:'1.1-1' }}%
+                </span>
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td class="category-label">
+                <strong>📊 TOTAL</strong>
+              </td>
+              <td class="amount funding total">
+                <strong>{{ formatCurrency(totalFunding) }}</strong>
+              </td>
+              <td class="amount spending total">
+                <strong>{{ formatCurrency(totalSpending) }}</strong>
+              </td>
+              <td class="amount total" [class.negative]="remainingTotal < 0">
+                <strong>{{ formatCurrency(remainingTotal) }}</strong>
+              </td>
+              <td class="percent total">
+                <div class="progress-bar large">
+                  <div class="progress-fill" [ngClass]="getStatusClass(spendingPercentTotal)"
+                       [style.width.%]="Math.min(spendingPercentTotal, 100)"></div>
+                </div>
+                <span class="percent-value large" [ngClass]="getStatusClass(spendingPercentTotal)">
+                  <strong>{{ spendingPercentTotal | number:'1.1-1' }}%</strong>
+                </span>
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bottom Line -->
+    <div class="bottom-line" [ngClass]="getStatusClass(spendingPercentTotal)">
+      <div class="bottom-line-icon">{{ getHealthIndicator() }}</div>
+      <div class="bottom-line-content">
+        <span class="bottom-line-label">Bottom Line:</span>
+        <span class="bottom-line-value">
+          Spending is at <strong>{{ spendingPercentTotal | number:'1.1-1' }}%</strong> of total funding
+        </span>
+        <span class="bottom-line-remaining" *ngIf="remainingTotal >= 0">
+          with <strong>{{ formatCurrency(remainingTotal) }}</strong> remaining
+        </span>
+        <span class="bottom-line-remaining over-budget" *ngIf="remainingTotal < 0">
+          and <strong>{{ formatCurrency(Math.abs(remainingTotal)) }}</strong> over budget
+        </span>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <!-- Funding Stats -->
+      <div class="stats-card funding">
+        <div class="stats-header">
+          <span class="stats-icon">📋</span>
+          <span class="stats-title">Funding</span>
+        </div>
+        <div class="stats-body">
+          <div class="stat-row">
+            <span class="stat-label">Items</span>
+            <span class="stat-value">{{ fundingItems.length }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Capital (CAP)</span>
+            <span class="stat-value">{{ formatCurrency(totalFundingCap) }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">O&M</span>
+            <span class="stat-value">{{ formatCurrency(totalFundingOm) }}</span>
+          </div>
+          <div class="stat-row total">
+            <span class="stat-label">Total</span>
+            <span class="stat-value">{{ formatCurrency(totalFunding) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spending Stats -->
+      <div class="stats-card spending">
+        <div class="stats-header">
+          <span class="stats-icon">💰</span>
+          <span class="stats-title">Spending</span>
+        </div>
+        <div class="stats-body">
+          <div class="stat-row">
+            <span class="stat-label">Items</span>
+            <span class="stat-value">{{ spendingItems.length }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Capital (CAP)</span>
+            <span class="stat-value">{{ formatCurrency(totalSpendingCap) }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">O&M</span>
+            <span class="stat-value">{{ formatCurrency(totalSpendingOm) }}</span>
+          </div>
+          <div class="stat-row total">
+            <span class="stat-label">Total</span>
+            <span class="stat-value">{{ formatCurrency(totalSpending) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Procurement Stats -->
+      <div class="stats-card procurement">
+        <div class="stats-header">
+          <span class="stats-icon">📦</span>
+          <span class="stats-title">Procurement</span>
+        </div>
+        <div class="stats-body">
+          <div class="stat-row">
+            <span class="stat-label">Total Items</span>
+            <span class="stat-value">{{ procurementItems.length }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Completed</span>
+            <span class="stat-value status-good">{{ procurementCompleted }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">In Progress</span>
+            <span class="stat-value status-caution">{{ procurementInProgress }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Pending</span>
+            <span class="stat-value status-warning">{{ procurementPending }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

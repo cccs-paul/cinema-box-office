@@ -426,6 +426,35 @@
                   rows="2"
                 ></textarea>
               </div>
+              <!-- Attach File Section -->
+              <div class="form-group file-attach-section">
+                <label for="newQuoteFile">Attach File (Optional)</label>
+                <div class="file-input-wrapper">
+                  <input
+                    type="file"
+                    id="newQuoteFile"
+                    (change)="onQuoteFileSelected($event)"
+                    accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                  />
+                  <span class="file-hint">PDF, images, documents up to 10MB</span>
+                </div>
+                <div *ngIf="newQuoteFile" class="selected-file-info">
+                  <span class="file-icon">📎</span>
+                  <span class="file-name">{{ newQuoteFile.name }}</span>
+                  <span class="file-size">({{ formatFileSize(newQuoteFile.size) }})</span>
+                  <button type="button" class="btn-remove-file" (click)="removeQuoteFile()">✕</button>
+                </div>
+                <div class="form-group file-description" *ngIf="newQuoteFile">
+                  <label for="newQuoteFileDescription">File Description</label>
+                  <input
+                    type="text"
+                    id="newQuoteFileDescription"
+                    [(ngModel)]="newQuoteFileDescription"
+                    name="newQuoteFileDescription"
+                    placeholder="Brief description of the attached file"
+                  />
+                </div>
+              </div>
               <div class="form-actions">
                 <button type="button" class="btn-secondary" (click)="cancelCreateQuote()">Cancel</button>
                 <button
@@ -472,9 +501,10 @@
                 </button>
                 <button
                   class="btn-icon btn-select"
-                  title="Select Quote"
+                  title="Select Quote (Coming Soon)"
                   *ngIf="canWrite && !quote.selected && quote.status !== 'REJECTED'"
-                  (click)="selectQuote(quote)"
+                  disabled
+                  [class.disabled]="true"
                 >
                   ✅ Select
                 </button>

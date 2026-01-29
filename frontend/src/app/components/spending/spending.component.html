@@ -279,4 +279,69 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Summary Section -->
+  <div class="summary-section" *ngIf="spendingItems.length > 0">
+    <h3>Summary</h3>
+    
+    <!-- Summary by Money Type -->
+    <div class="summary-group">
+      <h4>Totals by Money Type</h4>
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Money Type</th>
+            <th>Total CAP</th>
+            <th>Total OM</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let summary of summaryByMoneyType">
+            <td>{{ summary.moneyCode }} - {{ summary.moneyName }}</td>
+            <td class="amount">{{ formatCurrency(summary.totalCap) }}</td>
+            <td class="amount">{{ formatCurrency(summary.totalOm) }}</td>
+            <td class="amount total">{{ formatCurrency(summary.total) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Summary by Category -->
+    <div class="summary-group" *ngIf="summaryByCategory.length > 0">
+      <h4>Totals by Category</h4>
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Total CAP</th>
+            <th>Total OM</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let summary of summaryByCategory">
+            <td>{{ summary.categoryName }}</td>
+            <td class="amount">{{ formatCurrency(summary.totalCap) }}</td>
+            <td class="amount">{{ formatCurrency(summary.totalOm) }}</td>
+            <td class="amount total">{{ formatCurrency(summary.total) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Grand Total -->
+    <div class="grand-total">
+      <table class="summary-table">
+        <tbody>
+          <tr class="grand-total-row">
+            <td><strong>Grand Total (All Spending Items)</strong></td>
+            <td class="amount"><strong>{{ formatCurrency(grandTotalCap) }}</strong></td>
+            <td class="amount"><strong>{{ formatCurrency(grandTotalOm) }}</strong></td>
+            <td class="amount total"><strong>{{ formatCurrency(grandTotal) }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>

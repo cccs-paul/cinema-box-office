@@ -97,6 +97,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   newQuoteReceivedDate = '';
   newQuoteExpiryDate = '';
   newQuoteNotes = '';
+  newQuoteFile: File | null = null;
+  newQuoteFileDescription = '';
 
   // File Upload
   showFileUpload = false;
@@ -391,6 +393,37 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newQuoteReceivedDate = '';
     this.newQuoteExpiryDate = '';
     this.newQuoteNotes = '';
+    this.newQuoteFile = null;
+    this.newQuoteFileDescription = '';
+  }
+
+  /**
+   * Handle file selection for quote attachment.
+   */
+  onQuoteFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.newQuoteFile = input.files[0];
+    }
+  }
+
+  /**
+   * Remove the selected quote file.
+   */
+  removeQuoteFile(): void {
+    this.newQuoteFile = null;
+    this.newQuoteFileDescription = '';
+  }
+
+  /**
+   * Format file size for display.
+   */
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
   createQuote(): void {
@@ -418,12 +451,39 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       this.selectedItem.id,
       request
     ).subscribe({
-      next: () => {
-        this.showSuccess('Quote added successfully');
-        this.showCreateQuoteForm = false;
-        this.resetCreateQuoteForm();
-        this.loadQuotes();
-        this.isCreatingQuote = false;
+      next: (quote) => {
+        // If a file was attached, upload it to the newly created quote
+        if (this.newQuoteFile) {
+          this.procurementService.uploadFile(
+            this.selectedRC!.id,
+            this.selectedFY!.id,
+            this.selectedItem!.id,
+            quote.id,
+            this.newQuoteFile,
+            this.newQuoteFileDescription.trim() || undefined
+          ).subscribe({
+            next: () => {
+              this.showSuccess('Quote added with file attachment');
+              this.showCreateQuoteForm = false;
+              this.resetCreateQuoteForm();
+              this.loadQuotes();
+              this.isCreatingQuote = false;
+            },
+            error: (fileError) => {
+              this.showSuccess('Quote added, but file upload failed: ' + fileError.message);
+              this.showCreateQuoteForm = false;
+              this.resetCreateQuoteForm();
+              this.loadQuotes();
+              this.isCreatingQuote = false;
+            }
+          });
+        } else {
+          this.showSuccess('Quote added successfully');
+          this.showCreateQuoteForm = false;
+          this.resetCreateQuoteForm();
+          this.loadQuotes();
+          this.isCreatingQuote = false;
+        }
       },
       error: (error) => {
         this.showError('Failed to add quote: ' + error.message);
