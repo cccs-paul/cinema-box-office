@@ -32,8 +32,8 @@ public class FundingItemDTO {
   private Long id;
   private String name;
   private String description;
-  private BigDecimal budgetAmount;
-  private String status;
+  private String source;
+  private String comments;
   private String currency;
   private BigDecimal exchangeRate;
   private Long fiscalYearId;
@@ -47,13 +47,18 @@ public class FundingItemDTO {
   private Boolean active;
   private List<MoneyAllocationDTO> moneyAllocations;
 
+  // Computed totals from money allocations
+  private BigDecimal totalCap;
+  private BigDecimal totalOm;
+  private BigDecimal totalAmount;
+
   // Constructors
   public FundingItemDTO() {
     this.moneyAllocations = new ArrayList<>();
   }
 
-  public FundingItemDTO(Long id, String name, String description, BigDecimal budgetAmount,
-                        String status, String currency, BigDecimal exchangeRate,
+  public FundingItemDTO(Long id, String name, String description,
+                        String source, String comments, String currency, BigDecimal exchangeRate,
                         Long fiscalYearId, String fiscalYearName,
                         Long responsibilityCentreId, String responsibilityCentreName,
                         Long categoryId, String categoryName,
@@ -62,8 +67,8 @@ public class FundingItemDTO {
     this.id = id;
     this.name = name;
     this.description = description;
-    this.budgetAmount = budgetAmount;
-    this.status = status;
+    this.source = source;
+    this.comments = comments;
     this.currency = currency;
     this.exchangeRate = exchangeRate;
     this.fiscalYearId = fiscalYearId;
@@ -76,6 +81,26 @@ public class FundingItemDTO {
     this.updatedAt = updatedAt;
     this.active = active;
     this.moneyAllocations = moneyAllocations != null ? moneyAllocations : new ArrayList<>();
+    calculateTotals();
+  }
+
+  /**
+   * Calculate total CAP, OM, and overall total from money allocations.
+   */
+  private void calculateTotals() {
+    this.totalCap = BigDecimal.ZERO;
+    this.totalOm = BigDecimal.ZERO;
+    if (this.moneyAllocations != null) {
+      for (MoneyAllocationDTO allocation : this.moneyAllocations) {
+        if (allocation.getCapAmount() != null) {
+          this.totalCap = this.totalCap.add(allocation.getCapAmount());
+        }
+        if (allocation.getOmAmount() != null) {
+          this.totalOm = this.totalOm.add(allocation.getOmAmount());
+        }
+      }
+    }
+    this.totalAmount = this.totalCap.add(this.totalOm);
   }
 
   /**
@@ -98,8 +123,8 @@ public class FundingItemDTO {
         fundingItem.getId(),
         fundingItem.getName(),
         fundingItem.getDescription(),
-        fundingItem.getBudgetAmount(),
-        fundingItem.getStatus() != null ? fundingItem.getStatus().name() : null,
+        fundingItem.getSource() != null ? fundingItem.getSource().name() : null,
+        fundingItem.getComments(),
         fundingItem.getCurrency() != null ? fundingItem.getCurrency().getCode() : "CAD",
         fundingItem.getExchangeRate(),
         fundingItem.getFiscalYear() != null ? fundingItem.getFiscalYear().getId() : null,
@@ -142,20 +167,20 @@ public class FundingItemDTO {
     this.description = description;
   }
 
-  public BigDecimal getBudgetAmount() {
-    return budgetAmount;
+  public String getSource() {
+    return source;
   }
 
-  public void setBudgetAmount(BigDecimal budgetAmount) {
-    this.budgetAmount = budgetAmount;
+  public void setSource(String source) {
+    this.source = source;
   }
 
-  public String getStatus() {
-    return status;
+  public String getComments() {
+    return comments;
   }
 
-  public void setStatus(String status) {
-    this.status = status;
+  public void setComments(String comments) {
+    this.comments = comments;
   }
 
   public String getCurrency() {
@@ -252,5 +277,18 @@ public class FundingItemDTO {
 
   public void setMoneyAllocations(List<MoneyAllocationDTO> moneyAllocations) {
     this.moneyAllocations = moneyAllocations != null ? moneyAllocations : new ArrayList<>();
+    calculateTotals();
+  }
+
+  public BigDecimal getTotalCap() {
+    return totalCap;
+  }
+
+  public BigDecimal getTotalOm() {
+    return totalOm;
+  }
+
+  public BigDecimal getTotalAmount() {
+    return totalAmount;
   }
 }

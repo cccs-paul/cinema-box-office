@@ -57,18 +57,6 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="itemBudget">Budget Amount</label>
-            <input
-              id="itemBudget"
-              type="number"
-              [(ngModel)]="newItemBudget"
-              placeholder="0.00"
-              [disabled]="isCreating"
-              step="0.01"
-              min="0"
-            />
-          </div>
-          <div class="form-group">
             <label for="itemCurrency">Currency</label>
             <select 
               id="itemCurrency" 
@@ -101,10 +89,10 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="itemStatus">Status</label>
-            <select id="itemStatus" [(ngModel)]="newItemStatus" [disabled]="isCreating">
-              <option *ngFor="let status of statusOptions" [value]="status">
-                {{ getStatusLabel(status) }}
+            <label for="itemSource">Source <span class="required">*</span></label>
+            <select id="itemSource" [(ngModel)]="newItemSource" [disabled]="isCreating" required>
+              <option *ngFor="let source of sourceOptions" [value]="source">
+                {{ getSourceLabel(source) }}
               </option>
             </select>
           </div>
@@ -120,6 +108,20 @@
                 {{ category.name }}
               </option>
             </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="itemComments">Comments</label>
+            <textarea
+              id="itemComments"
+              [(ngModel)]="newItemComments"
+              placeholder="Optional comments or notes..."
+              [disabled]="isCreating"
+              rows="3"
+              class="comments-textarea"
+            ></textarea>
           </div>
         </div>
 
@@ -217,9 +219,12 @@
             <th>Category</th>
             <th>Description</th>
             <th>Money Allocations</th>
-            <th>Budget</th>
+            <th>Total CAP</th>
+            <th>Total OM</th>
+            <th>Total</th>
             <th>Currency</th>
-            <th>Status</th>
+            <th>Source</th>
+            <th>Comments</th>
             <th *ngIf="canWrite">Actions</th>
           </tr>
         </thead>
@@ -248,7 +253,9 @@
               </div>
               <span *ngIf="!item.moneyAllocations || item.moneyAllocations.length === 0">-</span>
             </td>
-            <td class="item-budget">{{ formatCurrency(item.budgetAmount, item.currency) }}</td>
+            <td class="item-total-cap">{{ formatCurrency(item.totalCap, item.currency) }}</td>
+            <td class="item-total-om">{{ formatCurrency(item.totalOm, item.currency) }}</td>
+            <td class="item-total">{{ formatCurrency(item.totalAmount, item.currency) }}</td>
             <td class="item-currency">
               <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
                 {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
@@ -257,11 +264,12 @@
                 (1 {{ item.currency }} = {{ item.exchangeRate }} CAD)
               </span>
             </td>
-            <td class="item-status">
-              <span class="status-badge" [ngClass]="getStatusClass(item.status)">
-                {{ getStatusLabel(item.status) }}
+            <td class="item-source">
+              <span class="source-badge" [ngClass]="getSourceClass(item.source)">
+                {{ getSourceLabel(item.source) }}
               </span>
             </td>
+            <td class="item-comments">{{ item.comments || '-' }}</td>
             <td class="item-actions" *ngIf="canWrite">
               <button class="btn btn-icon btn-delete" (click)="deleteFundingItem(item)" title="Delete">
                 🗑️
@@ -270,6 +278,71 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Summary Section -->
+    <div class="summary-section" *ngIf="fundingItems.length > 0">
+      <h3>Summary</h3>
+      
+      <!-- Summary by Money Type -->
+      <div class="summary-group">
+        <h4>Totals by Money Type</h4>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Money Type</th>
+              <th>Total CAP</th>
+              <th>Total OM</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let summary of summaryByMoneyType">
+              <td>{{ summary.moneyCode }} - {{ summary.moneyName }}</td>
+              <td class="amount">{{ formatCurrency(summary.totalCap) }}</td>
+              <td class="amount">{{ formatCurrency(summary.totalOm) }}</td>
+              <td class="amount total">{{ formatCurrency(summary.total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Summary by Category -->
+      <div class="summary-group" *ngIf="summaryByCategory.length > 0">
+        <h4>Totals by Category</h4>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Total CAP</th>
+              <th>Total OM</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let summary of summaryByCategory">
+              <td>{{ summary.categoryName }}</td>
+              <td class="amount">{{ formatCurrency(summary.totalCap) }}</td>
+              <td class="amount">{{ formatCurrency(summary.totalOm) }}</td>
+              <td class="amount total">{{ formatCurrency(summary.total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Grand Total -->
+      <div class="grand-total">
+        <table class="summary-table">
+          <tbody>
+            <tr class="grand-total-row">
+              <td><strong>Grand Total (All Funding Items)</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(grandTotalCap) }}</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(grandTotalOm) }}</strong></td>
+              <td class="amount total"><strong>{{ formatCurrency(grandTotal) }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Empty State -->

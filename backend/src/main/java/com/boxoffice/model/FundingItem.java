@@ -50,17 +50,6 @@ import jakarta.persistence.UniqueConstraint;
 })
 public class FundingItem {
 
-  /**
-   * Enumeration of funding item status values.
-   */
-  public enum Status {
-    DRAFT,
-    PENDING,
-    APPROVED,
-    ACTIVE,
-    CLOSED
-  }
-
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -71,12 +60,19 @@ public class FundingItem {
   @Column(length = 1000)
   private String description;
 
-  @Column(precision = 15, scale = 2)
-  private BigDecimal budgetAmount;
-
+  /**
+   * The source of this funding item. Mandatory field.
+   * Defaults to BUSINESS_PLAN.
+   */
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
-  private Status status = Status.DRAFT;
+  private FundingSource source = FundingSource.BUSINESS_PLAN;
+
+  /**
+   * Optional comments/notes for this funding item.
+   */
+  @Column(length = 2000)
+  private String comments;
 
   /**
    * The currency for this funding item. Defaults to CAD.
@@ -125,17 +121,15 @@ public class FundingItem {
   // Constructors
   public FundingItem() {}
 
-  public FundingItem(String name, String description, BigDecimal budgetAmount, 
-                     Status status, FiscalYear fiscalYear) {
+  public FundingItem(String name, String description, FundingSource source, FiscalYear fiscalYear) {
     this.name = name;
     this.description = description;
-    this.budgetAmount = budgetAmount;
-    this.status = status != null ? status : Status.DRAFT;
+    this.source = source != null ? source : FundingSource.BUSINESS_PLAN;
     this.fiscalYear = fiscalYear;
   }
 
   public FundingItem(String name, String description, FiscalYear fiscalYear) {
-    this(name, description, null, Status.DRAFT, fiscalYear);
+    this(name, description, FundingSource.BUSINESS_PLAN, fiscalYear);
   }
 
   // Getters and Setters
@@ -163,20 +157,20 @@ public class FundingItem {
     this.description = description;
   }
 
-  public BigDecimal getBudgetAmount() {
-    return budgetAmount;
+  public FundingSource getSource() {
+    return source;
   }
 
-  public void setBudgetAmount(BigDecimal budgetAmount) {
-    this.budgetAmount = budgetAmount;
+  public void setSource(FundingSource source) {
+    this.source = source != null ? source : FundingSource.BUSINESS_PLAN;
   }
 
-  public Status getStatus() {
-    return status;
+  public String getComments() {
+    return comments;
   }
 
-  public void setStatus(Status status) {
-    this.status = status;
+  public void setComments(String comments) {
+    this.comments = comments;
   }
 
   public Currency getCurrency() {
@@ -286,10 +280,10 @@ public class FundingItem {
     return "FundingItem{" +
         "id=" + id +
         ", name='" + name + '\'' +
-        ", budgetAmount=" + budgetAmount +
         ", currency=" + currency +
         ", exchangeRate=" + exchangeRate +
-        ", status=" + status +
+        ", source=" + source +
+        ", comments='" + comments + '\'' +
         ", active=" + active +
         '}';
   }

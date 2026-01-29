@@ -16,6 +16,7 @@ import com.boxoffice.model.Category;
 import com.boxoffice.model.Currency;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.FundingItem;
+import com.boxoffice.model.FundingSource;
 import com.boxoffice.model.Money;
 import com.boxoffice.model.MoneyAllocation;
 import com.boxoffice.model.ProcurementItem;
@@ -291,26 +292,25 @@ public class DataInitializer implements ApplicationRunner {
             .collect(java.util.stream.Collectors.toMap(Category::getName, c -> c, (a, b) -> a));
 
         // Demo Funding Items with sample data
-        // {name, description, budgetAmount, status, capAmount, omAmount, categoryName}
+        // {name, description, source, capAmount, omAmount, categoryName}
         String[][] demoItems = {
-            {"IT Infrastructure", "Annual IT infrastructure maintenance and upgrades", "250000.00", "APPROVED", "150000.00", "100000.00", "Compute"},
-            {"Staff Training", "Employee professional development and training programs", "75000.00", "ACTIVE", "25000.00", "50000.00", "Professional Services"},
-            {"Office Supplies", "General office supplies and consumables", "15000.00", "ACTIVE", "0.00", "15000.00", "Small Procurement"},
-            {"Software Licenses", "Annual software license renewals and new acquisitions", "120000.00", "APPROVED", "80000.00", "40000.00", "Software Licenses"},
-            {"Consulting Services", "External consulting and advisory services", "200000.00", "PENDING", "0.00", "200000.00", "Contractors"},
-            {"Equipment Purchase", "New equipment and hardware purchases", "175000.00", "DRAFT", "175000.00", "0.00", "Compute"},
-            {"Travel & Accommodation", "Business travel and accommodation expenses", "50000.00", "ACTIVE", "0.00", "50000.00", "Small Procurement"},
-            {"Building Maintenance", "Facility maintenance and repairs", "85000.00", "APPROVED", "35000.00", "50000.00", "Small Procurement"}
+            {"IT Infrastructure", "Annual IT infrastructure maintenance and upgrades", "APPROVED", "150000.00", "100000.00", "Compute"},
+            {"Staff Training", "Employee professional development and training programs", "BUSINESS_PLAN", "25000.00", "50000.00", "Professional Services"},
+            {"Office Supplies", "General office supplies and consumables", "BUSINESS_PLAN", "0.00", "15000.00", "Small Procurement"},
+            {"Software Licenses", "Annual software license renewals and new acquisitions", "APPROVED", "80000.00", "40000.00", "Software Licenses"},
+            {"Consulting Services", "External consulting and advisory services", "ON_RAMP", "0.00", "200000.00", "Contractors"},
+            {"Equipment Purchase", "New equipment and hardware purchases", "BUSINESS_PLAN", "175000.00", "0.00", "Compute"},
+            {"Travel & Accommodation", "Business travel and accommodation expenses", "APPROVED_DEFICIT", "0.00", "50000.00", "Small Procurement"},
+            {"Building Maintenance", "Facility maintenance and repairs", "BUSINESS_PLAN", "35000.00", "50000.00", "Small Procurement"}
         };
 
         for (String[] item : demoItems) {
             String name = item[0];
             String description = item[1];
-            BigDecimal budgetAmount = new BigDecimal(item[2]);
-            FundingItem.Status status = FundingItem.Status.valueOf(item[3]);
-            BigDecimal capAmount = new BigDecimal(item[4]);
-            BigDecimal omAmount = new BigDecimal(item[5]);
-            String categoryName = item[6];
+            FundingSource source = FundingSource.fromString(item[2]);
+            BigDecimal capAmount = new BigDecimal(item[3]);
+            BigDecimal omAmount = new BigDecimal(item[4]);
+            String categoryName = item[5];
 
             // Check if funding item already exists
             if (fundingItemRepository.existsByNameAndFiscalYear(name, demoFY)) {
@@ -325,7 +325,7 @@ public class DataInitializer implements ApplicationRunner {
             }
 
             try {
-                FundingItem fundingItem = new FundingItem(name, description, budgetAmount, status, demoFY);
+                FundingItem fundingItem = new FundingItem(name, description, source, demoFY);
                 fundingItem.setCategory(category);
                 fundingItem = fundingItemRepository.save(fundingItem);
 

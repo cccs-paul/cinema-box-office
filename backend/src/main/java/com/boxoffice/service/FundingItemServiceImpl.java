@@ -18,6 +18,7 @@ import com.boxoffice.model.Category;
 import com.boxoffice.model.Currency;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.FundingItem;
+import com.boxoffice.model.FundingSource;
 import com.boxoffice.model.Money;
 import com.boxoffice.model.MoneyAllocation;
 import com.boxoffice.model.RCAccess;
@@ -123,8 +124,8 @@ public class FundingItemServiceImpl implements FundingItemService {
 
   @Override
   public FundingItemDTO createFundingItem(Long fiscalYearId, String username, String name,
-      String description, BigDecimal budgetAmount, String status,
-      String currency, BigDecimal exchangeRate, Long categoryId,
+      String description, String source,
+      String comments, String currency, BigDecimal exchangeRate, Long categoryId,
       List<MoneyAllocationDTO> moneyAllocations) {
     // Get fiscal year and verify write access to its RC
     Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);
@@ -152,14 +153,10 @@ public class FundingItemServiceImpl implements FundingItemService {
       throw new IllegalArgumentException("Name is required");
     }
 
-    // Parse status
-    FundingItem.Status itemStatus = FundingItem.Status.DRAFT;
-    if (status != null && !status.trim().isEmpty()) {
-      try {
-        itemStatus = FundingItem.Status.valueOf(status.toUpperCase());
-      } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("Invalid status: " + status);
-      }
+    // Parse funding source (mandatory, defaults to BUSINESS_PLAN)
+    FundingSource itemSource = FundingSource.BUSINESS_PLAN;
+    if (source != null && !source.trim().isEmpty()) {
+      itemSource = FundingSource.fromString(source);
     }
 
     // Parse currency (default to CAD)
@@ -200,10 +197,11 @@ public class FundingItemServiceImpl implements FundingItemService {
       }
     }
 
-    FundingItem fi = new FundingItem(name, description, budgetAmount, itemStatus, fy);
+    FundingItem fi = new FundingItem(name, description, itemSource, fy);
     fi.setCurrency(itemCurrency);
     fi.setExchangeRate(itemCurrency == Currency.CAD ? null : exchangeRate);
     fi.setCategory(category);
+    fi.setComments(comments);
     FundingItem saved = fundingItemRepository.save(fi);
 
     // Process money allocations - create default allocations for all FY monies
@@ -249,8 +247,8 @@ public class FundingItemServiceImpl implements FundingItemService {
 
   @Override
   public Optional<FundingItemDTO> updateFundingItem(Long fundingItemId, String username, String name,
-      String description, BigDecimal budgetAmount, String status,
-      String currency, BigDecimal exchangeRate, Long categoryId,
+      String description, String source,
+      String comments, String currency, BigDecimal exchangeRate, Long categoryId,
       List<MoneyAllocationDTO> moneyAllocations) {
     Optional<FundingItem> fiOpt = fundingItemRepository.findById(fundingItemId);
     if (fiOpt.isEmpty()) {
@@ -279,15 +277,11 @@ public class FundingItemServiceImpl implements FundingItemService {
     if (description != null) {
       fi.setDescription(description);
     }
-    if (budgetAmount != null) {
-      fi.setBudgetAmount(budgetAmount);
+    if (source != null && !source.trim().isEmpty()) {
+      fi.setSource(FundingSource.fromString(source));
     }
-    if (status != null && !status.trim().isEmpty()) {
-      try {
-        fi.setStatus(FundingItem.Status.valueOf(status.toUpperCase()));
-      } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("Invalid status: " + status);
-      }
+    if (comments != null) {
+      fi.setComments(comments);
     }
 
     // Handle category update

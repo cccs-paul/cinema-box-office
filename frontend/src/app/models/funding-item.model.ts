@@ -32,9 +32,9 @@ export interface MoneyAllocation {
 }
 
 /**
- * Enum for funding item status values.
+ * Enum for funding item source values.
  */
-export type FundingItemStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'ACTIVE' | 'CLOSED';
+export type FundingSource = 'BUSINESS_PLAN' | 'ON_RAMP' | 'APPROVED_DEFICIT';
 
 /**
  * Funding Item interface representing a budget allocation within a fiscal year.
@@ -49,11 +49,11 @@ export interface FundingItem {
   /** Description of the funding item */
   description: string;
 
-  /** Budget amount allocated for this funding item */
-  budgetAmount: number | null;
+  /** Source of the funding item (mandatory) */
+  source: FundingSource;
 
-  /** Current status of the funding item */
-  status: FundingItemStatus;
+  /** Optional comments for this funding item */
+  comments: string | null;
 
   /** Currency code (ISO 4217) for this funding item */
   currency: string;
@@ -85,6 +85,15 @@ export interface FundingItem {
   /** Money allocations for this funding item */
   moneyAllocations?: MoneyAllocation[];
 
+  /** Computed total CAP amount from all money allocations */
+  totalCap?: number;
+
+  /** Computed total OM amount from all money allocations */
+  totalOm?: number;
+
+  /** Computed total amount (CAP + OM) from all money allocations */
+  totalAmount?: number;
+
   /** Creation timestamp */
   createdAt?: string;
 
@@ -102,11 +111,11 @@ export interface FundingItemCreateRequest {
   /** Description of the funding item */
   description?: string;
 
-  /** Budget amount allocated for this funding item */
-  budgetAmount?: number;
+  /** Source of the funding item */
+  source?: FundingSource;
 
-  /** Initial status of the funding item */
-  status?: FundingItemStatus;
+  /** Optional comments for this funding item */
+  comments?: string;
 
   /** Currency code (ISO 4217) for this funding item */
   currency?: string;
@@ -131,11 +140,11 @@ export interface FundingItemUpdateRequest {
   /** Description of the funding item */
   description?: string;
 
-  /** Budget amount allocated for this funding item */
-  budgetAmount?: number;
+  /** Source of the funding item */
+  source?: FundingSource;
 
-  /** Status of the funding item */
-  status?: FundingItemStatus;
+  /** Optional comments for this funding item */
+  comments?: string;
 
   /** Currency code (ISO 4217) for this funding item */
   currency?: string;
@@ -151,41 +160,33 @@ export interface FundingItemUpdateRequest {
 }
 
 /**
- * Get display label for a status.
+ * Get display label for a funding source.
  */
-export function getStatusLabel(status: FundingItemStatus): string {
-  switch (status) {
-    case 'DRAFT':
-      return 'Draft';
-    case 'PENDING':
-      return 'Pending Approval';
-    case 'APPROVED':
-      return 'Approved';
-    case 'ACTIVE':
-      return 'Active';
-    case 'CLOSED':
-      return 'Closed';
+export function getSourceLabel(source: FundingSource): string {
+  switch (source) {
+    case 'BUSINESS_PLAN':
+      return 'Business Plan';
+    case 'ON_RAMP':
+      return 'On-Ramp';
+    case 'APPROVED_DEFICIT':
+      return 'Approved Deficit';
     default:
-      return status;
+      return source;
   }
 }
 
 /**
- * Get CSS class for a status badge.
+ * Get CSS class for a source badge.
  */
-export function getStatusClass(status: FundingItemStatus): string {
-  switch (status) {
-    case 'DRAFT':
-      return 'status-draft';
-    case 'PENDING':
-      return 'status-pending';
-    case 'APPROVED':
-      return 'status-approved';
-    case 'ACTIVE':
-      return 'status-active';
-    case 'CLOSED':
-      return 'status-closed';
+export function getSourceClass(source: FundingSource): string {
+  switch (source) {
+    case 'BUSINESS_PLAN':
+      return 'source-business-plan';
+    case 'ON_RAMP':
+      return 'source-on-ramp';
+    case 'APPROVED_DEFICIT':
+      return 'source-approved-deficit';
     default:
-      return 'status-draft';
+      return 'source-business-plan';
   }
 }

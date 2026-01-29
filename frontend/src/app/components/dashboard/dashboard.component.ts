@@ -19,7 +19,7 @@ import { MoneyService } from '../../services/money.service';
 import { CategoryService } from '../../services/category.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
-import { FundingItem, FundingItemCreateRequest, getStatusLabel, getStatusClass, FundingItemStatus, MoneyAllocation } from '../../models/funding-item.model';
+import { FundingItem, FundingItemCreateRequest, getSourceLabel, getSourceClass, FundingSource, MoneyAllocation } from '../../models/funding-item.model';
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 import { Money } from '../../models/money.model';
 import { Category, categoryAllowsCap, categoryAllowsOm } from '../../models/category.model';
@@ -67,8 +67,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isCreating = false;
   newItemName = '';
   newItemDescription = '';
-  newItemBudget: number | null = null;
-  newItemStatus: FundingItemStatus = 'DRAFT';
+  newItemSource: FundingSource = 'BUSINESS_PLAN';
+  newItemComments = '';
   newItemCurrency = DEFAULT_CURRENCY;
   newItemExchangeRate: number | null = null;
   newItemCategoryId: number | null = null;
@@ -78,8 +78,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
-  // Status list for dropdown
-  statusOptions: FundingItemStatus[] = ['DRAFT', 'PENDING', 'APPROVED', 'ACTIVE', 'CLOSED'];
+  // Source list for dropdown
+  sourceOptions: FundingSource[] = ['BUSINESS_PLAN', 'ON_RAMP', 'APPROVED_DEFICIT'];
+
+  // Summary interfaces
+  summaryByMoneyType: { moneyCode: string; moneyName: string; totalCap: number; totalOm: number; total: number }[] = [];
+  summaryByCategory: { categoryName: string; totalCap: number; totalOm: number; total: number }[] = [];
+  grandTotalCap = 0;
+  grandTotalOm = 0;
+  grandTotal = 0;
 
   private destroy$ = new Subject<void>();
 
@@ -261,12 +268,75 @@ export class DashboardComponent implements OnInit, OnDestroy {
         next: (items) => {
           this.fundingItems = items;
           this.isLoadingItems = false;
+          this.calculateSummaries();
         },
         error: (error) => {
           this.errorMessage = error.message || 'Failed to load funding items.';
           this.isLoadingItems = false;
         }
       });
+  }
+
+  /**
+   * Calculate summary totals from funding items.
+   */
+  private calculateSummaries(): void {
+    // Reset summaries
+    this.summaryByMoneyType = [];
+    this.summaryByCategory = [];
+    this.grandTotalCap = 0;
+    this.grandTotalOm = 0;
+    this.grandTotal = 0;
+
+    // Maps for aggregation
+    const moneyMap = new Map<string, { moneyCode: string; moneyName: string; totalCap: number; totalOm: number }>();
+    const categoryMap = new Map<string, { categoryName: string; totalCap: number; totalOm: number }>();
+
+    for (const item of this.fundingItems) {
+      // Add to grand totals
+      this.grandTotalCap += item.totalCap || 0;
+      this.grandTotalOm += item.totalOm || 0;
+
+      // Aggregate by category
+      const catName = item.categoryName || 'Uncategorized';
+      if (!categoryMap.has(catName)) {
+        categoryMap.set(catName, { categoryName: catName, totalCap: 0, totalOm: 0 });
+      }
+      const catEntry = categoryMap.get(catName)!;
+      catEntry.totalCap += item.totalCap || 0;
+      catEntry.totalOm += item.totalOm || 0;
+
+      // Aggregate by money type
+      if (item.moneyAllocations) {
+        for (const allocation of item.moneyAllocations) {
+          const moneyKey = allocation.moneyCode;
+          if (!moneyMap.has(moneyKey)) {
+            moneyMap.set(moneyKey, {
+              moneyCode: allocation.moneyCode,
+              moneyName: allocation.moneyName,
+              totalCap: 0,
+              totalOm: 0
+            });
+          }
+          const moneyEntry = moneyMap.get(moneyKey)!;
+          moneyEntry.totalCap += allocation.capAmount || 0;
+          moneyEntry.totalOm += allocation.omAmount || 0;
+        }
+      }
+    }
+
+    // Convert maps to arrays
+    this.summaryByMoneyType = Array.from(moneyMap.values()).map(entry => ({
+      ...entry,
+      total: entry.totalCap + entry.totalOm
+    }));
+
+    this.summaryByCategory = Array.from(categoryMap.values()).map(entry => ({
+      ...entry,
+      total: entry.totalCap + entry.totalOm
+    }));
+
+    this.grandTotal = this.grandTotalCap + this.grandTotalOm;
   }
 
   /**
@@ -343,8 +413,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const request: FundingItemCreateRequest = {
       name: this.newItemName.trim(),
       description: this.newItemDescription.trim(),
-      budgetAmount: this.newItemBudget || undefined,
-      status: this.newItemStatus,
+      source: this.newItemSource,
+      comments: this.newItemComments.trim() || undefined,
       currency: this.newItemCurrency,
       exchangeRate: this.newItemCurrency !== DEFAULT_CURRENCY ? this.newItemExchangeRate || undefined : undefined,
       categoryId: this.newItemCategoryId,
@@ -401,8 +471,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private resetForm(): void {
     this.newItemName = '';
     this.newItemDescription = '';
-    this.newItemBudget = null;
-    this.newItemStatus = 'DRAFT';
+    this.newItemSource = 'BUSINESS_PLAN';
+    this.newItemComments = '';
     this.newItemCurrency = DEFAULT_CURRENCY;
     this.newItemExchangeRate = null;
     this.newItemCategoryId = null;
@@ -410,23 +480,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get status display label.
+   * Get source display label.
    */
-  getStatusLabel(status: FundingItemStatus): string {
-    return getStatusLabel(status);
+  getSourceLabel(source: FundingSource): string {
+    return getSourceLabel(source);
   }
 
   /**
-   * Get status CSS class.
+   * Get source CSS class.
    */
-  getStatusClass(status: FundingItemStatus): string {
-    return getStatusClass(status);
+  getSourceClass(source: FundingSource): string {
+    return getSourceClass(source);
   }
 
   /**
    * Format currency for display.
    */
-  formatCurrency(amount: number | null, currencyCode?: string): string {
+  formatCurrency(amount: number | null | undefined, currencyCode?: string): string {
     if (amount === null || amount === undefined) {
       return '-';
     }

@@ -163,8 +163,8 @@ public class FundingItemController {
           username,
           request.getName(),
           request.getDescription() != null ? request.getDescription() : "",
-          request.getBudgetAmount(),
-          request.getStatus(),
+          request.getSource(),
+          request.getComments(),
           request.getCurrency(),
           request.getExchangeRate(),
           request.getCategoryId(),
@@ -218,8 +218,8 @@ public class FundingItemController {
           username,
           request.getName(),
           request.getDescription(),
-          request.getBudgetAmount(),
-          request.getStatus(),
+          request.getSource(),
+          request.getComments(),
           request.getCurrency(),
           request.getExchangeRate(),
           request.getCategoryId(),
@@ -280,8 +280,8 @@ public class FundingItemController {
   public static class FundingItemCreateRequest {
     private String name;
     private String description;
-    private BigDecimal budgetAmount;
-    private String status;
+    private String source;
+    private String comments;
     private String currency;
     private BigDecimal exchangeRate;
     private Long categoryId;
@@ -289,13 +289,13 @@ public class FundingItemController {
 
     public FundingItemCreateRequest() {}
 
-    public FundingItemCreateRequest(String name, String description, BigDecimal budgetAmount, 
-        String status, String currency, BigDecimal exchangeRate, Long categoryId,
+    public FundingItemCreateRequest(String name, String description,
+        String source, String comments, String currency, BigDecimal exchangeRate, Long categoryId,
         List<MoneyAllocationDTO> moneyAllocations) {
       this.name = name;
       this.description = description;
-      this.budgetAmount = budgetAmount;
-      this.status = status;
+      this.source = source;
+      this.comments = comments;
       this.currency = currency;
       this.exchangeRate = exchangeRate;
       this.categoryId = categoryId;
@@ -318,20 +318,20 @@ public class FundingItemController {
       this.description = description;
     }
 
-    public BigDecimal getBudgetAmount() {
-      return budgetAmount;
+    public String getSource() {
+      return source;
     }
 
-    public void setBudgetAmount(BigDecimal budgetAmount) {
-      this.budgetAmount = budgetAmount;
+    public void setSource(String source) {
+      this.source = source;
     }
 
-    public String getStatus() {
-      return status;
+    public String getComments() {
+      return comments;
     }
 
-    public void setStatus(String status) {
-      this.status = status;
+    public void setComments(String comments) {
+      this.comments = comments;
     }
 
     public String getCurrency() {

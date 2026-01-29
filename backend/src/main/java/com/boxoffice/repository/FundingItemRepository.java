@@ -14,7 +14,7 @@ package com.boxoffice.repository;
 
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.FundingItem;
-import com.boxoffice.model.FundingItem.Status;
+import com.boxoffice.model.FundingSource;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -60,14 +60,14 @@ public interface FundingItemRepository extends JpaRepository<FundingItem, Long> 
   List<FundingItem> findActiveFundingItemsByFiscalYearId(@Param("fiscalYearId") Long fiscalYearId);
 
   /**
-   * Find funding items by status within a fiscal year.
+   * Find funding items by source within a fiscal year.
    *
    * @param fiscalYearId the fiscal year ID
-   * @param status the status to filter by
-   * @return list of funding items with the specified status
+   * @param source the funding source to filter by
+   * @return list of funding items with the specified source
    */
-  @Query("SELECT fi FROM FundingItem fi WHERE fi.fiscalYear.id = :fiscalYearId AND fi.status = :status ORDER BY fi.name ASC")
-  List<FundingItem> findByFiscalYearIdAndStatus(@Param("fiscalYearId") Long fiscalYearId, @Param("status") Status status);
+  @Query("SELECT fi FROM FundingItem fi WHERE fi.fiscalYear.id = :fiscalYearId AND fi.source = :source ORDER BY fi.name ASC")
+  List<FundingItem> findByFiscalYearIdAndSource(@Param("fiscalYearId") Long fiscalYearId, @Param("source") FundingSource source);
 
   /**
    * Check if a funding item with the given name exists for a fiscal year.

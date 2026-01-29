@@ -52,8 +52,8 @@ public interface FundingItemService {
    * @param username the username
    * @param name the funding item name
    * @param description the funding item description
-   * @param budgetAmount the budget amount
-   * @param status the status
+   * @param source the funding source (BUSINESS_PLAN, ON_RAMP, APPROVED_DEFICIT)
+   * @param comments optional comments
    * @param currency the currency code (defaults to CAD if null)
    * @param exchangeRate the exchange rate to CAD (required if currency is not CAD)
    * @param categoryId the category ID (optional)
@@ -61,9 +61,9 @@ public interface FundingItemService {
    * @return the created funding item DTO
    */
   FundingItemDTO createFundingItem(Long fiscalYearId, String username, String name,
-                                    String description, BigDecimal budgetAmount, String status,
-                                    String currency, BigDecimal exchangeRate, Long categoryId,
-                                    List<MoneyAllocationDTO> moneyAllocations);
+                                    String description, String source,
+                                    String comments, String currency, BigDecimal exchangeRate, 
+                                    Long categoryId, List<MoneyAllocationDTO> moneyAllocations);
 
   /**
    * Update an existing funding item.
@@ -72,8 +72,8 @@ public interface FundingItemService {
    * @param username the username
    * @param name the funding item name
    * @param description the funding item description
-   * @param budgetAmount the budget amount
-   * @param status the status
+   * @param source the funding source (BUSINESS_PLAN, ON_RAMP, APPROVED_DEFICIT)
+   * @param comments optional comments
    * @param currency the currency code (defaults to CAD if null)
    * @param exchangeRate the exchange rate to CAD (required if currency is not CAD)
    * @param categoryId the category ID (optional, null to not change, -1 to clear)
@@ -81,9 +81,9 @@ public interface FundingItemService {
    * @return optional updated funding item DTO
    */
   Optional<FundingItemDTO> updateFundingItem(Long fundingItemId, String username, String name,
-                                              String description, BigDecimal budgetAmount, String status,
-                                              String currency, BigDecimal exchangeRate, Long categoryId,
-                                              List<MoneyAllocationDTO> moneyAllocations);
+                                              String description, String source,
+                                              String comments, String currency, BigDecimal exchangeRate, 
+                                              Long categoryId, List<MoneyAllocationDTO> moneyAllocations);
 
   /**
    * Delete a funding item.
