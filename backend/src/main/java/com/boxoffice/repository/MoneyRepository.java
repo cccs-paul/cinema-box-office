@@ -111,4 +111,11 @@ public interface MoneyRepository extends JpaRepository<Money, Long> {
    */
   @Query("SELECT COUNT(m) FROM Money m WHERE m.fiscalYear.id = :fyId AND m.isDefault = false")
   long countCustomMoniesByFiscalYearId(@Param("fyId") Long fiscalYearId);
+
+  /**
+   * Delete all monies for a fiscal year.
+   *
+   * @param fiscalYearId the fiscal year ID
+   */
+  void deleteByFiscalYearId(Long fiscalYearId);
 }

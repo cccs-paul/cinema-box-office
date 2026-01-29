@@ -103,4 +103,11 @@ public interface FundingItemRepository extends JpaRepository<FundingItem, Long> 
    */
   @Query("SELECT COUNT(fi) FROM FundingItem fi WHERE fi.fiscalYear.id = :fiscalYearId AND fi.active = true")
   long countActiveFundingItemsByFiscalYearId(@Param("fiscalYearId") Long fiscalYearId);
+
+  /**
+   * Delete all funding items for a fiscal year.
+   *
+   * @param fiscalYearId the fiscal year ID
+   */
+  void deleteByFiscalYearId(Long fiscalYearId);
 }

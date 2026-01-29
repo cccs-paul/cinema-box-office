@@ -107,4 +107,11 @@ public interface SpendingCategoryRepository extends JpaRepository<SpendingCatego
    */
   @Query("SELECT COALESCE(MAX(c.displayOrder), 0) FROM SpendingCategory c WHERE c.fiscalYear.id = :fiscalYearId")
   int getMaxDisplayOrderByFiscalYearId(@Param("fiscalYearId") Long fiscalYearId);
+
+  /**
+   * Delete all categories for a fiscal year.
+   *
+   * @param fiscalYearId the fiscal year ID
+   */
+  void deleteByFiscalYearId(Long fiscalYearId);
 }

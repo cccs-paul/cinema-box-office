@@ -6,15 +6,31 @@
 package com.boxoffice.service;
 
 import com.boxoffice.dto.ResponsibilityCentreDTO;
+import com.boxoffice.model.FiscalYear;
+import com.boxoffice.model.FundingItem;
+import com.boxoffice.model.ProcurementItem;
+import com.boxoffice.model.ProcurementQuote;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
+import com.boxoffice.model.SpendingItem;
 import com.boxoffice.model.User;
 import com.boxoffice.repository.FiscalYearRepository;
+import com.boxoffice.repository.FundingItemRepository;
+import com.boxoffice.repository.MoneyAllocationRepository;
+import com.boxoffice.repository.MoneyRepository;
+import com.boxoffice.repository.ProcurementItemRepository;
+import com.boxoffice.repository.ProcurementQuoteFileRepository;
+import com.boxoffice.repository.ProcurementQuoteRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
+import com.boxoffice.repository.SpendingCategoryRepository;
+import com.boxoffice.repository.SpendingItemRepository;
+import com.boxoffice.repository.SpendingMoneyAllocationRepository;
 import com.boxoffice.repository.UserRepository;
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,25 +38,56 @@ import org.springframework.transaction.annotation.Transactional;
  * Implementation of ResponsibilityCentreService.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-17
  */
 @Service
 @Transactional
 public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreService {
 
+  private static final Logger logger = LoggerFactory.getLogger(ResponsibilityCentreServiceImpl.class);
+
   private final ResponsibilityCentreRepository rcRepository;
   private final RCAccessRepository accessRepository;
   private final UserRepository userRepository;
   private final FiscalYearRepository fiscalYearRepository;
+  private final FundingItemRepository fundingItemRepository;
+  private final SpendingItemRepository spendingItemRepository;
+  private final MoneyRepository moneyRepository;
+  private final SpendingCategoryRepository categoryRepository;
+  private final MoneyAllocationRepository moneyAllocationRepository;
+  private final SpendingMoneyAllocationRepository spendingMoneyAllocationRepository;
+  private final ProcurementItemRepository procurementItemRepository;
+  private final ProcurementQuoteRepository procurementQuoteRepository;
+  private final ProcurementQuoteFileRepository procurementQuoteFileRepository;
 
-  public ResponsibilityCentreServiceImpl(ResponsibilityCentreRepository rcRepository,
-      RCAccessRepository accessRepository, UserRepository userRepository,
-      FiscalYearRepository fiscalYearRepository) {
+  public ResponsibilityCentreServiceImpl(
+      ResponsibilityCentreRepository rcRepository,
+      RCAccessRepository accessRepository,
+      UserRepository userRepository,
+      FiscalYearRepository fiscalYearRepository,
+      FundingItemRepository fundingItemRepository,
+      SpendingItemRepository spendingItemRepository,
+      MoneyRepository moneyRepository,
+      SpendingCategoryRepository categoryRepository,
+      MoneyAllocationRepository moneyAllocationRepository,
+      SpendingMoneyAllocationRepository spendingMoneyAllocationRepository,
+      ProcurementItemRepository procurementItemRepository,
+      ProcurementQuoteRepository procurementQuoteRepository,
+      ProcurementQuoteFileRepository procurementQuoteFileRepository) {
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
     this.userRepository = userRepository;
     this.fiscalYearRepository = fiscalYearRepository;
+    this.fundingItemRepository = fundingItemRepository;
+    this.spendingItemRepository = spendingItemRepository;
+    this.moneyRepository = moneyRepository;
+    this.categoryRepository = categoryRepository;
+    this.moneyAllocationRepository = moneyAllocationRepository;
+    this.spendingMoneyAllocationRepository = spendingMoneyAllocationRepository;
+    this.procurementItemRepository = procurementItemRepository;
+    this.procurementQuoteRepository = procurementQuoteRepository;
+    this.procurementQuoteFileRepository = procurementQuoteFileRepository;
   }
 
   private static final String DEMO_RC_NAME = "Demo";
@@ -177,14 +224,63 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       throw new IllegalAccessError("Only the owner can delete this RC");
     }
 
-    // Delete access records first (these don't have DB cascade)
-    accessRepository.deleteByResponsibilityCentre(rc);
+    logger.info("Deleting responsibility centre {} (ID: {}) and all related entities", rc.getName(), rcId);
 
-    // Delete the RC - database will cascade delete all related entities:
-    // fiscal_years -> categories, monies, funding_items, spending_items
-    // funding_items -> money_allocations
-    // spending_items -> spending_money_allocations
+    // Delete access records first
+    accessRepository.deleteByResponsibilityCentre(rc);
+    logger.debug("Deleted access records for RC {}", rcId);
+
+    // Get all fiscal years for this RC to cascade delete their children
+    List<FiscalYear> fiscalYears = fiscalYearRepository.findByResponsibilityCentreId(rcId);
+    
+    for (FiscalYear fiscalYear : fiscalYears) {
+      Long fyId = fiscalYear.getId();
+      logger.debug("Deleting data for fiscal year {} (ID: {})", fiscalYear.getName(), fyId);
+      
+      // Delete procurement data (deepest level first: files -> quotes -> items)
+      List<ProcurementItem> procurementItems = procurementItemRepository.findByFiscalYearIdAndActiveTrueOrderByPurchaseRequisitionAsc(fyId);
+      for (ProcurementItem item : procurementItems) {
+        List<ProcurementQuote> quotes = procurementQuoteRepository.findByProcurementItemIdAndActiveTrueOrderByVendorNameAsc(item.getId());
+        for (ProcurementQuote quote : quotes) {
+          procurementQuoteFileRepository.deleteByQuoteId(quote.getId());
+        }
+        procurementQuoteRepository.deleteByProcurementItemId(item.getId());
+      }
+      procurementItemRepository.deleteByFiscalYearId(fyId);
+      
+      // Delete spending money allocations for all spending items in this fiscal year
+      List<SpendingItem> spendingItems = spendingItemRepository.findByFiscalYearIdOrderByNameAsc(fyId);
+      for (SpendingItem spendingItem : spendingItems) {
+        spendingMoneyAllocationRepository.deleteBySpendingItemId(spendingItem.getId());
+      }
+      
+      // Delete funding money allocations for all funding items in this fiscal year
+      List<FundingItem> fundingItems = fundingItemRepository.findByFiscalYearId(fyId);
+      for (FundingItem fundingItem : fundingItems) {
+        moneyAllocationRepository.deleteByFundingItemId(fundingItem.getId());
+      }
+      
+      // Delete spending items (must be before categories due to FK)
+      spendingItemRepository.deleteByFiscalYearId(fyId);
+      
+      // Delete funding items
+      fundingItemRepository.deleteByFiscalYearId(fyId);
+      
+      // Delete categories
+      categoryRepository.deleteByFiscalYearId(fyId);
+      
+      // Delete monies
+      moneyRepository.deleteByFiscalYearId(fyId);
+    }
+    
+    // Delete all fiscal years
+    fiscalYearRepository.deleteByResponsibilityCentre(rc);
+    logger.debug("Deleted {} fiscal years for RC {}", fiscalYears.size(), rcId);
+
+    // Finally, delete the RC itself
     rcRepository.deleteById(rcId);
+    logger.info("Successfully deleted responsibility centre {} (ID: {})", rc.getName(), rcId);
+    
     return true;
   }
 

@@ -107,4 +107,11 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
    */
   @Query("SELECT COALESCE(MAX(c.displayOrder), 0) FROM Category c WHERE c.fiscalYear.id = :fiscalYearId")
   int getMaxDisplayOrderByFiscalYearId(@Param("fiscalYearId") Long fiscalYearId);
+
+  /**
+   * Delete all categories for a fiscal year.
+   *
+   * @param fiscalYearId the fiscal year ID
+   */
+  void deleteByFiscalYearId(@Param("fiscalYearId") Long fiscalYearId);
 }

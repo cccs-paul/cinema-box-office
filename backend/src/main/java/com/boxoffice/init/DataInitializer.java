@@ -13,10 +13,12 @@ package com.boxoffice.init;
 
 import com.boxoffice.dto.CreateUserRequest;
 import com.boxoffice.model.Category;
+import com.boxoffice.model.Currency;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.FundingItem;
 import com.boxoffice.model.Money;
 import com.boxoffice.model.MoneyAllocation;
+import com.boxoffice.model.ProcurementItem;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.SpendingItem;
@@ -26,6 +28,7 @@ import com.boxoffice.repository.CategoryRepository;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.FundingItemRepository;
 import com.boxoffice.repository.MoneyRepository;
+import com.boxoffice.repository.ProcurementItemRepository;
 import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.SpendingItemRepository;
@@ -86,6 +89,9 @@ public class DataInitializer implements ApplicationRunner {
 
     @Autowired
     private SpendingItemRepository spendingItemRepository;
+
+    @Autowired
+    private ProcurementItemRepository procurementItemRepository;
 
     @Override
     public void run(org.springframework.boot.ApplicationArguments args) throws Exception {
@@ -215,6 +221,8 @@ public class DataInitializer implements ApplicationRunner {
                 initializeDemoFundingItems(demoFY);
                 // Also ensure demo spending items exist
                 initializeDemoSpendingItems(demoFY);
+                // Also ensure demo procurement items exist
+                initializeDemoProcurementItems(demoFY);
             }
             return;
         }
@@ -250,6 +258,9 @@ public class DataInitializer implements ApplicationRunner {
 
             // Create demo spending items
             initializeDemoSpendingItems(savedFY);
+
+            // Create demo procurement items
+            initializeDemoProcurementItems(savedFY);
         } catch (Exception e) {
             logger.warning(() -> "Failed to create Demo FY: " + e.getMessage());
         }
@@ -536,6 +547,97 @@ public class DataInitializer implements ApplicationRunner {
         }
 
         logger.info("Demo spending items initialized for FY: " + demoFY.getName());
+    }
+
+    /**
+     * Initialize demo procurement items for the Demo FY.
+     * Creates sample procurement items with various statuses, currencies, and realistic data.
+     *
+     * @param demoFY the Demo fiscal year
+     */
+    private void initializeDemoProcurementItems(FiscalYear demoFY) {
+        // Demo Procurement Items with sample data
+        // {pr, po, name, description, status, currency, exchangeRate}
+        Object[][] demoItems = {
+            {"PR-2025-001", "PO-2025-001", "Dell PowerEdge Servers", 
+             "3x Dell PowerEdge R750 rack servers for data center expansion",
+             ProcurementItem.Status.COMPLETED, Currency.CAD, null},
+            {"PR-2025-002", "PO-2025-002", "NVIDIA A100 GPUs", 
+             "4x NVIDIA A100 80GB GPUs for machine learning workloads",
+             ProcurementItem.Status.PO_ISSUED, Currency.USD, new BigDecimal("1.360000")},
+            {"PR-2025-003", null, "Cisco Network Switches", 
+             "Cisco Catalyst 9300 switches for network infrastructure upgrade",
+             ProcurementItem.Status.APPROVED, Currency.CAD, null},
+            {"PR-2025-004", null, "NetApp Storage Array", 
+             "NetApp AFF A400 storage system with 50TB capacity for data center",
+             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null},
+            {"PR-2025-005", null, "HP LaserJet Printers", 
+             "5x HP LaserJet Enterprise printers for office deployment",
+             ProcurementItem.Status.PENDING_QUOTES, Currency.CAD, null},
+            {"PR-2025-006", null, "IBM Cloud Credits", 
+             "Annual IBM Cloud compute and storage credits",
+             ProcurementItem.Status.UNDER_REVIEW, Currency.USD, new BigDecimal("1.360000")},
+            {"PR-2025-007", "PO-2025-003", "Lenovo ThinkPads", 
+             "25x Lenovo ThinkPad X1 Carbon laptops for staff refresh",
+             ProcurementItem.Status.COMPLETED, Currency.CAD, null},
+            {"PR-2025-008", null, "Autodesk Licenses", 
+             "50x Autodesk AutoCAD licenses - 3-year subscription",
+             ProcurementItem.Status.DRAFT, Currency.USD, new BigDecimal("1.360000")},
+            {"PR-2025-009", null, "Laboratory Equipment", 
+             "Oscilloscopes and signal generators for research laboratory",
+             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000")},
+            {"PR-2025-010", "PO-2025-004", "AWS Reserved Instances", 
+             "3-year reserved capacity for EC2 and RDS instances",
+             ProcurementItem.Status.PO_ISSUED, Currency.USD, new BigDecimal("1.360000")},
+            {"PR-2025-011", null, "Office Furniture", 
+             "Standing desks and ergonomic chairs for new office space",
+             ProcurementItem.Status.APPROVED, Currency.CAD, null},
+            {"PR-2025-012", null, "Security Assessment Services", 
+             "Annual penetration testing and security audit services",
+             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null},
+            {"PR-2025-013", null, "UK Training Program", 
+             "Staff training program with UK-based vendor",
+             ProcurementItem.Status.DRAFT, Currency.GBP, new BigDecimal("1.680000")},
+            {"PR-2025-014", null, "Video Conferencing System", 
+             "Cisco Webex Board 85 for main conference room",
+             ProcurementItem.Status.UNDER_REVIEW, Currency.CAD, null},
+            {"PR-2025-015", null, "European Instrumentation", 
+             "Specialized instrumentation from European manufacturer",
+             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000")}
+        };
+
+        for (Object[] item : demoItems) {
+            String pr = (String) item[0];
+            String po = (String) item[1];
+            String name = (String) item[2];
+            String description = (String) item[3];
+            ProcurementItem.Status status = (ProcurementItem.Status) item[4];
+            Currency currency = (Currency) item[5];
+            BigDecimal exchangeRate = (BigDecimal) item[6];
+
+            // Check if procurement item already exists
+            if (procurementItemRepository.existsByPurchaseRequisitionAndFiscalYearAndActiveTrue(pr, demoFY)) {
+                logger.info("Demo procurement item '" + pr + "' already exists, skipping");
+                continue;
+            }
+
+            try {
+                ProcurementItem procurementItem = new ProcurementItem(pr, name, description, status, demoFY);
+                procurementItem.setPurchaseOrder(po);
+                procurementItem.setCurrency(currency);
+                procurementItem.setExchangeRate(exchangeRate);
+                procurementItemRepository.save(procurementItem);
+
+                String currencyInfo = currency != Currency.CAD ? 
+                    " (" + currency + " @ " + exchangeRate + ")" : "";
+                logger.info("Created demo procurement item: " + pr + " - " + name + 
+                           " [" + status + "]" + currencyInfo);
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create demo procurement item '" + pr + "': " + e.getMessage());
+            }
+        }
+
+        logger.info("Demo procurement items initialized for FY: " + demoFY.getName());
     }
 
     /**

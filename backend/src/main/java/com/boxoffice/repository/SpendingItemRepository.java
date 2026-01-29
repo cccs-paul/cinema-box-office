@@ -137,4 +137,18 @@ public interface SpendingItemRepository extends JpaRepository<SpendingItem, Long
          "ORDER BY s.name ASC")
   List<SpendingItem> findByFiscalYearIdAndStatus(@Param("fiscalYearId") Long fiscalYearId, 
                                                    @Param("status") SpendingItem.Status status);
+
+  /**
+   * Delete all spending items for a fiscal year.
+   *
+   * @param fiscalYearId the fiscal year ID
+   */
+  void deleteByFiscalYearId(Long fiscalYearId);
+
+  /**
+   * Delete all spending items for a category.
+   *
+   * @param categoryId the category ID
+   */
+  void deleteByCategoryId(Long categoryId);
 }
