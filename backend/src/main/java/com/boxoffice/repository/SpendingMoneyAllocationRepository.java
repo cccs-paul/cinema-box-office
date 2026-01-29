@@ -14,6 +14,7 @@ package com.boxoffice.repository;
 
 import com.boxoffice.model.SpendingMoneyAllocation;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -56,7 +57,9 @@ public interface SpendingMoneyAllocationRepository extends JpaRepository<Spendin
    *
    * @param spendingItemId the spending item ID
    */
-  void deleteBySpendingItemId(Long spendingItemId);
+  @Modifying
+  @Query("DELETE FROM SpendingMoneyAllocation a WHERE a.spendingItem.id = :spendingItemId")
+  void deleteBySpendingItemId(@Param("spendingItemId") Long spendingItemId);
 
   /**
    * Get total CAP amount for a spending item.

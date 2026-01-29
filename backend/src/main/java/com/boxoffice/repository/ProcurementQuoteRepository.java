@@ -14,6 +14,7 @@ package com.boxoffice.repository;
 
 import com.boxoffice.model.ProcurementQuote;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -117,5 +118,7 @@ public interface ProcurementQuoteRepository extends JpaRepository<ProcurementQuo
      *
      * @param procurementItemId the procurement item ID
      */
-    void deleteByProcurementItemId(Long procurementItemId);
+    @Modifying
+    @Query("DELETE FROM ProcurementQuote pq WHERE pq.procurementItem.id = :procurementItemId")
+    void deleteByProcurementItemId(@Param("procurementItemId") Long procurementItemId);
 }

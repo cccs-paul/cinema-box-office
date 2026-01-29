@@ -20,7 +20,7 @@ import { CurrencyService } from '../../services/currency.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { SpendingItem, SpendingMoneyAllocation, SpendingItemStatus, SPENDING_STATUS_INFO } from '../../models/spending-item.model';
-import { Category } from '../../models/category.model';
+import { Category, categoryAllowsCap, categoryAllowsOm } from '../../models/category.model';
 import { Money } from '../../models/money.model';
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 
@@ -307,15 +307,21 @@ export class SpendingComponent implements OnInit, OnDestroy {
 
   /**
    * Check if the form has valid money allocation.
+   * Takes into account the selected category's funding type.
    */
   hasValidMoneyAllocation(): boolean {
     if (!this.newItemMoneyAllocations || this.newItemMoneyAllocations.length === 0) {
       return false;
     }
-    return this.newItemMoneyAllocations.some(allocation =>
-      (allocation.capAmount && allocation.capAmount > 0) ||
-      (allocation.omAmount && allocation.omAmount > 0)
-    );
+    
+    const allowsCap = this.selectedCategoryAllowsCap();
+    const allowsOm = this.selectedCategoryAllowsOm();
+    
+    return this.newItemMoneyAllocations.some(allocation => {
+      const hasValidCap = allowsCap && allocation.capAmount && allocation.capAmount > 0;
+      const hasValidOm = allowsOm && allocation.omAmount && allocation.omAmount > 0;
+      return hasValidCap || hasValidOm;
+    });
   }
 
   /**
@@ -430,6 +436,57 @@ export class SpendingComponent implements OnInit, OnDestroy {
   getCategoryName(categoryId: number): string {
     const category = this.categories.find(c => c.id === categoryId);
     return category ? category.name : 'Unknown';
+  }
+
+  /**
+   * Get the currently selected category.
+   */
+  getSelectedCategory(): Category | undefined {
+    if (!this.newItemCategoryId) return undefined;
+    return this.categories.find(c => c.id === this.newItemCategoryId);
+  }
+
+  /**
+   * Check if the selected category allows CAP amounts.
+   */
+  selectedCategoryAllowsCap(): boolean {
+    const category = this.getSelectedCategory();
+    if (!category) return true; // Default to allowing both if no category selected
+    return categoryAllowsCap(category);
+  }
+
+  /**
+   * Check if the selected category allows OM amounts.
+   */
+  selectedCategoryAllowsOm(): boolean {
+    const category = this.getSelectedCategory();
+    if (!category) return true; // Default to allowing both if no category selected
+    return categoryAllowsOm(category);
+  }
+
+  /**
+   * Get a category by ID.
+   */
+  getCategoryById(categoryId: number): Category | undefined {
+    return this.categories.find(c => c.id === categoryId);
+  }
+
+  /**
+   * Check if a category allows CAP amounts.
+   */
+  categoryAllowsCapById(categoryId: number): boolean {
+    const category = this.getCategoryById(categoryId);
+    if (!category) return true;
+    return categoryAllowsCap(category);
+  }
+
+  /**
+   * Check if a category allows OM amounts.
+   */
+  categoryAllowsOmById(categoryId: number): boolean {
+    const category = this.getCategoryById(categoryId);
+    if (!category) return true;
+    return categoryAllowsOm(category);
   }
 
   /**

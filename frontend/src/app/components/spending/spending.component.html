@@ -130,15 +130,23 @@
         <h3>Money Allocations</h3>
         <p class="allocation-hint">
           <span class="info-icon">ℹ️</span>
-          At least one money type must have a CAP or OM amount greater than $0.00
+          <ng-container *ngIf="selectedCategoryAllowsCap() && selectedCategoryAllowsOm()">
+            At least one money type must have a CAP or OM amount greater than $0.00
+          </ng-container>
+          <ng-container *ngIf="selectedCategoryAllowsCap() && !selectedCategoryAllowsOm()">
+            This category allows <strong>Capital (CAP) only</strong>. At least one CAP amount must be greater than $0.00
+          </ng-container>
+          <ng-container *ngIf="!selectedCategoryAllowsCap() && selectedCategoryAllowsOm()">
+            This category allows <strong>O&M only</strong>. At least one OM amount must be greater than $0.00
+          </ng-container>
         </p>
         <div class="allocations-table">
           <table>
             <thead>
               <tr>
                 <th>Money Type</th>
-                <th>CAP Amount</th>
-                <th>OM Amount</th>
+                <th *ngIf="selectedCategoryAllowsCap()">CAP Amount</th>
+                <th *ngIf="selectedCategoryAllowsOm()">OM Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -147,7 +155,7 @@
                   {{ allocation.moneyName }}
                   <span class="default-badge" *ngIf="allocation.isDefault">default</span>
                 </td>
-                <td>
+                <td *ngIf="selectedCategoryAllowsCap()">
                   <input 
                     type="number" 
                     [(ngModel)]="allocation.capAmount"
@@ -155,7 +163,7 @@
                     step="0.01"
                     class="form-control amount-input">
                 </td>
-                <td>
+                <td *ngIf="selectedCategoryAllowsOm()">
                   <input 
                     type="number" 
                     [(ngModel)]="allocation.omAmount"
@@ -234,8 +242,13 @@
               <div class="money-row" *ngFor="let allocation of item.moneyAllocations">
                 <span class="money-label">{{ allocation.moneyName || 'AB' }}:</span>
                 <span class="money-amounts">
-                  CAP: {{ formatCurrency(allocation.capAmount, item.currency) }},
-                  OM: {{ formatCurrency(allocation.omAmount, item.currency) }}
+                  <ng-container *ngIf="categoryAllowsCapById(item.categoryId)">
+                    CAP: {{ formatCurrency(allocation.capAmount, item.currency) }}
+                  </ng-container>
+                  <ng-container *ngIf="categoryAllowsCapById(item.categoryId) && categoryAllowsOmById(item.categoryId)">, </ng-container>
+                  <ng-container *ngIf="categoryAllowsOmById(item.categoryId)">
+                    OM: {{ formatCurrency(allocation.omAmount, item.currency) }}
+                  </ng-container>
                 </span>
               </div>
             </div>

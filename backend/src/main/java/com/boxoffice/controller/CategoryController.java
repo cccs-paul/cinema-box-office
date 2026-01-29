@@ -13,6 +13,7 @@
 package com.boxoffice.controller;
 
 import com.boxoffice.dto.CategoryDTO;
+import com.boxoffice.model.FundingType;
 import com.boxoffice.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -153,8 +154,16 @@ public class CategoryController {
         "/categories - Creating category for user: " + username);
 
     try {
+      FundingType fundingType = null;
+      if (request.fundingType != null && !request.fundingType.isEmpty()) {
+        try {
+          fundingType = FundingType.valueOf(request.fundingType);
+        } catch (IllegalArgumentException e) {
+          return ResponseEntity.badRequest().body(new ErrorResponse("Invalid funding type. Must be CAP_ONLY, OM_ONLY, or BOTH"));
+        }
+      }
       CategoryDTO created = categoryService.createCategory(
-          fyId, username, request.name, request.description);
+          fyId, username, request.name, request.description, fundingType);
       return ResponseEntity.status(HttpStatus.CREATED).body(created);
     } catch (IllegalArgumentException e) {
       logger.warning("Failed to create category: " + e.getMessage());
@@ -203,8 +212,16 @@ public class CategoryController {
         "/categories/" + categoryId + " - Updating category for user: " + username);
 
     try {
+      FundingType fundingType = null;
+      if (request.fundingType != null && !request.fundingType.isEmpty()) {
+        try {
+          fundingType = FundingType.valueOf(request.fundingType);
+        } catch (IllegalArgumentException e) {
+          return ResponseEntity.badRequest().body(new ErrorResponse("Invalid funding type. Must be CAP_ONLY, OM_ONLY, or BOTH"));
+        }
+      }
       CategoryDTO updated = categoryService.updateCategory(
-          categoryId, username, request.name, request.description);
+          categoryId, username, request.name, request.description, fundingType);
       return ResponseEntity.ok(updated);
     } catch (IllegalArgumentException e) {
       logger.warning("Failed to update category: " + e.getMessage());
@@ -365,11 +382,13 @@ public class CategoryController {
   public static class CategoryCreateRequest {
     public String name;
     public String description;
+    public String fundingType;
   }
 
   public static class CategoryUpdateRequest {
     public String name;
     public String description;
+    public String fundingType;
   }
 
   public static class ReorderRequest {

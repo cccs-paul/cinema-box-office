@@ -15,6 +15,7 @@ package com.boxoffice.repository;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.ProcurementItem;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -143,5 +144,7 @@ public interface ProcurementItemRepository extends JpaRepository<ProcurementItem
      *
      * @param fiscalYearId the fiscal year ID
      */
-    void deleteByFiscalYearId(Long fiscalYearId);
+    @Modifying
+    @Query("DELETE FROM ProcurementItem pi WHERE pi.fiscalYear.id = :fiscalYearId")
+    void deleteByFiscalYearId(@Param("fiscalYearId") Long fiscalYearId);
 }

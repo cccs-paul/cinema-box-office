@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -74,5 +75,16 @@ public interface FiscalYearRepository extends JpaRepository<FiscalYear, Long> {
    *
    * @param responsibilityCentre the responsibility centre
    */
-  void deleteByResponsibilityCentre(ResponsibilityCentre responsibilityCentre);
+  @Modifying
+  @Query("DELETE FROM FiscalYear fy WHERE fy.responsibilityCentre = :rc")
+  void deleteByResponsibilityCentre(@Param("rc") ResponsibilityCentre responsibilityCentre);
+
+  /**
+   * Delete all fiscal years for a specific responsibility centre by ID.
+   *
+   * @param rcId the responsibility centre ID
+   */
+  @Modifying
+  @Query("DELETE FROM FiscalYear fy WHERE fy.responsibilityCentre.id = :rcId")
+  void deleteByResponsibilityCentreId(@Param("rcId") Long rcId);
 }

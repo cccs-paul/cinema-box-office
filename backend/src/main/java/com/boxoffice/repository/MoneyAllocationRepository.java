@@ -18,6 +18,7 @@ import com.boxoffice.model.MoneyAllocation;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -80,14 +81,18 @@ public interface MoneyAllocationRepository extends JpaRepository<MoneyAllocation
    *
    * @param fundingItem the funding item
    */
-  void deleteByFundingItem(FundingItem fundingItem);
+  @Modifying
+  @Query("DELETE FROM MoneyAllocation ma WHERE ma.fundingItem = :fundingItem")
+  void deleteByFundingItem(@Param("fundingItem") FundingItem fundingItem);
 
   /**
    * Delete all allocations for a funding item by ID.
    *
    * @param fundingItemId the funding item ID
    */
-  void deleteByFundingItemId(Long fundingItemId);
+  @Modifying
+  @Query("DELETE FROM MoneyAllocation ma WHERE ma.fundingItem.id = :fundingItemId")
+  void deleteByFundingItemId(@Param("fundingItemId") Long fundingItemId);
 
   /**
    * Find all allocations for a specific money type.
@@ -102,7 +107,9 @@ public interface MoneyAllocationRepository extends JpaRepository<MoneyAllocation
    *
    * @param money the money type
    */
-  void deleteByMoney(Money money);
+  @Modifying
+  @Query("DELETE FROM MoneyAllocation ma WHERE ma.money = :money")
+  void deleteByMoney(@Param("money") Money money);
 
   /**
    * Get total CAP amount for a funding item.

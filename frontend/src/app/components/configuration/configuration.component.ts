@@ -13,7 +13,7 @@ import { FiscalYearService } from '../../services/fiscal-year.service';
 import { MoneyService } from '../../services/money.service';
 import { CategoryService, CategoryCreateRequest, CategoryUpdateRequest } from '../../services/category.service';
 import { Money, MoneyCreateRequest, MoneyUpdateRequest } from '../../models/money.model';
-import { Category } from '../../models/category.model';
+import { Category, FundingType, FUNDING_TYPE_LABELS } from '../../models/category.model';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 
@@ -62,8 +62,12 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   // Category form state
   isAddingCategory = false;
   editingCategoryId: number | null = null;
-  newCategory: CategoryCreateRequest = { name: '', description: '' };
-  editCategory: CategoryUpdateRequest = { name: '', description: '' };
+  newCategory: CategoryCreateRequest = { name: '', description: '', fundingType: 'BOTH' };
+  editCategory: CategoryUpdateRequest = { name: '', description: '', fundingType: 'BOTH' };
+
+  // Funding type options for dropdown
+  fundingTypeOptions: FundingType[] = ['BOTH', 'CAP_ONLY', 'OM_ONLY'];
+  fundingTypeLabels = FUNDING_TYPE_LABELS;
 
   // Operation state
   isSaving = false;
@@ -350,7 +354,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    */
   startAddCategory(): void {
     this.isAddingCategory = true;
-    this.newCategory = { name: '', description: '' };
+    this.newCategory = { name: '', description: '', fundingType: 'BOTH' };
     this.editingCategoryId = null;
   }
 
@@ -359,7 +363,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    */
   cancelAddCategory(): void {
     this.isAddingCategory = false;
-    this.newCategory = { name: '', description: '' };
+    this.newCategory = { name: '', description: '', fundingType: 'BOTH' };
   }
 
   /**
@@ -405,7 +409,8 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     this.editingCategoryId = category.id;
     this.editCategory = {
       name: category.name,
-      description: category.description || ''
+      description: category.description || '',
+      fundingType: category.fundingType || 'BOTH'
     };
     this.isAddingCategory = false;
   }
@@ -415,7 +420,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    */
   cancelEditCategory(): void {
     this.editingCategoryId = null;
-    this.editCategory = { name: '', description: '' };
+    this.editCategory = { name: '', description: '', fundingType: 'BOTH' };
   }
 
   /**
@@ -524,5 +529,13 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    */
   trackByCategoryId(index: number, category: Category): number {
     return category.id;
+  }
+
+  /**
+   * Get the display label for a funding type.
+   */
+  getFundingTypeLabel(fundingType: FundingType | string | undefined): string {
+    if (!fundingType) return FUNDING_TYPE_LABELS['BOTH'];
+    return FUNDING_TYPE_LABELS[fundingType as FundingType] || FUNDING_TYPE_LABELS['BOTH'];
   }
 }

@@ -22,6 +22,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -75,6 +77,15 @@ public class Category {
   private Integer displayOrder = 0;
 
   /**
+   * The allowed funding type for this category.
+   * Determines which money allocation fields (CAP, OM, or both) are available.
+   * Defaults to BOTH (allowing both CAP and OM amounts).
+   */
+  @Column(nullable = false, length = 20)
+  @Enumerated(EnumType.STRING)
+  private FundingType fundingType = FundingType.BOTH;
+
+  /**
    * The fiscal year this category belongs to.
    */
   @ManyToOne(optional = false)
@@ -115,6 +126,15 @@ public class Category {
     this.fiscalYear = fiscalYear;
     this.isDefault = isDefault;
     this.displayOrder = displayOrder;
+  }
+
+  public Category(String name, String description, FiscalYear fiscalYear, Boolean isDefault, Integer displayOrder, FundingType fundingType) {
+    this.name = name;
+    this.description = description;
+    this.fiscalYear = fiscalYear;
+    this.isDefault = isDefault;
+    this.displayOrder = displayOrder;
+    this.fundingType = fundingType != null ? fundingType : FundingType.BOTH;
   }
 
   // Getters and Setters
@@ -158,6 +178,14 @@ public class Category {
     this.displayOrder = displayOrder;
   }
 
+  public FundingType getFundingType() {
+    return fundingType;
+  }
+
+  public void setFundingType(FundingType fundingType) {
+    this.fundingType = fundingType != null ? fundingType : FundingType.BOTH;
+  }
+
   public FiscalYear getFiscalYear() {
     return fiscalYear;
   }
@@ -198,6 +226,7 @@ public class Category {
         ", description='" + description + '\'' +
         ", isDefault=" + isDefault +
         ", displayOrder=" + displayOrder +
+        ", fundingType=" + fundingType +
         ", fiscalYear=" + (fiscalYear != null ? fiscalYear.getName() : null) +
         ", active=" + active +
         ", createdAt=" + createdAt +

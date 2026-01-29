@@ -16,6 +16,7 @@ import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.SpendingCategory;
 import com.boxoffice.model.SpendingItem;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -143,12 +144,16 @@ public interface SpendingItemRepository extends JpaRepository<SpendingItem, Long
    *
    * @param fiscalYearId the fiscal year ID
    */
-  void deleteByFiscalYearId(Long fiscalYearId);
+  @Modifying
+  @Query("DELETE FROM SpendingItem si WHERE si.fiscalYear.id = :fiscalYearId")
+  void deleteByFiscalYearId(@Param("fiscalYearId") Long fiscalYearId);
 
   /**
    * Delete all spending items for a category.
    *
    * @param categoryId the category ID
    */
-  void deleteByCategoryId(Long categoryId);
+  @Modifying
+  @Query("DELETE FROM SpendingItem si WHERE si.category.id = :categoryId")
+  void deleteByCategoryId(@Param("categoryId") Long categoryId);
 }

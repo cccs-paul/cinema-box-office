@@ -15,6 +15,7 @@ package com.boxoffice.service;
 import com.boxoffice.dto.CategoryDTO;
 import com.boxoffice.model.Category;
 import com.boxoffice.model.FiscalYear;
+import com.boxoffice.model.FundingType;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
@@ -24,6 +25,7 @@ import com.boxoffice.repository.RCAccessRepository;
 import com.boxoffice.repository.ResponsibilityCentreRepository;
 import com.boxoffice.repository.UserRepository;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -44,14 +46,23 @@ public class CategoryServiceImpl implements CategoryService {
   private static final Logger logger = Logger.getLogger(CategoryServiceImpl.class.getName());
 
   // Default categories for both funding and spending
+  // Format: {name, description, fundingType}
+  // Software Licenses, Small Procurement, and Contractors are OM_ONLY by default
   private static final String[][] DEFAULT_CATEGORIES = {
-      {"Compute", "Computing infrastructure and services"},
-      {"GPUs", "Graphics Processing Units for AI/ML and rendering"},
-      {"Storage", "Data storage and backup services"},
-      {"Software Licenses", "Software licensing and subscriptions"},
-      {"Small Procurement", "Miscellaneous small purchases and equipment"},
-      {"Contractors", "External contractors and consulting services"}
+      {"Compute", "Computing infrastructure and services", "BOTH"},
+      {"GPUs", "Graphics Processing Units for AI/ML and rendering", "BOTH"},
+      {"Storage", "Data storage and backup services", "BOTH"},
+      {"Software Licenses", "Software licensing and subscriptions", "OM_ONLY"},
+      {"Small Procurement", "Miscellaneous small purchases and equipment", "OM_ONLY"},
+      {"Contractors", "External contractors and consulting services", "OM_ONLY"}
   };
+
+  // Map of category names to their default funding types for quick lookup
+  private static final Map<String, FundingType> DEFAULT_FUNDING_TYPES = Map.of(
+      "Software Licenses", FundingType.OM_ONLY,
+      "Small Procurement", FundingType.OM_ONLY,
+      "Contractors", FundingType.OM_ONLY
+  );
 
   private final CategoryRepository categoryRepository;
   private final FiscalYearRepository fiscalYearRepository;
@@ -114,6 +125,11 @@ public class CategoryServiceImpl implements CategoryService {
 
   @Override
   public CategoryDTO createCategory(Long fiscalYearId, String username, String name, String description) {
+    return createCategory(fiscalYearId, username, name, description, FundingType.BOTH);
+  }
+
+  @Override
+  public CategoryDTO createCategory(Long fiscalYearId, String username, String name, String description, FundingType fundingType) {
     Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);
     if (fyOpt.isEmpty()) {
       throw new IllegalArgumentException("Fiscal Year not found");
@@ -142,17 +158,22 @@ public class CategoryServiceImpl implements CategoryService {
     int nextOrder = maxOrder + 1;
 
     // New categories are always custom (not default)
-    Category category = new Category(name, description, fy, false);
-    category.setDisplayOrder(nextOrder);
+    FundingType ft = fundingType != null ? fundingType : FundingType.BOTH;
+    Category category = new Category(name, description, fy, false, nextOrder, ft);
 
     Category saved = categoryRepository.save(category);
-    logger.info("Created category '" + name + "' for fiscal year " + fy.getName() + " by user " + username);
+    logger.info("Created category '" + name + "' with funding type " + ft + " for fiscal year " + fy.getName() + " by user " + username);
 
     return CategoryDTO.fromEntity(saved);
   }
 
   @Override
   public CategoryDTO updateCategory(Long categoryId, String username, String name, String description) {
+    return updateCategory(categoryId, username, name, description, null);
+  }
+
+  @Override
+  public CategoryDTO updateCategory(Long categoryId, String username, String name, String description, FundingType fundingType) {
     Optional<Category> categoryOpt = categoryRepository.findById(categoryId);
     if (categoryOpt.isEmpty()) {
       throw new IllegalArgumentException("Category not found");
@@ -182,6 +203,9 @@ public class CategoryServiceImpl implements CategoryService {
     }
     if (description != null) {
       category.setDescription(description);
+    }
+    if (fundingType != null) {
+      category.setFundingType(fundingType);
     }
 
     Category saved = categoryRepository.save(category);
@@ -241,13 +265,14 @@ public class CategoryServiceImpl implements CategoryService {
     for (int i = 0; i < DEFAULT_CATEGORIES.length; i++) {
       String categoryName = DEFAULT_CATEGORIES[i][0];
       String categoryDescription = DEFAULT_CATEGORIES[i][1];
+      String fundingTypeStr = DEFAULT_CATEGORIES[i][2];
+      FundingType fundingType = FundingType.valueOf(fundingTypeStr);
 
       // Check if category with this name already exists
       if (!categoryRepository.existsByNameAndFiscalYear(categoryName, fy)) {
-        Category category = new Category(categoryName, categoryDescription, fy, true);
-        category.setDisplayOrder(i);
+        Category category = new Category(categoryName, categoryDescription, fy, true, i, fundingType);
         categoryRepository.save(category);
-        logger.info("Created default category '" + categoryName + "' for fiscal year " + fy.getName());
+        logger.info("Created default category '" + categoryName + "' with funding type " + fundingType + " for fiscal year " + fy.getName());
       }
     }
 
@@ -306,13 +331,14 @@ public class CategoryServiceImpl implements CategoryService {
     for (int i = 0; i < DEFAULT_CATEGORIES.length; i++) {
       String categoryName = DEFAULT_CATEGORIES[i][0];
       String categoryDescription = DEFAULT_CATEGORIES[i][1];
+      String fundingTypeStr = DEFAULT_CATEGORIES[i][2];
+      FundingType fundingType = FundingType.valueOf(fundingTypeStr);
 
       // Check if category with this name already exists
       if (!categoryRepository.existsByNameAndFiscalYear(categoryName, fy)) {
-        Category category = new Category(categoryName, categoryDescription, fy, true);
-        category.setDisplayOrder(i);
+        Category category = new Category(categoryName, categoryDescription, fy, true, i, fundingType);
         categoryRepository.save(category);
-        logger.info("Created default category '" + categoryName + "' for fiscal year " + fy.getName());
+        logger.info("Created default category '" + categoryName + "' with funding type " + fundingType + " for fiscal year " + fy.getName());
       }
     }
   }

@@ -15,6 +15,7 @@ package com.boxoffice.repository;
 import com.boxoffice.model.Category;
 import com.boxoffice.model.FiscalYear;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -113,5 +114,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
    *
    * @param fiscalYearId the fiscal year ID
    */
+  @Modifying
+  @Query("DELETE FROM Category c WHERE c.fiscalYear.id = :fiscalYearId")
   void deleteByFiscalYearId(@Param("fiscalYearId") Long fiscalYearId);
 }

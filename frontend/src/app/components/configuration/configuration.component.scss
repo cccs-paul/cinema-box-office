@@ -566,6 +566,29 @@
     }
   }
 
+  .funding-type-tag {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+
+    &.both {
+      background: rgba(33, 150, 243, 0.1);
+      color: #1976d2;
+    }
+
+    &.cap-only {
+      background: rgba(76, 175, 80, 0.1);
+      color: #388e3c;
+    }
+
+    &.om-only {
+      background: rgba(255, 152, 0, 0.1);
+      color: #f57c00;
+    }
+  }
+
   .category-info {
     display: flex;
     align-items: center;

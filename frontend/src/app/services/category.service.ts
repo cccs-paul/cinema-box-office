@@ -11,7 +11,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { Category } from '../models/category.model';
+import { Category, FundingType } from '../models/category.model';
 
 /**
  * Request body for creating a category.
@@ -19,6 +19,7 @@ import { Category } from '../models/category.model';
 export interface CategoryCreateRequest {
   name: string;
   description?: string;
+  fundingType?: FundingType;
 }
 
 /**
@@ -27,6 +28,7 @@ export interface CategoryCreateRequest {
 export interface CategoryUpdateRequest {
   name?: string;
   description?: string;
+  fundingType?: FundingType;
 }
 
 /**

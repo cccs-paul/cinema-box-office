@@ -9,6 +9,20 @@
  */
 
 /**
+ * Funding type enum representing the allowed money allocation types for a category.
+ */
+export type FundingType = 'CAP_ONLY' | 'OM_ONLY' | 'BOTH';
+
+/**
+ * Display labels for funding types.
+ */
+export const FUNDING_TYPE_LABELS: Record<FundingType, string> = {
+  'CAP_ONLY': 'Capital Only',
+  'OM_ONLY': 'O&M Only',
+  'BOTH': 'Both CAP & OM'
+};
+
+/**
  * Category interface representing a category for grouping funding and spending items.
  */
 export interface Category {
@@ -30,6 +44,15 @@ export interface Category {
   /** ID of the parent fiscal year */
   fiscalYearId: number;
 
+  /** Allowed funding type for this category */
+  fundingType: FundingType;
+
+  /** Whether CAP amounts are allowed (derived from fundingType) */
+  allowsCap: boolean;
+
+  /** Whether OM amounts are allowed (derived from fundingType) */
+  allowsOm: boolean;
+
   /** Whether the category is active */
   active: boolean;
 
@@ -41,13 +64,27 @@ export interface Category {
 }
 
 /**
- * Default categories.
+ * Default categories with their funding types.
  */
-export const DEFAULT_CATEGORIES: string[] = [
-  'Compute',
-  'GPUs',
-  'Storage',
-  'Software Licenses',
-  'Small Procurement',
-  'Contractors'
+export const DEFAULT_CATEGORIES: Array<{ name: string; fundingType: FundingType }> = [
+  { name: 'Compute', fundingType: 'BOTH' },
+  { name: 'GPUs', fundingType: 'BOTH' },
+  { name: 'Storage', fundingType: 'BOTH' },
+  { name: 'Software Licenses', fundingType: 'OM_ONLY' },
+  { name: 'Small Procurement', fundingType: 'OM_ONLY' },
+  { name: 'Contractors', fundingType: 'OM_ONLY' }
 ];
+
+/**
+ * Helper function to check if a category allows CAP amounts.
+ */
+export function categoryAllowsCap(category: Category): boolean {
+  return category.allowsCap ?? (category.fundingType === 'CAP_ONLY' || category.fundingType === 'BOTH');
+}
+
+/**
+ * Helper function to check if a category allows OM amounts.
+ */
+export function categoryAllowsOm(category: Category): boolean {
+  return category.allowsOm ?? (category.fundingType === 'OM_ONLY' || category.fundingType === 'BOTH');
+}

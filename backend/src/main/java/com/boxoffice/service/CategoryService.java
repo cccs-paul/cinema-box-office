@@ -13,6 +13,7 @@
 package com.boxoffice.service;
 
 import com.boxoffice.dto.CategoryDTO;
+import com.boxoffice.model.FundingType;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,6 +60,20 @@ public interface CategoryService {
   CategoryDTO createCategory(Long fiscalYearId, String username, String name, String description);
 
   /**
+   * Create a new category for a fiscal year with a specific funding type.
+   * Only custom categories can be created - default categories are system-managed.
+   *
+   * @param fiscalYearId the fiscal year ID
+   * @param username the requesting user's username
+   * @param name the category name
+   * @param description the category description
+   * @param fundingType the allowed funding type (CAP_ONLY, OM_ONLY, or BOTH)
+   * @return the created category
+   * @throws IllegalArgumentException if user doesn't have write access or category name already exists
+   */
+  CategoryDTO createCategory(Long fiscalYearId, String username, String name, String description, FundingType fundingType);
+
+  /**
    * Update an existing category.
    * Only custom categories can be updated - default categories are read-only.
    *
@@ -70,6 +85,20 @@ public interface CategoryService {
    * @throws IllegalArgumentException if user doesn't have write access or category is a default category
    */
   CategoryDTO updateCategory(Long categoryId, String username, String name, String description);
+
+  /**
+   * Update an existing category with funding type.
+   * Only custom categories can be updated - default categories are read-only.
+   *
+   * @param categoryId the category ID
+   * @param username the requesting user's username
+   * @param name the new category name
+   * @param description the new category description
+   * @param fundingType the allowed funding type (CAP_ONLY, OM_ONLY, or BOTH)
+   * @return the updated category
+   * @throws IllegalArgumentException if user doesn't have write access or category is a default category
+   */
+  CategoryDTO updateCategory(Long categoryId, String username, String name, String description, FundingType fundingType);
 
   /**
    * Delete a category.

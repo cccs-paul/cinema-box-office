@@ -11,6 +11,7 @@ import com.boxoffice.model.User;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -68,12 +69,16 @@ public interface RCAccessRepository extends JpaRepository<RCAccess, Long> {
    * @param rc the responsibility centre
    * @param user the user
    */
-  void deleteByResponsibilityCentreAndUser(ResponsibilityCentre rc, User user);
+  @Modifying
+  @Query("DELETE FROM RCAccess a WHERE a.responsibilityCentre = :rc AND a.user = :user")
+  void deleteByResponsibilityCentreAndUser(@Param("rc") ResponsibilityCentre rc, @Param("user") User user);
 
   /**
    * Delete all access records for a responsibility centre.
    *
    * @param rc the responsibility centre
    */
-  void deleteByResponsibilityCentre(ResponsibilityCentre rc);
+  @Modifying
+  @Query("DELETE FROM RCAccess a WHERE a.responsibilityCentre = :rc")
+  void deleteByResponsibilityCentre(@Param("rc") ResponsibilityCentre rc);
 }

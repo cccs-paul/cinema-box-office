@@ -14,6 +14,7 @@ import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.SpendingItem;
 import com.boxoffice.model.User;
+import com.boxoffice.repository.CategoryRepository;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.FundingItemRepository;
 import com.boxoffice.repository.MoneyAllocationRepository;
@@ -27,6 +28,8 @@ import com.boxoffice.repository.SpendingCategoryRepository;
 import com.boxoffice.repository.SpendingItemRepository;
 import com.boxoffice.repository.SpendingMoneyAllocationRepository;
 import com.boxoffice.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -47,6 +50,9 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
   private static final Logger logger = LoggerFactory.getLogger(ResponsibilityCentreServiceImpl.class);
 
+  @PersistenceContext
+  private EntityManager entityManager;
+
   private final ResponsibilityCentreRepository rcRepository;
   private final RCAccessRepository accessRepository;
   private final UserRepository userRepository;
@@ -54,7 +60,8 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
   private final FundingItemRepository fundingItemRepository;
   private final SpendingItemRepository spendingItemRepository;
   private final MoneyRepository moneyRepository;
-  private final SpendingCategoryRepository categoryRepository;
+  private final SpendingCategoryRepository spendingCategoryRepository;
+  private final CategoryRepository fundingCategoryRepository;
   private final MoneyAllocationRepository moneyAllocationRepository;
   private final SpendingMoneyAllocationRepository spendingMoneyAllocationRepository;
   private final ProcurementItemRepository procurementItemRepository;
@@ -69,7 +76,8 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       FundingItemRepository fundingItemRepository,
       SpendingItemRepository spendingItemRepository,
       MoneyRepository moneyRepository,
-      SpendingCategoryRepository categoryRepository,
+      SpendingCategoryRepository spendingCategoryRepository,
+      CategoryRepository fundingCategoryRepository,
       MoneyAllocationRepository moneyAllocationRepository,
       SpendingMoneyAllocationRepository spendingMoneyAllocationRepository,
       ProcurementItemRepository procurementItemRepository,
@@ -82,7 +90,8 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     this.fundingItemRepository = fundingItemRepository;
     this.spendingItemRepository = spendingItemRepository;
     this.moneyRepository = moneyRepository;
-    this.categoryRepository = categoryRepository;
+    this.spendingCategoryRepository = spendingCategoryRepository;
+    this.fundingCategoryRepository = fundingCategoryRepository;
     this.moneyAllocationRepository = moneyAllocationRepository;
     this.spendingMoneyAllocationRepository = spendingMoneyAllocationRepository;
     this.procurementItemRepository = procurementItemRepository;
@@ -212,6 +221,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     }
 
     ResponsibilityCentre rc = rcOpt.get();
+    String rcName = rc.getName(); // Store name before entity manager clear
     Optional<User> userOpt = userRepository.findByUsername(username);
     if (userOpt.isEmpty()) {
       return false;
@@ -224,7 +234,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       throw new IllegalAccessError("Only the owner can delete this RC");
     }
 
-    logger.info("Deleting responsibility centre {} (ID: {}) and all related entities", rc.getName(), rcId);
+    logger.info("Deleting responsibility centre {} (ID: {}) and all related entities", rcName, rcId);
 
     // Delete access records first
     accessRepository.deleteByResponsibilityCentre(rc);
@@ -266,20 +276,28 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       // Delete funding items
       fundingItemRepository.deleteByFiscalYearId(fyId);
       
-      // Delete categories
-      categoryRepository.deleteByFiscalYearId(fyId);
+      // Delete spending categories
+      spendingCategoryRepository.deleteByFiscalYearId(fyId);
+      
+      // Delete funding categories (the main categories table)
+      fundingCategoryRepository.deleteByFiscalYearId(fyId);
       
       // Delete monies
       moneyRepository.deleteByFiscalYearId(fyId);
     }
     
-    // Delete all fiscal years
-    fiscalYearRepository.deleteByResponsibilityCentre(rc);
+    // Delete all fiscal years using ID-based deletion
+    fiscalYearRepository.deleteByResponsibilityCentreId(rcId);
     logger.debug("Deleted {} fiscal years for RC {}", fiscalYears.size(), rcId);
+
+    // Flush pending changes and clear the persistence context
+    // This ensures all child deletions are committed and avoids TransientObjectException
+    entityManager.flush();
+    entityManager.clear();
 
     // Finally, delete the RC itself
     rcRepository.deleteById(rcId);
-    logger.info("Successfully deleted responsibility centre {} (ID: {})", rc.getName(), rcId);
+    logger.info("Successfully deleted responsibility centre {} (ID: {})", rcName, rcId);
     
     return true;
   }
