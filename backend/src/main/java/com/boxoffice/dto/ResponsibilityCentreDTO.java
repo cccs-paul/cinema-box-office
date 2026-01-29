@@ -189,7 +189,7 @@ public class ResponsibilityCentreDTO {
    * Check if the current user is the owner of this responsibility centre.
    * Note: Demo RC always returns false as it's read-only for all users.
    *
-   * @return true if current user is the owner, false otherwise (always false for Demo RC)
+   * @return true if current user is the owner (either original owner or has OWNER access), false otherwise
    */
   @JsonProperty("isOwner")
   public boolean isOwner() {
@@ -197,7 +197,22 @@ public class ResponsibilityCentreDTO {
     if (DEMO_RC_NAME.equals(name)) {
       return false;
     }
-    return currentUsername != null && currentUsername.equals(ownerUsername);
+    // Check if access level is OWNER, or if current user is the original owner
+    return "OWNER".equals(accessLevel) || 
+           (currentUsername != null && currentUsername.equals(ownerUsername));
+  }
+
+  /**
+   * Check if the current user can edit content (has OWNER or READ_WRITE access).
+   *
+   * @return true if user can edit content
+   */
+  @JsonProperty("canEdit")
+  public boolean canEdit() {
+    if (DEMO_RC_NAME.equals(name)) {
+      return false;
+    }
+    return "OWNER".equals(accessLevel) || "READ_WRITE".equals(accessLevel);
   }
 
   @Override

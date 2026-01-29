@@ -6,6 +6,8 @@
 package com.boxoffice.repository;
 
 import com.boxoffice.model.RCAccess;
+import com.boxoffice.model.RCAccess.AccessLevel;
+import com.boxoffice.model.RCAccess.PrincipalType;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
 import java.util.List;
@@ -81,4 +83,74 @@ public interface RCAccessRepository extends JpaRepository<RCAccess, Long> {
   @Modifying
   @Query("DELETE FROM RCAccess a WHERE a.responsibilityCentre = :rc")
   void deleteByResponsibilityCentre(@Param("rc") ResponsibilityCentre rc);
+
+  /**
+   * Find access by responsibility centre and principal identifier (for groups/distribution lists).
+   *
+   * @param rc the responsibility centre
+   * @param principalIdentifier the principal identifier
+   * @param principalType the type of principal
+   * @return optional containing the access record if found
+   */
+  Optional<RCAccess> findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+      ResponsibilityCentre rc, String principalIdentifier, PrincipalType principalType);
+
+  /**
+   * Find all access records for a responsibility centre with a specific principal type.
+   *
+   * @param rc the responsibility centre
+   * @param principalType the type of principal
+   * @return list of access records
+   */
+  List<RCAccess> findByResponsibilityCentreAndPrincipalType(ResponsibilityCentre rc, PrincipalType principalType);
+
+  /**
+   * Find all access records for a user based on group membership.
+   * This is used to check if a user has access via a group or distribution list.
+   *
+   * @param groupIdentifiers list of group identifiers the user belongs to
+   * @return list of access records matching the groups
+   */
+  @Query("SELECT a FROM RCAccess a WHERE a.principalIdentifier IN :identifiers AND a.principalType IN ('GROUP', 'DISTRIBUTION_LIST')")
+  List<RCAccess> findByPrincipalIdentifierIn(@Param("identifiers") List<String> identifiers);
+
+  /**
+   * Find the highest access level for a user in a specific RC (direct or via groups).
+   *
+   * @param rc the responsibility centre
+   * @param user the user
+   * @param groupIdentifiers list of group identifiers the user belongs to
+   * @return list of access records matching either direct user access or group membership
+   */
+  @Query("SELECT a FROM RCAccess a WHERE a.responsibilityCentre = :rc AND " +
+      "(a.user = :user OR (a.principalIdentifier IN :identifiers AND a.principalType IN ('GROUP', 'DISTRIBUTION_LIST')))")
+  List<RCAccess> findAllAccessForUserInRC(@Param("rc") ResponsibilityCentre rc, 
+      @Param("user") User user, @Param("identifiers") List<String> identifiers);
+
+  /**
+   * Delete access record by ID.
+   *
+   * @param id the access record ID
+   */
+  @Modifying
+  @Query("DELETE FROM RCAccess a WHERE a.id = :id")
+  void deleteAccessById(@Param("id") Long id);
+
+  /**
+   * Count owners for a responsibility centre.
+   *
+   * @param rc the responsibility centre
+   * @return count of owners
+   */
+  @Query("SELECT COUNT(a) FROM RCAccess a WHERE a.responsibilityCentre = :rc AND a.accessLevel = 'OWNER'")
+  long countOwnersByRC(@Param("rc") ResponsibilityCentre rc);
+
+  /**
+   * Find all owners for a responsibility centre.
+   *
+   * @param rc the responsibility centre
+   * @return list of owner access records
+   */
+  @Query("SELECT a FROM RCAccess a WHERE a.responsibilityCentre = :rc AND a.accessLevel = 'OWNER'")
+  List<RCAccess> findOwnersByRC(@Param("rc") ResponsibilityCentre rc);
 }

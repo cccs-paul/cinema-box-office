@@ -25,6 +25,10 @@
       <span class="action-icon">✏️</span>
       <span class="action-label">Rename RC</span>
     </button>
+    <button class="btn btn-action btn-permissions" (click)="managePermissions()" [disabled]="selectedRCId === null || !selectedRCIsOwner" title="Manage RC Permissions">
+      <span class="action-icon">🔐</span>
+      <span class="action-label">Permissions</span>
+    </button>
   </div>
 
   <!-- Create RC Form -->

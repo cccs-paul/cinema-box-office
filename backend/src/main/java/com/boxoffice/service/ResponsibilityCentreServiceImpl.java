@@ -115,8 +115,8 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     // Get RCs owned by the user
     List<ResponsibilityCentre> ownedRCs = rcRepository.findByOwner(user);
     for (ResponsibilityCentre rc : ownedRCs) {
-      // Demo RC is always read-only for all users
-      String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "READ_WRITE";
+      // Demo RC is always read-only for all users, otherwise owner has OWNER access
+      String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "OWNER";
       result.add(ResponsibilityCentreDTO.fromEntity(rc, username, accessLevel));
     }
 
@@ -170,8 +170,8 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
     // Check if user is the owner
     if (rc.getOwner().getId().equals(user.getId())) {
-      // Demo RC is always read-only for all users
-      String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "READ_WRITE";
+      // Demo RC is always read-only for all users, otherwise owner has OWNER access
+      String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "OWNER";
       return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, accessLevel));
     }
 

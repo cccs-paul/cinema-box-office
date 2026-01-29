@@ -298,6 +298,14 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Navigate to the RC Permissions page.
+   */
+  managePermissions(): void {
+    if (this.selectedRCId === null || !this.selectedRCIsOwner) return;
+    this.router.navigate(['/rc-permissions', this.selectedRCId]);
+  }
+
+  /**
    * Close all RC forms.
    */
   closeAllForms(): void {

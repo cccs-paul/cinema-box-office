@@ -102,6 +102,16 @@
     }
   }
 
+  &.btn-permissions {
+    border-color: #8b5cf6;
+    color: #8b5cf6;
+
+    &:hover:not(:disabled) {
+      background: #f5f3ff;
+      border-color: #7c3aed;
+    }
+  }
+
   &.btn-sm {
     padding: 0.5rem 1rem;
     font-size: 0.85rem;

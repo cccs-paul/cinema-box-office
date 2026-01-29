@@ -8,6 +8,7 @@ import { LoginComponent } from './components/login/login.component';
 import { LayoutComponent } from './components/layout/layout.component';
 import { LayoutNoSidebarComponent } from './components/layout-no-sidebar/layout-no-sidebar.component';
 import { RCSelectionComponent } from './components/rc-selection/rc-selection.component';
+import { RCPermissionsComponent } from './components/rc-permissions/rc-permissions.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { SpendingComponent } from './components/spending/spending.component';
 import { ProcurementComponent } from './components/procurement/procurement.component';
@@ -40,6 +41,10 @@ export const routes: Routes = [
       {
         path: 'rc-selection',
         component: RCSelectionComponent,
+      },
+      {
+        path: 'rc-permissions/:rcId',
+        component: RCPermissionsComponent,
       },
       {
         path: '',
