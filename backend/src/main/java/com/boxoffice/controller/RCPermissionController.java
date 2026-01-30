@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2026-01-29
  */
 @RestController
-@RequestMapping("/api/rc-permissions")
+@RequestMapping("/rc-permissions")
 @Tag(name = "RC Permission Management", description = "APIs for managing RC access permissions")
 public class RCPermissionController {
 

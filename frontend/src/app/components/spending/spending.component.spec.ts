@@ -93,7 +93,10 @@ describe('SpendingComponent', () => {
       isDefault: true,
       fiscalYearId: 1,
       displayOrder: 0,
-      active: true
+      active: true,
+      fundingType: 'BOTH',
+      allowsCap: true,
+      allowsOm: true
     },
     {
       id: 2,
@@ -102,7 +105,10 @@ describe('SpendingComponent', () => {
       isDefault: true,
       fiscalYearId: 1,
       displayOrder: 1,
-      active: true
+      active: true,
+      fundingType: 'BOTH',
+      allowsCap: true,
+      allowsOm: true
     }
   ];
 

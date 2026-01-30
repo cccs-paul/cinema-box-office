@@ -22,7 +22,10 @@ describe('SpendingCategoryService', () => {
     isDefault: true,
     fiscalYearId: 1,
     displayOrder: 0,
-    active: true
+    active: true,
+    fundingType: 'BOTH',
+    allowsCap: true,
+    allowsOm: true
   };
 
   const mockCustomCategory: SpendingCategory = {
@@ -32,7 +35,10 @@ describe('SpendingCategoryService', () => {
     isDefault: false,
     fiscalYearId: 1,
     displayOrder: 6,
-    active: true
+    active: true,
+    fundingType: 'BOTH',
+    allowsCap: true,
+    allowsOm: true
   };
 
   beforeEach(() => {

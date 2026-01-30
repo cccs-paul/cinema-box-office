@@ -23,7 +23,10 @@ describe('CategoryService', () => {
     isDefault: true,
     fiscalYearId: 1,
     displayOrder: 0,
-    active: true
+    active: true,
+    fundingType: 'BOTH',
+    allowsCap: true,
+    allowsOm: true
   };
 
   const mockCustomCategory: Category = {
@@ -33,7 +36,10 @@ describe('CategoryService', () => {
     isDefault: false,
     fiscalYearId: 1,
     displayOrder: 6,
-    active: true
+    active: true,
+    fundingType: 'BOTH',
+    allowsCap: true,
+    allowsOm: true
   };
 
   beforeEach(() => {
