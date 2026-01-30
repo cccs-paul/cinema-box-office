@@ -573,6 +573,11 @@
       white-space: nowrap;
       flex-shrink: 0;
 
+      &.access-owner {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
       &.access-readwrite {
         background: #d1fae5;
         color: #065f46;

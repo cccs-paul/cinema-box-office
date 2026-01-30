@@ -12,6 +12,7 @@
  */
 package com.boxoffice.controller;
 
+import com.boxoffice.dto.ErrorResponse;
 import com.boxoffice.dto.MoneyDTO;
 import com.boxoffice.service.MoneyService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -141,7 +142,7 @@ public class MoneyController {
       @ApiResponse(responseCode = "409", description = "Money code already exists"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
-  public ResponseEntity<MoneyDTO> createMoney(
+  public ResponseEntity<?> createMoney(
       @PathVariable Long rcId,
       @PathVariable Long fyId,
       Authentication authentication,
@@ -153,11 +154,11 @@ public class MoneyController {
     try {
       if (request.getCode() == null || request.getCode().trim().isEmpty()) {
         logger.warning("Money creation failed: Code is required");
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.badRequest().body(new ErrorResponse("Money code is required"));
       }
       if (request.getName() == null || request.getName().trim().isEmpty()) {
         logger.warning("Money creation failed: Name is required");
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.badRequest().body(new ErrorResponse("Money name is required"));
       }
 
       MoneyDTO created = moneyService.createMoney(fyId, username, 
@@ -167,17 +168,17 @@ public class MoneyController {
       String message = e.getMessage();
       if (message.contains("already exists")) {
         logger.warning("Money creation conflict: " + message);
-        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(message));
       }
       if (message.contains("access")) {
         logger.warning("Money creation access denied: " + message);
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(message));
       }
       logger.warning("Money creation failed: " + message);
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.badRequest().body(new ErrorResponse(message));
     } catch (Exception e) {
       logger.severe("Failed to create money: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 
@@ -203,7 +204,7 @@ public class MoneyController {
       @ApiResponse(responseCode = "409", description = "Money code already exists"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
-  public ResponseEntity<MoneyDTO> updateMoney(
+  public ResponseEntity<?> updateMoney(
       @PathVariable Long rcId,
       @PathVariable Long fyId,
       @PathVariable Long moneyId,
@@ -224,17 +225,17 @@ public class MoneyController {
       }
       if (message.contains("already exists")) {
         logger.warning("Money update conflict: " + message);
-        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(message));
       }
       if (message.contains("access") || message.contains("default")) {
         logger.warning("Money update denied: " + message);
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(message));
       }
       logger.warning("Money update failed: " + message);
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.badRequest().body(new ErrorResponse(message));
     } catch (Exception e) {
       logger.severe("Failed to update money: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 
@@ -257,7 +258,7 @@ public class MoneyController {
       @ApiResponse(responseCode = "404", description = "Money not found"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
-  public ResponseEntity<Void> deleteMoney(
+  public ResponseEntity<?> deleteMoney(
       @PathVariable Long rcId,
       @PathVariable Long fyId,
       @PathVariable Long moneyId,
@@ -276,13 +277,13 @@ public class MoneyController {
       }
       if (message.contains("access") || message.contains("default")) {
         logger.warning("Money delete denied: " + message);
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(message));
       }
       logger.warning("Money delete failed: " + message);
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.badRequest().body(new ErrorResponse(message));
     } catch (Exception e) {
       logger.severe("Failed to delete money: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 
@@ -305,7 +306,7 @@ public class MoneyController {
       @ApiResponse(responseCode = "403", description = "Access denied"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
-  public ResponseEntity<Void> reorderMonies(
+  public ResponseEntity<?> reorderMonies(
       @PathVariable Long rcId,
       @PathVariable Long fyId,
       Authentication authentication,
@@ -316,19 +317,19 @@ public class MoneyController {
 
     try {
       if (request.getMoneyIds() == null || request.getMoneyIds().isEmpty()) {
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.badRequest().body(new ErrorResponse("Money IDs are required for reordering"));
       }
 
       moneyService.reorderMonies(fyId, username, request.getMoneyIds());
       return ResponseEntity.noContent().build();
     } catch (IllegalArgumentException e) {
       if (e.getMessage().contains("access")) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(e.getMessage()));
       }
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
     } catch (Exception e) {
       logger.severe("Failed to reorder monies: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 

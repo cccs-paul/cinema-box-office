@@ -1,7 +1,7 @@
 /**
  * Money model for myRC application.
  * Represents a money type configured at the Fiscal Year level.
- * Each money has two parts: Capital (CAP) and O&M (OM).
+ * Each money has two parts: Capital (CAP) and O&M (Operations & Maintenance).
  *
  * @author myRC Team
  * @version 1.0.0
@@ -46,7 +46,7 @@ export interface Money {
   /** Capital (CAP) label derived from code (e.g., "AB (CAP)") */
   capLabel: string;
 
-  /** O&M (OM) label derived from code (e.g., "AB (OM)") */
+  /** O&M label derived from code (e.g., "AB (O&M)") */
   omLabel: string;
 
   /** Creation timestamp */

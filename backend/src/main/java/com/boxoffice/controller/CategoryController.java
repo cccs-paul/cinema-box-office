@@ -13,6 +13,7 @@
 package com.boxoffice.controller;
 
 import com.boxoffice.dto.CategoryDTO;
+import com.boxoffice.dto.ErrorResponse;
 import com.boxoffice.model.FundingType;
 import com.boxoffice.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -393,13 +394,5 @@ public class CategoryController {
 
   public static class ReorderRequest {
     public List<Long> categoryIds;
-  }
-
-  public static class ErrorResponse {
-    public String message;
-
-    public ErrorResponse(String message) {
-      this.message = message;
-    }
   }
 }

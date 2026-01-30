@@ -44,6 +44,8 @@ public class SpendingItemDTO {
   private String fiscalYearName;
   private Long responsibilityCentreId;
   private String responsibilityCentreName;
+  private Long procurementItemId;
+  private String procurementItemName;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
@@ -97,7 +99,7 @@ public class SpendingItemDTO {
           .map(SpendingMoneyAllocationDTO::fromEntity)
           .collect(Collectors.toList());
     }
-    return new SpendingItemDTO(
+    SpendingItemDTO dto = new SpendingItemDTO(
         spendingItem.getId(),
         spendingItem.getName(),
         spendingItem.getDescription(),
@@ -120,6 +122,9 @@ public class SpendingItemDTO {
         spendingItem.getActive(),
         allocations
     );
+    dto.setProcurementItemId(spendingItem.getProcurementItem() != null ? spendingItem.getProcurementItem().getId() : null);
+    dto.setProcurementItemName(spendingItem.getProcurementItem() != null ? spendingItem.getProcurementItem().getName() : null);
+    return dto;
   }
 
   // Getters and Setters
@@ -241,6 +246,22 @@ public class SpendingItemDTO {
 
   public void setResponsibilityCentreName(String responsibilityCentreName) {
     this.responsibilityCentreName = responsibilityCentreName;
+  }
+
+  public Long getProcurementItemId() {
+    return procurementItemId;
+  }
+
+  public void setProcurementItemId(Long procurementItemId) {
+    this.procurementItemId = procurementItemId;
+  }
+
+  public String getProcurementItemName() {
+    return procurementItemName;
+  }
+
+  public void setProcurementItemName(String procurementItemName) {
+    this.procurementItemName = procurementItemName;
   }
 
   public LocalDateTime getCreatedAt() {

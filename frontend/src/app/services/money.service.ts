@@ -115,28 +115,37 @@ export class MoneyService {
       // Client-side error
       errorMessage = `Client error: ${error.error.message}`;
     } else {
-      // Server-side error
-      switch (error.status) {
-        case 400:
-          errorMessage = 'Invalid request. Please check your input.';
-          break;
-        case 401:
-          errorMessage = 'Unauthorized. Please log in again.';
-          break;
-        case 403:
-          errorMessage = 'Access denied. You do not have permission to perform this action.';
-          break;
-        case 404:
-          errorMessage = 'Money type not found.';
-          break;
-        case 409:
-          errorMessage = 'A money type with this code already exists for this fiscal year.';
-          break;
-        case 500:
-          errorMessage = 'Server error. Please try again later.';
-          break;
-        default:
-          errorMessage = `Server error: ${error.status}`;
+      // Server-side error - try to extract message from response body
+      if (error.error && typeof error.error === 'object' && error.error.message) {
+        // Backend returned an ErrorResponse with a message
+        errorMessage = error.error.message;
+      } else if (typeof error.error === 'string' && error.error.length > 0) {
+        // Backend returned a plain string error
+        errorMessage = error.error;
+      } else {
+        // Fall back to status-based messages
+        switch (error.status) {
+          case 400:
+            errorMessage = 'Invalid request. Please check your input.';
+            break;
+          case 401:
+            errorMessage = 'Unauthorized. Please log in again.';
+            break;
+          case 403:
+            errorMessage = 'Access denied. You do not have permission to perform this action.';
+            break;
+          case 404:
+            errorMessage = 'Money type not found.';
+            break;
+          case 409:
+            errorMessage = 'A money type with this code already exists for this fiscal year.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            errorMessage = `Server error: ${error.status}`;
+        }
       }
     }
 

@@ -25,7 +25,11 @@ import {
   ProcurementItemStatus,
   QuoteStatus,
   PROCUREMENT_STATUS_INFO,
-  QUOTE_STATUS_INFO
+  QUOTE_STATUS_INFO,
+  ProcurementEvent,
+  ProcurementEventType,
+  ProcurementEventRequest,
+  EVENT_TYPE_INFO
 } from '../../models/procurement.model';
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 
@@ -33,7 +37,7 @@ import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/curren
  * Procurement component for managing procurement items, quotes, and files.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-28
  */
 @Component({
@@ -65,6 +69,22 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   selectedQuote: ProcurementQuote | null = null;
   files: ProcurementQuoteFile[] = [];
   isLoadingFiles = false;
+
+  // Procurement Events (Tracking)
+  events: ProcurementEvent[] = [];
+  isLoadingEvents = false;
+  showEventsPanel = false;
+  showCreateEventForm = false;
+  isCreatingEvent = false;
+  editingEvent: ProcurementEvent | null = null;
+  newEventType: ProcurementEventType = 'NOTE_ADDED';
+  newEventDate: string = '';
+  newEventComment: string = '';
+  eventTypeOptions: ProcurementEventType[] = [
+    'NOTE_ADDED', 'STATUS_CHANGE', 'QUOTE_RECEIVED', 'QUOTE_SELECTED',
+    'QUOTE_REJECTED', 'PO_ISSUED', 'DELIVERED', 'INVOICED',
+    'PAYMENT_MADE', 'COMPLETED', 'CANCELLED', 'OTHER'
+  ];
 
   // Currencies
   currencies: Currency[] = [];
@@ -339,7 +359,13 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.selectedItem = item;
     this.selectedQuote = null;
     this.files = [];
+    this.events = [];
+    this.showEventsPanel = false;
+    this.showCreateEventForm = false;
+    this.editingEvent = null;
     this.loadQuotes();
+    // Load events in background
+    this.loadEvents();
   }
 
   closeItemDetails(): void {
@@ -347,6 +373,10 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.quotes = [];
     this.selectedQuote = null;
     this.files = [];
+    this.events = [];
+    this.showEventsPanel = false;
+    this.showCreateEventForm = false;
+    this.editingEvent = null;
   }
 
   // ==========================
@@ -729,6 +759,213 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.previewUrl = null;
     this.previewTextContent = '';
     this.isLoadingPreview = false;
+  }
+
+  // ==========================
+  // Procurement Event Methods
+  // ==========================
+
+  /**
+   * Toggle the events panel visibility.
+   */
+  toggleEventsPanel(): void {
+    this.showEventsPanel = !this.showEventsPanel;
+    if (this.showEventsPanel && this.events.length === 0) {
+      this.loadEvents();
+    }
+  }
+
+  /**
+   * Load events for the selected procurement item.
+   */
+  loadEvents(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem) return;
+
+    this.isLoadingEvents = true;
+    this.procurementService.getEvents(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id
+    ).subscribe({
+      next: (events) => {
+        this.events = events;
+        this.isLoadingEvents = false;
+      },
+      error: (error) => {
+        this.events = [];
+        this.isLoadingEvents = false;
+        this.showError('Failed to load events: ' + error.message);
+      }
+    });
+  }
+
+  /**
+   * Show the create event form.
+   */
+  showCreateEvent(): void {
+    this.showCreateEventForm = true;
+    this.editingEvent = null;
+    this.resetEventForm();
+    // Set default date to today
+    this.newEventDate = new Date().toISOString().split('T')[0];
+  }
+
+  /**
+   * Cancel creating/editing an event.
+   */
+  cancelEventForm(): void {
+    this.showCreateEventForm = false;
+    this.editingEvent = null;
+    this.resetEventForm();
+  }
+
+  /**
+   * Reset the event form.
+   */
+  private resetEventForm(): void {
+    this.newEventType = 'NOTE_ADDED';
+    this.newEventDate = new Date().toISOString().split('T')[0];
+    this.newEventComment = '';
+  }
+
+  /**
+   * Create a new procurement event.
+   */
+  createEvent(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem) return;
+    if (!this.newEventDate.trim()) {
+      this.showError('Event date is required');
+      return;
+    }
+
+    this.isCreatingEvent = true;
+    this.clearMessages();
+
+    const request: ProcurementEventRequest = {
+      eventType: this.newEventType,
+      eventDate: this.newEventDate,
+      comment: this.newEventComment.trim() || undefined
+    };
+
+    this.procurementService.createEvent(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      request
+    ).subscribe({
+      next: () => {
+        this.showSuccess('Event created successfully');
+        this.showCreateEventForm = false;
+        this.resetEventForm();
+        this.loadEvents();
+        this.isCreatingEvent = false;
+      },
+      error: (error) => {
+        this.showError('Failed to create event: ' + error.message);
+        this.isCreatingEvent = false;
+      }
+    });
+  }
+
+  /**
+   * Start editing an event.
+   */
+  editEvent(event: ProcurementEvent): void {
+    this.editingEvent = event;
+    this.showCreateEventForm = true;
+    this.newEventType = event.eventType;
+    this.newEventDate = event.eventDate;
+    this.newEventComment = event.comment || '';
+  }
+
+  /**
+   * Update an existing event.
+   */
+  updateEvent(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.editingEvent) return;
+    if (!this.newEventDate.trim()) {
+      this.showError('Event date is required');
+      return;
+    }
+
+    this.isCreatingEvent = true;
+    this.clearMessages();
+
+    const request: ProcurementEventRequest = {
+      eventType: this.newEventType,
+      eventDate: this.newEventDate,
+      comment: this.newEventComment.trim() || undefined
+    };
+
+    this.procurementService.updateEvent(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      this.editingEvent.id,
+      request
+    ).subscribe({
+      next: () => {
+        this.showSuccess('Event updated successfully');
+        this.showCreateEventForm = false;
+        this.editingEvent = null;
+        this.resetEventForm();
+        this.loadEvents();
+        this.isCreatingEvent = false;
+      },
+      error: (error) => {
+        this.showError('Failed to update event: ' + error.message);
+        this.isCreatingEvent = false;
+      }
+    });
+  }
+
+  /**
+   * Delete a procurement event.
+   */
+  deleteEvent(event: ProcurementEvent): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem) return;
+    if (!confirm(`Are you sure you want to delete this event?`)) return;
+
+    this.procurementService.deleteEvent(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      event.id
+    ).subscribe({
+      next: () => {
+        this.showSuccess('Event deleted successfully');
+        this.loadEvents();
+        if (this.editingEvent?.id === event.id) {
+          this.editingEvent = null;
+          this.showCreateEventForm = false;
+          this.resetEventForm();
+        }
+      },
+      error: (error) => {
+        this.showError('Failed to delete event: ' + error.message);
+      }
+    });
+  }
+
+  /**
+   * Get the label for an event type.
+   */
+  getEventTypeLabel(eventType: ProcurementEventType): string {
+    return EVENT_TYPE_INFO[eventType]?.label || eventType;
+  }
+
+  /**
+   * Get the icon for an event type.
+   */
+  getEventTypeIcon(eventType: ProcurementEventType): string {
+    return EVENT_TYPE_INFO[eventType]?.icon || '📌';
+  }
+
+  /**
+   * Get the color class for an event type.
+   */
+  getEventTypeClass(eventType: ProcurementEventType): string {
+    return `event-${EVENT_TYPE_INFO[eventType]?.color || 'gray'}`;
   }
 
   // ==========================

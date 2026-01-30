@@ -27,7 +27,7 @@ describe('MoneyService', () => {
     displayOrder: 0,
     active: true,
     capLabel: 'AB (CAP)',
-    omLabel: 'AB (OM)'
+    omLabel: 'AB (O&M)'
   };
 
   const mockCustomMoney: Money = {
@@ -42,7 +42,7 @@ describe('MoneyService', () => {
     displayOrder: 1,
     active: true,
     capLabel: 'OA (CAP)',
-    omLabel: 'OA (OM)'
+    omLabel: 'OA (O&M)'
   };
 
   beforeEach(() => {
@@ -138,7 +138,7 @@ describe('MoneyService', () => {
         code: 'WCF',
         name: 'Working Capital Fund',
         capLabel: 'WCF (CAP)',
-        omLabel: 'WCF (OM)'
+        omLabel: 'WCF (O&M)'
       };
 
       service.createMoney(rcId, fyId, request).subscribe(money => {

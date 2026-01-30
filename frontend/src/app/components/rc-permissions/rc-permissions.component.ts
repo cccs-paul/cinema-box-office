@@ -158,7 +158,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
       this.permissionService.grantUserAccess(this.rcId, request).subscribe({
         next: () => {
-          this.successMessage = `Access granted to ${this.newPrincipalIdentifier}`;
+          this.showSuccessMessage(`Access granted to ${this.newPrincipalIdentifier}`);
           this.closeGrantForm();
           this.loadPermissions();
           this.isGranting = false;
@@ -178,7 +178,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
       this.permissionService.grantGroupAccess(this.rcId, request).subscribe({
         next: () => {
-          this.successMessage = `Access granted to ${this.newPrincipalIdentifier}`;
+          this.showSuccessMessage(`Access granted to ${this.newPrincipalIdentifier}`);
           this.closeGrantForm();
           this.loadPermissions();
           this.isGranting = false;
@@ -208,7 +208,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
     this.permissionService.updatePermission(this.editingPermissionId, { accessLevel: this.editAccessLevel }).subscribe({
       next: () => {
-        this.successMessage = 'Permission updated successfully.';
+        this.showSuccessMessage('Permission updated successfully.');
         this.editingPermissionId = null;
         this.loadPermissions();
       },
@@ -234,7 +234,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
     this.permissionService.revokeAccess(this.deleteConfirmId).subscribe({
       next: () => {
-        this.successMessage = 'Access revoked successfully.';
+        this.showSuccessMessage('Access revoked successfully.');
         this.deleteConfirmId = null;
         this.loadPermissions();
       },
@@ -292,6 +292,18 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
       default:
         return '';
     }
+  }
+
+  /**
+   * Show a success message and auto-clear it after 5 seconds.
+   */
+  showSuccessMessage(message: string): void {
+    this.successMessage = message;
+    setTimeout(() => {
+      if (this.successMessage === message) {
+        this.successMessage = null;
+      }
+    }, 5000);
   }
 
   clearMessages(): void {

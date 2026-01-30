@@ -80,12 +80,12 @@ describe('CurrencyService', () => {
     it('should handle errors gracefully', () => {
       service.getCurrencies().subscribe({
         error: (error) => {
-          expect(error.message).toContain('Server error');
+          expect(error.message).toContain('Internal server error');
         }
       });
 
       const req = httpMock.expectOne('/api/currencies');
-      req.flush('Error', { status: 500, statusText: 'Internal Server Error' });
+      req.flush({ message: 'Internal server error' }, { status: 500, statusText: 'Internal Server Error' });
     });
   });
 

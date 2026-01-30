@@ -15,6 +15,7 @@
 
 package com.boxoffice.controller;
 
+import com.boxoffice.dto.ErrorResponse;
 import com.boxoffice.dto.ResponsibilityCentreDTO;
 import com.boxoffice.dto.RCAccessDTO;
 import com.boxoffice.service.ResponsibilityCentreService;
@@ -89,7 +90,7 @@ public class ResponsibilityCentreController {
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
-  public ResponseEntity<ResponsibilityCentreDTO> createResponsibilityCentre(
+  public ResponseEntity<?> createResponsibilityCentre(
       Authentication authentication,
       @RequestBody RCCreateRequest request) {
     // Use default user for unauthenticated access (development mode)
@@ -104,7 +105,7 @@ public class ResponsibilityCentreController {
     try {
       if (request.getName() == null || request.getName().trim().isEmpty()) {
         logger.warning("RC creation failed: Name is required");
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.badRequest().body(new ErrorResponse("Responsibility Centre name is required"));
       }
 
       ResponsibilityCentreDTO createdRC = rcService.createResponsibilityCentre(
@@ -115,11 +116,11 @@ public class ResponsibilityCentreController {
       return ResponseEntity.status(HttpStatus.CREATED).body(createdRC);
     } catch (IllegalArgumentException e) {
       logger.warning("RC creation failed: " + e.getMessage());
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
     } catch (Exception e) {
       logger.severe("RC creation failed: " + e.getMessage());
       e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 
@@ -176,7 +177,7 @@ public class ResponsibilityCentreController {
       @ApiResponse(responseCode = "404", description = "RC not found"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
-  public ResponseEntity<ResponsibilityCentreDTO> updateResponsibilityCentre(
+  public ResponseEntity<?> updateResponsibilityCentre(
       @PathVariable Long id,
       Authentication authentication,
       @RequestBody RCCreateRequest request) {
@@ -197,10 +198,10 @@ public class ResponsibilityCentreController {
           .orElseGet(() -> ResponseEntity.notFound().build());
     } catch (IllegalArgumentException e) {
       logger.warning("RC update failed: " + e.getMessage());
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
     } catch (Exception e) {
       logger.severe("RC update failed: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 
@@ -274,10 +275,10 @@ public class ResponsibilityCentreController {
       return ResponseEntity.ok().build();
     } catch (IllegalArgumentException e) {
       logger.warning("Grant access failed: " + e.getMessage());
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
     } catch (Exception e) {
       logger.severe("Grant access failed: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 
@@ -314,10 +315,10 @@ public class ResponsibilityCentreController {
       return ResponseEntity.ok().build();
     } catch (IllegalArgumentException e) {
       logger.warning("Revoke access failed: " + e.getMessage());
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
     } catch (Exception e) {
       logger.severe("Revoke access failed: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 

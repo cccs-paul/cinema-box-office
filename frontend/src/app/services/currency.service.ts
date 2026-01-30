@@ -132,13 +132,22 @@ export class CurrencyService {
       // Client-side error
       errorMessage = `Client error: ${error.error.message}`;
     } else {
-      // Server-side error
-      switch (error.status) {
-        case 500:
-          errorMessage = 'Server error: Unable to load currency data';
-          break;
-        default:
-          errorMessage = `Server error: ${error.status} - ${error.statusText}`;
+      // Server-side error - try to extract message from response body
+      if (error.error && typeof error.error === 'object' && error.error.message) {
+        // Backend returned an ErrorResponse with a message
+        errorMessage = error.error.message;
+      } else if (typeof error.error === 'string' && error.error.length > 0) {
+        // Backend returned a plain string error
+        errorMessage = error.error;
+      } else {
+        // Fall back to status-based messages
+        switch (error.status) {
+          case 500:
+            errorMessage = 'Server error: Unable to load currency data';
+            break;
+          default:
+            errorMessage = `Server error: ${error.status} - ${error.statusText}`;
+        }
       }
     }
 

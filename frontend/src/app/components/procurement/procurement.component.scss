@@ -979,3 +979,234 @@
     color: #334155;
   }
 }
+
+/* ===============================
+ * Procurement Events/Tracking Section
+ * =============================== */
+
+.events-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: #1e293b;
+      font-weight: 600;
+    }
+
+    .section-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+  }
+
+  .btn-toggle {
+    background: none;
+    border: 1px solid #e2e8f0;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+
+    &.active {
+      background-color: #e0f2fe;
+      border-color: #7dd3fc;
+      color: #0369a1;
+    }
+  }
+}
+
+.events-content {
+  background-color: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* Event Form */
+.event-form {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #e2e8f0;
+
+  h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.9375rem;
+    color: #1e293b;
+  }
+}
+
+/* Events Timeline */
+.events-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  border-left: 3px solid #94a3b8;
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  .event-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f1f5f9;
+    border-radius: 50%;
+  }
+
+  .event-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.25rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .event-type {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #1e293b;
+  }
+
+  .event-date {
+    font-size: 0.8125rem;
+    color: #64748b;
+  }
+
+  .event-comment {
+    margin: 0.375rem 0;
+    font-size: 0.875rem;
+    color: #475569;
+    line-height: 1.5;
+  }
+
+  .event-status-change {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.375rem 0;
+    padding: 0.375rem 0.625rem;
+    background-color: #f8fafc;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    width: fit-content;
+
+    .old-status {
+      color: #64748b;
+    }
+
+    .arrow {
+      color: #94a3b8;
+    }
+
+    .new-status {
+      font-weight: 500;
+      color: #1e293b;
+    }
+  }
+
+  .event-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 0.375rem;
+  }
+
+  .event-actions {
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+
+    .btn-icon {
+      font-size: 0.75rem;
+      padding: 0.25rem;
+    }
+  }
+
+  &:hover .event-actions {
+    opacity: 1;
+  }
+
+  /* Event type color variations */
+  &.event-blue {
+    border-left-color: #3b82f6;
+    .event-icon { background-color: #eff6ff; }
+  }
+
+  &.event-green {
+    border-left-color: #22c55e;
+    .event-icon { background-color: #f0fdf4; }
+  }
+
+  &.event-orange {
+    border-left-color: #f97316;
+    .event-icon { background-color: #fff7ed; }
+  }
+
+  &.event-red {
+    border-left-color: #ef4444;
+    .event-icon { background-color: #fef2f2; }
+  }
+
+  &.event-purple {
+    border-left-color: #a855f7;
+    .event-icon { background-color: #faf5ff; }
+  }
+
+  &.event-yellow {
+    border-left-color: #eab308;
+    .event-icon { background-color: #fefce8; }
+  }
+
+  &.event-success {
+    border-left-color: #16a34a;
+    .event-icon { background-color: #f0fdf4; }
+  }
+
+  &.event-gray {
+    border-left-color: #94a3b8;
+    .event-icon { background-color: #f8fafc; }
+  }
+}

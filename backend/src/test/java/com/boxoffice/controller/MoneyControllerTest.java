@@ -120,11 +120,11 @@ class MoneyControllerTest {
       when(moneyService.getMoneyById(anyLong(), anyString()))
           .thenReturn(Optional.of(defaultMoney));
 
-      ResponseEntity<MoneyDTO> response = controller.getMoney(1L, 1L, 1L, null);
+      ResponseEntity<?> response = controller.getMoney(1L, 1L, 1L, null);
 
       assertEquals(HttpStatus.OK, response.getStatusCode());
       assertNotNull(response.getBody());
-      assertEquals("AB", response.getBody().getCode());
+      assertEquals("AB", ((MoneyDTO) response.getBody()).getCode());
     }
 
     @Test
@@ -133,7 +133,7 @@ class MoneyControllerTest {
       when(moneyService.getMoneyById(anyLong(), anyString()))
           .thenReturn(Optional.empty());
 
-      ResponseEntity<MoneyDTO> response = controller.getMoney(1L, 1L, 99L, null);
+      ResponseEntity<?> response = controller.getMoney(1L, 1L, 99L, null);
 
       assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
@@ -155,11 +155,11 @@ class MoneyControllerTest {
       request.setName("Working Capital Fund");
       request.setDescription("Test");
 
-      ResponseEntity<MoneyDTO> response = controller.createMoney(1L, 1L, null, request);
+      ResponseEntity<?> response = controller.createMoney(1L, 1L, null, request);
 
       assertEquals(HttpStatus.CREATED, response.getStatusCode());
       assertNotNull(response.getBody());
-      assertEquals("WCF", response.getBody().getCode());
+      assertEquals("WCF", ((MoneyDTO) response.getBody()).getCode());
     }
 
     @Test
@@ -169,7 +169,7 @@ class MoneyControllerTest {
       request.setCode("");
       request.setName("Test");
 
-      ResponseEntity<MoneyDTO> response = controller.createMoney(1L, 1L, null, request);
+      ResponseEntity<?> response = controller.createMoney(1L, 1L, null, request);
 
       assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
@@ -184,7 +184,7 @@ class MoneyControllerTest {
       request.setCode("AB");
       request.setName("Duplicate");
 
-      ResponseEntity<MoneyDTO> response = controller.createMoney(1L, 1L, null, request);
+      ResponseEntity<?> response = controller.createMoney(1L, 1L, null, request);
 
       assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
     }
@@ -199,7 +199,7 @@ class MoneyControllerTest {
       request.setCode("WCF");
       request.setName("Test");
 
-      ResponseEntity<MoneyDTO> response = controller.createMoney(1L, 1L, null, request);
+      ResponseEntity<?> response = controller.createMoney(1L, 1L, null, request);
 
       assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
@@ -221,10 +221,10 @@ class MoneyControllerTest {
       request.setName("Working Capital");
       request.setDescription("Updated");
 
-      ResponseEntity<MoneyDTO> response = controller.updateMoney(1L, 1L, 2L, null, request);
+      ResponseEntity<?> response = controller.updateMoney(1L, 1L, 2L, null, request);
 
       assertEquals(HttpStatus.OK, response.getStatusCode());
-      assertEquals("WCF", response.getBody().getCode());
+      assertEquals("WCF", ((MoneyDTO) response.getBody()).getCode());
     }
 
     @Test
@@ -236,7 +236,7 @@ class MoneyControllerTest {
       MoneyController.MoneyUpdateRequest request = new MoneyController.MoneyUpdateRequest();
       request.setName("Test");
 
-      ResponseEntity<MoneyDTO> response = controller.updateMoney(1L, 1L, 99L, null, request);
+      ResponseEntity<?> response = controller.updateMoney(1L, 1L, 99L, null, request);
 
       assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
@@ -250,7 +250,7 @@ class MoneyControllerTest {
       MoneyController.MoneyUpdateRequest request = new MoneyController.MoneyUpdateRequest();
       request.setCode("XX");
 
-      ResponseEntity<MoneyDTO> response = controller.updateMoney(1L, 1L, 1L, null, request);
+      ResponseEntity<?> response = controller.updateMoney(1L, 1L, 1L, null, request);
 
       assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
@@ -265,7 +265,7 @@ class MoneyControllerTest {
     void deletesMoney() {
       doNothing().when(moneyService).deleteMoney(eq(2L), anyString());
 
-      ResponseEntity<Void> response = controller.deleteMoney(1L, 1L, 2L, null);
+      ResponseEntity<?> response = controller.deleteMoney(1L, 1L, 2L, null);
 
       assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     }
@@ -276,7 +276,7 @@ class MoneyControllerTest {
       doThrow(new IllegalArgumentException("Money not found"))
           .when(moneyService).deleteMoney(eq(99L), anyString());
 
-      ResponseEntity<Void> response = controller.deleteMoney(1L, 1L, 99L, null);
+      ResponseEntity<?> response = controller.deleteMoney(1L, 1L, 99L, null);
 
       assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
@@ -287,7 +287,7 @@ class MoneyControllerTest {
       doThrow(new IllegalArgumentException("Cannot delete the default money"))
           .when(moneyService).deleteMoney(eq(1L), anyString());
 
-      ResponseEntity<Void> response = controller.deleteMoney(1L, 1L, 1L, null);
+      ResponseEntity<?> response = controller.deleteMoney(1L, 1L, 1L, null);
 
       assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
@@ -305,7 +305,7 @@ class MoneyControllerTest {
       MoneyController.MoneyReorderRequest request = new MoneyController.MoneyReorderRequest();
       request.setMoneyIds(Arrays.asList(2L, 1L));
 
-      ResponseEntity<Void> response = controller.reorderMonies(1L, 1L, null, request);
+      ResponseEntity<?> response = controller.reorderMonies(1L, 1L, null, request);
 
       assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     }
@@ -316,7 +316,7 @@ class MoneyControllerTest {
       MoneyController.MoneyReorderRequest request = new MoneyController.MoneyReorderRequest();
       request.setMoneyIds(Arrays.asList());
 
-      ResponseEntity<Void> response = controller.reorderMonies(1L, 1L, null, request);
+      ResponseEntity<?> response = controller.reorderMonies(1L, 1L, null, request);
 
       assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }

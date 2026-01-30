@@ -16,7 +16,10 @@ import {
   ProcurementQuote,
   ProcurementQuoteFile,
   ProcurementItemStatus,
-  QuoteStatus
+  QuoteStatus,
+  ProcurementEvent,
+  ProcurementEventRequest,
+  ProcurementEventType
 } from '../models/procurement.model';
 
 /**
@@ -335,6 +338,129 @@ export class ProcurementService {
    */
   getFileViewUrl(rcId: number, fyId: number, procurementItemId: number, quoteId: number, fileId: number): string {
     return `${this.baseUrl(rcId, fyId)}/${procurementItemId}/quotes/${quoteId}/files/${fileId}/view`;
+  }
+
+  // ==========================
+  // Procurement Event Operations
+  // ==========================
+
+  /**
+   * Get all events for a procurement item.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventType Optional event type filter
+   * @param startDate Optional start date filter (ISO date string)
+   * @param endDate Optional end date filter (ISO date string)
+   * @returns Observable of procurement events
+   */
+  getEvents(rcId: number, fyId: number, procurementItemId: number, 
+            eventType?: ProcurementEventType, startDate?: string, endDate?: string): Observable<ProcurementEvent[]> {
+    let params = new HttpParams();
+    if (eventType) {
+      params = params.set('eventType', eventType);
+    }
+    if (startDate) {
+      params = params.set('startDate', startDate);
+    }
+    if (endDate) {
+      params = params.set('endDate', endDate);
+    }
+    return this.http.get<ProcurementEvent[]>(`${this.baseUrl(rcId, fyId)}/${procurementItemId}/events`, 
+      { params, withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Get a specific event by ID.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @returns Observable of the event
+   */
+  getEvent(rcId: number, fyId: number, procurementItemId: number, eventId: number): Observable<ProcurementEvent> {
+    return this.http.get<ProcurementEvent>(`${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}`, 
+      { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Get the event count for a procurement item.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @returns Observable of the event count
+   */
+  getEventCount(rcId: number, fyId: number, procurementItemId: number): Observable<number> {
+    return this.http.get<number>(`${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/count`, 
+      { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Get the most recent event for a procurement item.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @returns Observable of the most recent event (or null if none)
+   */
+  getLatestEvent(rcId: number, fyId: number, procurementItemId: number): Observable<ProcurementEvent | null> {
+    return this.http.get<ProcurementEvent | null>(`${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/latest`, 
+      { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Create a new event for a procurement item.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param request The event create request
+   * @returns Observable of the created event
+   */
+  createEvent(rcId: number, fyId: number, procurementItemId: number, 
+              request: ProcurementEventRequest): Observable<ProcurementEvent> {
+    return this.http.post<ProcurementEvent>(`${this.baseUrl(rcId, fyId)}/${procurementItemId}/events`, 
+      request, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Update an existing event.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @param request The event update request
+   * @returns Observable of the updated event
+   */
+  updateEvent(rcId: number, fyId: number, procurementItemId: number, 
+              eventId: number, request: ProcurementEventRequest): Observable<ProcurementEvent> {
+    return this.http.put<ProcurementEvent>(`${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}`, 
+      request, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Delete an event.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @returns Observable of void
+   */
+  deleteEvent(rcId: number, fyId: number, procurementItemId: number, eventId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}`, 
+      { withCredentials: true })
+      .pipe(catchError(this.handleError));
   }
 
   // ==========================

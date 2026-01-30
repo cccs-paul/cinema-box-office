@@ -76,7 +76,7 @@ describe('FiscalYearService', () => {
     it('should handle 404 error', () => {
       service.getFiscalYear(1, 999).subscribe({
         error: (error) => {
-          expect(error.message).toContain('not found');
+          expect(error.message).toContain('Not found');
         }
       });
 
@@ -110,12 +110,12 @@ describe('FiscalYearService', () => {
 
       service.createFiscalYear(1, createRequest).subscribe({
         error: (error) => {
-          expect(error.message).toContain('Invalid request');
+          expect(error.message).toContain('Name is required');
         }
       });
 
       const req = httpMock.expectOne('/api/responsibility-centres/1/fiscal-years');
-      req.flush({ message: 'Invalid' }, { status: 400, statusText: 'Bad Request' });
+      req.flush({ message: 'Name is required' }, { status: 400, statusText: 'Bad Request' });
     });
   });
 

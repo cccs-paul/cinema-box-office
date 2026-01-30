@@ -67,7 +67,7 @@ describe('SpendingComponent', () => {
     displayOrder: 0,
     active: true,
     capLabel: 'AB (CAP)',
-    omLabel: 'AB (OM)'
+    omLabel: 'AB (O&M)'
   };
 
   const mockCustomMoney: Money = {
@@ -82,7 +82,7 @@ describe('SpendingComponent', () => {
     displayOrder: 1,
     active: true,
     capLabel: 'OA (CAP)',
-    omLabel: 'OA (OM)'
+    omLabel: 'OA (O&M)'
   };
 
   const mockCategories: Category[] = [

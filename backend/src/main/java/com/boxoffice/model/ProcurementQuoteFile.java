@@ -68,7 +68,6 @@ public class ProcurementQuoteFile {
      * Binary content of the file.
      * Stored as a BLOB in the database.
      */
-    @Lob
     @Basic(fetch = FetchType.LAZY)
     @Column(nullable = false, columnDefinition = "BYTEA")
     private byte[] content;

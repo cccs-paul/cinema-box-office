@@ -638,14 +638,30 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
    * Get access level label for display.
    */
   getAccessLevelLabel(accessLevel: string): string {
-    return accessLevel === 'READ_WRITE' ? 'Read & Write' : 'Read Only';
+    switch (accessLevel) {
+      case 'OWNER':
+        return 'Owned';
+      case 'READ_WRITE':
+        return 'Read & Write';
+      case 'READ_ONLY':
+      default:
+        return 'Read Only';
+    }
   }
 
   /**
    * Get CSS class for access level badge.
    */
   getAccessLevelClass(accessLevel: string): string {
-    return accessLevel === 'READ_WRITE' ? 'access-readwrite' : 'access-readonly';
+    switch (accessLevel) {
+      case 'OWNER':
+        return 'access-owner';
+      case 'READ_WRITE':
+        return 'access-readwrite';
+      case 'READ_ONLY':
+      default:
+        return 'access-readonly';
+    }
   }
 
   ngOnDestroy(): void {

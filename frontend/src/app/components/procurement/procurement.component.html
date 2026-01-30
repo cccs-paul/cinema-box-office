@@ -528,6 +528,117 @@
             </div>
           </div>
         </div>
+
+        <!-- Procurement Events/Tracking Section -->
+        <div class="events-section">
+          <div class="section-header">
+            <h3>📋 Procurement Tracking ({{ events.length }})</h3>
+            <div class="section-actions">
+              <button 
+                class="btn-toggle" 
+                (click)="toggleEventsPanel()"
+                [class.active]="showEventsPanel">
+                {{ showEventsPanel ? '▼ Hide' : '▶ Show' }}
+              </button>
+              <button 
+                class="btn-primary btn-sm" 
+                (click)="showCreateEvent()" 
+                *ngIf="canWrite && showEventsPanel && !showCreateEventForm">
+                ➕ Add Event
+              </button>
+            </div>
+          </div>
+
+          <div class="events-content" *ngIf="showEventsPanel">
+            <!-- Create/Edit Event Form -->
+            <div class="create-form event-form" *ngIf="showCreateEventForm">
+              <h4>{{ editingEvent ? 'Edit Event' : 'Add New Event' }}</h4>
+              <form (ngSubmit)="editingEvent ? updateEvent() : createEvent()">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="newEventType">Event Type *</label>
+                    <select 
+                      id="newEventType" 
+                      [(ngModel)]="newEventType" 
+                      name="newEventType"
+                      required>
+                      <option *ngFor="let type of eventTypeOptions" [value]="type">
+                        {{ getEventTypeIcon(type) }} {{ getEventTypeLabel(type) }}
+                      </option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="newEventDate">Date *</label>
+                    <input
+                      type="date"
+                      id="newEventDate"
+                      [(ngModel)]="newEventDate"
+                      name="newEventDate"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="newEventComment">Comment/Notes</label>
+                  <textarea
+                    id="newEventComment"
+                    [(ngModel)]="newEventComment"
+                    name="newEventComment"
+                    rows="2"
+                    placeholder="Optional comment or description..."
+                  ></textarea>
+                </div>
+                <div class="form-actions">
+                  <button type="button" class="btn-secondary" (click)="cancelEventForm()">Cancel</button>
+                  <button
+                    type="submit"
+                    class="btn-primary"
+                    [disabled]="isCreatingEvent || !newEventDate">
+                    {{ isCreatingEvent ? (editingEvent ? 'Updating...' : 'Adding...') : (editingEvent ? 'Update' : 'Add Event') }}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Events Timeline -->
+            <div class="events-timeline">
+              <div class="loading" *ngIf="isLoadingEvents">
+                <span class="spinner"></span> Loading events...
+              </div>
+
+              <div class="event-item" 
+                   *ngFor="let event of events" 
+                   [ngClass]="getEventTypeClass(event.eventType)">
+                <div class="event-icon">{{ getEventTypeIcon(event.eventType) }}</div>
+                <div class="event-content">
+                  <div class="event-header">
+                    <span class="event-type">{{ getEventTypeLabel(event.eventType) }}</span>
+                    <span class="event-date">{{ event.eventDate | date:'mediumDate' }}</span>
+                  </div>
+                  <p class="event-comment" *ngIf="event.comment">{{ event.comment }}</p>
+                  <div class="event-status-change" *ngIf="event.oldStatus && event.newStatus">
+                    <span class="old-status">{{ event.oldStatus }}</span>
+                    <span class="arrow">→</span>
+                    <span class="new-status">{{ event.newStatus }}</span>
+                  </div>
+                  <div class="event-meta">
+                    <span class="created-by" *ngIf="event.createdBy">By: {{ event.createdBy }}</span>
+                    <span class="created-at" *ngIf="event.createdAt">{{ event.createdAt | date:'short' }}</span>
+                  </div>
+                </div>
+                <div class="event-actions" *ngIf="canWrite">
+                  <button class="btn-icon" title="Edit" (click)="editEvent(event)">✏️</button>
+                  <button class="btn-icon btn-danger" title="Delete" (click)="deleteEvent(event)">🗑️</button>
+                </div>
+              </div>
+
+              <div class="empty-state" *ngIf="!isLoadingEvents && events.length === 0">
+                <p>No tracking events recorded yet.</p>
+                <p *ngIf="canWrite">Click "Add Event" to add one.</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

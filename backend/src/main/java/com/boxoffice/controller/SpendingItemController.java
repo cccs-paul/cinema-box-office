@@ -12,6 +12,7 @@
  */
 package com.boxoffice.controller;
 
+import com.boxoffice.dto.ErrorResponse;
 import com.boxoffice.dto.SpendingItemDTO;
 import com.boxoffice.dto.SpendingMoneyAllocationDTO;
 import com.boxoffice.service.SpendingItemService;
@@ -413,13 +414,5 @@ public class SpendingItemController {
   // Request DTOs
   public static class StatusUpdateRequest {
     public String status;
-  }
-
-  public static class ErrorResponse {
-    public String message;
-
-    public ErrorResponse(String message) {
-      this.message = message;
-    }
   }
 }

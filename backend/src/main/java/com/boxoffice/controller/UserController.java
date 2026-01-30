@@ -17,6 +17,7 @@ package com.boxoffice.controller;
 
 import com.boxoffice.dto.ChangePasswordRequest;
 import com.boxoffice.dto.CreateUserRequest;
+import com.boxoffice.dto.ErrorResponse;
 import com.boxoffice.dto.UpdateUserRequest;
 import com.boxoffice.dto.UserDTO;
 import com.boxoffice.service.UserService;
@@ -63,7 +64,7 @@ public class UserController {
         @ApiResponse(responseCode = "400", description = "Invalid request or user already exists"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<UserDTO> createUser(
+    public ResponseEntity<?> createUser(
             @RequestBody CreateUserRequest createUserRequest) {
         logger.info("POST /users - Creating new user: " + createUserRequest.getUsername());
         try {
@@ -71,7 +72,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CREATED).body(user);
         } catch (IllegalArgumentException e) {
             logger.severe("User creation failed: " + e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         }
     }
 
@@ -212,7 +213,7 @@ public class UserController {
         @ApiResponse(responseCode = "400", description = "Invalid request"),
         @ApiResponse(responseCode = "404", description = "User not found")
     })
-    public ResponseEntity<UserDTO> updateUser(
+    public ResponseEntity<?> updateUser(
             @Parameter(description = "The user ID", required = true)
             @PathVariable Long userId,
             @RequestBody UpdateUserRequest updateRequest) {;
@@ -220,8 +221,8 @@ public class UserController {
             UserDTO user = userService.updateUser(userId, updateRequest);
             return ResponseEntity.ok(user);
         } catch (IllegalArgumentException e) {
-            logger.severe("Error");
-            return ResponseEntity.badRequest().build();
+            logger.severe("User update failed: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         }
     }
 
@@ -485,13 +486,13 @@ public class UserController {
         @ApiResponse(responseCode = "200", description = "Theme updated successfully"),
         @ApiResponse(responseCode = "404", description = "User not found")
     })
-    public ResponseEntity<UserDTO> updateTheme(
+    public ResponseEntity<?> updateTheme(
             @Parameter(description = "Username") @PathVariable String username,
             @Parameter(description = "Theme preference") @RequestParam String theme) {
         logger.info("PUT /users/" + username + "/theme - Updating theme to " + theme);
         
         if (!theme.equals("light") && !theme.equals("dark")) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(new ErrorResponse("Theme must be 'light' or 'dark'"));
         }
         
         Optional<UserDTO> updated = userService.updateTheme(username, theme);

@@ -118,6 +118,15 @@ public class SpendingItem {
   private FiscalYear fiscalYear;
 
   /**
+   * Optional link to a procurement item.
+   * If set, this spending item is associated with the procurement process.
+   * If null, this is a discrete (standalone) spending item.
+   */
+  @ManyToOne(optional = true)
+  @JoinColumn(name = "procurement_item_id", nullable = true)
+  private ProcurementItem procurementItem;
+
+  /**
    * Money allocations for this spending item.
    * Each allocation tracks CAP and OM amounts for a specific money type.
    */
@@ -241,6 +250,23 @@ public class SpendingItem {
     this.fiscalYear = fiscalYear;
   }
 
+  public ProcurementItem getProcurementItem() {
+    return procurementItem;
+  }
+
+  public void setProcurementItem(ProcurementItem procurementItem) {
+    this.procurementItem = procurementItem;
+  }
+
+  /**
+   * Check if this spending item is linked to a procurement item.
+   *
+   * @return true if linked to procurement, false if discrete
+   */
+  public boolean isLinkedToProcurement() {
+    return procurementItem != null;
+  }
+
   public List<SpendingMoneyAllocation> getMoneyAllocations() {
     return moneyAllocations;
   }
@@ -322,6 +348,7 @@ public class SpendingItem {
         ", exchangeRate=" + exchangeRate +
         ", category=" + (category != null ? category.getName() : null) +
         ", fiscalYear=" + (fiscalYear != null ? fiscalYear.getName() : null) +
+        ", procurementItem=" + (procurementItem != null ? procurementItem.getName() : null) +
         ", active=" + active +
         ", createdAt=" + createdAt +
         ", updatedAt=" + updatedAt +

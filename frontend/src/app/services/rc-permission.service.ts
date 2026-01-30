@@ -215,8 +215,24 @@ export class RCPermissionService {
       // Client-side error
       errorMessage = error.error.message;
     } else {
-      // Server-side error
-      errorMessage = error.error || `Error Code: ${error.status}`;
+      // Server-side error - extract message from response
+      if (error.error) {
+        if (typeof error.error === 'string') {
+          errorMessage = error.error;
+        } else if (error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.error.error) {
+          errorMessage = error.error.error;
+        }
+      } else if (error.status === 400) {
+        errorMessage = 'Invalid request. Please check your input.';
+      } else if (error.status === 403) {
+        errorMessage = 'You do not have permission to perform this action.';
+      } else if (error.status === 404) {
+        errorMessage = 'The requested resource was not found.';
+      } else {
+        errorMessage = `Error Code: ${error.status}`;
+      }
     }
     console.error('RC Permission Service Error:', errorMessage);
     return throwError(() => new Error(errorMessage));

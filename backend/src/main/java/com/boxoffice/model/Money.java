@@ -207,12 +207,12 @@ public class Money {
   }
 
   /**
-   * Get the OM (O&M) label for this money type.
+   * Get the O&M (Operations and Maintenance) label for this money type.
    *
-   * @return the OM label (e.g., "AB (OM)")
+   * @return the O&M label (e.g., "AB (O&M)")
    */
   public String getOmLabel() {
-    return code + " (OM)";
+    return code + " (O&M)";
   }
 
   @Override

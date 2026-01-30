@@ -100,6 +100,12 @@ export interface SpendingItem {
   /** Name of the responsibility centre */
   responsibilityCentreName?: string;
 
+  /** Optional link to a procurement item (null if discrete spending item) */
+  procurementItemId?: number | null;
+
+  /** Name of the linked procurement item */
+  procurementItemName?: string | null;
+
   /** Whether the spending item is active */
   active: boolean;
 
@@ -111,6 +117,15 @@ export interface SpendingItem {
 
   /** Last update timestamp */
   updatedAt?: string;
+}
+
+/**
+ * Check if a spending item is linked to procurement.
+ * @param item The spending item to check
+ * @returns true if linked to procurement, false if discrete
+ */
+export function isLinkedToProcurement(item: SpendingItem): boolean {
+  return item.procurementItemId != null;
 }
 
 /**

@@ -5,6 +5,7 @@
  */
 package com.boxoffice.controller;
 
+import com.boxoffice.dto.ErrorResponse;
 import com.boxoffice.dto.FiscalYearDTO;
 import com.boxoffice.service.FiscalYearService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -132,7 +133,7 @@ public class FiscalYearController {
       @ApiResponse(responseCode = "403", description = "Access denied"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
-  public ResponseEntity<FiscalYearDTO> createFiscalYear(
+  public ResponseEntity<?> createFiscalYear(
       @PathVariable Long rcId,
       Authentication authentication,
       @RequestBody FiscalYearCreateRequest request) {
@@ -146,7 +147,7 @@ public class FiscalYearController {
     try {
       if (request.getName() == null || request.getName().trim().isEmpty()) {
         logger.warning("Fiscal year creation failed: Name is required");
-        return ResponseEntity.badRequest().build();
+        return ResponseEntity.badRequest().body(new ErrorResponse("Fiscal year name is required"));
       }
 
       FiscalYearDTO createdFY = fiscalYearService.createFiscalYear(
@@ -158,11 +159,11 @@ public class FiscalYearController {
       return ResponseEntity.status(HttpStatus.CREATED).body(createdFY);
     } catch (IllegalArgumentException e) {
       logger.warning("Fiscal year creation failed: " + e.getMessage());
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
     } catch (Exception e) {
       logger.severe("Fiscal year creation failed: " + e.getMessage());
       e.printStackTrace();
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 
@@ -185,7 +186,7 @@ public class FiscalYearController {
       @ApiResponse(responseCode = "404", description = "Fiscal year not found"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
-  public ResponseEntity<FiscalYearDTO> updateFiscalYear(
+  public ResponseEntity<?> updateFiscalYear(
       @PathVariable Long rcId,
       @PathVariable Long fyId,
       Authentication authentication,
@@ -208,10 +209,10 @@ public class FiscalYearController {
           .orElseGet(() -> ResponseEntity.notFound().build());
     } catch (IllegalArgumentException e) {
       logger.warning("Fiscal year update failed: " + e.getMessage());
-      return ResponseEntity.badRequest().build();
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
     } catch (Exception e) {
       logger.severe("Fiscal year update failed: " + e.getMessage());
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 

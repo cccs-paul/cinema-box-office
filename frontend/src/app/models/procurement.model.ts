@@ -225,4 +225,117 @@ export interface ProcurementItem {
 
   /** Number of quotes */
   quoteCount?: number;
+
+  /** Events associated with this item */
+  events?: ProcurementEvent[];
+
+  /** Number of events */
+  eventCount?: number;
+}
+
+/**
+ * Enum for procurement event types.
+ */
+export type ProcurementEventType =
+  | 'CREATED'
+  | 'STATUS_CHANGE'
+  | 'NOTE_ADDED'
+  | 'QUOTE_RECEIVED'
+  | 'QUOTE_SELECTED'
+  | 'QUOTE_REJECTED'
+  | 'PO_ISSUED'
+  | 'DELIVERED'
+  | 'INVOICED'
+  | 'PAYMENT_MADE'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'OTHER';
+
+/**
+ * Event type display information.
+ */
+export interface EventTypeInfo {
+  label: string;
+  color: string;
+  icon: string;
+}
+
+/**
+ * Map of event type to display information.
+ */
+export const EVENT_TYPE_INFO: Record<ProcurementEventType, EventTypeInfo> = {
+  CREATED: { label: 'Created', color: 'blue', icon: '🆕' },
+  STATUS_CHANGE: { label: 'Status Change', color: 'orange', icon: '🔄' },
+  NOTE_ADDED: { label: 'Note Added', color: 'gray', icon: '📝' },
+  QUOTE_RECEIVED: { label: 'Quote Received', color: 'blue', icon: '📥' },
+  QUOTE_SELECTED: { label: 'Quote Selected', color: 'green', icon: '✅' },
+  QUOTE_REJECTED: { label: 'Quote Rejected', color: 'red', icon: '❌' },
+  PO_ISSUED: { label: 'PO Issued', color: 'purple', icon: '📋' },
+  DELIVERED: { label: 'Delivered', color: 'green', icon: '📦' },
+  INVOICED: { label: 'Invoiced', color: 'yellow', icon: '🧾' },
+  PAYMENT_MADE: { label: 'Payment Made', color: 'green', icon: '💰' },
+  COMPLETED: { label: 'Completed', color: 'success', icon: '✔️' },
+  CANCELLED: { label: 'Cancelled', color: 'red', icon: '🚫' },
+  OTHER: { label: 'Other', color: 'gray', icon: '📌' }
+};
+
+/**
+ * Procurement event interface.
+ */
+export interface ProcurementEvent {
+  /** Unique identifier for the event */
+  id: number;
+
+  /** ID of the parent procurement item */
+  procurementItemId: number;
+
+  /** Name of the parent procurement item */
+  procurementItemName?: string;
+
+  /** Event type */
+  eventType: ProcurementEventType;
+
+  /** Date of the event (ISO date string) */
+  eventDate: string;
+
+  /** Optional comment/description */
+  comment?: string;
+
+  /** Old status for status change events */
+  oldStatus?: string;
+
+  /** New status for status change events */
+  newStatus?: string;
+
+  /** Username who created the event */
+  createdBy?: string;
+
+  /** Creation timestamp */
+  createdAt?: string;
+
+  /** Last update timestamp */
+  updatedAt?: string;
+
+  /** Whether the event is active */
+  active?: boolean;
+}
+
+/**
+ * Request payload for creating/updating a procurement event.
+ */
+export interface ProcurementEventRequest {
+  /** Event type */
+  eventType?: ProcurementEventType;
+
+  /** Date of the event (ISO date string, defaults to today) */
+  eventDate?: string;
+
+  /** Optional comment/description */
+  comment?: string;
+
+  /** Old status for status change events */
+  oldStatus?: string;
+
+  /** New status for status change events */
+  newStatus?: string;
 }

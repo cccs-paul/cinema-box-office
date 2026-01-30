@@ -149,7 +149,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     ResponsibilityCentre rc = new ResponsibilityCentre(name, description, user);
     ResponsibilityCentre saved = rcRepository.save(rc);
 
-    return ResponsibilityCentreDTO.fromEntity(saved, username, "READ_WRITE");
+    return ResponsibilityCentreDTO.fromEntity(saved, username, "OWNER");
   }
 
   @Override
@@ -210,7 +210,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     rc.setDescription(description);
     ResponsibilityCentre updated = rcRepository.save(rc);
 
-    return Optional.of(ResponsibilityCentreDTO.fromEntity(updated, username, "READ_WRITE"));
+    return Optional.of(ResponsibilityCentreDTO.fromEntity(updated, username, "OWNER"));
   }
 
   @Override
@@ -445,6 +445,6 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
     ResponsibilityCentre saved = rcRepository.save(clonedRc);
 
-    return ResponsibilityCentreDTO.fromEntity(saved, username, "READ_WRITE");
+    return ResponsibilityCentreDTO.fromEntity(saved, username, "OWNER");
   }
 }

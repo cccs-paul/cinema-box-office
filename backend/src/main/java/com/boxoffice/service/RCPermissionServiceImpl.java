@@ -199,10 +199,27 @@ public class RCPermissionServiceImpl implements RCPermissionService {
       throw new IllegalArgumentException("Cannot modify permissions for Demo RC");
     }
 
-    // Prevent removing the last owner
+    // Prevent user from demoting their own OWNER permissions if they are the sole owner
     if (access.getAccessLevel() == AccessLevel.OWNER && newAccessLevel != AccessLevel.OWNER) {
+      // Check if the user is trying to demote their own owner permissions
+      User requestingUser = userRepository.findByUsername(requestingUsername).orElse(null);
+      if (requestingUser != null && access.getUser() != null 
+          && access.getUser().getId().equals(requestingUser.getId())) {
+        // User is trying to demote their own OWNER permissions
+        long ownerCount = accessRepository.countOwnersByRC(rc);
+        boolean originalOwnerHasExplicitAccess = accessRepository.findOwnersByRC(rc).stream()
+            .anyMatch(a -> a.getUser() != null && a.getUser().getId().equals(rc.getOwner().getId()));
+        long effectiveOwnerCount = originalOwnerHasExplicitAccess ? ownerCount : ownerCount + 1;
+
+        if (effectiveOwnerCount <= 1) {
+          throw new IllegalArgumentException(
+              "Cannot demote your own owner permissions when you are the sole owner. " +
+              "Grant owner access to another user first.");
+        }
+      }
+
+      // General check: prevent removing the last owner
       long ownerCount = accessRepository.countOwnersByRC(rc);
-      // Also count the original owner from the RC entity
       boolean originalOwnerHasExplicitAccess = accessRepository.findOwnersByRC(rc).stream()
           .anyMatch(a -> a.getUser() != null && a.getUser().getId().equals(rc.getOwner().getId()));
       long effectiveOwnerCount = originalOwnerHasExplicitAccess ? ownerCount : ownerCount + 1;
@@ -246,10 +263,27 @@ public class RCPermissionServiceImpl implements RCPermissionService {
       throw new IllegalArgumentException("Cannot revoke access for the original RC owner");
     }
 
-    // Prevent removing the last owner
+    // Prevent owner from removing their own OWNER permissions if they are the sole owner
     if (access.getAccessLevel() == AccessLevel.OWNER) {
+      // Check if the user is trying to remove their own owner permissions
+      User requestingUser = userRepository.findByUsername(requestingUsername).orElse(null);
+      if (requestingUser != null && access.getUser() != null 
+          && access.getUser().getId().equals(requestingUser.getId())) {
+        // User is trying to remove their own OWNER permissions
+        long ownerCount = accessRepository.countOwnersByRC(rc);
+        boolean originalOwnerHasExplicitAccess = accessRepository.findOwnersByRC(rc).stream()
+            .anyMatch(a -> a.getUser() != null && a.getUser().getId().equals(rc.getOwner().getId()));
+        long effectiveOwnerCount = originalOwnerHasExplicitAccess ? ownerCount : ownerCount + 1;
+
+        if (effectiveOwnerCount <= 1) {
+          throw new IllegalArgumentException(
+              "Cannot remove your own owner permissions when you are the sole owner. " +
+              "Grant owner access to another user first.");
+        }
+      }
+
+      // General check: prevent removing the last owner
       long ownerCount = accessRepository.countOwnersByRC(rc);
-      // Also count the original owner from the RC entity
       boolean originalOwnerHasExplicitAccess = accessRepository.findOwnersByRC(rc).stream()
           .anyMatch(a -> a.getUser() != null && a.getUser().getId().equals(rc.getOwner().getId()));
       long effectiveOwnerCount = originalOwnerHasExplicitAccess ? ownerCount : ownerCount + 1;

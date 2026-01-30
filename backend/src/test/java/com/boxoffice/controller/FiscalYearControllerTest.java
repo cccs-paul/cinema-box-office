@@ -100,11 +100,11 @@ class FiscalYearControllerTest {
     when(fiscalYearService.getFiscalYearById(anyLong(), anyString()))
         .thenReturn(Optional.of(testFiscalYear));
 
-    ResponseEntity<FiscalYearDTO> response = controller.getFiscalYear(1L, 1L, null);
+    ResponseEntity<?> response = controller.getFiscalYear(1L, 1L, null);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals("FY 2025-2026", response.getBody().getName());
+    assertEquals("FY 2025-2026", ((FiscalYearDTO) response.getBody()).getName());
   }
 
   @Test
@@ -112,7 +112,7 @@ class FiscalYearControllerTest {
   void getFiscalYear_ReturnsNotFoundWhenMissing() {
     when(fiscalYearService.getFiscalYearById(anyLong(), anyString())).thenReturn(Optional.empty());
 
-    ResponseEntity<FiscalYearDTO> response = controller.getFiscalYear(1L, 999L, null);
+    ResponseEntity<?> response = controller.getFiscalYear(1L, 999L, null);
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
@@ -129,11 +129,11 @@ class FiscalYearControllerTest {
             "Fiscal Year 2025-2026"
         );
 
-    ResponseEntity<FiscalYearDTO> response = controller.createFiscalYear(1L, null, request);
+    ResponseEntity<?> response = controller.createFiscalYear(1L, null, request);
 
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals("FY 2025-2026", response.getBody().getName());
+    assertEquals("FY 2025-2026", ((FiscalYearDTO) response.getBody()).getName());
   }
 
   @Test
@@ -145,7 +145,7 @@ class FiscalYearControllerTest {
             "Description"
         );
 
-    ResponseEntity<FiscalYearDTO> response = controller.createFiscalYear(1L, null, request);
+    ResponseEntity<?> response = controller.createFiscalYear(1L, null, request);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -159,7 +159,7 @@ class FiscalYearControllerTest {
             "Description"
         );
 
-    ResponseEntity<FiscalYearDTO> response = controller.createFiscalYear(1L, null, request);
+    ResponseEntity<?> response = controller.createFiscalYear(1L, null, request);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -176,7 +176,7 @@ class FiscalYearControllerTest {
             "Description"
         );
 
-    ResponseEntity<FiscalYearDTO> response = controller.createFiscalYear(1L, null, request);
+    ResponseEntity<?> response = controller.createFiscalYear(1L, null, request);
 
     assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
@@ -206,11 +206,11 @@ class FiscalYearControllerTest {
             "Updated description"
         );
 
-    ResponseEntity<FiscalYearDTO> response = controller.updateFiscalYear(1L, 1L, null, request);
+    ResponseEntity<?> response = controller.updateFiscalYear(1L, 1L, null, request);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
-    assertEquals("FY 2025-2026 Updated", response.getBody().getName());
+    assertEquals("FY 2025-2026 Updated", ((FiscalYearDTO) response.getBody()).getName());
   }
 
   @Test
@@ -225,7 +225,7 @@ class FiscalYearControllerTest {
             "Description"
         );
 
-    ResponseEntity<FiscalYearDTO> response = controller.updateFiscalYear(1L, 999L, null, request);
+    ResponseEntity<?> response = controller.updateFiscalYear(1L, 999L, null, request);
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
   }
