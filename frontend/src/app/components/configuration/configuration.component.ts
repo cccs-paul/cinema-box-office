@@ -536,17 +536,20 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Clear any previous error when slider is moved
+    this.moneyError = null;
+
     const numValue = parseInt(value, 10);
     if (isNaN(numValue)) {
       return;
     }
 
     // Validate that min <= max
-    if (setting === 'onTargetMin' && numValue > (this.selectedFY.onTargetMax ?? 10)) {
+    if (setting === 'onTargetMin' && numValue > (this.selectedFY.onTargetMax ?? 2)) {
       this.moneyError = 'Minimum threshold cannot be greater than maximum threshold';
       return;
     }
-    if (setting === 'onTargetMax' && numValue < (this.selectedFY.onTargetMin ?? -10)) {
+    if (setting === 'onTargetMax' && numValue < (this.selectedFY.onTargetMin ?? -2)) {
       this.moneyError = 'Maximum threshold cannot be less than minimum threshold';
       return;
     }

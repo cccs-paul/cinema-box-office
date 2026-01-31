@@ -60,8 +60,8 @@ class FiscalYearControllerTest {
         true,
         true,   // showCategoryFilter
         false,  // groupByCategory
-        -10,    // onTargetMin
-        10      // onTargetMax
+        -2,     // onTargetMin
+        2       // onTargetMax
     );
   }
 
@@ -197,8 +197,8 @@ class FiscalYearControllerTest {
         true,
         true,   // showCategoryFilter
         false,  // groupByCategory
-        -10,    // onTargetMin
-        10      // onTargetMax
+        -2,     // onTargetMin
+        2       // onTargetMax
     );
 
     when(fiscalYearService.updateFiscalYear(anyLong(), anyString(), anyString(), anyString()))

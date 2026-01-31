@@ -4,6 +4,13 @@
   Licensed under MIT License
 -->
 <div class="procurement-container">
+  <!-- Action Bar -->
+  <div class="action-bar" *ngIf="canWrite && !showCreateItemForm">
+    <button class="btn btn-primary" (click)="showCreateItem()">
+      + Add Procurement Item
+    </button>
+  </div>
+
   <!-- Messages -->
   <div class="messages" *ngIf="errorMessage || successMessage">
     <div class="alert alert-error" *ngIf="errorMessage">
@@ -18,13 +25,6 @@
   <div class="content-wrapper">
     <!-- Items Panel -->
     <div class="items-panel">
-      <!-- Action Bar -->
-      <div class="action-bar" *ngIf="canWrite && !showCreateItemForm">
-        <button class="btn btn-primary" (click)="showCreateItem()">
-          + New Procurement
-        </button>
-      </div>
-
       <!-- Search and Category Filter -->
       <div class="filters-bar" *ngIf="!showCreateItemForm">
         <!-- Search Box -->
@@ -218,10 +218,10 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn-secondary" (click)="cancelCreateItem()">Cancel</button>
+            <button type="button" class="btn btn-secondary" (click)="cancelCreateItem()">Cancel</button>
             <button
               type="submit"
-              class="btn-primary"
+              class="btn btn-primary"
               [disabled]="isCreatingItem || !newItemPR.trim() || !newItemName.trim()"
             >
               {{ isCreatingItem ? 'Creating...' : 'Create' }}
@@ -838,7 +838,7 @@
           <div class="empty-icon">🛒</div>
           <h3>No Procurement Items Yet</h3>
           <p>Get started by creating your first procurement item for this fiscal year.</p>
-          <button class="btn-primary" (click)="showCreateItem()" *ngIf="canWrite">
+          <button class="btn btn-primary" (click)="showCreateItem()" *ngIf="canWrite">
             Create First Procurement Item
           </button>
         </div>

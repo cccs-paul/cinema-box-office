@@ -301,8 +301,8 @@ class FiscalYearServiceTest {
         "testuser",
         true,
         false,
-        -10,
-        10
+        -2,
+        2
     );
 
     assertTrue(result.isPresent());

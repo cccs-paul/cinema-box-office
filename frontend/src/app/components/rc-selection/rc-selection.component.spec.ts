@@ -30,8 +30,8 @@ describe('RCSelectionComponent', () => {
   ];
 
   const createMockFiscalYears = (): FiscalYear[] => [
-    { id: 1, name: 'FY 2025-2026', description: 'Current year', active: true, responsibilityCentreId: 1, showCategoryFilter: true, groupByCategory: false, onTargetMin: -10, onTargetMax: 10 },
-    { id: 2, name: 'FY 2024-2025', description: 'Previous year', active: false, responsibilityCentreId: 1, showCategoryFilter: true, groupByCategory: false, onTargetMin: -10, onTargetMax: 10 }
+    { id: 1, name: 'FY 2025-2026', description: 'Current year', active: true, responsibilityCentreId: 1, showCategoryFilter: true, groupByCategory: false, onTargetMin: -2, onTargetMax: 2 },
+    { id: 2, name: 'FY 2024-2025', description: 'Previous year', active: false, responsibilityCentreId: 1, showCategoryFilter: true, groupByCategory: false, onTargetMin: -2, onTargetMax: 2 }
   ];
 
   beforeEach(async () => {
@@ -415,8 +415,8 @@ describe('RCSelectionComponent', () => {
         responsibilityCentreId: 1,
         showCategoryFilter: true,
         groupByCategory: false,
-        onTargetMin: -10,
-        onTargetMax: 10
+        onTargetMin: -2,
+        onTargetMax: 2
       };
 
       fyServiceMock.createFiscalYear.and.returnValue(of(newFY));
@@ -460,8 +460,8 @@ describe('RCSelectionComponent', () => {
         responsibilityCentreId: 1,
         showCategoryFilter: true,
         groupByCategory: false,
-        onTargetMin: -10,
-        onTargetMax: 10
+        onTargetMin: -2,
+        onTargetMax: 2
       };
 
       fyServiceMock.updateFiscalYear.and.returnValue(of(updatedFY));

@@ -38,15 +38,15 @@ export class SidebarComponent implements OnInit, OnDestroy {
       badge: null,
     },
     {
-      label: 'Spending',
-      icon: '💰',
-      route: '/app/spending',
-      badge: null,
-    },
-    {
       label: 'Procurement',
       icon: '📦',
       route: '/app/procurement',
+      badge: null,
+    },
+    {
+      label: 'Spending',
+      icon: '💰',
+      route: '/app/spending',
       badge: null,
     },
     {

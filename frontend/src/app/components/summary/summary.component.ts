@@ -16,11 +16,30 @@ import { FiscalYearService } from '../../services/fiscal-year.service';
 import { FundingItemService } from '../../services/funding-item.service';
 import { SpendingItemService } from '../../services/spending-item.service';
 import { ProcurementService } from '../../services/procurement.service';
+import { MoneyService } from '../../services/money.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { FundingItem } from '../../models/funding-item.model';
 import { SpendingItem } from '../../models/spending-item.model';
 import { ProcurementItem } from '../../models/procurement.model';
+import { Money } from '../../models/money.model';
+
+/**
+ * Interface for money type summary data.
+ */
+interface MoneyTypeSummary {
+  code: string;
+  name: string;
+  fundingCap: number;
+  fundingOm: number;
+  fundingTotal: number;
+  spendingCap: number;
+  spendingOm: number;
+  spendingTotal: number;
+  leftToSpendCap: number;
+  leftToSpendOm: number;
+  leftToSpendTotal: number;
+}
 
 /**
  * Summary component providing an overall financial overview of the FY.
@@ -48,6 +67,8 @@ export class SummaryComponent implements OnInit, OnDestroy {
   fundingItems: FundingItem[] = [];
   spendingItems: SpendingItem[] = [];
   procurementItems: ProcurementItem[] = [];
+  moneyTypes: Money[] = [];
+  moneyTypeSummaries: MoneyTypeSummary[] = [];
   
   isLoading = false;
   errorMessage: string | null = null;
@@ -83,7 +104,8 @@ export class SummaryComponent implements OnInit, OnDestroy {
     private fyService: FiscalYearService,
     private fundingItemService: FundingItemService,
     private spendingItemService: SpendingItemService,
-    private procurementService: ProcurementService
+    private procurementService: ProcurementService,
+    private moneyService: MoneyService
   ) {}
 
   ngOnInit(): void {
@@ -144,14 +166,17 @@ export class SummaryComponent implements OnInit, OnDestroy {
     forkJoin({
       funding: this.fundingItemService.getFundingItemsByFY(this.selectedFY.id),
       spending: this.spendingItemService.getSpendingItemsByFY(this.selectedRC.id, this.selectedFY.id),
-      procurement: this.procurementService.getProcurementItems(this.selectedRC.id, this.selectedFY.id)
+      procurement: this.procurementService.getProcurementItems(this.selectedRC.id, this.selectedFY.id),
+      moneyTypes: this.moneyService.getMoniesByFiscalYear(this.selectedRC.id, this.selectedFY.id)
     }).subscribe({
       next: (data) => {
         this.fundingItems = data.funding;
         this.spendingItems = data.spending;
         this.procurementItems = data.procurement;
+        this.moneyTypes = data.moneyTypes;
         this.isLoading = false;
         this.calculateTotals();
+        this.calculateMoneyTypeSummaries();
       },
       error: (error) => {
         this.errorMessage = 'Failed to load data: ' + error.message;
@@ -218,6 +243,59 @@ export class SummaryComponent implements OnInit, OnDestroy {
     this.procurementInProgress = this.procurementItems.filter(
       p => ['UNDER_REVIEW', 'APPROVED', 'PO_ISSUED'].includes(p.status)
     ).length;
+  }
+
+  /**
+   * Calculate summaries per money type.
+   */
+  private calculateMoneyTypeSummaries(): void {
+    this.moneyTypeSummaries = [];
+
+    for (const money of this.moneyTypes) {
+      let fundingCap = 0;
+      let fundingOm = 0;
+      let spendingCap = 0;
+      let spendingOm = 0;
+
+      // Sum funding for this money type
+      for (const item of this.fundingItems) {
+        if (item.moneyAllocations) {
+          const allocation = item.moneyAllocations.find(a => a.moneyId === money.id);
+          if (allocation) {
+            fundingCap += allocation.capAmount || 0;
+            fundingOm += allocation.omAmount || 0;
+          }
+        }
+      }
+
+      // Sum spending for this money type
+      for (const item of this.spendingItems) {
+        if (item.moneyAllocations) {
+          const allocation = item.moneyAllocations.find(a => a.moneyId === money.id);
+          if (allocation) {
+            spendingCap += allocation.capAmount || 0;
+            spendingOm += allocation.omAmount || 0;
+          }
+        }
+      }
+
+      const fundingTotal = fundingCap + fundingOm;
+      const spendingTotal = spendingCap + spendingOm;
+
+      this.moneyTypeSummaries.push({
+        code: money.code,
+        name: money.name,
+        fundingCap,
+        fundingOm,
+        fundingTotal,
+        spendingCap,
+        spendingOm,
+        spendingTotal,
+        leftToSpendCap: fundingCap - spendingCap,
+        leftToSpendOm: fundingOm - spendingOm,
+        leftToSpendTotal: fundingTotal - spendingTotal
+      });
+    }
   }
 
   /**

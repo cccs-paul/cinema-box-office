@@ -117,6 +117,52 @@
       </div>
     </div>
 
+    <!-- Money Type Breakdown -->
+    <div class="money-type-section" *ngIf="moneyTypeSummaries.length > 0">
+      <h2>Left to Spend by Money Type</h2>
+      
+      <div class="money-type-grid">
+        <div class="money-type-card" *ngFor="let summary of moneyTypeSummaries">
+          <div class="money-type-header">
+            <span class="money-code">{{ summary.code }}</span>
+            <span class="money-name">{{ summary.name }}</span>
+          </div>
+          <div class="money-type-body">
+            <div class="money-row">
+              <span class="money-label">Funding (CAP)</span>
+              <span class="money-value">{{ formatCurrency(summary.fundingCap) }}</span>
+            </div>
+            <div class="money-row">
+              <span class="money-label">Spending (CAP)</span>
+              <span class="money-value">{{ formatCurrency(summary.spendingCap) }}</span>
+            </div>
+            <div class="money-row left-to-spend" [class.negative]="summary.leftToSpendCap < 0">
+              <span class="money-label">Left to Spend (CAP)</span>
+              <span class="money-value">{{ formatCurrency(summary.leftToSpendCap) }}</span>
+            </div>
+            <div class="money-divider"></div>
+            <div class="money-row">
+              <span class="money-label">Funding (O&M)</span>
+              <span class="money-value">{{ formatCurrency(summary.fundingOm) }}</span>
+            </div>
+            <div class="money-row">
+              <span class="money-label">Spending (O&M)</span>
+              <span class="money-value">{{ formatCurrency(summary.spendingOm) }}</span>
+            </div>
+            <div class="money-row left-to-spend" [class.negative]="summary.leftToSpendOm < 0">
+              <span class="money-label">Left to Spend (O&M)</span>
+              <span class="money-value">{{ formatCurrency(summary.leftToSpendOm) }}</span>
+            </div>
+            <div class="money-divider"></div>
+            <div class="money-row total" [class.negative]="summary.leftToSpendTotal < 0">
+              <span class="money-label">Total Left to Spend</span>
+              <span class="money-value">{{ formatCurrency(summary.leftToSpendTotal) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Bottom Line -->
     <div class="bottom-line" [ngClass]="getStatusClass(spendingPercentTotal)">
       <div class="bottom-line-icon">{{ getHealthIndicator() }}</div>

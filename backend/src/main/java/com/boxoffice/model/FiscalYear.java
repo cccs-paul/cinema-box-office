@@ -66,7 +66,7 @@ public class FiscalYear {
   private Boolean groupByCategory = false;
 
   @Column(name = "on_target_min", nullable = false)
-  private Integer onTargetMin = -10;
+  private Integer onTargetMin = -2;
 
   @Column(name = "on_target_max", nullable = false)
   private Integer onTargetMax = 10;

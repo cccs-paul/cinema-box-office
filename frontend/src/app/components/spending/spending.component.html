@@ -5,8 +5,8 @@
 -->
 <div class="spending-container">
   <!-- Action Bar -->
-  <div class="action-bar" *ngIf="canWrite">
-    <button class="btn btn-primary" (click)="showCreate()" [disabled]="categories.length === 0">
+  <div class="action-bar">
+    <button class="btn btn-primary" (click)="showCreate()" *ngIf="canWrite && !showCreateForm" [disabled]="categories.length === 0">
       + Add Spending Item
     </button>
   </div>
