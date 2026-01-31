@@ -1,0 +1,144 @@
+# .dockerignore - Root level Docker ignore file
+# Prevents unnecessary files from being sent to Docker build context
+# Author: myRC Team
+# Date: 2026-01-31
+# Version: 1.0.0
+# License: MIT
+
+# =============================================================================
+# Node.js / Frontend
+# =============================================================================
+
+# Dependencies - CRITICAL for image size reduction
+frontend/node_modules/
+frontend/.angular/
+
+# Build artifacts (we copy dist explicitly)
+# frontend/dist/  # Keep this - needed for production build
+
+# Package manager files
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.npm/
+frontend/.yarn/
+
+# Test coverage
+frontend/coverage/
+
+# =============================================================================
+# Backend / Java
+# =============================================================================
+
+# Maven target directory (except the final JAR)
+backend/target/classes/
+backend/target/test-classes/
+backend/target/generated-sources/
+backend/target/generated-test-sources/
+backend/target/maven-status/
+backend/target/maven-archiver/
+backend/target/surefire-reports/
+backend/target/*.jar.original
+
+# =============================================================================
+# IDE and Editor Files
+# =============================================================================
+
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+*.sublime-workspace
+*.sublime-project
+.c9/
+
+# =============================================================================
+# OS Generated Files
+# =============================================================================
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# =============================================================================
+# Git
+# =============================================================================
+
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# =============================================================================
+# Documentation
+# =============================================================================
+
+docs/
+*.md
+!README.md
+LICENSE
+
+# =============================================================================
+# Development Files
+# =============================================================================
+
+# Test files
+**/*.spec.ts
+**/*.test.ts
+**/test/
+**/tests/
+**/spec/
+
+# Configuration for testing
+karma.conf.js
+protractor.conf.js
+jest.config.js
+
+# Development docker files
+docker-compose.dev*.yml
+docker-compose.oauth2.yml
+Dockerfile.dev
+
+# Scripts not needed in container
+*.sh
+!start.sh
+
+# Kubernetes configs (not needed in image)
+k8s/
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+.env
+.env.*
+
+# LDAP test files
+ldap-init.ldif
+
+# pgAdmin config
+pgadmin-servers.json
+
+# Cookies and credentials
+cookies.txt
+
+# =============================================================================
+# Miscellaneous
+# =============================================================================
+
+# VS Code workspace
+*.code-workspace
+
+# Lock files (dependencies already installed)
+# Keep package-lock.json for reproducible builds in dev Dockerfile
