@@ -355,6 +355,20 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Toggle item details - expand if collapsed, collapse if expanded
+   * @param item - The procurement item to toggle
+   */
+  toggleItemDetails(item: ProcurementItem): void {
+    if (this.selectedItem?.id === item.id) {
+      // Collapse if same item clicked
+      this.closeItemDetails();
+    } else {
+      // Expand new item
+      this.viewItemDetails(item);
+    }
+  }
+
   viewItemDetails(item: ProcurementItem): void {
     this.selectedItem = item;
     this.selectedQuote = null;

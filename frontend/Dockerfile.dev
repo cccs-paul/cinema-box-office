@@ -1,4 +1,12 @@
 # Development Dockerfile for Angular Frontend
+# Author: myRC Team
+# Date: 2026-01-31
+# Version: 1.1.0
+# License: MIT
+#
+# Build context should be project root, not frontend directory
+# Usage: docker build -f frontend/Dockerfile.dev -t myrc-web-dev .
+
 FROM node:20-slim
 
 WORKDIR /app
@@ -14,14 +22,21 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 # Expose port
 EXPOSE 4200
 
-# Copy package files
+# Copy package files first for better layer caching
 COPY frontend/package*.json ./
 
-# Install dependencies
-RUN npm ci && npm cache clean --force
+# Install dependencies and clean cache to reduce image size
+# Using --legacy-peer-deps to handle peer dependency conflicts
+RUN npm ci --legacy-peer-deps && \
+    npm cache clean --force && \
+    rm -rf /tmp/*
 
-# Copy source code
-COPY frontend/ ./
+# Copy only source code (node_modules excluded by .dockerignore)
+# This significantly reduces build context and image size
+COPY frontend/src/ ./src/
+COPY frontend/angular.json ./
+COPY frontend/tsconfig*.json ./
+COPY frontend/proxy.conf.json ./
 
 # Start Angular dev server with proper host binding
 CMD ["npx", "ng", "serve", "--host", "0.0.0.0", "--poll", "2000"]

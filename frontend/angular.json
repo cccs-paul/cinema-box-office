@@ -65,7 +65,10 @@
             },
             "development": {
               "buildTarget": "myrc:build:development",
-              "proxyConfig": "proxy.conf.json"
+              "proxyConfig": "proxy.conf.json",
+              "headers": {
+                "X-Frame-Options": "SAMEORIGIN"
+              }
             }
           },
           "defaultConfiguration": "development"
