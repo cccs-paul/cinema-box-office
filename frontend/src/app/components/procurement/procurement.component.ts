@@ -677,26 +677,26 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   viewFile(file: ProcurementQuoteFile): void {
     if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.selectedQuote) return;
 
-    const url = `/api${this.procurementService.getFileViewUrl(
+    const url = this.procurementService.getFileViewUrl(
       this.selectedRC.id,
       this.selectedFY.id,
       this.selectedItem.id,
       this.selectedQuote.id,
       file.id
-    )}`;
+    );
     window.open(url, '_blank');
   }
 
   downloadFile(file: ProcurementQuoteFile): void {
     if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.selectedQuote) return;
 
-    const url = `/api${this.procurementService.getFileDownloadUrl(
+    const url = this.procurementService.getFileDownloadUrl(
       this.selectedRC.id,
       this.selectedFY.id,
       this.selectedItem.id,
       this.selectedQuote.id,
       file.id
-    )}`;
+    );
     window.open(url, '_blank');
   }
 
@@ -723,13 +723,13 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.previewUrl = null;
     this.previewTextContent = '';
 
-    const url = `/api${this.procurementService.getFileViewUrl(
+    const url = this.procurementService.getFileViewUrl(
       this.selectedRC.id,
       this.selectedFY.id,
       this.selectedItem.id,
       this.selectedQuote.id,
       file.id
-    )}`;
+    );
 
     // For PDFs and images, we can use the URL directly in an iframe/img
     if (file.contentType === 'application/pdf' || file.contentType.startsWith('image/')) {

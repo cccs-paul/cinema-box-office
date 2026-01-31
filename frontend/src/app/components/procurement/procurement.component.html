@@ -4,14 +4,6 @@
   Licensed under MIT License
 -->
 <div class="procurement-container">
-  <!-- Header -->
-  <div class="page-header">
-    <h1>Procurement Management</h1>
-    <p class="subtitle" *ngIf="selectedRC && selectedFY">
-      {{ selectedRC.name }} - {{ selectedFY.name }}
-    </p>
-  </div>
-
   <!-- Messages -->
   <div class="messages" *ngIf="errorMessage || successMessage">
     <div class="alert alert-error" *ngIf="errorMessage">

@@ -149,6 +149,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   /**
    * Load the selected RC and FY context from service.
+   * RC must be loaded before FY to ensure proper data dependencies.
    */
   private loadSelectedContext(): void {
     const rcId = this.rcService.getSelectedRC();
@@ -160,31 +161,30 @@ export class DashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Load RC details
+    // Load RC details first, then FY within the callback to ensure proper sequencing
     this.rcService.getResponsibilityCentre(rcId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (rc) => {
           this.selectedRC = rc;
+          // Load FY details after RC is loaded to ensure selectedRC is set
+          this.fyService.getFiscalYear(rcId, fyId)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (fy) => {
+                this.selectedFY = fy;
+                this.loadFundingItems();
+                this.loadMonies();
+                this.loadCategories();
+              },
+              error: (error) => {
+                console.error('Failed to load FY:', error);
+                this.router.navigate(['/rc-selection']);
+              }
+            });
         },
         error: (error) => {
           console.error('Failed to load RC:', error);
-          this.router.navigate(['/rc-selection']);
-        }
-      });
-
-    // Load FY details
-    this.fyService.getFiscalYear(rcId, fyId)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (fy) => {
-          this.selectedFY = fy;
-          this.loadFundingItems();
-          this.loadMonies();
-          this.loadCategories();
-        },
-        error: (error) => {
-          console.error('Failed to load FY:', error);
           this.router.navigate(['/rc-selection']);
         }
       });

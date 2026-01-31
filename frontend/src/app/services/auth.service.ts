@@ -37,7 +37,27 @@ export class AuthService {
     this.currentUser$ = this.currentUserSubject.asObservable();
     
     // Check if there's an active session on initialization
-    this.checkSession();
+    // Only check if there's a session indicator to avoid unnecessary 401 errors
+    if (this.hasSessionIndicator()) {
+      this.checkSession();
+    }
+  }
+
+  /**
+   * Check if there's an indicator that a session might exist.
+   * This helps avoid unnecessary 401 errors on the login page.
+   *
+   * @returns true if a session indicator exists
+   */
+  private hasSessionIndicator(): boolean {
+    // Check for JSESSIONID cookie or any session-related cookie
+    // Note: HttpOnly cookies aren't visible to JavaScript, but we can check
+    // if any cookies exist that might indicate an active session
+    const cookies = document.cookie;
+    // If there are any cookies set by the application, check for session
+    // We can't read HttpOnly cookies directly, but the presence of any
+    // cookies from our domain suggests the user may have a session
+    return cookies.length > 0;
   }
 
   /**

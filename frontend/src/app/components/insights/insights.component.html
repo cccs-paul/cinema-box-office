@@ -4,14 +4,6 @@
   Licensed under MIT License
 -->
 <div class="insights-container">
-  <!-- Page Header -->
-  <div class="page-header">
-    <h1>📊 Insights</h1>
-    <p class="subtitle" *ngIf="selectedRC && selectedFY">
-      Financial analytics for {{ selectedRC.name }} - {{ selectedFY.name }}
-    </p>
-  </div>
-
   <!-- Error Message -->
   <div class="alert alert-error" *ngIf="errorMessage">
     <span>❌</span> {{ errorMessage }}
