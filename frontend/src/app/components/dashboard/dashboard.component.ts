@@ -74,6 +74,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   newItemCategoryId: number | null = null;
   newItemMoneyAllocations: MoneyAllocation[] = [];
 
+  // Expandable item tracking
+  expandedItemId: number | null = null;
+
   // Messages
   errorMessage: string | null = null;
   successMessage: string | null = null;
@@ -456,6 +459,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.fundingItems = this.fundingItems.filter(fi => fi.id !== item.id);
+          // Close expanded view if deleted item was expanded
+          if (this.expandedItemId === item.id) {
+            this.expandedItemId = null;
+          }
           this.successMessage = `Funding Item "${item.name}" deleted successfully.`;
           setTimeout(() => this.clearSuccess(), 5000);
         },
@@ -463,6 +470,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.errorMessage = error.message || 'Failed to delete funding item.';
         }
       });
+  }
+
+  /**
+   * Toggle expanded details for a funding item.
+   */
+  toggleItemDetails(item: FundingItem): void {
+    this.expandedItemId = this.expandedItemId === item.id ? null : item.id;
   }
 
   /**

@@ -76,6 +76,9 @@ export class SpendingComponent implements OnInit, OnDestroy {
   newItemCategoryId: number | null = null;
   newItemMoneyAllocations: SpendingMoneyAllocation[] = [];
 
+  // Expandable item tracking
+  expandedItemId: number | null = null;
+
   // Messages
   errorMessage: string | null = null;
   successMessage: string | null = null;
@@ -468,6 +471,10 @@ export class SpendingComponent implements OnInit, OnDestroy {
 
     this.spendingItemService.deleteSpendingItem(this.selectedRC.id, this.selectedFY.id, item.id).subscribe({
       next: () => {
+        // Close expanded view if deleted item was expanded
+        if (this.expandedItemId === item.id) {
+          this.expandedItemId = null;
+        }
         this.showSuccess('Spending item deleted successfully');
         this.loadSpendingItems();
       },
@@ -475,6 +482,13 @@ export class SpendingComponent implements OnInit, OnDestroy {
         this.showError('Failed to delete spending item: ' + error.message);
       }
     });
+  }
+
+  /**
+   * Toggle expanded details for a spending item.
+   */
+  toggleItemDetails(item: SpendingItem): void {
+    this.expandedItemId = this.expandedItemId === item.id ? null : item.id;
   }
 
   /**

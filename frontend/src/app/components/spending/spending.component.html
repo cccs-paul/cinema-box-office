@@ -212,33 +212,66 @@
     </p>
   </div>
 
-  <!-- Spending Items Table -->
-  <div class="spending-table-container" *ngIf="!isLoadingItems && spendingItems.length > 0">
-    <table class="spending-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Category</th>
-          <th>Vendor</th>
-          <th>Reference</th>
-          <th>Money Allocations</th>
-          <th class="text-right">Total</th>
-          <th>Currency</th>
-          <th class="text-center">Status</th>
-          <th class="text-center" *ngIf="canWrite">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of spendingItems">
-          <td class="item-name">
-            <span class="name">{{ item.name }}</span>
-            <span class="description" *ngIf="item.description">{{ item.description }}</span>
-          </td>
-          <td>{{ item.categoryName || getCategoryName(item.categoryId) }}</td>
-          <td>{{ item.vendor || '-' }}</td>
-          <td>{{ item.referenceNumber || '-' }}</td>
-          <td class="item-money">
-            <div class="money-allocations-display" *ngIf="item.moneyAllocations && item.moneyAllocations.length > 0">
+  <!-- Spending Items List -->
+  <div class="items-list" *ngIf="!isLoadingItems && spendingItems.length > 0">
+    <div class="item-card" *ngFor="let item of spendingItems" [class.expanded]="expandedItemId === item.id">
+      <!-- Item Summary Row -->
+      <div class="item-summary" (click)="toggleItemDetails(item)">
+        <div class="item-info">
+          <span class="item-name">{{ item.name }}</span>
+          <span class="category-badge" *ngIf="item.categoryName">{{ item.categoryName }}</span>
+          <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+            {{ getStatusLabel(item.status) }}
+          </span>
+          <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
+            {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
+          </span>
+          <span class="total-amount">{{ formatCurrency(calculateTotal(item), item.currency) }}</span>
+        </div>
+        <div class="item-actions">
+          <button
+            class="btn-icon expand-btn"
+            [title]="expandedItemId === item.id ? 'Collapse' : 'Expand'"
+            (click)="toggleItemDetails(item); $event.stopPropagation()"
+          >
+            {{ expandedItemId === item.id ? '▲' : '▼' }}
+          </button>
+          <button
+            class="btn-icon btn-delete"
+            title="Delete"
+            *ngIf="canWrite"
+            (click)="deleteSpendingItem(item); $event.stopPropagation()"
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
+
+      <!-- Expanded Details Section -->
+      <div class="item-details" *ngIf="expandedItemId === item.id">
+        <div class="details-content">
+          <div class="info-grid">
+            <div class="info-item" *ngIf="item.description">
+              <label>Description</label>
+              <span>{{ item.description }}</span>
+            </div>
+            <div class="info-item" *ngIf="item.vendor">
+              <label>Vendor</label>
+              <span>{{ item.vendor }}</span>
+            </div>
+            <div class="info-item" *ngIf="item.referenceNumber">
+              <label>Reference Number</label>
+              <span>{{ item.referenceNumber }}</span>
+            </div>
+            <div class="info-item" *ngIf="item.currency !== 'CAD' && item.exchangeRate">
+              <label>Exchange Rate</label>
+              <span>1 {{ item.currency }} = {{ item.exchangeRate }} CAD</span>
+            </div>
+          </div>
+          <!-- Money Allocations -->
+          <div class="money-section" *ngIf="item.moneyAllocations && item.moneyAllocations.length > 0">
+            <label>Money Allocations</label>
+            <div class="money-grid">
               <div class="money-row" *ngFor="let allocation of item.moneyAllocations">
                 <span class="money-label">{{ allocation.moneyName || 'AB' }}:</span>
                 <span class="money-amounts">
@@ -252,32 +285,10 @@
                 </span>
               </div>
             </div>
-            <span *ngIf="!item.moneyAllocations || item.moneyAllocations.length === 0">-</span>
-          </td>
-          <td class="text-right amount">
-            {{ formatCurrency(calculateTotal(item), item.currency) }}
-          </td>
-          <td class="item-currency">
-            <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
-              {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
-            </span>
-            <span class="exchange-rate" *ngIf="item.currency !== 'CAD' && item.exchangeRate">
-              (1 {{ item.currency }} = {{ item.exchangeRate }} CAD)
-            </span>
-          </td>
-          <td class="text-center">
-            <span class="status-badge" [ngClass]="getStatusClass(item.status)">
-              {{ getStatusLabel(item.status) }}
-            </span>
-          </td>
-          <td class="text-center actions" *ngIf="canWrite">
-            <button class="btn-icon-action" title="Delete" (click)="deleteSpendingItem(item)">
-              🗑️
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Summary Section -->
