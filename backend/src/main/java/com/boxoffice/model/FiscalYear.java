@@ -65,6 +65,12 @@ public class FiscalYear {
   @Column(name = "group_by_category", nullable = false)
   private Boolean groupByCategory = false;
 
+  @Column(name = "on_target_min", nullable = false)
+  private Integer onTargetMin = -10;
+
+  @Column(name = "on_target_max", nullable = false)
+  private Integer onTargetMax = 10;
+
   // Constructors
   public FiscalYear() {}
 
@@ -145,6 +151,22 @@ public class FiscalYear {
 
   public void setGroupByCategory(Boolean groupByCategory) {
     this.groupByCategory = groupByCategory;
+  }
+
+  public Integer getOnTargetMin() {
+    return onTargetMin;
+  }
+
+  public void setOnTargetMin(Integer onTargetMin) {
+    this.onTargetMin = onTargetMin;
+  }
+
+  public Integer getOnTargetMax() {
+    return onTargetMax;
+  }
+
+  public void setOnTargetMax(Integer onTargetMax) {
+    this.onTargetMax = onTargetMax;
   }
 
   @Override

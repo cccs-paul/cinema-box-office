@@ -221,8 +221,27 @@
   }
 }
 
+.btn-edit:hover {
+  color: var(--primary-gradient-start, #1976d2);
+}
+
 .btn-delete:hover {
   color: var(--danger-color, #ef4444);
+}
+
+/* Edit Form Styles */
+.edit-form {
+  padding: 1rem;
+  background: var(--card-background);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+
+  h4 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
 }
 
 /* Create Form */

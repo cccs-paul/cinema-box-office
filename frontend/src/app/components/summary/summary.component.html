@@ -17,13 +17,16 @@
 
   <!-- Summary Content -->
   <div class="summary-content" *ngIf="!isLoading">
-    <!-- Health Status Banner -->
+    <!-- On Target Status Banner -->
     <div class="health-banner" [ngClass]="getStatusClass(spendingPercentTotal)">
-      <div class="health-indicator">{{ getHealthIndicator() }}</div>
+      <div class="health-indicator">{{ getOnTargetIndicator() }}</div>
       <div class="health-info">
-        <span class="health-status">{{ getHealthText() }}</span>
+        <span class="health-status">{{ getOnTargetText() }}</span>
         <span class="health-detail">
           Spending is at {{ spendingPercentTotal | number:'1.1-1' }}% of total funding
+        </span>
+        <span class="target-range" *ngIf="selectedFY">
+          (Target range: {{ selectedFY.onTargetMin }}% to {{ selectedFY.onTargetMax }}% of funding)
         </span>
       </div>
     </div>

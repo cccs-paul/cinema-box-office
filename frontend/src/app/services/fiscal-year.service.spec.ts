@@ -19,7 +19,9 @@ describe('FiscalYearService', () => {
     active: true,
     responsibilityCentreId: 1,
     showCategoryFilter: true,
-    groupByCategory: false
+    groupByCategory: false,
+    onTargetMin: -10,
+    onTargetMax: 10
   };
 
   beforeEach(() => {

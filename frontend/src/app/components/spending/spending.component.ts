@@ -13,7 +13,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
-import { SpendingItemService, SpendingItemCreateRequest } from '../../services/spending-item.service';
+import { SpendingItemService, SpendingItemCreateRequest, SpendingItemUpdateRequest } from '../../services/spending-item.service';
 import { CategoryService } from '../../services/category.service';
 import { MoneyService } from '../../services/money.service';
 import { CurrencyService } from '../../services/currency.service';
@@ -82,6 +82,19 @@ export class SpendingComponent implements OnInit, OnDestroy {
 
   // Expandable item tracking
   expandedItemId: number | null = null;
+
+  // Edit Form
+  editingItemId: number | null = null;
+  isUpdating = false;
+  editItemName = '';
+  editItemDescription = '';
+  editItemVendor = '';
+  editItemReferenceNumber = '';
+  editItemStatus: SpendingItemStatus = 'DRAFT';
+  editItemCurrency = DEFAULT_CURRENCY;
+  editItemExchangeRate: number | null = null;
+  editItemCategoryId: number | null = null;
+  editItemMoneyAllocations: SpendingMoneyAllocation[] = [];
 
   // Messages
   errorMessage: string | null = null;
@@ -515,6 +528,10 @@ export class SpendingComponent implements OnInit, OnDestroy {
         if (this.expandedItemId === item.id) {
           this.expandedItemId = null;
         }
+        // Cancel edit if deleted item was being edited
+        if (this.editingItemId === item.id) {
+          this.editingItemId = null;
+        }
         this.showSuccess('Spending item deleted successfully');
         this.loadSpendingItems();
       },
@@ -522,6 +539,175 @@ export class SpendingComponent implements OnInit, OnDestroy {
         this.showError('Failed to delete spending item: ' + error.message);
       }
     });
+  }
+
+  /**
+   * Start editing a spending item.
+   */
+  startEditSpendingItem(item: SpendingItem): void {
+    this.editingItemId = item.id;
+    this.editItemName = item.name;
+    this.editItemDescription = item.description || '';
+    this.editItemVendor = item.vendor || '';
+    this.editItemReferenceNumber = item.referenceNumber || '';
+    this.editItemStatus = item.status;
+    this.editItemCurrency = item.currency || DEFAULT_CURRENCY;
+    this.editItemExchangeRate = item.exchangeRate || null;
+    this.editItemCategoryId = item.categoryId || null;
+    
+    // Initialize edit money allocations from the item's existing allocations
+    this.editItemMoneyAllocations = this.monies.map(money => {
+      const existingAllocation = item.moneyAllocations?.find(a => a.moneyId === money.id);
+      return {
+        moneyId: money.id,
+        moneyCode: money.code,
+        moneyName: money.name,
+        capAmount: existingAllocation?.capAmount || 0,
+        omAmount: existingAllocation?.omAmount || 0,
+        isDefault: money.isDefault
+      };
+    });
+
+    // Expand the item to show the edit form
+    this.expandedItemId = item.id;
+  }
+
+  /**
+   * Cancel editing a spending item.
+   */
+  cancelEditSpendingItem(): void {
+    this.editingItemId = null;
+    this.resetEditForm();
+  }
+
+  /**
+   * Update a spending item.
+   */
+  updateSpendingItem(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.editingItemId) {
+      return;
+    }
+
+    if (!this.editItemName?.trim()) {
+      this.showError('Item name is required.');
+      return;
+    }
+
+    if (!this.hasValidEditMoneyAllocation()) {
+      this.showError('At least one money allocation must have a CAP or OM amount greater than $0.00.');
+      return;
+    }
+
+    // Validate exchange rate for non-CAD currencies
+    if (this.editItemCurrency !== 'CAD' && (!this.editItemExchangeRate || this.editItemExchangeRate <= 0)) {
+      this.showError('Exchange rate is required for non-CAD currencies.');
+      return;
+    }
+
+    this.isUpdating = true;
+
+    const updateRequest: SpendingItemUpdateRequest = {
+      name: this.editItemName.trim(),
+      description: this.editItemDescription?.trim() || undefined,
+      vendor: this.editItemVendor?.trim() || undefined,
+      referenceNumber: this.editItemReferenceNumber?.trim() || undefined,
+      status: this.editItemStatus,
+      currency: this.editItemCurrency,
+      exchangeRate: this.editItemCurrency !== 'CAD' ? (this.editItemExchangeRate ?? undefined) : undefined,
+      categoryId: this.editItemCategoryId || undefined,
+      moneyAllocations: this.editItemMoneyAllocations
+        .filter(a => (a.capAmount && a.capAmount > 0) || (a.omAmount && a.omAmount > 0))
+        .map(a => ({
+          moneyId: a.moneyId,
+          moneyName: a.moneyName,
+          capAmount: a.capAmount || 0,
+          omAmount: a.omAmount || 0
+        }))
+    };
+
+    this.spendingItemService.updateSpendingItem(this.selectedRC.id, this.selectedFY.id, this.editingItemId, updateRequest)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedItem) => {
+          // Update the item in the list
+          const index = this.spendingItems.findIndex(si => si.id === updatedItem.id);
+          if (index !== -1) {
+            this.spendingItems[index] = updatedItem;
+          }
+          this.editingItemId = null;
+          this.isUpdating = false;
+          this.resetEditForm();
+          this.showSuccess(`Spending Item "${updatedItem.name}" updated successfully.`);
+          // Recalculate summaries
+          this.calculateSummaries();
+        },
+        error: (error) => {
+          this.showError(error.message || 'Failed to update spending item.');
+          this.isUpdating = false;
+        }
+      });
+  }
+
+  /**
+   * Reset the edit form.
+   */
+  private resetEditForm(): void {
+    this.editItemName = '';
+    this.editItemDescription = '';
+    this.editItemVendor = '';
+    this.editItemReferenceNumber = '';
+    this.editItemStatus = 'DRAFT';
+    this.editItemCurrency = DEFAULT_CURRENCY;
+    this.editItemExchangeRate = null;
+    this.editItemCategoryId = null;
+    this.editItemMoneyAllocations = [];
+  }
+
+  /**
+   * Handle currency change in edit form.
+   */
+  onEditCurrencyChange(): void {
+    if (this.editItemCurrency === 'CAD') {
+      this.editItemExchangeRate = null;
+    }
+  }
+
+  /**
+   * Check if the edit form has at least one valid money allocation.
+   */
+  hasValidEditMoneyAllocation(): boolean {
+    return this.editItemMoneyAllocations.some(a => 
+      (this.editCategoryAllowsCap() && a.capAmount && a.capAmount > 0) ||
+      (this.editCategoryAllowsOm() && a.omAmount && a.omAmount > 0)
+    );
+  }
+
+  /**
+   * Check if the selected category in edit form allows CAP allocations.
+   */
+  editCategoryAllowsCap(): boolean {
+    if (!this.editItemCategoryId) {
+      return true; // Default to allowing both
+    }
+    const category = this.categories.find(c => c.id === this.editItemCategoryId);
+    if (!category || !category.fundingType) {
+      return true;
+    }
+    return category.fundingType === 'BOTH' || category.fundingType === 'CAP_ONLY';
+  }
+
+  /**
+   * Check if the selected category in edit form allows OM allocations.
+   */
+  editCategoryAllowsOm(): boolean {
+    if (!this.editItemCategoryId) {
+      return true; // Default to allowing both
+    }
+    const category = this.categories.find(c => c.id === this.editItemCategoryId);
+    if (!category || !category.fundingType) {
+      return true;
+    }
+    return category.fundingType === 'BOTH' || category.fundingType === 'OM_ONLY';
   }
 
   /**

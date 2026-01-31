@@ -28,6 +28,8 @@ public class FiscalYearDTO {
   private Boolean active;
   private Boolean showCategoryFilter;
   private Boolean groupByCategory;
+  private Integer onTargetMin;
+  private Integer onTargetMax;
 
   // Constructors
   public FiscalYearDTO() {}
@@ -35,7 +37,8 @@ public class FiscalYearDTO {
   public FiscalYearDTO(Long id, String name, String description,
                        Long responsibilityCentreId, String responsibilityCentreName,
                        LocalDateTime createdAt, LocalDateTime updatedAt, Boolean active,
-                       Boolean showCategoryFilter, Boolean groupByCategory) {
+                       Boolean showCategoryFilter, Boolean groupByCategory,
+                       Integer onTargetMin, Integer onTargetMax) {
     this.id = id;
     this.name = name;
     this.description = description;
@@ -46,6 +49,8 @@ public class FiscalYearDTO {
     this.active = active;
     this.showCategoryFilter = showCategoryFilter;
     this.groupByCategory = groupByCategory;
+    this.onTargetMin = onTargetMin;
+    this.onTargetMax = onTargetMax;
   }
 
   /**
@@ -68,7 +73,9 @@ public class FiscalYearDTO {
         fiscalYear.getUpdatedAt(),
         fiscalYear.getActive(),
         fiscalYear.getShowCategoryFilter(),
-        fiscalYear.getGroupByCategory()
+        fiscalYear.getGroupByCategory(),
+        fiscalYear.getOnTargetMin(),
+        fiscalYear.getOnTargetMax()
     );
   }
 
@@ -151,5 +158,21 @@ public class FiscalYearDTO {
 
   public void setGroupByCategory(Boolean groupByCategory) {
     this.groupByCategory = groupByCategory;
+  }
+
+  public Integer getOnTargetMin() {
+    return onTargetMin;
+  }
+
+  public void setOnTargetMin(Integer onTargetMin) {
+    this.onTargetMin = onTargetMin;
+  }
+
+  public Integer getOnTargetMax() {
+    return onTargetMax;
+  }
+
+  public void setOnTargetMax(Integer onTargetMax) {
+    this.onTargetMax = onTargetMax;
   }
 }

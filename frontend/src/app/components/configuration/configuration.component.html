@@ -46,6 +46,13 @@
       <span class="tab-icon">⚙️</span>
       <span class="tab-label">General</span>
     </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'summary'"
+      (click)="setActiveTab('summary')">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label">Summary</span>
+    </button>
   </div>
 
   <!-- Monies Tab Content -->
@@ -81,13 +88,13 @@
           </div>
           <div class="money-actions" *ngIf="!money.isDefault">
             <button 
-              class="btn btn-small btn-secondary" 
+              class="btn btn-secondary" 
               (click)="startEditMoney(money)"
               [disabled]="isSaving || isDeleting">
               Edit
             </button>
             <button 
-              class="btn btn-small btn-danger" 
+              class="btn btn-danger" 
               (click)="deleteMoney(money)"
               [disabled]="isSaving || isDeleting"
               title="Delete">
@@ -269,13 +276,13 @@
           </div>
           <div class="category-actions" *ngIf="!category.isDefault">
             <button 
-              class="btn btn-small btn-secondary" 
+              class="btn btn-secondary" 
               (click)="startEditCategory(category)"
               [disabled]="isSaving || isDeleting">
               Edit
             </button>
             <button 
-              class="btn btn-small btn-danger" 
+              class="btn btn-danger" 
               (click)="deleteCategory(category)"
               [disabled]="isSaving || isDeleting"
               title="Delete">
@@ -456,6 +463,79 @@
               (change)="updateDisplaySettings('groupByCategory', $any($event.target).checked)">
             <span class="toggle-slider"></span>
           </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Tab Content -->
+  <div class="tab-content" *ngIf="activeTab === 'summary'">
+    <div class="section-header">
+      <h2>Summary Settings</h2>
+      <p class="section-description">
+        Configure settings for the Summary page display and indicators.
+      </p>
+    </div>
+
+    <!-- On Target Settings -->
+    <div class="settings-section">
+      <h3>On Target Settings</h3>
+      <p class="section-description">
+        Configure the thresholds for the "On Target" indicator on the Summary page.
+        The indicator compares Funding vs Spending percentages. When the difference falls
+        within the configured range, the status shows as "On Target".
+      </p>
+      
+      <div class="setting-card range-setting">
+        <div class="setting-info">
+          <span class="setting-label">Minimum Threshold</span>
+          <span class="setting-description">
+            Lower bound of the "On Target" range. Values below this show as "Under Budget".
+          </span>
+        </div>
+        <div class="setting-control range-control">
+          <input 
+            type="range" 
+            class="range-slider"
+            min="-100" 
+            max="100" 
+            step="1"
+            [value]="selectedFY?.onTargetMin ?? -10"
+            (input)="onTargetMinValue = $any($event.target).value"
+            (change)="updateOnTargetSetting('onTargetMin', $any($event.target).value)">
+          <span class="range-value">{{ onTargetMinValue ?? selectedFY?.onTargetMin ?? -10 }}%</span>
+        </div>
+      </div>
+
+      <div class="setting-card range-setting">
+        <div class="setting-info">
+          <span class="setting-label">Maximum Threshold</span>
+          <span class="setting-description">
+            Upper bound of the "On Target" range. Values above this show as "Over Budget".
+          </span>
+        </div>
+        <div class="setting-control range-control">
+          <input 
+            type="range" 
+            class="range-slider"
+            min="-100" 
+            max="100" 
+            step="1"
+            [value]="selectedFY?.onTargetMax ?? 10"
+            (input)="onTargetMaxValue = $any($event.target).value"
+            (change)="updateOnTargetSetting('onTargetMax', $any($event.target).value)">
+          <span class="range-value">{{ onTargetMaxValue ?? selectedFY?.onTargetMax ?? 10 }}%</span>
+        </div>
+      </div>
+
+      <div class="on-target-preview">
+        <span class="preview-label">Preview:</span>
+        <div class="preview-range">
+          <span class="preview-under">Under Budget</span>
+          <span class="preview-target">
+            On Target ({{ selectedFY?.onTargetMin ?? -10 }}% to {{ selectedFY?.onTargetMax ?? 10 }}%)
+          </span>
+          <span class="preview-over">Over Budget</span>
         </div>
       </div>
     </div>

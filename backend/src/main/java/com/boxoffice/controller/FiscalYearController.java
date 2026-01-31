@@ -291,7 +291,9 @@ public class FiscalYearController {
           fyId,
           username,
           request.getShowCategoryFilter(),
-          request.getGroupByCategory()
+          request.getGroupByCategory(),
+          request.getOnTargetMin(),
+          request.getOnTargetMax()
       );
       return updatedFY.map(ResponseEntity::ok)
           .orElseGet(() -> ResponseEntity.notFound().build());
@@ -336,12 +338,17 @@ public class FiscalYearController {
   public static class DisplaySettingsRequest {
     private Boolean showCategoryFilter;
     private Boolean groupByCategory;
+    private Integer onTargetMin;
+    private Integer onTargetMax;
 
     public DisplaySettingsRequest() {}
 
-    public DisplaySettingsRequest(Boolean showCategoryFilter, Boolean groupByCategory) {
+    public DisplaySettingsRequest(Boolean showCategoryFilter, Boolean groupByCategory,
+                                   Integer onTargetMin, Integer onTargetMax) {
       this.showCategoryFilter = showCategoryFilter;
       this.groupByCategory = groupByCategory;
+      this.onTargetMin = onTargetMin;
+      this.onTargetMax = onTargetMax;
     }
 
     public Boolean getShowCategoryFilter() {
@@ -358,6 +365,22 @@ public class FiscalYearController {
 
     public void setGroupByCategory(Boolean groupByCategory) {
       this.groupByCategory = groupByCategory;
+    }
+
+    public Integer getOnTargetMin() {
+      return onTargetMin;
+    }
+
+    public void setOnTargetMin(Integer onTargetMin) {
+      this.onTargetMin = onTargetMin;
+    }
+
+    public Integer getOnTargetMax() {
+      return onTargetMax;
+    }
+
+    public void setOnTargetMax(Integer onTargetMax) {
+      this.onTargetMax = onTargetMax;
     }
   }
 }

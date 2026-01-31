@@ -208,7 +208,9 @@ describe('SpendingComponent', () => {
       active: true,
       responsibilityCentreId: 1,
       showCategoryFilter: true,
-      groupByCategory: false
+      groupByCategory: false,
+      onTargetMin: -10,
+      onTargetMax: 10
     }));
     currencyService.getCurrencies.and.returnValue(of([
       { code: 'CAD', name: 'Canadian Dollar', symbol: '$', isDefault: true }

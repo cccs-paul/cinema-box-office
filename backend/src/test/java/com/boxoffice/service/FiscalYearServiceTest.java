@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -299,7 +300,9 @@ class FiscalYearServiceTest {
         1L,
         "testuser",
         true,
-        false
+        false,
+        -10,
+        10
     );
 
     assertTrue(result.isPresent());
@@ -315,7 +318,9 @@ class FiscalYearServiceTest {
         999L,
         "testuser",
         true,
-        false
+        false,
+        null,
+        null
     );
 
     assertFalse(result.isPresent());
@@ -340,6 +345,57 @@ class FiscalYearServiceTest {
         .thenReturn(Optional.of(access));
 
     assertThrows(IllegalArgumentException.class,
-        () -> fiscalYearService.updateDisplaySettings(1L, "anotheruser", true, false));
+        () -> fiscalYearService.updateDisplaySettings(1L, "anotheruser", true, false, null, null));
+  }
+
+  @Test
+  @DisplayName("updateDisplaySettings - Updates on target thresholds")
+  void updateDisplaySettings_UpdatesOnTargetThresholds() {
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+    when(fiscalYearRepository.save(any(FiscalYear.class))).thenAnswer(invocation -> {
+      FiscalYear fy = invocation.getArgument(0);
+      return fy;
+    });
+
+    Optional<FiscalYearDTO> result = fiscalYearService.updateDisplaySettings(
+        1L,
+        "testuser",
+        null,
+        null,
+        -20,
+        15
+    );
+
+    assertTrue(result.isPresent());
+    verify(fiscalYearRepository).save(argThat(fy -> 
+        fy.getOnTargetMin().equals(-20) && fy.getOnTargetMax().equals(15)));
+  }
+
+  @Test
+  @DisplayName("updateDisplaySettings - Clamps on target values to valid range")
+  void updateDisplaySettings_ClampsOnTargetValues() {
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+    when(fiscalYearRepository.save(any(FiscalYear.class))).thenAnswer(invocation -> {
+      FiscalYear fy = invocation.getArgument(0);
+      return fy;
+    });
+
+    // Test with values outside the -100 to +100 range
+    Optional<FiscalYearDTO> result = fiscalYearService.updateDisplaySettings(
+        1L,
+        "testuser",
+        null,
+        null,
+        -150,
+        200
+    );
+
+    assertTrue(result.isPresent());
+    verify(fiscalYearRepository).save(argThat(fy -> 
+        fy.getOnTargetMin().equals(-100) && fy.getOnTargetMax().equals(100)));
   }
 }

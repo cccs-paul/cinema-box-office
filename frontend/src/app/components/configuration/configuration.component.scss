@@ -845,3 +845,159 @@ html[data-theme='dark'] {
     }
   }
 }
+
+// Range Slider Styles
+.range-setting {
+  .setting-control.range-control {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 200px;
+  }
+}
+
+.range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 150px;
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 4px;
+  outline: none;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--text-secondary);
+  }
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-gradient-start);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s, box-shadow 0.2s;
+
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-gradient-start);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s, box-shadow 0.2s;
+
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+.range-value {
+  font-weight: 600;
+  min-width: 50px;
+  text-align: right;
+  color: var(--primary-gradient-start);
+  font-size: 0.95rem;
+}
+
+// On Target Preview
+.on-target-preview {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+
+  .preview-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+  }
+
+  .preview-range {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: linear-gradient(
+      to right,
+      rgba(255, 152, 0, 0.15) 0%,
+      rgba(255, 152, 0, 0.15) 33%,
+      rgba(46, 125, 50, 0.15) 33%,
+      rgba(46, 125, 50, 0.15) 66%,
+      rgba(211, 47, 47, 0.15) 66%,
+      rgba(211, 47, 47, 0.15) 100%
+    );
+    border-radius: 6px;
+  }
+
+  .preview-under {
+    font-size: 0.8rem;
+    color: #ff9800;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 152, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  .preview-target {
+    font-size: 0.85rem;
+    color: #2e7d32;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    background: rgba(46, 125, 50, 0.2);
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .preview-over {
+    font-size: 0.8rem;
+    color: #d32f2f;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    background: rgba(211, 47, 47, 0.2);
+    border-radius: 4px;
+  }
+}
+
+// Dark theme for range sliders
+html[data-theme='dark'] {
+  .range-slider {
+    background: rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+
+  .on-target-preview {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.1);
+
+    .preview-range {
+      background: linear-gradient(
+        to right,
+        rgba(255, 152, 0, 0.2) 0%,
+        rgba(255, 152, 0, 0.2) 33%,
+        rgba(46, 125, 50, 0.2) 33%,
+        rgba(46, 125, 50, 0.2) 66%,
+        rgba(211, 47, 47, 0.2) 66%,
+        rgba(211, 47, 47, 0.2) 100%
+      );
+    }
+  }
+}

@@ -41,7 +41,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   fyId: number | null = null;
 
   // Configuration tabs
-  activeTab: 'monies' | 'categories' | 'general' = 'monies';
+  activeTab: 'monies' | 'categories' | 'general' | 'summary' = 'monies';
 
   // Money management state
   monies: Money[] = [];
@@ -73,6 +73,10 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   isSaving = false;
   isDeleting = false;
   successMessage: string | null = null;
+
+  // On Target slider values for real-time display
+  onTargetMinValue: number | null = null;
+  onTargetMaxValue: number | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -157,7 +161,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   /**
    * Switch to a configuration tab.
    */
-  setActiveTab(tab: 'monies' | 'categories' | 'general'): void {
+  setActiveTab(tab: 'monies' | 'categories' | 'general' | 'summary'): void {
     this.activeTab = tab;
   }
 
@@ -520,6 +524,46 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.moneyError = error.message || 'Failed to update display settings';
+      }
+    });
+  }
+
+  /**
+   * Update On Target threshold settings for the fiscal year.
+   */
+  updateOnTargetSetting(setting: 'onTargetMin' | 'onTargetMax', value: string): void {
+    if (!this.rcId || !this.fyId || !this.selectedFY) {
+      return;
+    }
+
+    const numValue = parseInt(value, 10);
+    if (isNaN(numValue)) {
+      return;
+    }
+
+    // Validate that min <= max
+    if (setting === 'onTargetMin' && numValue > (this.selectedFY.onTargetMax ?? 10)) {
+      this.moneyError = 'Minimum threshold cannot be greater than maximum threshold';
+      return;
+    }
+    if (setting === 'onTargetMax' && numValue < (this.selectedFY.onTargetMin ?? -10)) {
+      this.moneyError = 'Maximum threshold cannot be less than minimum threshold';
+      return;
+    }
+
+    const request = { [setting]: numValue };
+    
+    this.fyService.updateDisplaySettings(this.rcId, this.fyId, request).subscribe({
+      next: (updatedFY) => {
+        this.selectedFY = updatedFY;
+        // Reset the temp values
+        this.onTargetMinValue = null;
+        this.onTargetMaxValue = null;
+        const settingLabel = setting === 'onTargetMin' ? 'Minimum threshold' : 'Maximum threshold';
+        this.showSuccess(`${settingLabel} updated to ${numValue}%`);
+      },
+      error: (error) => {
+        this.moneyError = error.message || 'Failed to update On Target settings';
       }
     });
   }

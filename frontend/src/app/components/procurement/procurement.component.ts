@@ -145,8 +145,32 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   successMessage: string | null = null;
 
+  // Edit Procurement Item Form
+  editingItemId: number | null = null;
+  isUpdatingItem = false;
+  editItemPR = '';
+  editItemPO = '';
+  editItemName = '';
+  editItemDescription = '';
+  editItemCurrency = DEFAULT_CURRENCY;
+  editItemExchangeRate: number | null = null;
+  editItemPreferredVendor = '';
+  editItemContractNumber = '';
+  editItemContractStartDate = '';
+  editItemContractEndDate = '';
+  editItemProcurementCompleted = false;
+  editItemProcurementCompletedDate = '';
+  editItemCategoryId: number | null = null;
+  editItemStatus: ProcurementItemStatus = 'DRAFT';
+
   // Status options
   statusOptions: ProcurementItemStatus[] = [
+    'DRAFT', 'PENDING_QUOTES', 'QUOTES_RECEIVED', 'UNDER_REVIEW',
+    'APPROVED', 'PO_ISSUED', 'COMPLETED', 'CANCELLED'
+  ];
+
+  // Procurement statuses for dropdown
+  procurementStatuses: ProcurementItemStatus[] = [
     'DRAFT', 'PENDING_QUOTES', 'QUOTES_RECEIVED', 'UNDER_REVIEW',
     'APPROVED', 'PO_ISSUED', 'COMPLETED', 'CANCELLED'
   ];
@@ -429,11 +453,131 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           this.selectedItem = null;
           this.quotes = [];
         }
+        // Cancel edit if deleted item was being edited
+        if (this.editingItemId === item.id) {
+          this.editingItemId = null;
+        }
       },
       error: (error) => {
         this.showError('Failed to delete procurement item: ' + error.message);
       }
     });
+  }
+
+  /**
+   * Start editing a procurement item.
+   */
+  startEditProcurementItem(item: ProcurementItem): void {
+    this.editingItemId = item.id;
+    this.editItemPR = item.purchaseRequisition;
+    this.editItemPO = item.purchaseOrder || '';
+    this.editItemName = item.name;
+    this.editItemDescription = item.description || '';
+    this.editItemCurrency = item.currency || DEFAULT_CURRENCY;
+    this.editItemExchangeRate = item.exchangeRate || null;
+    this.editItemPreferredVendor = item.preferredVendor || '';
+    this.editItemContractNumber = item.contractNumber || '';
+    this.editItemContractStartDate = item.contractStartDate ? item.contractStartDate.split('T')[0] : '';
+    this.editItemContractEndDate = item.contractEndDate ? item.contractEndDate.split('T')[0] : '';
+    this.editItemProcurementCompleted = item.procurementCompleted || false;
+    this.editItemProcurementCompletedDate = item.procurementCompletedDate ? item.procurementCompletedDate.split('T')[0] : '';
+    this.editItemCategoryId = item.categoryId || null;
+    this.editItemStatus = item.status;
+    
+    // Expand the item to show the edit form
+    this.selectedItem = item;
+  }
+
+  /**
+   * Cancel editing a procurement item.
+   */
+  cancelEditProcurementItem(): void {
+    this.editingItemId = null;
+    this.resetEditItemForm();
+  }
+
+  /**
+   * Reset the edit item form.
+   */
+  private resetEditItemForm(): void {
+    this.editItemPR = '';
+    this.editItemPO = '';
+    this.editItemName = '';
+    this.editItemDescription = '';
+    this.editItemCurrency = DEFAULT_CURRENCY;
+    this.editItemExchangeRate = null;
+    this.editItemPreferredVendor = '';
+    this.editItemContractNumber = '';
+    this.editItemContractStartDate = '';
+    this.editItemContractEndDate = '';
+    this.editItemProcurementCompleted = false;
+    this.editItemProcurementCompletedDate = '';
+    this.editItemCategoryId = null;
+    this.editItemStatus = 'DRAFT';
+  }
+
+  /**
+   * Update a procurement item.
+   */
+  updateProcurementItem(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.editingItemId) {
+      return;
+    }
+
+    if (!this.editItemPR?.trim()) {
+      this.showError('Purchase Requisition (PR) is required.');
+      return;
+    }
+
+    if (!this.editItemName?.trim()) {
+      this.showError('Item name is required.');
+      return;
+    }
+
+    this.isUpdatingItem = true;
+
+    const updateRequest: Partial<ProcurementItemCreateRequest> = {
+      purchaseRequisition: this.editItemPR.trim(),
+      purchaseOrder: this.editItemPO?.trim() || undefined,
+      name: this.editItemName.trim(),
+      description: this.editItemDescription?.trim() || undefined,
+      currency: this.editItemCurrency,
+      exchangeRate: this.editItemCurrency !== 'CAD' ? this.editItemExchangeRate : undefined,
+      preferredVendor: this.editItemPreferredVendor?.trim() || undefined,
+      contractNumber: this.editItemContractNumber?.trim() || undefined,
+      contractStartDate: this.editItemContractStartDate || undefined,
+      contractEndDate: this.editItemContractEndDate || undefined,
+      procurementCompleted: this.editItemProcurementCompleted,
+      procurementCompletedDate: this.editItemProcurementCompleted && this.editItemProcurementCompletedDate 
+        ? this.editItemProcurementCompletedDate 
+        : undefined,
+      categoryId: this.editItemCategoryId || undefined,
+      status: this.editItemStatus
+    };
+
+    this.procurementService.updateProcurementItem(this.selectedRC.id, this.selectedFY.id, this.editingItemId, updateRequest)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedItem) => {
+          // Update the item in the list
+          const index = this.procurementItems.findIndex(pi => pi.id === updatedItem.id);
+          if (index !== -1) {
+            this.procurementItems[index] = updatedItem;
+          }
+          // Update selectedItem if it's the one being edited
+          if (this.selectedItem?.id === updatedItem.id) {
+            this.selectedItem = updatedItem;
+          }
+          this.editingItemId = null;
+          this.isUpdatingItem = false;
+          this.resetEditItemForm();
+          this.showSuccess(`Procurement Item "${updatedItem.name}" updated successfully.`);
+        },
+        error: (error) => {
+          this.showError(error.message || 'Failed to update procurement item.');
+          this.isUpdatingItem = false;
+        }
+      });
   }
 
   /**

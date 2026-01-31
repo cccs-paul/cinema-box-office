@@ -211,11 +211,11 @@
 
       <!-- FY Action Buttons -->
       <div class="fy-action-buttons" *ngIf="!showFYCreateForm && !showFYRenameForm && selectedRCCanWrite">
-        <button class="btn btn-action btn-sm" (click)="toggleFYCreateForm()" title="Create New Fiscal Year">
+        <button class="btn btn-action" (click)="toggleFYCreateForm()" title="Create New Fiscal Year">
           <span class="action-icon">➕</span>
           <span class="action-label">New FY</span>
         </button>
-        <button class="btn btn-action btn-sm" (click)="toggleFYRenameForm()" [disabled]="selectedFYId === null" title="Rename Selected FY">
+        <button class="btn btn-action" (click)="toggleFYRenameForm()" [disabled]="selectedFYId === null" title="Rename Selected FY">
           <span class="action-icon">✏️</span>
           <span class="action-label">Rename FY</span>
         </button>

@@ -232,32 +232,92 @@ export class SummaryComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get status color class based on percentage.
+   * Get status color class based on funding vs spending percentage difference.
+   * Uses the On Target thresholds from FY settings.
    */
   getStatusClass(percentage: number): string {
-    if (percentage > 100) return 'status-danger';
-    if (percentage > 90) return 'status-warning';
-    if (percentage > 75) return 'status-caution';
-    return 'status-good';
+    const difference = 100 - percentage; // How much is remaining (positive = under budget)
+    const onTargetMin = this.selectedFY?.onTargetMin ?? -10;
+    const onTargetMax = this.selectedFY?.onTargetMax ?? 10;
+
+    // If spending exceeds funding (negative remaining = over budget)
+    if (difference < onTargetMin) {
+      return 'status-danger'; // Over budget - outside lower bound
+    }
+    // If we're within the on-target range
+    if (difference >= onTargetMin && difference <= onTargetMax) {
+      return 'status-good'; // On target
+    }
+    // If we're under budget but outside the target range
+    if (difference > onTargetMax && difference <= onTargetMax + 15) {
+      return 'status-caution'; // Slightly under budget
+    }
+    return 'status-warning'; // Significantly under budget
   }
 
   /**
+   * Get On Target indicator based on funding vs spending difference.
+   * Uses the On Target thresholds from FY settings.
+   */
+  getOnTargetIndicator(): string {
+    const difference = 100 - this.spendingPercentTotal; // Positive = under budget, negative = over budget
+    const onTargetMin = this.selectedFY?.onTargetMin ?? -10;
+    const onTargetMax = this.selectedFY?.onTargetMax ?? 10;
+
+    // If spending exceeds funding significantly (over budget)
+    if (difference < onTargetMin) {
+      return '🔴'; // Over budget
+    }
+    // If within the on-target range
+    if (difference >= onTargetMin && difference <= onTargetMax) {
+      return '🟢'; // On target
+    }
+    // Slightly outside range
+    if (difference > onTargetMax && difference <= onTargetMax + 20) {
+      return '🟡'; // Slightly under budget
+    }
+    // Significantly under budget
+    return '🟠'; // Under budget
+  }
+
+  /**
+   * Get On Target status text description.
+   * Uses the On Target thresholds from FY settings.
+   */
+  getOnTargetText(): string {
+    const difference = 100 - this.spendingPercentTotal; // Positive = under budget, negative = over budget
+    const onTargetMin = this.selectedFY?.onTargetMin ?? -10;
+    const onTargetMax = this.selectedFY?.onTargetMax ?? 10;
+
+    // If spending exceeds funding significantly (over budget)
+    if (difference < onTargetMin) {
+      return 'Over Budget';
+    }
+    // If within the on-target range
+    if (difference >= onTargetMin && difference <= onTargetMax) {
+      return 'On Target';
+    }
+    // Slightly outside range
+    if (difference > onTargetMax && difference <= onTargetMax + 20) {
+      return 'Slightly Under Budget';
+    }
+    // Significantly under budget
+    return 'Under Budget';
+  }
+
+  /**
+   * @deprecated Use getOnTargetIndicator() instead
    * Get health indicator based on remaining budget.
    */
   getHealthIndicator(): string {
-    if (this.remainingTotal < 0) return '🔴';
-    if (this.spendingPercentTotal > 90) return '🟠';
-    if (this.spendingPercentTotal > 75) return '🟡';
-    return '🟢';
+    return this.getOnTargetIndicator();
   }
 
   /**
+   * @deprecated Use getOnTargetText() instead
    * Get health text description.
    */
   getHealthText(): string {
-    if (this.remainingTotal < 0) return 'Over Budget';
-    if (this.spendingPercentTotal > 90) return 'Near Budget Limit';
-    if (this.spendingPercentTotal > 75) return 'Monitor Spending';
-    return 'Healthy';
+    return this.getOnTargetText();
   }
 }

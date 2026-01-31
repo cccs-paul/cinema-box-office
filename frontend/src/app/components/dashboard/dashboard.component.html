@@ -230,7 +230,7 @@
     </div>
 
     <!-- Funding Items List -->
-    <div class="items-list" *ngIf="!isLoadingItems && fundingItems.length > 0">
+    <div class="items-list" *ngIf="!isLoadingItems && sortedFundingItems.length > 0">
       <div class="item-card" *ngFor="let item of sortedFundingItems" [class.expanded]="expandedItemId === item.id">
         <!-- Item Summary Row -->
         <div class="item-summary" (click)="toggleItemDetails(item)">
@@ -255,6 +255,14 @@
               {{ expandedItemId === item.id ? '▲' : '▼' }}
             </button>
             <button
+              class="btn-icon btn-edit"
+              title="Edit"
+              *ngIf="canWrite && editingItemId !== item.id"
+              (click)="startEditFundingItem(item); $event.stopPropagation()"
+            >
+              ✏️
+            </button>
+            <button
               class="btn-icon btn-delete"
               title="Delete"
               *ngIf="canWrite"
@@ -267,7 +275,8 @@
 
         <!-- Expanded Details Section -->
         <div class="item-details" *ngIf="expandedItemId === item.id">
-          <div class="details-content">
+          <!-- View Mode -->
+          <div class="details-content" *ngIf="editingItemId !== item.id">
             <div class="info-grid">
               <div class="info-item" *ngIf="item.description">
                 <label>Description</label>
@@ -307,6 +316,187 @@
                   </span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Edit Mode -->
+          <div class="edit-form" *ngIf="editingItemId === item.id">
+            <h4>Edit Funding Item</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="editItemName">Name <span class="required">*</span></label>
+                <input
+                  id="editItemName"
+                  type="text"
+                  [(ngModel)]="editItemName"
+                  placeholder="Enter item name"
+                  [disabled]="isUpdating"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="editItemDescription">Description</label>
+                <input
+                  id="editItemDescription"
+                  type="text"
+                  [(ngModel)]="editItemDescription"
+                  placeholder="Optional description"
+                  [disabled]="isUpdating"
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="editItemCurrency">Currency</label>
+                <div class="currency-selector">
+                  <span class="currency-flag">{{ getCurrencyFlag(editItemCurrency) }}</span>
+                  <select id="editItemCurrency" [(ngModel)]="editItemCurrency" [disabled]="isUpdating"
+                          (change)="onEditCurrencyChange()">
+                    <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
+                    <option value="USD">🇺🇸 USD - US Dollar</option>
+                    <option value="EUR">🇪🇺 EUR - Euro</option>
+                    <option value="GBP">🇬🇧 GBP - British Pound</option>
+                    <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
+                    <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
+                    <option value="CHF">🇨🇭 CHF - Swiss Franc</option>
+                    <option value="CNY">🇨🇳 CNY - Chinese Yuan</option>
+                    <option value="INR">🇮🇳 INR - Indian Rupee</option>
+                    <option value="MXN">🇲🇽 MXN - Mexican Peso</option>
+                    <option value="BRL">🇧🇷 BRL - Brazilian Real</option>
+                    <option value="KRW">🇰🇷 KRW - South Korean Won</option>
+                    <option value="SGD">🇸🇬 SGD - Singapore Dollar</option>
+                    <option value="HKD">🇭🇰 HKD - Hong Kong Dollar</option>
+                    <option value="NZD">🇳🇿 NZD - New Zealand Dollar</option>
+                    <option value="SEK">🇸🇪 SEK - Swedish Krona</option>
+                    <option value="NOK">🇳🇴 NOK - Norwegian Krone</option>
+                    <option value="DKK">🇩🇰 DKK - Danish Krone</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" *ngIf="editItemCurrency !== 'CAD'">
+                <label for="editItemExchangeRate">Exchange Rate <span class="required">*</span></label>
+                <div class="exchange-rate-field">
+                  1 {{ editItemCurrency }} = 
+                  <input
+                    id="editItemExchangeRate"
+                    type="number"
+                    [(ngModel)]="editItemExchangeRate"
+                    placeholder="Enter exchange rate"
+                    [disabled]="isUpdating"
+                    step="0.000001"
+                    min="0.000001"
+                    class="exchange-rate-input"
+                  /> CAD
+                </div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="editItemSource">Source <span class="required">*</span></label>
+                <select id="editItemSource" [(ngModel)]="editItemSource" [disabled]="isUpdating" required>
+                  <option *ngFor="let source of sourceOptions" [value]="source">
+                    {{ getSourceLabel(source) }}
+                  </option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="editItemCategory">Category</label>
+                <select 
+                  id="editItemCategory" 
+                  [(ngModel)]="editItemCategoryId" 
+                  [disabled]="isUpdating || isLoadingCategories"
+                >
+                  <option [ngValue]="null">-- No Category --</option>
+                  <option *ngFor="let category of categories" [ngValue]="category.id">
+                    {{ category.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group full-width">
+                <label for="editItemComments">Comments</label>
+                <textarea
+                  id="editItemComments"
+                  [(ngModel)]="editItemComments"
+                  placeholder="Optional comments or notes..."
+                  [disabled]="isUpdating"
+                  rows="3"
+                  class="comments-textarea"
+                ></textarea>
+              </div>
+            </div>
+
+            <!-- Edit Money Allocations -->
+            <div class="money-allocations" *ngIf="editItemMoneyAllocations && editItemMoneyAllocations.length > 0">
+              <h4>Money Allocations</h4>
+              <p class="allocation-hint">
+                <ng-container *ngIf="editCategoryAllowsCap() && editCategoryAllowsOm()">
+                  Enter budget amounts for each money type. 
+                  <strong>At least one money type must have a CAP or OM amount greater than $0.00.</strong>
+                </ng-container>
+                <ng-container *ngIf="editCategoryAllowsCap() && !editCategoryAllowsOm()">
+                  This category allows <strong>Capital (CAP) only</strong>. At least one CAP amount must be greater than $0.00.
+                </ng-container>
+                <ng-container *ngIf="!editCategoryAllowsCap() && editCategoryAllowsOm()">
+                  This category allows <strong>O&M only</strong>. At least one OM amount must be greater than $0.00.
+                </ng-container>
+              </p>
+              <div class="allocations-grid">
+                <div class="allocation-row" *ngFor="let allocation of editItemMoneyAllocations; let i = index" [class.is-default]="allocation.isDefault">
+                  <div class="allocation-header">
+                    <span class="money-code">{{ allocation.moneyCode }}</span>
+                    <span class="money-name">{{ allocation.moneyName }}</span>
+                  </div>
+                  <div class="allocation-inputs">
+                    <div class="allocation-field" *ngIf="editCategoryAllowsCap()">
+                      <label [for]="'edit-cap-' + i">{{ allocation.moneyCode }} (CAP)</label>
+                      <input
+                        [id]="'edit-cap-' + i"
+                        type="number"
+                        [(ngModel)]="allocation.capAmount"
+                        placeholder="0.00"
+                        [disabled]="isUpdating"
+                        step="0.01"
+                        min="0"
+                        class="money-input"
+                      />
+                    </div>
+                    <div class="allocation-field" *ngIf="editCategoryAllowsOm()">
+                      <label [for]="'edit-om-' + i">{{ allocation.moneyCode }} (O&M)</label>
+                      <input
+                        [id]="'edit-om-' + i"
+                        type="number"
+                        [(ngModel)]="allocation.omAmount"
+                        placeholder="0.00"
+                        [disabled]="isUpdating"
+                        step="0.01"
+                        min="0"
+                        class="money-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button 
+                class="btn-secondary" 
+                (click)="cancelEditFundingItem()"
+                [disabled]="isUpdating"
+              >
+                Cancel
+              </button>
+              <button 
+                class="btn-primary" 
+                (click)="updateFundingItem()"
+                [disabled]="isUpdating || !editItemName.trim() || !hasValidEditMoneyAllocation()"
+              >
+                <span *ngIf="isUpdating">Updating...</span>
+                <span *ngIf="!isUpdating">Update Item</span>
+              </button>
             </div>
           </div>
         </div>
@@ -378,11 +568,21 @@
       </div>
     </div>
 
-    <!-- Empty State -->
+    <!-- Empty State - No items match filter -->
+    <div class="empty-state" *ngIf="!isLoadingItems && fundingItems.length > 0 && sortedFundingItems.length === 0 && !showCreateForm">
+      <div class="empty-icon">🔍</div>
+      <h3>No Matching Items</h3>
+      <p>No funding items match the current filter(s). Try adjusting your search or category filter.</p>
+      <button class="btn btn-secondary" (click)="clearSearch(); filterByCategory(null)">
+        Clear Filters
+      </button>
+    </div>
+
+    <!-- Empty State - No items exist -->
     <div class="empty-state" *ngIf="!isLoadingItems && fundingItems.length === 0 && !showCreateForm">
       <div class="empty-icon">📋</div>
-      <h3>No Funding Items</h3>
-      <p>This fiscal year has no funding items yet.</p>
+      <h3>No Funding Items Yet</h3>
+      <p>Get started by creating your first funding item for this fiscal year.</p>
       <button class="btn btn-primary" (click)="toggleCreateForm()" *ngIf="canWrite">
         Create First Funding Item
       </button>

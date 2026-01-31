@@ -236,7 +236,7 @@
           <span class="spinner"></span> Loading...
         </div>
 
-        <div class="items-list" *ngIf="!isLoadingItems && procurementItems.length > 0">
+        <div class="items-list" *ngIf="!isLoadingItems && filteredProcurementItems.length > 0">
           <div class="item-card" *ngFor="let item of filteredProcurementItems" [class.expanded]="selectedItem?.id === item.id">
             <!-- Item Summary Row -->
             <div class="item-summary" (click)="toggleItemDetails(item)">
@@ -259,6 +259,14 @@
                   {{ selectedItem?.id === item.id ? '▲' : '▼' }}
                 </button>
                 <button
+                  class="btn-icon btn-edit"
+                  title="Edit"
+                  *ngIf="canWrite && editingItemId !== item.id"
+                  (click)="startEditProcurementItem(item); $event.stopPropagation()"
+                >
+                  ✏️
+                </button>
+                <button
                   class="btn-icon btn-danger"
                   title="Delete"
                   *ngIf="canWrite"
@@ -272,8 +280,8 @@
             <!-- Expanded Details Section -->
             <div class="item-details" *ngIf="selectedItem?.id === item.id">
               <div class="details-content">
-                <!-- Item Info -->
-                <div class="info-section">
+                <!-- Item Info View Mode -->
+                <div class="info-section" *ngIf="editingItemId !== item.id">
                   <div class="info-grid">
                     <div class="info-item">
                       <label>Purchase Requisition (PR)</label>
@@ -334,11 +342,182 @@
                   </div>
                 </div>
 
+                <!-- Edit Mode -->
+                <div class="edit-form" *ngIf="editingItemId === item.id">
+                  <h4>Edit Procurement Item</h4>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="editItemPR">Purchase Requisition (PR) <span class="required">*</span></label>
+                      <input
+                        id="editItemPR"
+                        type="text"
+                        [(ngModel)]="editItemPR"
+                        placeholder="e.g., PR-2026-001"
+                        [disabled]="isUpdatingItem"
+                        required
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="editItemPO">Purchase Order (PO)</label>
+                      <input
+                        id="editItemPO"
+                        type="text"
+                        [(ngModel)]="editItemPO"
+                        placeholder="e.g., PO-2026-001"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="editItemName">Name <span class="required">*</span></label>
+                    <input
+                      id="editItemName"
+                      type="text"
+                      [(ngModel)]="editItemName"
+                      placeholder="Brief name for this procurement"
+                      [disabled]="isUpdatingItem"
+                      required
+                    />
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="editItemCategory">Category</label>
+                      <select id="editItemCategory" [(ngModel)]="editItemCategoryId" [disabled]="isUpdatingItem">
+                        <option [ngValue]="null">-- No Category --</option>
+                        <option *ngFor="let category of categories" [ngValue]="category.id">
+                          {{ category.name }}
+                        </option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="editItemStatus">Status <span class="required">*</span></label>
+                      <select id="editItemStatus" [(ngModel)]="editItemStatus" [disabled]="isUpdatingItem" required>
+                        <option *ngFor="let status of procurementStatuses" [value]="status">
+                          {{ getStatusLabel(status) }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="editItemDescription">Description</label>
+                    <textarea
+                      id="editItemDescription"
+                      [(ngModel)]="editItemDescription"
+                      placeholder="Detailed description..."
+                      [disabled]="isUpdatingItem"
+                      rows="3"
+                    ></textarea>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="editItemCurrency">Currency</label>
+                      <select id="editItemCurrency" [(ngModel)]="editItemCurrency" [disabled]="isUpdatingItem">
+                        <option *ngFor="let currency of currencies" [value]="currency.code">
+                          {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
+                        </option>
+                      </select>
+                    </div>
+                    <div class="form-group" *ngIf="editItemCurrency !== 'CAD'">
+                      <label for="editItemExchangeRate">Exchange Rate to CAD</label>
+                      <input
+                        id="editItemExchangeRate"
+                        type="number"
+                        [(ngModel)]="editItemExchangeRate"
+                        step="0.0001"
+                        min="0"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="editItemPreferredVendor">Preferred Vendor</label>
+                      <input
+                        id="editItemPreferredVendor"
+                        type="text"
+                        [(ngModel)]="editItemPreferredVendor"
+                        placeholder="Vendor name"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="editItemContractNumber">Contract Number</label>
+                      <input
+                        id="editItemContractNumber"
+                        type="text"
+                        [(ngModel)]="editItemContractNumber"
+                        placeholder="Contract number"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="editItemContractStartDate">Contract Start Date</label>
+                      <input
+                        id="editItemContractStartDate"
+                        type="date"
+                        [(ngModel)]="editItemContractStartDate"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="editItemContractEndDate">Contract End Date</label>
+                      <input
+                        id="editItemContractEndDate"
+                        type="date"
+                        [(ngModel)]="editItemContractEndDate"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="checkbox-label">
+                        <input
+                          type="checkbox"
+                          [(ngModel)]="editItemProcurementCompleted"
+                          [disabled]="isUpdatingItem"
+                        />
+                        Procurement Completed
+                      </label>
+                    </div>
+                    <div class="form-group" *ngIf="editItemProcurementCompleted">
+                      <label for="editItemProcurementCompletedDate">Completion Date</label>
+                      <input
+                        id="editItemProcurementCompletedDate"
+                        type="date"
+                        [(ngModel)]="editItemProcurementCompletedDate"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <button 
+                      type="button"
+                      class="btn-secondary" 
+                      (click)="cancelEditProcurementItem()"
+                      [disabled]="isUpdatingItem"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="button"
+                      class="btn-primary" 
+                      (click)="updateProcurementItem()"
+                      [disabled]="isUpdatingItem || !editItemPR.trim() || !editItemName.trim()"
+                    >
+                      <span *ngIf="isUpdatingItem">Updating...</span>
+                      <span *ngIf="!isUpdatingItem">Update Item</span>
+                    </button>
+                  </div>
+                </div>
+
                 <!-- Quotes Section -->
                 <div class="quotes-section">
                   <div class="section-header">
                     <h3>Quotes ({{ quotes.length }})</h3>
-                    <button class="btn-primary btn-sm" (click)="showCreateQuote()" *ngIf="canWrite && !showCreateQuoteForm">
+                    <button class="btn-primary" (click)="showCreateQuote()" *ngIf="canWrite && !showCreateQuoteForm">
                       ➕ Add Quote
                     </button>
                   </div>
@@ -541,7 +720,7 @@
                         {{ showEventsPanel ? '▼ Hide' : '▶ Show' }}
                       </button>
                       <button 
-                        class="btn-primary btn-sm" 
+                        class="btn-primary" 
                         (click)="showCreateEvent()" 
                         *ngIf="canWrite && showEventsPanel && !showCreateEventForm">
                         ➕ Add Event
@@ -644,10 +823,21 @@
           </div>
         </div>
 
+        <!-- Empty State - No items match filter -->
+        <div class="empty-state" *ngIf="!isLoadingItems && procurementItems.length > 0 && filteredProcurementItems.length === 0">
+          <div class="empty-icon">🔍</div>
+          <h3>No Matching Items</h3>
+          <p>No procurement items match the current filter(s). Try adjusting your search or category filter.</p>
+          <button class="btn-secondary" (click)="clearSearch(); selectedCategoryId = null">
+            Clear Filters
+          </button>
+        </div>
+
+        <!-- Empty State - No items exist -->
         <div class="empty-state" *ngIf="!isLoadingItems && procurementItems.length === 0">
           <div class="empty-icon">🛒</div>
-          <h3>No Procurement Items</h3>
-          <p>No procurement items have been created for this fiscal year yet.</p>
+          <h3>No Procurement Items Yet</h3>
+          <p>Get started by creating your first procurement item for this fiscal year.</p>
           <button class="btn-primary" (click)="showCreateItem()" *ngIf="canWrite">
             Create First Procurement Item
           </button>
@@ -666,7 +856,7 @@
       <div class="modal-body">
         <!-- Upload Form -->
         <div class="upload-section" *ngIf="canWrite">
-          <button class="btn-primary btn-sm" (click)="showFileUploadForm()" *ngIf="!showFileUpload">
+          <button class="btn-primary" (click)="showFileUploadForm()" *ngIf="!showFileUpload">
             📎 Upload File
           </button>
 

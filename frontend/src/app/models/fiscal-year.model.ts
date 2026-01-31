@@ -28,6 +28,12 @@ export interface FiscalYear {
   /** Whether to group items by category in funding/spending pages */
   groupByCategory: boolean;
 
+  /** Minimum percentage for "On Target" status (-100 to +100) */
+  onTargetMin: number;
+
+  /** Maximum percentage for "On Target" status (-100 to +100) */
+  onTargetMax: number;
+
   /** Creation timestamp */
   createdAt?: string;
 
@@ -66,4 +72,10 @@ export interface DisplaySettingsRequest {
 
   /** Whether to group items by category in funding/spending pages */
   groupByCategory?: boolean;
+
+  /** Minimum percentage for "On Target" status (-100 to +100) */
+  onTargetMin?: number;
+
+  /** Maximum percentage for "On Target" status (-100 to +100) */
+  onTargetMax?: number;
 }

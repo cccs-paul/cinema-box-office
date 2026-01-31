@@ -103,6 +103,12 @@
     opacity: 0.9;
   }
 
+  .target-range {
+    font-size: 12px;
+    opacity: 0.75;
+    font-style: italic;
+  }
+
   &.status-good {
     background: linear-gradient(135deg, #dcfce7, #bbf7d0);
     color: #166534;
