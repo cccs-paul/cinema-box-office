@@ -1408,6 +1408,9 @@
   justify-content: center;
   padding: 4rem 2rem;
   text-align: center;
+  background: var(--background-secondary);
+  border-radius: 8px;
+  border: 1px dashed var(--border-color);
 
   .empty-icon {
     font-size: 4rem;

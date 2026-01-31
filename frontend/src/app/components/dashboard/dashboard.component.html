@@ -164,7 +164,6 @@
             <div class="allocation-row" *ngFor="let allocation of newItemMoneyAllocations; let i = index" [class.is-default]="allocation.isDefault">
               <div class="allocation-header">
                 <span class="money-code">{{ allocation.moneyCode }}</span>
-                <span class="default-badge" *ngIf="allocation.isDefault">Default</span>
                 <span class="money-name">{{ allocation.moneyName }}</span>
               </div>
               <div class="allocation-inputs">

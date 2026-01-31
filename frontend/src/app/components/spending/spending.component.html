@@ -173,7 +173,6 @@
               <tr *ngFor="let allocation of newItemMoneyAllocations">
                 <td class="money-name">
                   {{ allocation.moneyName }}
-                  <span class="default-badge" *ngIf="allocation.isDefault">default</span>
                 </td>
                 <td *ngIf="selectedCategoryAllowsCap()">
                   <input 
