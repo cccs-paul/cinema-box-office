@@ -70,6 +70,10 @@ export class SummaryComponent implements OnInit, OnDestroy {
   moneyTypes: Money[] = [];
   moneyTypeSummaries: MoneyTypeSummary[] = [];
   
+  // Collapsible sections
+  comparisonExpanded = true;
+  moneyTypeExpanded = true;
+  
   isLoading = false;
   errorMessage: string | null = null;
 
@@ -315,8 +319,8 @@ export class SummaryComponent implements OnInit, OnDestroy {
    */
   getStatusClass(percentage: number): string {
     const difference = 100 - percentage; // How much is remaining (positive = under budget)
-    const onTargetMin = this.selectedFY?.onTargetMin ?? -10;
-    const onTargetMax = this.selectedFY?.onTargetMax ?? 10;
+    const onTargetMin = this.selectedFY?.onTargetMin ?? -2;
+    const onTargetMax = this.selectedFY?.onTargetMax ?? 2;
 
     // If spending exceeds funding (negative remaining = over budget)
     if (difference < onTargetMin) {
@@ -339,8 +343,8 @@ export class SummaryComponent implements OnInit, OnDestroy {
    */
   getOnTargetIndicator(): string {
     const difference = 100 - this.spendingPercentTotal; // Positive = under budget, negative = over budget
-    const onTargetMin = this.selectedFY?.onTargetMin ?? -10;
-    const onTargetMax = this.selectedFY?.onTargetMax ?? 10;
+    const onTargetMin = this.selectedFY?.onTargetMin ?? -2;
+    const onTargetMax = this.selectedFY?.onTargetMax ?? 2;
 
     // If spending exceeds funding significantly (over budget)
     if (difference < onTargetMin) {
@@ -364,8 +368,8 @@ export class SummaryComponent implements OnInit, OnDestroy {
    */
   getOnTargetText(): string {
     const difference = 100 - this.spendingPercentTotal; // Positive = under budget, negative = over budget
-    const onTargetMin = this.selectedFY?.onTargetMin ?? -10;
-    const onTargetMax = this.selectedFY?.onTargetMax ?? 10;
+    const onTargetMin = this.selectedFY?.onTargetMin ?? -2;
+    const onTargetMax = this.selectedFY?.onTargetMax ?? 2;
 
     // If spending exceeds funding significantly (over budget)
     if (difference < onTargetMin) {

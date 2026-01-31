@@ -1001,3 +1001,116 @@ html[data-theme='dark'] {
     }
   }
 }
+
+// Import/Export Section
+.import-export-section {
+  background: var(--background-secondary, #f9fafb);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary, #1f2937);
+    margin: 0 0 0.5rem 0;
+  }
+
+  .section-description {
+    color: var(--text-secondary, #6b7280);
+    font-size: 0.875rem;
+    margin: 0 0 1.25rem 0;
+  }
+}
+
+.export-options,
+.import-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .form-group {
+    margin-bottom: 0;
+
+    label {
+      display: block;
+      font-weight: 500;
+      color: var(--text-primary, #1f2937);
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.file-input-group {
+  display: flex;
+  gap: 0.5rem;
+
+  .file-path-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    background: var(--background-primary, #ffffff);
+    color: var(--text-primary, #1f2937);
+
+    &:disabled {
+      background: var(--background-tertiary, #f3f4f6);
+      color: var(--text-tertiary, #9ca3af);
+      cursor: not-allowed;
+    }
+
+    &::placeholder {
+      color: var(--text-tertiary, #9ca3af);
+    }
+  }
+}
+
+.export-actions,
+.import-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.import-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--background-tertiary, #f3f4f6);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #6b7280);
+
+  .notice-icon {
+    font-size: 1rem;
+  }
+}
+
+// Dark theme for Import/Export
+html.dark-theme {
+  .import-export-section {
+    background: var(--background-secondary);
+    border-color: var(--border-color);
+  }
+
+  .file-path-input {
+    background: var(--background-primary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+
+    &:disabled {
+      background: var(--background-tertiary);
+      color: var(--text-tertiary);
+    }
+  }
+
+  .import-notice {
+    background: var(--background-tertiary);
+    color: var(--text-secondary);
+  }
+}

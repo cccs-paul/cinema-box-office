@@ -62,6 +62,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   isLoadingItems = false;
   selectedStatusFilter: ProcurementItemStatus | null = null;
   searchTerm = '';
+  filtersExpanded = true;
 
   // Categories
   categories: Category[] = [];
@@ -343,6 +344,13 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    */
   clearSearch(): void {
     this.searchTerm = '';
+  }
+
+  /**
+   * Toggle the filters bar visibility.
+   */
+  toggleFilters(): void {
+    this.filtersExpanded = !this.filtersExpanded;
   }
 
   /**

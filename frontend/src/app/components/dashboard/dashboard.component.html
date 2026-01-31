@@ -14,40 +14,51 @@
     </div>
 
     <!-- Search and Category Filter -->
-    <div class="filters-bar" *ngIf="!showCreateForm">
-      <!-- Search Box -->
-      <div class="search-box">
-        <input
-          type="text"
-          [(ngModel)]="searchTerm"
-          placeholder="Search funding items..."
-          class="search-input"
-        />
+    <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateForm">
+      <div class="filters-header">
         <button 
-          class="btn-clear" 
-          *ngIf="searchTerm" 
-          (click)="clearSearch()"
-          title="Clear search">
-          ✕
+          class="btn-toggle-filters" 
+          (click)="toggleFilters()"
+          [title]="filtersExpanded ? 'Collapse filters' : 'Expand filters'">
+          <span class="toggle-icon" [class.collapsed]="!filtersExpanded">▼</span>
+          <span class="toggle-label">{{ filtersExpanded ? 'Hide Filters' : 'Show Filters' }}</span>
         </button>
       </div>
+      <div class="filters-content" *ngIf="filtersExpanded">
+        <!-- Search Box -->
+        <div class="search-box">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            placeholder="Search funding items..."
+            class="search-input"
+          />
+          <button 
+            class="btn-clear" 
+            *ngIf="searchTerm" 
+            (click)="clearSearch()"
+            title="Clear search">
+            ✕
+          </button>
+        </div>
 
-      <!-- Category Filter -->
-      <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
-        <span class="filter-label">Category:</span>
-        <button 
-          class="filter-btn"
-          [class.active]="selectedCategoryId === null"
-          (click)="filterByCategory(null)">
-          All
-        </button>
-        <button 
-          *ngFor="let category of categories"
-          class="filter-btn"
-          [class.active]="selectedCategoryId === category.id"
-          (click)="filterByCategory(category.id)">
-          {{ category.name }}
-        </button>
+        <!-- Category Filter -->
+        <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
+          <span class="filter-label">Category:</span>
+          <button 
+            class="filter-btn"
+            [class.active]="selectedCategoryId === null"
+            (click)="filterByCategory(null)">
+            All
+          </button>
+          <button 
+            *ngFor="let category of categories"
+            class="filter-btn"
+            [class.active]="selectedCategoryId === category.id"
+            (click)="filterByCategory(category.id)">
+            {{ category.name }}
+          </button>
+        </div>
       </div>
     </div>
 

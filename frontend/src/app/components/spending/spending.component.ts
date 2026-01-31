@@ -65,6 +65,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
 
   // Search filter
   searchTerm = '';
+  filtersExpanded = true;
 
   // Create Form
   showCreateForm = false;
@@ -398,6 +399,13 @@ export class SpendingComponent implements OnInit, OnDestroy {
    */
   clearSearch(): void {
     this.searchTerm = '';
+  }
+
+  /**
+   * Toggle the filters bar visibility.
+   */
+  toggleFilters(): void {
+    this.filtersExpanded = !this.filtersExpanded;
   }
 
   /**

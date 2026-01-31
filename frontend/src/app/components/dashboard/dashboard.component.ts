@@ -65,6 +65,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Search filter
   searchTerm = '';
+  filtersExpanded = true;
 
   // Create Form
   showCreateForm = false;
@@ -396,6 +397,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   clearSearch(): void {
     this.searchTerm = '';
+  }
+
+  /**
+   * Toggle the filters bar visibility.
+   */
+  toggleFilters(): void {
+    this.filtersExpanded = !this.filtersExpanded;
   }
 
   /**

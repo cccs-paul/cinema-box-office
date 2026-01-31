@@ -69,7 +69,7 @@ public class FiscalYear {
   private Integer onTargetMin = -2;
 
   @Column(name = "on_target_max", nullable = false)
-  private Integer onTargetMax = 10;
+  private Integer onTargetMax = 2;
 
   // Constructors
   public FiscalYear() {}

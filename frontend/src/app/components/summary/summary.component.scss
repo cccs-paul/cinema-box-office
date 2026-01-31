@@ -141,17 +141,64 @@
   box-shadow: 0 1px 3px var(--shadow-light, rgba(0, 0, 0, 0.1));
   padding: 24px;
   margin-bottom: 24px;
+  transition: padding 0.3s ease;
+
+  &.collapsed {
+    padding: 16px 24px;
+  }
 
   h2 {
     font-size: 18px;
     font-weight: 600;
     color: var(--text-primary, #1f2937);
-    margin: 0 0 20px 0;
+    margin: 0;
   }
 }
 
-.comparison-table-wrapper {
-  overflow-x: auto;
+// Section Header with Toggle
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  .collapsed & {
+    margin-bottom: 0;
+  }
+}
+
+.btn-toggle-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-tertiary, #f3f4f6);
+  border: 1px solid var(--border-color, #e5e7eb);
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+
+  &:hover {
+    background: var(--background-hover, #e5e7eb);
+    color: var(--text-primary, #1f2937);
+  }
+
+  .toggle-icon {
+    font-size: 0.75rem;
+    transition: transform 0.3s ease;
+
+    &.collapsed {
+      transform: rotate(-90deg);
+    }
+  }
+}
+
+.section-content {
+  .comparison-table-wrapper {
+    overflow-x: auto;
+  }
 }
 
 .comparison-table {
@@ -652,12 +699,17 @@ html.dark-theme {
   box-shadow: 0 1px 3px var(--shadow-light, rgba(0, 0, 0, 0.1));
   padding: 24px;
   margin-bottom: 24px;
+  transition: padding 0.3s ease;
+
+  &.collapsed {
+    padding: 16px 24px;
+  }
 
   h2 {
     font-size: 18px;
     font-weight: 600;
     color: var(--text-primary, #1f2937);
-    margin: 0 0 20px 0;
+    margin: 0;
   }
 }
 

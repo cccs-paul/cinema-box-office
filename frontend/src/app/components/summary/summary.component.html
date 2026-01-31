@@ -32,10 +32,18 @@
     </div>
 
     <!-- Main Comparison Table -->
-    <div class="comparison-section">
-      <h2>Funding vs Spending Comparison</h2>
+    <div class="comparison-section" [class.collapsed]="!comparisonExpanded">
+      <div class="section-header">
+        <h2>Funding vs Spending Comparison</h2>
+        <button 
+          class="btn-toggle-section" 
+          (click)="comparisonExpanded = !comparisonExpanded"
+          [title]="comparisonExpanded ? 'Collapse section' : 'Expand section'">
+          <span class="toggle-icon" [class.collapsed]="!comparisonExpanded">▼</span>
+        </button>
+      </div>
       
-      <div class="comparison-table-wrapper">
+      <div class="section-content" *ngIf="comparisonExpanded">
         <table class="comparison-table">
           <thead>
             <tr>
@@ -118,10 +126,19 @@
     </div>
 
     <!-- Money Type Breakdown -->
-    <div class="money-type-section" *ngIf="moneyTypeSummaries.length > 0">
-      <h2>Left to Spend by Money Type</h2>
+    <div class="money-type-section" [class.collapsed]="!moneyTypeExpanded" *ngIf="moneyTypeSummaries.length > 0">
+      <div class="section-header">
+        <h2>Left to Spend by Money Type</h2>
+        <button 
+          class="btn-toggle-section" 
+          (click)="moneyTypeExpanded = !moneyTypeExpanded"
+          [title]="moneyTypeExpanded ? 'Collapse section' : 'Expand section'">
+          <span class="toggle-icon" [class.collapsed]="!moneyTypeExpanded">▼</span>
+        </button>
+      </div>
       
-      <div class="money-type-grid">
+      <div class="section-content" *ngIf="moneyTypeExpanded">
+        <div class="money-type-grid">
         <div class="money-type-card" *ngFor="let summary of moneyTypeSummaries">
           <div class="money-type-header">
             <span class="money-code">{{ summary.code }}</span>

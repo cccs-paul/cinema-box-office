@@ -53,6 +53,13 @@
       <span class="tab-icon">📊</span>
       <span class="tab-label">Summary</span>
     </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'import-export'"
+      (click)="setActiveTab('import-export')">
+      <span class="tab-icon">📥</span>
+      <span class="tab-label">Import/Export</span>
+    </button>
   </div>
 
   <!-- Monies Tab Content -->
@@ -533,10 +540,110 @@
         <div class="preview-range">
           <span class="preview-under">Under Budget</span>
           <span class="preview-target">
-            On Target ({{ selectedFY?.onTargetMin ?? -10 }}% to {{ selectedFY?.onTargetMax ?? 10 }}%)
+            On Target ({{ selectedFY?.onTargetMin ?? -2 }}% to {{ selectedFY?.onTargetMax ?? 2 }}%)
           </span>
           <span class="preview-over">Over Budget</span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import/Export Tab Content -->
+  <div class="tab-content" *ngIf="activeTab === 'import-export'">
+    <div class="section-header">
+      <h2>Import/Export Data</h2>
+    </div>
+
+    <!-- Export Section -->
+    <div class="import-export-section">
+      <h3>Export Line Items</h3>
+      <p class="section-description">
+        Export all Funding, Procurement, and Spending line items to a CSV file for backup or analysis.
+      </p>
+      
+      <div class="export-options">
+        <div class="form-group">
+          <label for="exportPath">Export Destination</label>
+          <div class="file-input-group">
+            <input 
+              type="text" 
+              id="exportPath" 
+              [(ngModel)]="exportPath"
+              placeholder="Select export destination..."
+              readonly
+              class="file-path-input"
+            />
+            <button 
+              type="button" 
+              class="btn btn-secondary"
+              (click)="selectExportDestination()">
+              Browse...
+            </button>
+          </div>
+        </div>
+        
+        <div class="export-actions">
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            (click)="exportToCSV()"
+            [disabled]="isExporting">
+            <span *ngIf="!isExporting">📤 Export to CSV</span>
+            <span *ngIf="isExporting">Exporting...</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="alert alert-success" *ngIf="exportSuccessMessage">
+        {{ exportSuccessMessage }}
+      </div>
+      <div class="alert alert-error" *ngIf="exportErrorMessage">
+        {{ exportErrorMessage }}
+      </div>
+    </div>
+
+    <!-- Import Section -->
+    <div class="import-export-section">
+      <h3>Import Line Items</h3>
+      <p class="section-description">
+        Import line items from a CSV file. This feature is currently under development.
+      </p>
+      
+      <div class="import-options">
+        <div class="form-group">
+          <label for="importPath">Import File</label>
+          <div class="file-input-group">
+            <input 
+              type="text" 
+              id="importPath" 
+              placeholder="Select CSV file to import..."
+              readonly
+              disabled
+              class="file-path-input"
+            />
+            <button 
+              type="button" 
+              class="btn btn-secondary"
+              disabled>
+              Browse...
+            </button>
+          </div>
+        </div>
+        
+        <div class="import-actions">
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            disabled
+            title="Import functionality coming soon">
+            📥 Import from CSV
+          </button>
+        </div>
+      </div>
+      
+      <div class="import-notice">
+        <span class="notice-icon">ℹ️</span>
+        <span class="notice-text">Import functionality will be available in a future update.</span>
       </div>
     </div>
   </div>

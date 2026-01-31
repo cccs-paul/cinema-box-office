@@ -41,7 +41,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   fyId: number | null = null;
 
   // Configuration tabs
-  activeTab: 'monies' | 'categories' | 'general' | 'summary' = 'monies';
+  activeTab: 'monies' | 'categories' | 'general' | 'summary' | 'import-export' = 'general';
 
   // Money management state
   monies: Money[] = [];
@@ -77,6 +77,12 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   // On Target slider values for real-time display
   onTargetMinValue: number | null = null;
   onTargetMaxValue: number | null = null;
+
+  // Import/Export state
+  exportPath = '';
+  isExporting = false;
+  exportSuccessMessage: string | null = null;
+  exportErrorMessage: string | null = null;
 
   private destroy$ = new Subject<void>();
 
@@ -161,7 +167,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   /**
    * Switch to a configuration tab.
    */
-  setActiveTab(tab: 'monies' | 'categories' | 'general' | 'summary'): void {
+  setActiveTab(tab: 'monies' | 'categories' | 'general' | 'summary' | 'import-export'): void {
     this.activeTab = tab;
   }
 
@@ -584,5 +590,192 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   getFundingTypeLabel(fundingType: FundingType | string | undefined): string {
     if (!fundingType) return FUNDING_TYPE_LABELS['BOTH'];
     return FUNDING_TYPE_LABELS[fundingType as FundingType] || FUNDING_TYPE_LABELS['BOTH'];
+  }
+
+  /**
+   * Select export destination using browser download.
+   */
+  selectExportDestination(): void {
+    // In browser context, we'll use the download approach
+    // Set a default filename
+    const timestamp = new Date().toISOString().split('T')[0];
+    const rcName = this.selectedRC?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'RC';
+    const fyName = this.selectedFY?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'FY';
+    this.exportPath = `${rcName}_${fyName}_export_${timestamp}.csv`;
+  }
+
+  /**
+   * Export Funding, Procurement, and Spending items to CSV.
+   */
+  exportToCSV(): void {
+    if (!this.rcId || !this.fyId) {
+      this.exportErrorMessage = 'Please select a Responsibility Centre and Fiscal Year';
+      return;
+    }
+
+    this.isExporting = true;
+    this.exportSuccessMessage = null;
+    this.exportErrorMessage = null;
+
+    // Fetch all data for export
+    Promise.all([
+      this.fetchFundingItems(),
+      this.fetchProcurementItems(),
+      this.fetchSpendingItems()
+    ]).then(([fundingItems, procurementItems, spendingItems]) => {
+      const csvContent = this.generateCSVContent(fundingItems, procurementItems, spendingItems);
+      this.downloadCSV(csvContent);
+      this.exportSuccessMessage = 'Export completed successfully!';
+      this.isExporting = false;
+    }).catch(error => {
+      this.exportErrorMessage = `Export failed: ${error.message || 'Unknown error'}`;
+      this.isExporting = false;
+    });
+  }
+
+  /**
+   * Fetch funding items for export.
+   */
+  private fetchFundingItems(): Promise<any[]> {
+    return fetch(`/api/responsibility-centres/${this.rcId}/fiscal-years/${this.fyId}/funding-items`)
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch funding items');
+        return response.json();
+      });
+  }
+
+  /**
+   * Fetch procurement items for export.
+   */
+  private fetchProcurementItems(): Promise<any[]> {
+    return fetch(`/api/responsibility-centres/${this.rcId}/fiscal-years/${this.fyId}/procurement-items`)
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch procurement items');
+        return response.json();
+      });
+  }
+
+  /**
+   * Fetch spending items for export.
+   */
+  private fetchSpendingItems(): Promise<any[]> {
+    return fetch(`/api/responsibility-centres/${this.rcId}/fiscal-years/${this.fyId}/spending-items`)
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch spending items');
+        return response.json();
+      });
+  }
+
+  /**
+   * Generate CSV content from all items.
+   */
+  private generateCSVContent(fundingItems: any[], procurementItems: any[], spendingItems: any[]): string {
+    const lines: string[] = [];
+
+    // Funding Items Section
+    lines.push('=== FUNDING ITEMS ===');
+    lines.push('Type,ID,Name,Description,Source,Amount,Currency,Exchange Rate,Category,Money Allocations,Status,Created Date');
+    for (const item of fundingItems) {
+      const allocations = item.moneyAllocations?.map((a: any) => `${a.moneyCode || a.money?.code}:${a.amount}`).join(';') || '';
+      lines.push(this.escapeCSVRow([
+        'FUNDING',
+        item.id,
+        item.name,
+        item.description || '',
+        item.source || '',
+        item.amount || 0,
+        item.currency || 'USD',
+        item.exchangeRate || 1,
+        item.category?.name || '',
+        allocations,
+        item.status || '',
+        item.createdAt || ''
+      ]));
+    }
+
+    lines.push('');
+
+    // Procurement Items Section
+    lines.push('=== PROCUREMENT ITEMS ===');
+    lines.push('Type,ID,PR Number,PO Number,Name,Description,Vendor,Status,Amount,Currency,Exchange Rate,Category,Created Date');
+    for (const item of procurementItems) {
+      lines.push(this.escapeCSVRow([
+        'PROCUREMENT',
+        item.id,
+        item.purchaseRequisition || '',
+        item.purchaseOrder || '',
+        item.name,
+        item.description || '',
+        item.vendor || '',
+        item.status || '',
+        item.amount || 0,
+        item.currency || 'USD',
+        item.exchangeRate || 1,
+        item.category?.name || '',
+        item.createdAt || ''
+      ]));
+    }
+
+    lines.push('');
+
+    // Spending Items Section
+    lines.push('=== SPENDING ITEMS ===');
+    lines.push('Type,ID,Name,Description,Vendor,Reference Number,Amount,Currency,Exchange Rate,Category,Money Allocations,Status,Created Date');
+    for (const item of spendingItems) {
+      const allocations = item.moneyAllocations?.map((a: any) => `${a.moneyCode || a.money?.code}:${a.amount}`).join(';') || '';
+      lines.push(this.escapeCSVRow([
+        'SPENDING',
+        item.id,
+        item.name,
+        item.description || '',
+        item.vendor || '',
+        item.referenceNumber || '',
+        item.amount || 0,
+        item.currency || 'USD',
+        item.exchangeRate || 1,
+        item.category?.name || '',
+        allocations,
+        item.status || '',
+        item.createdAt || ''
+      ]));
+    }
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Escape a row of values for CSV format.
+   */
+  private escapeCSVRow(values: any[]): string {
+    return values.map(value => {
+      const strValue = String(value ?? '');
+      // Escape double quotes and wrap in quotes if contains comma, newline, or quotes
+      if (strValue.includes(',') || strValue.includes('\n') || strValue.includes('"')) {
+        return '"' + strValue.replace(/"/g, '""') + '"';
+      }
+      return strValue;
+    }).join(',');
+  }
+
+  /**
+   * Download the CSV content as a file.
+   */
+  private downloadCSV(content: string): void {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    const timestamp = new Date().toISOString().split('T')[0];
+    const rcName = this.selectedRC?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'RC';
+    const fyName = this.selectedFY?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'FY';
+    const filename = this.exportPath || `${rcName}_${fyName}_export_${timestamp}.csv`;
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 }
