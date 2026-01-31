@@ -13,22 +13,42 @@
       </button>
     </div>
 
-    <!-- Category Filter -->
-    <div class="category-filter" *ngIf="categories.length > 0 && !showCreateForm && selectedFY?.showCategoryFilter !== false">
-      <span class="filter-label">Filter by Category:</span>
-      <button 
-        class="filter-btn"
-        [class.active]="selectedCategoryId === null"
-        (click)="filterByCategory(null)">
-        All
-      </button>
-      <button 
-        *ngFor="let category of categories"
-        class="filter-btn"
-        [class.active]="selectedCategoryId === category.id"
-        (click)="filterByCategory(category.id)">
-        {{ category.name }}
-      </button>
+    <!-- Search and Category Filter -->
+    <div class="filters-bar" *ngIf="!showCreateForm">
+      <!-- Search Box -->
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          placeholder="Search funding items..."
+          class="search-input"
+        />
+        <button 
+          class="btn-clear" 
+          *ngIf="searchTerm" 
+          (click)="clearSearch()"
+          title="Clear search">
+          ✕
+        </button>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
+        <span class="filter-label">Category:</span>
+        <button 
+          class="filter-btn"
+          [class.active]="selectedCategoryId === null"
+          (click)="filterByCategory(null)">
+          All
+        </button>
+        <button 
+          *ngFor="let category of categories"
+          class="filter-btn"
+          [class.active]="selectedCategoryId === category.id"
+          (click)="filterByCategory(category.id)">
+          {{ category.name }}
+        </button>
+      </div>
     </div>
 
     <!-- Create Form -->
@@ -221,10 +241,11 @@
             <span class="source-badge" [ngClass]="getSourceClass(item.source)">
               {{ getSourceLabel(item.source) }}
             </span>
-            <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
-              {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
+            <!-- Show CAP/OM totals - always with prefix even for single-type categories -->
+            <span class="cap-om-totals">
+              <span class="cap-total" *ngIf="categoryAllowsCapById(item.categoryId)">CAP: {{ formatCurrency(item.totalCap, item.currency) }}</span>
+              <span class="om-total" *ngIf="categoryAllowsOmById(item.categoryId)">OM: {{ formatCurrency(item.totalOm, item.currency) }}</span>
             </span>
-            <span class="total-amount">{{ formatCurrency(item.totalAmount, item.currency) }}</span>
           </div>
           <div class="item-actions">
             <button

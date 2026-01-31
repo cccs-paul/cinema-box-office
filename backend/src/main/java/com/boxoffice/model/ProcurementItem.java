@@ -148,6 +148,14 @@ public class ProcurementItem {
     private FiscalYear fiscalYear;
 
     /**
+     * The category this procurement item belongs to.
+     * Optional - procurement items may or may not have a category.
+     */
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "category_id", nullable = true)
+    private Category category;
+
+    /**
      * Quotes associated with this procurement item.
      * Each procurement item can have 0..n quotes.
      */
@@ -301,6 +309,14 @@ public class ProcurementItem {
 
     public void setFiscalYear(FiscalYear fiscalYear) {
         this.fiscalYear = fiscalYear;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     public List<ProcurementQuote> getQuotes() {

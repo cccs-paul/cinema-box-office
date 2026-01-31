@@ -47,6 +47,8 @@ public class ProcurementItemDTO {
     private String fiscalYearName;
     private Long responsibilityCentreId;
     private String responsibilityCentreName;
+    private Long categoryId;
+    private String categoryName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean active;
@@ -123,6 +125,8 @@ public class ProcurementItemDTO {
         dto.setContractEndDate(item.getContractEndDate());
         dto.setProcurementCompleted(item.getProcurementCompleted());
         dto.setProcurementCompletedDate(item.getProcurementCompletedDate());
+        dto.setCategoryId(item.getCategory() != null ? item.getCategory().getId() : null);
+        dto.setCategoryName(item.getCategory() != null ? item.getCategory().getName() : null);
         return dto;
     }
 
@@ -149,6 +153,8 @@ public class ProcurementItemDTO {
                 ? item.getFiscalYear().getResponsibilityCentre().getId() : null);
         dto.setResponsibilityCentreName(item.getFiscalYear() != null && item.getFiscalYear().getResponsibilityCentre() != null
                 ? item.getFiscalYear().getResponsibilityCentre().getName() : null);
+        dto.setCategoryId(item.getCategory() != null ? item.getCategory().getId() : null);
+        dto.setCategoryName(item.getCategory() != null ? item.getCategory().getName() : null);
         dto.setCurrency(item.getCurrency() != null ? item.getCurrency().name() : "CAD");
         dto.setExchangeRate(item.getExchangeRate());
         dto.setPreferredVendor(item.getPreferredVendor());
@@ -308,6 +314,22 @@ public class ProcurementItemDTO {
 
     public void setResponsibilityCentreName(String responsibilityCentreName) {
         this.responsibilityCentreName = responsibilityCentreName;
+    }
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
     public LocalDateTime getCreatedAt() {

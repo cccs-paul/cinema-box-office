@@ -15,6 +15,7 @@ package com.boxoffice.service;
 import com.boxoffice.dto.ProcurementItemDTO;
 import com.boxoffice.dto.ProcurementQuoteDTO;
 import com.boxoffice.dto.ProcurementQuoteFileDTO;
+import com.boxoffice.model.Category;
 import com.boxoffice.model.Currency;
 import com.boxoffice.model.FiscalYear;
 import com.boxoffice.model.ProcurementItem;
@@ -23,6 +24,7 @@ import com.boxoffice.model.ProcurementQuoteFile;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
+import com.boxoffice.repository.CategoryRepository;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.ProcurementItemRepository;
 import com.boxoffice.repository.ProcurementQuoteFileRepository;
@@ -73,6 +75,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
     private final ResponsibilityCentreRepository rcRepository;
     private final RCAccessRepository accessRepository;
     private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
 
     public ProcurementItemServiceImpl(ProcurementItemRepository procurementItemRepository,
                                        ProcurementQuoteRepository quoteRepository,
@@ -80,7 +83,8 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
                                        FiscalYearRepository fiscalYearRepository,
                                        ResponsibilityCentreRepository rcRepository,
                                        RCAccessRepository accessRepository,
-                                       UserRepository userRepository) {
+                                       UserRepository userRepository,
+                                       CategoryRepository categoryRepository) {
         this.procurementItemRepository = procurementItemRepository;
         this.quoteRepository = quoteRepository;
         this.fileRepository = fileRepository;
@@ -88,6 +92,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         this.rcRepository = rcRepository;
         this.accessRepository = accessRepository;
         this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     // ==========================
@@ -249,6 +254,12 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         item.setProcurementCompleted(dto.getProcurementCompleted() != null ? dto.getProcurementCompleted() : false);
         item.setProcurementCompletedDate(dto.getProcurementCompletedDate());
         
+        // Set category if provided
+        if (dto.getCategoryId() != null) {
+            categoryRepository.findById(dto.getCategoryId())
+                .ifPresent(item::setCategory);
+        }
+        
         item.setActive(true);
 
         ProcurementItem saved = procurementItemRepository.save(item);
@@ -332,6 +343,18 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         }
         if (dto.getProcurementCompletedDate() != null) {
             item.setProcurementCompletedDate(dto.getProcurementCompletedDate());
+        }
+        
+        // Update category (null removes the category)
+        if (dto.getCategoryId() != null) {
+            categoryRepository.findById(dto.getCategoryId())
+                .ifPresentOrElse(
+                    item::setCategory,
+                    () -> item.setCategory(null)
+                );
+        } else if (dto.getCategoryId() == null && dto.getCategoryName() == null) {
+            // Only clear category if both are null (explicit removal)
+            // If neither field is in the request, don't change the category
         }
 
         ProcurementItem saved = procurementItemRepository.save(item);

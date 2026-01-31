@@ -18,17 +18,30 @@
   <div class="content-wrapper">
     <!-- Items Panel -->
     <div class="items-panel">
-      <!-- Search and Filter Bar -->
-      <div class="toolbar">
+      <!-- Action Bar -->
+      <div class="action-bar" *ngIf="canWrite && !showCreateItemForm">
+        <button class="btn btn-primary" (click)="showCreateItem()">
+          + New Procurement
+        </button>
+      </div>
+
+      <!-- Search and Category Filter -->
+      <div class="filters-bar" *ngIf="!showCreateItemForm">
+        <!-- Search Box -->
         <div class="search-box">
           <input
             type="text"
             [(ngModel)]="searchTerm"
-            (keyup.enter)="onSearch()"
-            placeholder="Search by PR, PO, or name..."
+            placeholder="Search by PR, PO, name, vendor..."
             class="search-input"
           />
-          <button class="btn-search" (click)="onSearch()">🔍</button>
+          <button 
+            class="btn-clear" 
+            *ngIf="searchTerm" 
+            (click)="clearSearch()"
+            title="Clear search">
+            ✕
+          </button>
         </div>
         <div class="filter-dropdown">
           <select [(ngModel)]="selectedStatusFilter" (change)="filterByStatus(selectedStatusFilter)">
@@ -38,9 +51,24 @@
             </option>
           </select>
         </div>
-        <button class="btn-primary" (click)="showCreateItem()" *ngIf="canWrite">
-          ➕ New Procurement
-        </button>
+
+        <!-- Category Filter -->
+        <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
+          <span class="filter-label">Category:</span>
+          <button 
+            class="filter-btn"
+            [class.active]="selectedCategoryId === null"
+            (click)="filterByCategory(null)">
+            All
+          </button>
+          <button 
+            *ngFor="let category of categories"
+            class="filter-btn"
+            [class.active]="selectedCategoryId === category.id"
+            (click)="filterByCategory(category.id)">
+            {{ category.name }}
+          </button>
+        </div>
       </div>
 
       <!-- Create Item Form -->
@@ -80,6 +108,17 @@
               required
               placeholder="Brief name for this procurement"
             />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newItemCategory">Category</label>
+              <select id="newItemCategory" [(ngModel)]="newItemCategoryId" name="newItemCategory">
+                <option [ngValue]="null">-- No Category --</option>
+                <option *ngFor="let category of categories" [ngValue]="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
             <label for="newItemDescription">Description</label>
@@ -198,7 +237,7 @@
         </div>
 
         <div class="items-list" *ngIf="!isLoadingItems && procurementItems.length > 0">
-          <div class="item-card" *ngFor="let item of procurementItems" [class.expanded]="selectedItem?.id === item.id">
+          <div class="item-card" *ngFor="let item of filteredProcurementItems" [class.expanded]="selectedItem?.id === item.id">
             <!-- Item Summary Row -->
             <div class="item-summary" (click)="toggleItemDetails(item)">
               <div class="item-info">
@@ -208,6 +247,7 @@
                 <span class="status-badge" [ngClass]="getStatusClass(item.status)">
                   {{ getStatusLabel(item.status) }}
                 </span>
+                <span class="category-badge" *ngIf="item.categoryName">📁 {{ item.categoryName }}</span>
                 <span class="quotes-count">📋 {{ item.quoteCount || 0 }}</span>
               </div>
               <div class="item-actions">

@@ -72,9 +72,8 @@ export class LoginComponent implements OnInit {
     this.checkApiHealth();
     this.checkDatabaseHealth();
 
-    // Initialize theme service with saved theme preference
-    const savedTheme = localStorage.getItem('appTheme') as 'light' | 'dark' || 'light';
-    this.themeService.setTheme(savedTheme);
+    // Force light theme on login page - dark theme is only available after RC/FY selection
+    this.themeService.setTheme('light');
 
     // If already logged in, redirect to RC selection page
     if (this.authService.isLoggedIn) {

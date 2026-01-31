@@ -17,6 +17,7 @@ import { FundingItemService } from '../../services/funding-item.service';
 import { CurrencyService } from '../../services/currency.service';
 import { MoneyService } from '../../services/money.service';
 import { CategoryService } from '../../services/category.service';
+import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { FundingItem, FundingItemCreateRequest, getSourceLabel, getSourceClass, FundingSource, MoneyAllocation } from '../../models/funding-item.model';
@@ -62,6 +63,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isLoadingCategories = false;
   selectedCategoryId: number | null = null;
 
+  // Search filter
+  searchTerm = '';
+
   // Create Form
   showCreateForm = false;
   isCreating = false;
@@ -101,7 +105,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private fundingItemService: FundingItemService,
     private currencyService: CurrencyService,
     private moneyService: MoneyService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private fuzzySearchService: FuzzySearchService
   ) {}
 
   ngOnInit(): void {
@@ -344,7 +349,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   /**
    * Get sorted and filtered list of funding items.
-   * Filters by selected category (if any) and sorts alphabetically by name.
+   * Filters by selected category (if any), applies fuzzy search, and sorts alphabetically by name.
    */
   get sortedFundingItems(): FundingItem[] {
     let items = [...this.fundingItems];
@@ -353,10 +358,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (this.selectedCategoryId !== null) {
       items = items.filter(item => item.categoryId === this.selectedCategoryId);
     }
+
+    // Apply fuzzy search filter
+    if (this.searchTerm.trim()) {
+      items = this.fuzzySearchService.filter(
+        items,
+        this.searchTerm,
+        (item: FundingItem) => ({
+          name: item.name,
+          description: item.description,
+          categoryName: item.categoryName,
+          source: this.getSourceLabel(item.source),
+          comments: item.comments
+        })
+      );
+    }
     
     return items.sort((a, b) =>
       a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
     );
+  }
+
+  /**
+   * Clear the search filter.
+   */
+  clearSearch(): void {
+    this.searchTerm = '';
   }
 
   /**

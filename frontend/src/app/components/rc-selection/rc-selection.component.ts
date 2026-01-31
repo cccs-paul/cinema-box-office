@@ -15,6 +15,7 @@ import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.mode
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { FiscalYear, FiscalYearCreateRequest, FiscalYearUpdateRequest } from '../../models/fiscal-year.model';
 import { AuthService } from '../../services/auth.service';
+import { ThemeService, Theme } from '../../services/theme.service';
 
 /**
  * RC Selection Component
@@ -78,10 +79,16 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private themeService: ThemeService
   ) {}
 
   ngOnInit(): void {
+    // Restore user's saved theme preference from localStorage
+    // The login page forces light theme, so we restore user's choice here
+    const savedTheme = localStorage.getItem('appTheme') as Theme || 'light';
+    this.themeService.setTheme(savedTheme);
+
     // Wait for authentication to be checked before loading RCs
     this.authService.currentUser$
       .pipe(

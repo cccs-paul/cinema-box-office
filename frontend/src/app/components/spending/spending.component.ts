@@ -17,6 +17,7 @@ import { SpendingItemService, SpendingItemCreateRequest } from '../../services/s
 import { CategoryService } from '../../services/category.service';
 import { MoneyService } from '../../services/money.service';
 import { CurrencyService } from '../../services/currency.service';
+import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { SpendingItem, SpendingMoneyAllocation, SpendingItemStatus, SPENDING_STATUS_INFO } from '../../models/spending-item.model';
@@ -62,6 +63,9 @@ export class SpendingComponent implements OnInit, OnDestroy {
   monies: Money[] = [];
   isLoadingMonies = false;
 
+  // Search filter
+  searchTerm = '';
+
   // Create Form
   showCreateForm = false;
   isCreating = false;
@@ -103,7 +107,8 @@ export class SpendingComponent implements OnInit, OnDestroy {
     private spendingItemService: SpendingItemService,
     private categoryService: CategoryService,
     private moneyService: MoneyService,
-    private currencyService: CurrencyService
+    private currencyService: CurrencyService,
+    private fuzzySearchService: FuzzySearchService
   ) {}
 
   ngOnInit(): void {
@@ -345,6 +350,41 @@ export class SpendingComponent implements OnInit, OnDestroy {
   filterByCategory(categoryId: number | null): void {
     this.selectedCategoryId = categoryId;
     this.loadSpendingItems();
+  }
+
+  /**
+   * Get sorted and filtered list of spending items.
+   * Filters by selected category (if any), applies fuzzy search, and sorts alphabetically by name.
+   */
+  get filteredSpendingItems(): SpendingItem[] {
+    let items = [...this.spendingItems];
+
+    // Apply fuzzy search filter
+    if (this.searchTerm.trim()) {
+      items = this.fuzzySearchService.filter(
+        items,
+        this.searchTerm,
+        (item: SpendingItem) => ({
+          name: item.name,
+          description: item.description,
+          categoryName: item.categoryName,
+          vendor: item.vendor,
+          referenceNumber: item.referenceNumber,
+          status: SPENDING_STATUS_INFO[item.status]?.label || item.status
+        })
+      );
+    }
+    
+    return items.sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    );
+  }
+
+  /**
+   * Clear the search filter.
+   */
+  clearSearch(): void {
+    this.searchTerm = '';
   }
 
   /**

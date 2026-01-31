@@ -39,6 +39,7 @@ export interface ProcurementItemCreateRequest {
   contractEndDate?: string;
   procurementCompleted?: boolean;
   procurementCompletedDate?: string;
+  categoryId?: number | null;
 }
 
 /**

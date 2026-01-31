@@ -19,6 +19,7 @@ import com.boxoffice.model.ProcurementItem;
 import com.boxoffice.model.RCAccess;
 import com.boxoffice.model.ResponsibilityCentre;
 import com.boxoffice.model.User;
+import com.boxoffice.repository.CategoryRepository;
 import com.boxoffice.repository.FiscalYearRepository;
 import com.boxoffice.repository.ProcurementItemRepository;
 import com.boxoffice.repository.ProcurementQuoteFileRepository;
@@ -69,6 +70,9 @@ class ProcurementItemServiceTest {
   @Mock
   private UserRepository userRepository;
 
+  @Mock
+  private CategoryRepository categoryRepository;
+
   private ProcurementItemServiceImpl service;
   private User testUser;
   private User ownerUser;
@@ -85,7 +89,8 @@ class ProcurementItemServiceTest {
         fiscalYearRepository,
         rcRepository,
         accessRepository,
-        userRepository
+        userRepository,
+        categoryRepository
     );
 
     ownerUser = new User();

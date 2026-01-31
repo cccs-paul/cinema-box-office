@@ -16,8 +16,11 @@ import { ResponsibilityCentreService } from '../../services/responsibility-centr
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { ProcurementService, ProcurementItemCreateRequest, QuoteCreateRequest } from '../../services/procurement.service';
 import { CurrencyService } from '../../services/currency.service';
+import { FuzzySearchService } from '../../services/fuzzy-search.service';
+import { CategoryService } from '../../services/category.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
+import { Category } from '../../models/category.model';
 import {
   ProcurementItem,
   ProcurementQuote,
@@ -59,6 +62,11 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   isLoadingItems = false;
   selectedStatusFilter: ProcurementItemStatus | null = null;
   searchTerm = '';
+
+  // Categories
+  categories: Category[] = [];
+  isLoadingCategories = false;
+  selectedCategoryId: number | null = null;
 
   // Selected Item for detail view
   selectedItem: ProcurementItem | null = null;
@@ -105,6 +113,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   newItemContractEndDate = '';
   newItemProcurementCompleted = false;
   newItemProcurementCompletedDate = '';
+  newItemCategoryId: number | null = null;
 
   // Create Quote Form
   showCreateQuoteForm = false;
@@ -151,6 +160,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     private fyService: FiscalYearService,
     private procurementService: ProcurementService,
     private currencyService: CurrencyService,
+    private fuzzySearchService: FuzzySearchService,
+    private categoryService: CategoryService,
     private sanitizer: DomSanitizer
   ) {}
 
@@ -190,6 +201,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
         this.fyService.getFiscalYear(rcId, fyId).subscribe({
           next: (fy) => {
             this.selectedFY = fy;
+            this.loadCategories();
             this.loadProcurementItems();
           },
           error: () => {
@@ -223,6 +235,25 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Load categories from the API.
+   */
+  private loadCategories(): void {
+    if (!this.selectedRC || !this.selectedFY) return;
+
+    this.isLoadingCategories = true;
+    this.categoryService.getCategoriesByFY(this.selectedRC.id, this.selectedFY.id).subscribe({
+      next: (categories) => {
+        this.categories = categories;
+        this.isLoadingCategories = false;
+      },
+      error: () => {
+        this.categories = [];
+        this.isLoadingCategories = false;
+      }
+    });
+  }
+
+  /**
    * Load procurement items for the current FY.
    */
   loadProcurementItems(): void {
@@ -251,6 +282,46 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get sorted and filtered list of procurement items.
+   * Uses fuzzy search to filter items by PR, PO, name, description, vendor, or contract number.
+   */
+  get filteredProcurementItems(): ProcurementItem[] {
+    let items = [...this.procurementItems];
+
+    // Apply client-side fuzzy search filter (supplements backend search)
+    if (this.searchTerm.trim()) {
+      items = this.fuzzySearchService.filter(
+        items,
+        this.searchTerm,
+        (item: ProcurementItem) => ({
+          purchaseRequisition: item.purchaseRequisition,
+          purchaseOrder: item.purchaseOrder,
+          name: item.name,
+          description: item.description,
+          preferredVendor: item.preferredVendor,
+          contractNumber: item.contractNumber,
+          categoryName: item.categoryName,
+          status: PROCUREMENT_STATUS_INFO[item.status]?.label || item.status
+        })
+      );
+    }
+
+    // Apply category filter
+    if (this.selectedCategoryId !== null) {
+      items = items.filter(item => item.categoryId === this.selectedCategoryId);
+    }
+    
+    return items;
+  }
+
+  /**
+   * Clear the search filter.
+   */
+  clearSearch(): void {
+    this.searchTerm = '';
+  }
+
+  /**
    * Check if user can write to the selected RC.
    */
   get canWrite(): boolean {
@@ -269,8 +340,16 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.loadProcurementItems();
   }
 
+  /**
+   * Filter procurement items by category.
+   */
+  filterByCategory(categoryId: number | null): void {
+    this.selectedCategoryId = categoryId;
+  }
+
   onSearch(): void {
-    this.loadProcurementItems();
+    // With fuzzy search, we do client-side filtering
+    // Backend search is still available but less necessary
   }
 
   showCreateItem(): void {
@@ -296,6 +375,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newItemContractEndDate = '';
     this.newItemProcurementCompleted = false;
     this.newItemProcurementCompletedDate = '';
+    this.newItemCategoryId = null;
   }
 
   createProcurementItem(): void {
@@ -318,7 +398,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       contractStartDate: this.newItemContractStartDate || undefined,
       contractEndDate: this.newItemContractEndDate || undefined,
       procurementCompleted: this.newItemProcurementCompleted,
-      procurementCompletedDate: this.newItemProcurementCompletedDate || undefined
+      procurementCompletedDate: this.newItemProcurementCompletedDate || undefined,
+      categoryId: this.newItemCategoryId
     };
 
     this.procurementService.createProcurementItem(this.selectedRC.id, this.selectedFY.id, request).subscribe({

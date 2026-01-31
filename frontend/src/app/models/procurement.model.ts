@@ -202,6 +202,12 @@ export interface ProcurementItem {
   /** Date when procurement was completed (ISO date string) */
   procurementCompletedDate?: string;
 
+  /** ID of the category */
+  categoryId?: number;
+
+  /** Name of the category */
+  categoryName?: string;
+
   /** ID of the parent fiscal year */
   fiscalYearId: number;
 
