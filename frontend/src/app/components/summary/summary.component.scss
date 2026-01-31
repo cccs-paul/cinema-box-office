@@ -5,9 +5,9 @@
  */
 
 .summary-container {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 0.5rem 1.5rem 1.5rem 1.5rem;
+  min-height: 100vh;
+  background-color: var(--background-primary, #f8fafc);
 }
 
 // Page Header

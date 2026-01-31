@@ -36,6 +36,9 @@ echo -e "${BLUE}║    Environment: ${ENVIRONMENT}                              
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
+# Step 0: Cleanup docker environment
+docker system prune -a --volumes -f
+
 # Step 1: Build Backend
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${YELLOW}[1/5] Building Backend with Maven...${NC}"
