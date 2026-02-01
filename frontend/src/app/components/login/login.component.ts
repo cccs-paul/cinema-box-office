@@ -3,12 +3,15 @@
  * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
+import { LanguageService, Language } from '../../services/language.service';
 import { User } from '../../models/user.model';
 import { LoginMethods } from '../../models/auth.model';
 import { HttpClient } from '@angular/common/http';
@@ -26,11 +29,11 @@ import { HttpClient } from '@angular/common/http';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, TranslateModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   title = 'myRC';
   activeTab: 'local' | 'ldap' | 'oauth2' = 'local';
   
@@ -57,6 +60,10 @@ export class LoginComponent implements OnInit {
   databaseStatus = 'Checking...';
   isDatabaseHealthy = false;
 
+  // Language
+  currentLanguage: Language = 'en';
+  private languageSubscription?: Subscription;
+
   /**
    * Constructor.
    *
@@ -65,13 +72,15 @@ export class LoginComponent implements OnInit {
    * @param formBuilder Form builder service
    * @param http HTTP client
    * @param themeService Theme service
+   * @param languageService Language service
    */
   constructor(
     private authService: AuthService,
     private router: Router,
     private formBuilder: FormBuilder,
     private http: HttpClient,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private languageService: LanguageService
   ) {}
 
   /**
@@ -83,6 +92,11 @@ export class LoginComponent implements OnInit {
     this.checkApiHealth();
     this.checkDatabaseHealth();
 
+    // Subscribe to language changes
+    this.languageSubscription = this.languageService.currentLanguage$.subscribe(
+      (lang) => (this.currentLanguage = lang)
+    );
+
     // Force light theme on login page - dark theme is only available after RC/FY selection
     this.themeService.setTheme('light');
 
@@ -90,6 +104,29 @@ export class LoginComponent implements OnInit {
     if (this.authService.isLoggedIn) {
       this.router.navigate(['/rc-selection']);
     }
+  }
+
+  /**
+   * Component cleanup.
+   */
+  ngOnDestroy(): void {
+    this.languageSubscription?.unsubscribe();
+  }
+
+  /**
+   * Toggle between English and French.
+   */
+  toggleLanguage(): void {
+    this.languageService.toggleLanguage();
+  }
+
+  /**
+   * Get the label for the language button (shows the other language's native name).
+   *
+   * @returns The native name of the other language
+   */
+  getOtherLanguageLabel(): string {
+    return this.languageService.getOtherLanguageNativeName();
   }
 
   /**

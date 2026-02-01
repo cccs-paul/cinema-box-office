@@ -1,5 +1,5 @@
--- Cinema Box Office - Add Responsibility Centres Tables
--- Copyright (c) 2026 Box Office Team
+-- myRC - Add Responsibility Centres Tables
+-- Copyright (c) 2026 myRC Team
 -- Licensed under MIT License
 
 -- Create responsibility_centres table

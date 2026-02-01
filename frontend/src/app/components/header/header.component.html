@@ -10,8 +10,16 @@
       <h1>myRC</h1>
     </div>
     <nav class="header-nav">
+      <!-- Language Switcher Button -->
+      <button 
+        class="btn-language" 
+        (click)="toggleLanguage()" 
+        [title]="'Switch to ' + getOtherLanguageLabel()">
+        {{ getOtherLanguageLabel() }}
+      </button>
+      
       <div class="user-menu-container">
-        <button (click)="toggleUserMenu()" class="btn-user-menu" title="User menu">
+        <button (click)="toggleUserMenu()" class="btn-user-menu" [title]="'header.userMenu' | translate">
           <span class="user-name" *ngIf="currentUser">{{ currentUser?.fullName || currentUser?.username }}</span>
           <span class="user-avatar">⚙️</span>
         </button>
@@ -26,17 +34,17 @@
           <div class="menu-items">
             <button (click)="openApiDocs()" class="menu-item">
               <span class="menu-icon">📚</span>
-              <span>API Documentation</span>
+              <span>{{ 'header.apiDocs' | translate }}</span>
             </button>
             <button (click)="toggleTheme()" class="menu-item">
               <span class="menu-icon">{{ getThemeIcon() }}</span>
-              <span>{{ currentTheme === 'light' ? 'Dark' : 'Light' }} Theme</span>
+              <span>{{ (currentTheme === 'light' ? 'header.darkTheme' : 'header.lightTheme') | translate }}</span>
             </button>
             <div class="menu-divider"></div>
             <button (click)="logout()" class="menu-item logout-item" [disabled]="isLoggingOut">
               <span class="menu-icon">🚪</span>
-              <span *ngIf="!isLoggingOut">Sign Out</span>
-              <span *ngIf="isLoggingOut">Signing Out...</span>
+              <span *ngIf="!isLoggingOut">{{ 'header.signOut' | translate }}</span>
+              <span *ngIf="isLoggingOut">{{ 'header.signingOut' | translate }}</span>
             </button>
           </div>
         </div>

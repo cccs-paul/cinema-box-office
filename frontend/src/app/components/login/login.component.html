@@ -4,13 +4,18 @@
   Licensed under MIT License
 -->
 <div class="login-container">
+  <!-- Language Switcher - Top Right -->
+  <button class="btn-language-login" (click)="toggleLanguage()">
+    {{ getOtherLanguageLabel() }}
+  </button>
+
   <!-- Header Section -->
   <header class="login-header">
     <div class="login-brand">
       <img src="assets/logo.svg" alt="myRC Logo" class="login-logo" width="48" height="48">
       <h1>{{ title }}</h1>
     </div>
-    <p>Responsibility Centre Management System</p>
+    <p>{{ 'login.subtitle' | translate }}</p>
   </header>
 
   <!-- Main Login Section -->
@@ -19,14 +24,14 @@
       <!-- Loading state for login methods -->
       <div *ngIf="isLoadingLoginMethods" class="loading-methods">
         <span class="spinner"></span>
-        <span>Loading authentication options...</span>
+        <span>{{ 'login.loadingAuthOptions' | translate }}</span>
       </div>
 
       <!-- No login methods available -->
       <div *ngIf="!isLoadingLoginMethods && !hasAnyLoginMethod" class="no-methods-message">
         <span class="message-icon">⚠️</span>
-        <p>No authentication methods are currently enabled.</p>
-        <p>Please contact your administrator.</p>
+        <p>{{ 'login.noAuthMethods' | translate }}</p>
+        <p>{{ 'login.contactAdmin' | translate }}</p>
       </div>
 
       <!-- Tab Navigation (only show if login methods are loaded and at least one is enabled) -->
@@ -38,7 +43,7 @@
           class="tab-button"
         >
           <span class="tab-icon">👤</span>
-          <span class="tab-text">App Account</span>
+          <span class="tab-text">{{ 'login.tabs.appAccount' | translate }}</span>
         </button>
         <button
           *ngIf="loginMethods.ldapEnabled"
@@ -47,7 +52,7 @@
           class="tab-button"
         >
           <span class="tab-icon">🔐</span>
-          <span class="tab-text">LDAP</span>
+          <span class="tab-text">{{ 'login.tabs.ldap' | translate }}</span>
         </button>
         <button
           *ngIf="loginMethods.oauth2Enabled"
@@ -56,7 +61,7 @@
           class="tab-button"
         >
           <span class="tab-icon">🌐</span>
-          <span class="tab-text">OAuth2</span>
+          <span class="tab-text">{{ 'login.tabs.oauth2' | translate }}</span>
         </button>
       </nav>
 
@@ -74,27 +79,27 @@
       <div *ngIf="!isLoadingLoginMethods && loginMethods.appAccount.enabled && activeTab === 'local'" class="tab-content active">
         <form [formGroup]="localForm" (ngSubmit)="loginLocal()" class="login-form">
           <div class="form-group">
-            <label for="username" class="form-label">Username</label>
+            <label for="username" class="form-label">{{ 'login.username' | translate }}</label>
             <input
               id="username"
               type="text"
               formControlName="username"
               class="form-input"
-              placeholder="Enter your username"
+              [placeholder]="'login.usernamePlaceholder' | translate"
             />
-            <small class="form-hint">Demo: admin</small>
+            <small class="form-hint">{{ 'login.demoUsername' | translate }}</small>
           </div>
 
           <div class="form-group">
-            <label for="password" class="form-label">Password</label>
+            <label for="password" class="form-label">{{ 'login.password' | translate }}</label>
             <input
               id="password"
               type="password"
               formControlName="password"
               class="form-input"
-              placeholder="Enter your password"
+              [placeholder]="'login.passwordPlaceholder' | translate"
             />
-            <small class="form-hint">Demo: Admin&#64;123</small>
+            <small class="form-hint">{{ 'login.demoPassword' | translate }}</small>
           </div>
 
           <div class="form-group checkbox">
@@ -104,7 +109,7 @@
               formControlName="rememberMe"
               class="form-checkbox"
             />
-            <label for="rememberMe" class="form-label checkbox-label">Remember me</label>
+            <label for="rememberMe" class="form-label checkbox-label">{{ 'login.rememberMe' | translate }}</label>
           </div>
 
           <button
@@ -112,15 +117,15 @@
             [disabled]="isLoading || localForm.invalid"
             class="btn btn-primary btn-block"
           >
-            <span *ngIf="!isLoading">Sign In</span>
-            <span *ngIf="isLoading">Signing In...</span>
+            <span *ngIf="!isLoading">{{ 'login.signIn' | translate }}</span>
+            <span *ngIf="isLoading">{{ 'login.signingIn' | translate }}</span>
           </button>
         </form>
 
         <!-- Registration Link -->
         <div *ngIf="allowRegistration" class="register-link-section">
-          <p>Don't have an account?</p>
-          <a routerLink="/register" class="register-link">Create an account</a>
+          <p>{{ 'login.noAccount' | translate }}</p>
+          <a routerLink="/register" class="register-link">{{ 'login.createAccount' | translate }}</a>
         </div>
       </div>
 
@@ -128,25 +133,25 @@
       <div *ngIf="!isLoadingLoginMethods && loginMethods.ldapEnabled && activeTab === 'ldap'" class="tab-content active">
         <form [formGroup]="ldapForm" (ngSubmit)="loginLdap()" class="login-form">
           <div class="form-group">
-            <label for="ldapUsername" class="form-label">LDAP Username</label>
+            <label for="ldapUsername" class="form-label">{{ 'login.ldapUsername' | translate }}</label>
             <input
               id="ldapUsername"
               type="text"
               formControlName="ldapUsername"
               class="form-input"
-              placeholder="Enter your LDAP username"
+              [placeholder]="'login.ldapUsernamePlaceholder' | translate"
               [disabled]="isLoading"
             />
           </div>
 
           <div class="form-group">
-            <label for="ldapPassword" class="form-label">LDAP Password</label>
+            <label for="ldapPassword" class="form-label">{{ 'login.ldapPassword' | translate }}</label>
             <input
               id="ldapPassword"
               type="password"
               formControlName="ldapPassword"
               class="form-input"
-              placeholder="Enter your LDAP password"
+              [placeholder]="'login.ldapPasswordPlaceholder' | translate"
               [disabled]="isLoading"
             />
           </div>
@@ -156,8 +161,8 @@
             [disabled]="isLoading || ldapForm.invalid"
             class="btn btn-primary btn-block"
           >
-            <span *ngIf="!isLoading">Sign In with LDAP</span>
-            <span *ngIf="isLoading">Authenticating...</span>
+            <span *ngIf="!isLoading">{{ 'login.signInLdap' | translate }}</span>
+            <span *ngIf="isLoading">{{ 'login.authenticating' | translate }}</span>
           </button>
         </form>
       </div>
@@ -172,8 +177,8 @@
             class="btn btn-oauth btn-google"
           >
             <span class="oauth-icon">🔵</span>
-            <span *ngIf="!isLoading">Sign in with Google</span>
-            <span *ngIf="isLoading">Redirecting...</span>
+            <span *ngIf="!isLoading">{{ 'login.signInGoogle' | translate }}</span>
+            <span *ngIf="isLoading">{{ 'login.redirecting' | translate }}</span>
           </button>
 
           <button
@@ -183,8 +188,8 @@
             class="btn btn-oauth btn-github"
           >
             <span class="oauth-icon">⚫</span>
-            <span *ngIf="!isLoading">Sign in with GitHub</span>
-            <span *ngIf="isLoading">Redirecting...</span>
+            <span *ngIf="!isLoading">{{ 'login.signInGithub' | translate }}</span>
+            <span *ngIf="isLoading">{{ 'login.redirecting' | translate }}</span>
           </button>
 
           <button
@@ -194,8 +199,8 @@
             class="btn btn-oauth btn-microsoft"
           >
             <span class="oauth-icon">◼️</span>
-            <span *ngIf="!isLoading">Sign in with Microsoft</span>
-            <span *ngIf="isLoading">Redirecting...</span>
+            <span *ngIf="!isLoading">{{ 'login.signInMicrosoft' | translate }}</span>
+            <span *ngIf="isLoading">{{ 'login.redirecting' | translate }}</span>
           </button>
         </div>
       </div>
@@ -205,9 +210,9 @@
     <footer class="login-footer">
       <div class="footer-content">
         <div class="footer-section">
-          <p>&copy; 2026 myRC. All rights reserved.</p>
+          <p>{{ 'login.copyright' | translate }}</p>
           <p class="demo-hint">
-            <strong>Demo Credentials:</strong> Username: <code>admin</code> | Password: <code>Admin&#64;123</code>
+            <strong>{{ 'login.demoCredentials' | translate }}:</strong> {{ 'login.username' | translate }}: <code>admin</code> | {{ 'login.password' | translate }}: <code>Admin&#64;123</code>
           </p>
         </div>
         
@@ -216,14 +221,14 @@
         <div class="footer-status">
           <div class="status-compact">
             <div class="status-item-compact">
-              <span class="status-label">API:</span>
+              <span class="status-label">{{ 'login.api' | translate }}:</span>
               <div [class.healthy]="isApiHealthy" [class.unhealthy]="!isApiHealthy" class="status-indicator-compact">
                 <span class="status-dot"></span>
                 <span class="status-text">{{ apiStatus }}</span>
               </div>
             </div>
             <div class="status-item-compact">
-              <span class="status-label">Database:</span>
+              <span class="status-label">{{ 'login.database' | translate }}:</span>
               <div [class.healthy]="isDatabaseHealthy" [class.unhealthy]="!isDatabaseHealthy" class="status-indicator-compact">
                 <span class="status-dot"></span>
                 <span class="status-text">{{ databaseStatus }}</span>
@@ -232,10 +237,10 @@
           </div>
           
           <div class="tools-links">
-            <a href="http://localhost:8080/api/swagger-ui.html" target="_blank" class="tool-link" title="API Documentation">
+            <a href="http://localhost:8080/api/swagger-ui.html" target="_blank" class="tool-link" [title]="'login.apiDocs' | translate">
               <span>📚</span>
             </a>
-            <a href="http://localhost:5050" target="_blank" class="tool-link" title="Database Console">
+            <a href="http://localhost:5050" target="_blank" class="tool-link" [title]="'login.dbConsole' | translate">
               <span>🗄️</span>
             </a>
           </div>

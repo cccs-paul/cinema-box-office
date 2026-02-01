@@ -1,5 +1,5 @@
--- Cinema Box Office - Add principal fields to rc_access table
--- Copyright (c) 2026 Box Office Team
+-- myRC - Add principal fields to rc_access table
+-- Copyright (c) 2026 myRC Team
 -- Licensed under MIT License
 
 -- Add principal_type column for distinguishing between users, groups, and distribution lists

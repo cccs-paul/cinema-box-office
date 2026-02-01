@@ -1,8 +1,8 @@
--- Cinema Box Office - Remove Fiscal Year Date Fields
--- Copyright (c) 2026 Box Office Team
+-- myRC - Remove Fiscal Year Date Fields
+-- Copyright (c) 2026 myRC Team
 -- Licensed under MIT License
 --
--- Author: Box Office Team
+-- Author: myRC Team
 -- Date: 2026-01-23
 -- Version: 1.0.0
 --

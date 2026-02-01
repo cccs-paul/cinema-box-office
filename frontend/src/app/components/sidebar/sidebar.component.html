@@ -16,8 +16,8 @@
         <span class="context-value">{{ selectedFY.name }}</span>
       </div>
     </div>
-    <button class="change-context-btn" (click)="navigateToRCSelection()" title="Change RC and Fiscal Year">
-      Change RC / Fiscal Year
+    <button class="change-context-btn" (click)="navigateToRCSelection()" [title]="'sidebar.changeRcFy' | translate">
+      {{ 'sidebar.changeRcFy' | translate }}
     </button>
   </div>
 
@@ -31,7 +31,7 @@
         class="menu-item"
       >
         <span class="menu-icon">{{ item.icon }}</span>
-        <span class="menu-label">{{ item.label }}</span>
+        <span class="menu-label">{{ item.labelKey | translate }}</span>
         <span *ngIf="item.badge" class="menu-badge">{{ item.badge }}</span>
       </a>
     </div>
@@ -46,7 +46,7 @@
         class="menu-item"
       >
         <span class="menu-icon">{{ item.icon }}</span>
-        <span class="menu-label">{{ item.label }}</span>
+        <span class="menu-label">{{ item.labelKey | translate }}</span>
         <span *ngIf="item.badge" class="menu-badge">{{ item.badge }}</span>
       </a>
     </div>

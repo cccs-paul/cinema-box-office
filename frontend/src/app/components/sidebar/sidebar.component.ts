@@ -6,6 +6,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, switchMap, filter } from 'rxjs/operators';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
@@ -25,38 +26,38 @@ import { FiscalYear } from '../../models/fiscal-year.model';
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, TranslateModule],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   menuItems = [
     {
-      label: 'Funding',
+      labelKey: 'sidebar.funding',
       icon: '📊',
       route: '/app/dashboard',
       badge: null,
     },
     {
-      label: 'Procurement',
+      labelKey: 'sidebar.procurement',
       icon: '📦',
       route: '/app/procurement',
       badge: null,
     },
     {
-      label: 'Spending',
+      labelKey: 'sidebar.spending',
       icon: '💰',
       route: '/app/spending',
       badge: null,
     },
     {
-      label: 'Insights',
+      labelKey: 'sidebar.insights',
       icon: '📈',
       route: '/app/insights',
       badge: null,
     },
     {
-      label: 'Summary',
+      labelKey: 'sidebar.summary',
       icon: '📋',
       route: '/app/summary',
       badge: null,
@@ -65,13 +66,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   bottomMenuItems = [
     {
-      label: 'Configuration',
+      labelKey: 'sidebar.configuration',
       icon: '⚙️',
       route: '/app/configuration',
       badge: null,
     },
     {
-      label: 'Developer Tools',
+      labelKey: 'sidebar.developerTools',
       icon: '🛠️',
       route: '/app/developer-tools',
       badge: null,

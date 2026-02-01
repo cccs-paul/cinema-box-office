@@ -8,8 +8,10 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService, Theme } from '../../services/theme.service';
+import { LanguageService, Language } from '../../services/language.service';
 
 /**
  * Global header component with user dropdown menu.
@@ -17,13 +19,13 @@ import { ThemeService, Theme } from '../../services/theme.service';
  * Hidden on login page for full-screen login experience.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-18
  */
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
 })
@@ -31,6 +33,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   isUserMenuOpen = false;
   currentUser: any = null;
   currentTheme: Theme = 'light';
+  currentLanguage: Language = 'en';
   isLoggingOut = false;
   isLoggedIn = false;
   isHeaderVisible = true;
@@ -41,6 +44,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private themeService: ThemeService,
+    private languageService: LanguageService,
     private router: Router
   ) {}
 
@@ -58,6 +62,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((theme: Theme) => {
         this.currentTheme = theme;
+      });
+
+    // Get current language
+    this.languageService.currentLanguage$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((lang: Language) => {
+        this.currentLanguage = lang;
       });
   }
 
@@ -105,6 +116,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   getThemeIcon(): string {
     return this.currentTheme === 'light' ? '🌙' : '☀️';
+  }
+
+  /**
+   * Toggle the application language between English and French.
+   */
+  toggleLanguage(): void {
+    this.languageService.toggleLanguage();
+  }
+
+  /**
+   * Get the native name of the other language for display on the button.
+   */
+  getOtherLanguageLabel(): string {
+    return this.languageService.getOtherLanguageNativeName();
   }
 
   openApiDocs(): void {

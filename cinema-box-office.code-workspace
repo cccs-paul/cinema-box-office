@@ -75,7 +75,7 @@
         "type": "java",
         "name": "Debug Spring Boot App",
         "request": "launch",
-        "mainClass": "com.boxoffice.BoxOfficeApplication",
+        "mainClass": "com.myrc.MyRCApplication",
         "projectName": "backend",
         "cwd": "${workspaceFolder}/backend",
         "console": "integratedTerminal"

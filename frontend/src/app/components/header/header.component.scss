@@ -81,6 +81,31 @@ html[data-theme='dark'] {
   .header-nav {
     display: flex;
     align-items: center;
+    gap: 12px;
+  }
+}
+
+// Language Switcher Button
+.btn-language {
+  background: transparent;
+  border: 1px solid var(--header-border);
+  color: var(--header-text);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  text-transform: capitalize;
+
+  &:hover {
+    background-color: var(--button-hover-bg);
+    border-color: var(--header-text);
+  }
+
+  &:focus {
+    outline: 2px solid var(--header-border);
+    outline-offset: 2px;
   }
 }
 

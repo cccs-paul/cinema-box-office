@@ -61,7 +61,7 @@ Development mode provides hot-reloading for both frontend and backend, making it
 
 1. **Open the project in VS Code**
    ```bash
-   cd /path/to/cinema-box-office
+   cd /path/to/myrc
    code .
    ```
 
@@ -83,7 +83,7 @@ Development mode provides hot-reloading for both frontend and backend, making it
    ```
 
 5. **Run the backend**
-   - Open `backend/src/main/java/com/boxoffice/Application.java`
+   - Open `backend/src/main/java/com/myrc/Application.java`
    - Click "Run" or "Debug" above the `main` method
    - Or use terminal:
      ```bash
@@ -130,7 +130,7 @@ Create `.vscode/launch.json` for integrated debugging:
       "type": "java",
       "name": "Debug Backend",
       "request": "launch",
-      "mainClass": "com.boxoffice.Application",
+      "mainClass": "com.myrc.Application",
       "projectName": "backend",
       "cwd": "${workspaceFolder}/backend",
       "env": {

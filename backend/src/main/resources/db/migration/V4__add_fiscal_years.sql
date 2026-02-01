@@ -1,5 +1,5 @@
--- Cinema Box Office - Add Fiscal Years Table
--- Copyright (c) 2026 Box Office Team
+-- myRC - Add Fiscal Years Table
+-- Copyright (c) 2026 myRC Team
 -- Licensed under MIT License
 
 -- Create fiscal_years table
