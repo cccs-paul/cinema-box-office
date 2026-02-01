@@ -1,0 +1,199 @@
+<!--
+  myRC - Register Component Template
+  Copyright (c) 2026 myRC Team
+  Licensed under MIT License
+-->
+<div class="register-container">
+  <!-- Header Section -->
+  <header class="register-header">
+    <div class="register-brand">
+      <img src="assets/logo.svg" alt="myRC Logo" class="register-logo" width="48" height="48">
+      <h1>{{ title }}</h1>
+    </div>
+    <p>Create Your Account</p>
+  </header>
+
+  <!-- Main Registration Section -->
+  <main class="register-main">
+    <div class="register-card">
+      <h2 class="register-title">
+        <span class="title-icon">📝</span>
+        Self Registration
+      </h2>
+
+      <!-- Messages -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        <span class="alert-icon">❌</span>
+        <span class="alert-text">{{ errorMessage }}</span>
+      </div>
+      <div *ngIf="successMessage" class="alert alert-success">
+        <span class="alert-icon">✅</span>
+        <span class="alert-text">{{ successMessage }}</span>
+      </div>
+
+      <!-- Registration Form -->
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+        <!-- Username Field -->
+        <div class="form-group">
+          <label for="username" class="form-label">Username *</label>
+          <div class="input-with-status">
+            <input
+              id="username"
+              type="text"
+              formControlName="username"
+              (input)="onUsernameChange()"
+              class="form-input"
+              [class.is-invalid]="hasError('username')"
+              [class.is-valid]="usernameAvailable === true"
+              placeholder="Choose a username"
+              autocomplete="username"
+            />
+            <span *ngIf="isCheckingUsername" class="input-status checking">
+              <span class="spinner-small"></span>
+            </span>
+            <span *ngIf="!isCheckingUsername && usernameAvailable === true" class="input-status available">
+              ✓
+            </span>
+            <span *ngIf="!isCheckingUsername && usernameAvailable === false" class="input-status unavailable">
+              ✗
+            </span>
+          </div>
+          <small *ngIf="hasError('username')" class="form-error">{{ getErrorMessage('username') }}</small>
+          <small *ngIf="usernameMessage && !hasError('username')" 
+                 [class.form-hint]="usernameAvailable === true"
+                 [class.form-error]="usernameAvailable === false">
+            {{ usernameMessage }}
+          </small>
+          <small *ngIf="!hasError('username') && !usernameMessage" class="form-hint">
+            3-50 characters, letters, numbers, underscores, and hyphens only
+          </small>
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email *</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="form-input"
+            [class.is-invalid]="hasError('email')"
+            placeholder="Enter your email address"
+            autocomplete="email"
+          />
+          <small *ngIf="hasError('email')" class="form-error">{{ getErrorMessage('email') }}</small>
+        </div>
+
+        <!-- Full Name Field (Optional) -->
+        <div class="form-group">
+          <label for="fullName" class="form-label">Full Name</label>
+          <input
+            id="fullName"
+            type="text"
+            formControlName="fullName"
+            class="form-input"
+            [class.is-invalid]="hasError('fullName')"
+            placeholder="Enter your full name (optional)"
+            autocomplete="name"
+          />
+          <small *ngIf="hasError('fullName')" class="form-error">{{ getErrorMessage('fullName') }}</small>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password *</label>
+          <div class="password-input-wrapper">
+            <input
+              id="password"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              class="form-input"
+              [class.is-invalid]="hasError('password')"
+              placeholder="Create a password"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+            >
+              {{ showPassword ? '👁️' : '👁️‍🗨️' }}
+            </button>
+          </div>
+          <small *ngIf="hasError('password')" class="form-error">{{ getErrorMessage('password') }}</small>
+          <small *ngIf="!hasError('password')" class="form-hint">Minimum 8 characters</small>
+        </div>
+
+        <!-- Confirm Password Field -->
+        <div class="form-group">
+          <label for="confirmPassword" class="form-label">Confirm Password *</label>
+          <div class="password-input-wrapper">
+            <input
+              id="confirmPassword"
+              [type]="showConfirmPassword ? 'text' : 'password'"
+              formControlName="confirmPassword"
+              class="form-input"
+              [class.is-invalid]="hasError('confirmPassword')"
+              placeholder="Confirm your password"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              (click)="toggleConfirmPasswordVisibility()"
+              [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'"
+            >
+              {{ showConfirmPassword ? '👁️' : '👁️‍🗨️' }}
+            </button>
+          </div>
+          <small *ngIf="hasError('confirmPassword')" class="form-error">{{ getErrorMessage('confirmPassword') }}</small>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          [disabled]="isLoading || registerForm.invalid || usernameAvailable === false"
+          class="btn btn-primary btn-block"
+        >
+          <span *ngIf="!isLoading">Create Account</span>
+          <span *ngIf="isLoading">Creating Account...</span>
+        </button>
+      </form>
+
+      <!-- Back to Login Link -->
+      <div class="register-footer">
+        <p>Already have an account?</p>
+        <a routerLink="/login" class="login-link">Sign in instead</a>
+      </div>
+    </div>
+
+    <!-- Footer Info -->
+    <footer class="register-footer-info">
+      <div class="footer-content">
+        <p>&copy; 2026 myRC. All rights reserved.</p>
+        
+        <div class="footer-divider"></div>
+        
+        <div class="footer-status">
+          <div class="status-compact">
+            <div class="status-item-compact">
+              <span class="status-label">API:</span>
+              <div [class.healthy]="isApiHealthy" [class.unhealthy]="!isApiHealthy" class="status-indicator-compact">
+                <span class="status-dot"></span>
+                <span class="status-text">{{ apiStatus }}</span>
+              </div>
+            </div>
+            <div class="status-item-compact">
+              <span class="status-label">DB:</span>
+              <div [class.healthy]="isDatabaseHealthy" [class.unhealthy]="!isDatabaseHealthy" class="status-indicator-compact">
+                <span class="status-dot"></span>
+                <span class="status-text">{{ databaseStatus }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+</div>

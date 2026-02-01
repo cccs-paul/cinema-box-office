@@ -80,6 +80,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
 
   // Import/Export state
   exportPath = '';
+  exportFileHandle: any = null;
   isExporting = false;
   exportSuccessMessage: string | null = null;
   exportErrorMessage: string | null = null;
@@ -593,15 +594,54 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Select export destination using browser download.
+   * Select export destination using browser file picker.
+   * Uses the File System Access API to allow user to choose destination.
    */
-  selectExportDestination(): void {
-    // In browser context, we'll use the download approach
-    // Set a default filename
-    const timestamp = new Date().toISOString().split('T')[0];
-    const rcName = this.selectedRC?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'RC';
-    const fyName = this.selectedFY?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'FY';
-    this.exportPath = `${rcName}_${fyName}_export_${timestamp}.csv`;
+  async selectExportDestination(): Promise<void> {
+    // Generate default filename with export, date, and RC_FY format
+    const rcName = this.selectedRC?.name || 'RC';
+    const fyName = this.selectedFY?.name || 'FY';
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0]; // yyyy-mm-dd format
+    const defaultFilename = `${rcName}_${fyName}_export_${dateStr}.csv`;
+
+    // Check if File System Access API is available
+    if ('showSaveFilePicker' in window) {
+      try {
+        const options = {
+          suggestedName: defaultFilename,
+          types: [
+            {
+              description: 'CSV Files',
+              accept: {
+                'text/csv': ['.csv']
+              }
+            }
+          ]
+        };
+        
+        const handle = await (window as any).showSaveFilePicker(options);
+        this.exportFileHandle = handle;
+        this.exportPath = handle.name;
+        this.exportErrorMessage = null;
+      } catch (err: any) {
+        // User cancelled the picker or error occurred
+        if (err.name !== 'AbortError') {
+          this.exportErrorMessage = 'Failed to select export destination';
+        }
+      }
+    } else {
+      // Fallback for browsers without File System Access API
+      this.exportPath = defaultFilename;
+      this.exportFileHandle = null;
+    }
+  }
+
+  /**
+   * Check if export destination is valid.
+   */
+  isExportValid(): boolean {
+    return this.exportPath.trim().length > 0;
   }
 
   /**
@@ -610,6 +650,11 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   exportToCSV(): void {
     if (!this.rcId || !this.fyId) {
       this.exportErrorMessage = 'Please select a Responsibility Centre and Fiscal Year';
+      return;
+    }
+
+    if (!this.isExportValid()) {
+      this.exportErrorMessage = 'Please select an export destination first';
       return;
     }
 
@@ -622,9 +667,9 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
       this.fetchFundingItems(),
       this.fetchProcurementItems(),
       this.fetchSpendingItems()
-    ]).then(([fundingItems, procurementItems, spendingItems]) => {
+    ]).then(async ([fundingItems, procurementItems, spendingItems]) => {
       const csvContent = this.generateCSVContent(fundingItems, procurementItems, spendingItems);
-      this.downloadCSV(csvContent);
+      await this.downloadCSV(csvContent);
       this.exportSuccessMessage = 'Export completed successfully!';
       this.isExporting = false;
     }).catch(error => {
@@ -760,15 +805,31 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   /**
    * Download the CSV content as a file.
    */
-  private downloadCSV(content: string): void {
+  private async downloadCSV(content: string): Promise<void> {
+    // If we have a file handle from File System Access API, use it
+    if (this.exportFileHandle) {
+      try {
+        const writable = await this.exportFileHandle.createWritable();
+        await writable.write(content);
+        await writable.close();
+        return;
+      } catch (err) {
+        // Fall through to the standard download approach
+        console.warn('Failed to write using file handle, falling back to download:', err);
+      }
+    }
+
+    // Standard download approach
     const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     
-    const timestamp = new Date().toISOString().split('T')[0];
-    const rcName = this.selectedRC?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'RC';
-    const fyName = this.selectedFY?.name?.replace(/[^a-zA-Z0-9]/g, '_') || 'FY';
-    const filename = this.exportPath || `${rcName}_${fyName}_export_${timestamp}.csv`;
+    // Generate filename with export and date
+    const rcName = this.selectedRC?.name || 'RC';
+    const fyName = this.selectedFY?.name || 'FY';
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0]; // yyyy-mm-dd format
+    const filename = this.exportPath || `${rcName}_${fyName}_export_${dateStr}.csv`;
     
     link.setAttribute('href', url);
     link.setAttribute('download', filename);

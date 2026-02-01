@@ -108,6 +108,12 @@ public class ResponsibilityCentreController {
         return ResponseEntity.badRequest().body(new ErrorResponse("Responsibility Centre name is required"));
       }
 
+      if (!request.isNameValidForFilename()) {
+        logger.warning("RC creation failed: Name contains invalid characters");
+        return ResponseEntity.badRequest().body(new ErrorResponse(
+            "Responsibility Centre name cannot contain the following characters: < > : \" / \\ | ? *"));
+      }
+
       ResponsibilityCentreDTO createdRC = rcService.createResponsibilityCentre(
           username,
           request.getName(),
@@ -188,6 +194,12 @@ public class ResponsibilityCentreController {
     }
     logger.info("PUT /responsibility-centres/{" + id + "} - Updating RC for user: " + username);
     try {
+      if (request.getName() != null && !request.getName().trim().isEmpty() && !request.isNameValidForFilename()) {
+        logger.warning("RC update failed: Name contains invalid characters");
+        return ResponseEntity.badRequest().body(new ErrorResponse(
+            "Responsibility Centre name cannot contain the following characters: < > : \" / \\ | ? *"));
+      }
+
       Optional<ResponsibilityCentreDTO> updatedRC = rcService.updateResponsibilityCentre(
           id,
           username,
@@ -411,6 +423,7 @@ public class ResponsibilityCentreController {
 
   // Request DTOs
   public static class RCCreateRequest {
+    private static final String INVALID_FILENAME_CHARS = "<>:\"/\\|?*";
     private String name;
     private String description;
 
@@ -435,6 +448,22 @@ public class ResponsibilityCentreController {
 
     public void setDescription(String description) {
       this.description = description;
+    }
+
+    /**
+     * Validate that the name doesn't contain characters invalid for filenames.
+     * @return true if valid, false otherwise
+     */
+    public boolean isNameValidForFilename() {
+      if (name == null || name.isBlank()) {
+        return false;
+      }
+      for (char c : INVALID_FILENAME_CHARS.toCharArray()) {
+        if (name.indexOf(c) >= 0) {
+          return false;
+        }
+      }
+      return true;
     }
   }
 

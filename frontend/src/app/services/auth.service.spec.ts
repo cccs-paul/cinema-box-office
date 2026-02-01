@@ -10,6 +10,7 @@ import {
 } from '@angular/common/http/testing';
 import { AuthService } from './auth.service';
 import { User } from '../models/user.model';
+import { LoginMethods, RegistrationRequest, RegistrationResponse, UsernameAvailabilityResponse } from '../models/auth.model';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -229,6 +230,187 @@ describe('AuthService', () => {
       tick();
 
       expect(service.isLoggedIn).toBe(true);
+    }));
+  });
+
+  describe('getLoginMethods', () => {
+    const mockLoginMethods: LoginMethods = {
+      appAccount: { enabled: true, allowRegistration: true },
+      ldapEnabled: true,
+      oauth2Enabled: false
+    };
+
+    it('should return login methods from server', fakeAsync(() => {
+      const sessionReq = httpMock.expectOne('/api/users/me');
+      sessionReq.flush(null, { status: 401, statusText: 'Unauthorized' });
+      tick();
+
+      service.getLoginMethods().subscribe((methods) => {
+        expect(methods).toEqual(mockLoginMethods);
+        expect(methods.appAccount.enabled).toBe(true);
+        expect(methods.appAccount.allowRegistration).toBe(true);
+        expect(methods.ldapEnabled).toBe(true);
+        expect(methods.oauth2Enabled).toBe(false);
+      });
+
+      const req = httpMock.expectOne('/api/auth/login-methods');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockLoginMethods);
+    }));
+
+    it('should return default config on error', fakeAsync(() => {
+      const sessionReq = httpMock.expectOne('/api/users/me');
+      sessionReq.flush(null, { status: 401, statusText: 'Unauthorized' });
+      tick();
+
+      service.getLoginMethods().subscribe((methods) => {
+        expect(methods.appAccount.enabled).toBe(true);
+        expect(methods.appAccount.allowRegistration).toBe(false);
+        expect(methods.ldapEnabled).toBe(true);
+        expect(methods.oauth2Enabled).toBe(true);
+      });
+
+      const req = httpMock.expectOne('/api/auth/login-methods');
+      req.flush(null, { status: 500, statusText: 'Server Error' });
+    }));
+  });
+
+  describe('checkUsernameAvailability', () => {
+    it('should return available for non-existent username', fakeAsync(() => {
+      const sessionReq = httpMock.expectOne('/api/users/me');
+      sessionReq.flush(null, { status: 401, statusText: 'Unauthorized' });
+      tick();
+
+      const mockResponse: UsernameAvailabilityResponse = {
+        available: true,
+        message: 'Username is available'
+      };
+
+      service.checkUsernameAvailability('newuser').subscribe((response) => {
+        expect(response.available).toBe(true);
+      });
+
+      const req = httpMock.expectOne('/api/auth/check-username/newuser');
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    }));
+
+    it('should return unavailable for existing username', fakeAsync(() => {
+      const sessionReq = httpMock.expectOne('/api/users/me');
+      sessionReq.flush(null, { status: 401, statusText: 'Unauthorized' });
+      tick();
+
+      const mockResponse: UsernameAvailabilityResponse = {
+        available: false,
+        message: 'Username is already taken'
+      };
+
+      service.checkUsernameAvailability('existinguser').subscribe((response) => {
+        expect(response.available).toBe(false);
+      });
+
+      const req = httpMock.expectOne('/api/auth/check-username/existinguser');
+      req.flush(mockResponse);
+    }));
+
+    it('should handle error gracefully', fakeAsync(() => {
+      const sessionReq = httpMock.expectOne('/api/users/me');
+      sessionReq.flush(null, { status: 401, statusText: 'Unauthorized' });
+      tick();
+
+      service.checkUsernameAvailability('testuser').subscribe((response) => {
+        expect(response.available).toBe(false);
+        expect(response.message).toContain('Unable to verify');
+      });
+
+      const req = httpMock.expectOne('/api/auth/check-username/testuser');
+      req.flush(null, { status: 500, statusText: 'Server Error' });
+    }));
+  });
+
+  describe('register', () => {
+    const mockRequest: RegistrationRequest = {
+      username: 'newuser',
+      email: 'newuser@example.com',
+      password: 'Password123',
+      confirmPassword: 'Password123',
+      fullName: 'New User'
+    };
+
+    const mockResponse: RegistrationResponse = {
+      success: true,
+      message: 'Registration successful',
+      userId: 1
+    };
+
+    it('should register a new user successfully', fakeAsync(() => {
+      const sessionReq = httpMock.expectOne('/api/users/me');
+      sessionReq.flush(null, { status: 401, statusText: 'Unauthorized' });
+      tick();
+
+      service.register(mockRequest).subscribe((response) => {
+        expect(response.success).toBe(true);
+        expect(response.message).toContain('successful');
+      });
+
+      const req = httpMock.expectOne('/api/auth/register');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(mockRequest);
+      req.flush(mockResponse);
+    }));
+
+    it('should handle 409 conflict error (username exists)', fakeAsync(() => {
+      const sessionReq = httpMock.expectOne('/api/users/me');
+      sessionReq.flush(null, { status: 401, statusText: 'Unauthorized' });
+      tick();
+
+      service.register(mockRequest).subscribe({
+        error: (error) => {
+          expect(error.message).toContain('already exists');
+        }
+      });
+
+      const req = httpMock.expectOne('/api/auth/register');
+      req.flush(
+        { message: 'Username already exists' },
+        { status: 409, statusText: 'Conflict' }
+      );
+    }));
+
+    it('should handle 400 bad request error', fakeAsync(() => {
+      const sessionReq = httpMock.expectOne('/api/users/me');
+      sessionReq.flush(null, { status: 401, statusText: 'Unauthorized' });
+      tick();
+
+      service.register(mockRequest).subscribe({
+        error: (error) => {
+          expect(error.message).toContain('Invalid');
+        }
+      });
+
+      const req = httpMock.expectOne('/api/auth/register');
+      req.flush(
+        { message: 'Invalid registration data' },
+        { status: 400, statusText: 'Bad Request' }
+      );
+    }));
+
+    it('should handle server error message', fakeAsync(() => {
+      const sessionReq = httpMock.expectOne('/api/users/me');
+      sessionReq.flush(null, { status: 401, statusText: 'Unauthorized' });
+      tick();
+
+      service.register(mockRequest).subscribe({
+        error: (error) => {
+          expect(error.message).toBe('Custom error message');
+        }
+      });
+
+      const req = httpMock.expectOne('/api/auth/register');
+      req.flush(
+        { message: 'Custom error message' },
+        { status: 500, statusText: 'Server Error' }
+      );
     }));
   });
 });

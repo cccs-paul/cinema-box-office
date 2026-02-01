@@ -6,8 +6,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError, of } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { tap, catchError, map } from 'rxjs/operators';
 import { User, AuthResponse } from '../models/user.model';
+import { LoginMethods, RegistrationRequest, RegistrationResponse, UsernameAvailabilityResponse } from '../models/auth.model';
 
 /**
  * Authentication service for managing user login and session.
@@ -187,6 +188,65 @@ export class AuthService {
   private setCurrentUser(user: User): void {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
     this.currentUserSubject.next(user);
+  }
+
+  /**
+   * Get available login methods from the server.
+   * Determines which authentication methods are enabled (App Account, LDAP, OAuth2).
+   *
+   * @returns Observable of LoginMethods configuration
+   */
+  getLoginMethods(): Observable<LoginMethods> {
+    return this.http.get<LoginMethods>(`${this.API_URL}/auth/login-methods`).pipe(
+      catchError((error) => {
+        console.error('Failed to fetch login methods:', error);
+        // Return default config with all methods enabled on error
+        return of({
+          appAccount: { enabled: true, allowRegistration: false },
+          ldapEnabled: true,
+          oauth2Enabled: true
+        });
+      })
+    );
+  }
+
+  /**
+   * Check if a username is available for registration.
+   *
+   * @param username Username to check
+   * @returns Observable of availability response
+   */
+  checkUsernameAvailability(username: string): Observable<UsernameAvailabilityResponse> {
+    return this.http.get<UsernameAvailabilityResponse>(
+      `${this.API_URL}/auth/check-username/${encodeURIComponent(username)}`
+    ).pipe(
+      catchError((error) => {
+        console.error('Username check failed:', error);
+        return of({ available: false, message: 'Unable to verify username availability' });
+      })
+    );
+  }
+
+  /**
+   * Register a new user account.
+   *
+   * @param request Registration request data
+   * @returns Observable of registration response
+   */
+  register(request: RegistrationRequest): Observable<RegistrationResponse> {
+    return this.http.post<RegistrationResponse>(`${this.API_URL}/auth/register`, request).pipe(
+      catchError((error) => {
+        let errorMessage = 'Registration failed';
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.status === 409) {
+          errorMessage = 'Username or email already exists';
+        } else if (error.status === 400) {
+          errorMessage = 'Invalid registration data';
+        }
+        return throwError(() => new Error(errorMessage));
+      })
+    );
   }
 
   /**

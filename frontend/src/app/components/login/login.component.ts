@@ -6,25 +6,27 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { User } from '../../models/user.model';
+import { LoginMethods } from '../../models/auth.model';
 import { HttpClient } from '@angular/common/http';
 
 /**
  * Login component supporting LOCAL, LDAP, and OAUTH2 authentication.
  * Displays API and database status.
  * Provides tab-based interface for switching between auth methods.
+ * Conditionally shows authentication methods based on server configuration.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-17
  */
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
@@ -38,8 +40,16 @@ export class LoginComponent implements OnInit {
   
   // Loading and error states
   isLoading = false;
+  isLoadingLoginMethods = true;
   errorMessage = '';
   successMessage = '';
+  
+  // Login methods configuration
+  loginMethods: LoginMethods = {
+    appAccount: { enabled: true, allowRegistration: false },
+    ldapEnabled: true,
+    oauth2Enabled: true
+  };
   
   // Status indicators
   apiStatus = 'Checking...';
@@ -69,6 +79,7 @@ export class LoginComponent implements OnInit {
    */
   ngOnInit(): void {
     this.initializeForms();
+    this.loadLoginMethods();
     this.checkApiHealth();
     this.checkDatabaseHealth();
 
@@ -79,6 +90,55 @@ export class LoginComponent implements OnInit {
     if (this.authService.isLoggedIn) {
       this.router.navigate(['/rc-selection']);
     }
+  }
+
+  /**
+   * Load available login methods from the server.
+   */
+  private loadLoginMethods(): void {
+    this.isLoadingLoginMethods = true;
+    this.authService.getLoginMethods().subscribe({
+      next: (methods) => {
+        this.loginMethods = methods;
+        this.isLoadingLoginMethods = false;
+        // Set default active tab to first enabled method
+        this.setDefaultActiveTab();
+      },
+      error: () => {
+        // On error, show all methods (default behavior)
+        this.isLoadingLoginMethods = false;
+      }
+    });
+  }
+
+  /**
+   * Set the default active tab to the first enabled authentication method.
+   */
+  private setDefaultActiveTab(): void {
+    if (this.loginMethods.appAccount.enabled) {
+      this.activeTab = 'local';
+    } else if (this.loginMethods.ldapEnabled) {
+      this.activeTab = 'ldap';
+    } else if (this.loginMethods.oauth2Enabled) {
+      this.activeTab = 'oauth2';
+    }
+  }
+
+  /**
+   * Check if any login method is enabled.
+   */
+  get hasAnyLoginMethod(): boolean {
+    return this.loginMethods.appAccount.enabled || 
+           this.loginMethods.ldapEnabled || 
+           this.loginMethods.oauth2Enabled;
+  }
+
+  /**
+   * Check if registration is allowed.
+   */
+  get allowRegistration(): boolean {
+    return this.loginMethods.appAccount.enabled && 
+           this.loginMethods.appAccount.allowRegistration;
   }
 
   /**

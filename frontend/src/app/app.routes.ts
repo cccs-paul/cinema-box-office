@@ -5,6 +5,7 @@
  */
 import { Routes } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
+import { RegisterComponent } from './components/register/register.component';
 import { LayoutComponent } from './components/layout/layout.component';
 import { LayoutNoSidebarComponent } from './components/layout-no-sidebar/layout-no-sidebar.component';
 import { RCSelectionComponent } from './components/rc-selection/rc-selection.component';
@@ -20,18 +21,22 @@ import { AuthGuardService } from './guards/auth.guard';
 
 /**
  * Application routing configuration.
- * Provides navigation between login, RC selection, and dashboard with auth protection.
+ * Provides navigation between login, registration, RC selection, and dashboard with auth protection.
  * RC selection uses layout without sidebar.
  * Dashboard and other main pages use layout with sidebar.
  *
  * @author myRC Team
- * @version 1.1.0
+ * @version 1.2.0
  * @since 2026-01-17
  */
 export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
+  },
+  {
+    path: 'register',
+    component: RegisterComponent,
   },
   {
     path: '',

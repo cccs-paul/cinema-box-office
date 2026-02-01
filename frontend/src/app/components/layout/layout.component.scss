@@ -10,9 +10,9 @@
 }
 
 .app-main {
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 60px);
   padding: 0;
-  padding-top: 56px; /* Minimal gap from sticky header */
+  padding-top: 60px; /* Match header height for alignment with sidebar */
   display: flex;
   flex-direction: column;
   margin-left: 250px;

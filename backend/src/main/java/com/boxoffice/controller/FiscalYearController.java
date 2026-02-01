@@ -150,6 +150,12 @@ public class FiscalYearController {
         return ResponseEntity.badRequest().body(new ErrorResponse("Fiscal year name is required"));
       }
 
+      if (!request.isNameValidForFilename()) {
+        logger.warning("Fiscal year creation failed: Name contains invalid characters");
+        return ResponseEntity.badRequest().body(new ErrorResponse(
+            "Fiscal year name cannot contain the following characters: < > : \" / \\ | ? *"));
+      }
+
       FiscalYearDTO createdFY = fiscalYearService.createFiscalYear(
           rcId,
           username,
@@ -199,6 +205,12 @@ public class FiscalYearController {
     logger.info("PUT /responsibility-centres/" + rcId + "/fiscal-years/" + fyId + " - Updating fiscal year for user: " + username);
     
     try {
+      if (request.getName() != null && !request.getName().trim().isEmpty() && !request.isNameValidForFilename()) {
+        logger.warning("Fiscal year update failed: Name contains invalid characters");
+        return ResponseEntity.badRequest().body(new ErrorResponse(
+            "Fiscal year name cannot contain the following characters: < > : \" / \\ | ? *"));
+      }
+
       Optional<FiscalYearDTO> updatedFY = fiscalYearService.updateFiscalYear(
           fyId,
           username,
@@ -308,6 +320,7 @@ public class FiscalYearController {
 
   // Request DTOs
   public static class FiscalYearCreateRequest {
+    private static final String INVALID_FILENAME_CHARS = "<>:\"/\\|?*";
     private String name;
     private String description;
 
@@ -332,6 +345,22 @@ public class FiscalYearController {
 
     public void setDescription(String description) {
       this.description = description;
+    }
+
+    /**
+     * Validate that the name doesn't contain characters invalid for filenames.
+     * @return true if valid, false otherwise
+     */
+    public boolean isNameValidForFilename() {
+      if (name == null || name.isBlank()) {
+        return false;
+      }
+      for (char c : INVALID_FILENAME_CHARS.toCharArray()) {
+        if (name.indexOf(c) >= 0) {
+          return false;
+        }
+      }
+      return true;
     }
   }
 

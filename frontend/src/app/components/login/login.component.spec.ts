@@ -2,19 +2,30 @@
  * Login Component Tests for myRC application.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-31
  * @license MIT
  */
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { of, throwError, BehaviorSubject } from 'rxjs';
+import { Router, ActivatedRoute, RouterLink, RouterModule } from '@angular/router';
+import { of, throwError, BehaviorSubject, Subject } from 'rxjs';
+import { Component, Directive, Input } from '@angular/core';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { User } from '../../models/user.model';
+import { LoginMethods } from '../../models/auth.model';
+
+// Stub directive to replace routerLink
+@Directive({
+  standalone: true,
+  selector: '[routerLink]'
+})
+class RouterLinkStubDirective {
+  @Input() routerLink: string | any[] = '';
+}
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -42,27 +53,55 @@ describe('LoginComponent', () => {
 
   const currentUser$ = new BehaviorSubject<User | null>(null);
 
+  const mockLoginMethods: LoginMethods = {
+    appAccount: { enabled: true, allowRegistration: true },
+    ldapEnabled: true,
+    oauth2Enabled: true
+  };
+
+  const mockActivatedRoute = {
+    snapshot: { params: {}, queryParams: {}, data: {} },
+    params: of({}),
+    queryParams: of({}),
+    data: of({}),
+    url: of([]),
+    fragment: of(''),
+    outlet: 'primary',
+    component: null
+  };
+
   beforeEach(async () => {
     const authSpy = jasmine.createSpyObj('AuthService', 
-      ['loginLocal', 'loginLdap', 'initiateOAuth2'], 
+      ['loginLocal', 'loginLdap', 'initiateOAuth2', 'getLoginMethods'], 
       { currentUser$: currentUser$.asObservable(), isLoggedIn: false }
     );
+    // Set up default return value for getLoginMethods
+    authSpy.getLoginMethods.and.returnValue(of(mockLoginMethods));
+    
     const themeSpy = jasmine.createSpyObj('ThemeService', ['setTheme']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate', 'navigateByUrl'], {
+      events: new Subject(),
+      routerState: { root: {} }
+    });
 
     await TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
         FormsModule,
-        ReactiveFormsModule,
-        LoginComponent
+        ReactiveFormsModule
       ],
       providers: [
         { provide: AuthService, useValue: authSpy },
         { provide: ThemeService, useValue: themeSpy },
-        { provide: Router, useValue: routerSpy }
+        { provide: Router, useValue: routerSpy },
+        { provide: ActivatedRoute, useValue: mockActivatedRoute }
       ]
-    }).compileComponents();
+    })
+    .overrideComponent(LoginComponent, {
+      remove: { imports: [RouterModule] },
+      add: { imports: [RouterLinkStubDirective] }
+    })
+    .compileComponents();
 
     authService = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
     themeService = TestBed.inject(ThemeService) as jasmine.SpyObj<ThemeService>;
@@ -491,5 +530,165 @@ describe('LoginComponent', () => {
       // The actual redirect may not work in this test setup due to spy limitations
       expect(component).toBeTruthy();
     });
+  });
+
+  describe('Login Methods Configuration', () => {
+    it('should fetch login methods on init', fakeAsync(() => {
+      fixture.detectChanges();
+      // Flush health check requests
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(authService.getLoginMethods).toHaveBeenCalled();
+    }));
+
+    it('should show all tabs when all methods are enabled', fakeAsync(() => {
+      fixture.detectChanges();
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(component.loginMethods.appAccount.enabled).toBeTrue();
+      expect(component.loginMethods.ldapEnabled).toBeTrue();
+      expect(component.loginMethods.oauth2Enabled).toBeTrue();
+    }));
+
+    it('should hide App Account tab when disabled', fakeAsync(() => {
+      const disabledMethods: LoginMethods = {
+        appAccount: { enabled: false, allowRegistration: false },
+        ldapEnabled: true,
+        oauth2Enabled: true
+      };
+      authService.getLoginMethods.and.returnValue(of(disabledMethods));
+      
+      fixture.detectChanges();
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(component.loginMethods.appAccount.enabled).toBeFalse();
+    }));
+
+    it('should hide LDAP tab when disabled', fakeAsync(() => {
+      const disabledMethods: LoginMethods = {
+        appAccount: { enabled: true, allowRegistration: true },
+        ldapEnabled: false,
+        oauth2Enabled: true
+      };
+      authService.getLoginMethods.and.returnValue(of(disabledMethods));
+      
+      fixture.detectChanges();
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(component.loginMethods.ldapEnabled).toBeFalse();
+    }));
+
+    it('should hide OAuth2 tab when disabled', fakeAsync(() => {
+      const disabledMethods: LoginMethods = {
+        appAccount: { enabled: true, allowRegistration: true },
+        ldapEnabled: true,
+        oauth2Enabled: false
+      };
+      authService.getLoginMethods.and.returnValue(of(disabledMethods));
+      
+      fixture.detectChanges();
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(component.loginMethods.oauth2Enabled).toBeFalse();
+    }));
+
+    it('should set default tab to LDAP when App Account is disabled', fakeAsync(() => {
+      const disabledMethods: LoginMethods = {
+        appAccount: { enabled: false, allowRegistration: false },
+        ldapEnabled: true,
+        oauth2Enabled: true
+      };
+      authService.getLoginMethods.and.returnValue(of(disabledMethods));
+      
+      fixture.detectChanges();
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(component.activeTab).toBe('ldap');
+    }));
+
+    it('should set default tab to OAuth2 when App Account and LDAP are disabled', fakeAsync(() => {
+      const disabledMethods: LoginMethods = {
+        appAccount: { enabled: false, allowRegistration: false },
+        ldapEnabled: false,
+        oauth2Enabled: true
+      };
+      authService.getLoginMethods.and.returnValue(of(disabledMethods));
+      
+      fixture.detectChanges();
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(component.activeTab).toBe('oauth2');
+    }));
+
+    it('should indicate no login methods when all are disabled', fakeAsync(() => {
+      const disabledMethods: LoginMethods = {
+        appAccount: { enabled: false, allowRegistration: false },
+        ldapEnabled: false,
+        oauth2Enabled: false
+      };
+      authService.getLoginMethods.and.returnValue(of(disabledMethods));
+      
+      fixture.detectChanges();
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(component.hasAnyLoginMethod).toBeFalse();
+    }));
+
+    it('should allow registration when configured', fakeAsync(() => {
+      fixture.detectChanges();
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(component.allowRegistration).toBeTrue();
+    }));
+
+    it('should not allow registration when disabled', fakeAsync(() => {
+      const noRegistration: LoginMethods = {
+        appAccount: { enabled: true, allowRegistration: false },
+        ldapEnabled: true,
+        oauth2Enabled: true
+      };
+      authService.getLoginMethods.and.returnValue(of(noRegistration));
+      
+      fixture.detectChanges();
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(component.allowRegistration).toBeFalse();
+    }));
+
+    it('should not allow registration when App Account is disabled', fakeAsync(() => {
+      const noAppAccount: LoginMethods = {
+        appAccount: { enabled: false, allowRegistration: true },
+        ldapEnabled: true,
+        oauth2Enabled: true
+      };
+      authService.getLoginMethods.and.returnValue(of(noAppAccount));
+      
+      fixture.detectChanges();
+      httpMock.expectOne('/api/health').flush({ status: 'UP' });
+      httpMock.expectOne('/api/health/db').flush({ status: 'UP' });
+      tick();
+      
+      expect(component.allowRegistration).toBeFalse();
+    }));
   });
 });

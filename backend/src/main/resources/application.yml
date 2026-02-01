@@ -29,6 +29,15 @@ server:
 # Application-specific security configuration
 app:
   security:
+    # Login methods configuration - enable/disable specific authentication methods
+    login-methods:
+      app-account:
+        enabled: true
+        allow-registration: true  # Allow self-registration for App Accounts
+      ldap:
+        enabled: false
+      oauth2:
+        enabled: false
     ldap:
       enabled: false
       # LDAP server configuration

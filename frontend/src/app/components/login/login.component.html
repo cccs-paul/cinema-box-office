@@ -16,9 +16,23 @@
   <!-- Main Login Section -->
   <main class="login-main">
     <div class="login-card">
-      <!-- Tab Navigation -->
-      <nav class="auth-tabs">
+      <!-- Loading state for login methods -->
+      <div *ngIf="isLoadingLoginMethods" class="loading-methods">
+        <span class="spinner"></span>
+        <span>Loading authentication options...</span>
+      </div>
+
+      <!-- No login methods available -->
+      <div *ngIf="!isLoadingLoginMethods && !hasAnyLoginMethod" class="no-methods-message">
+        <span class="message-icon">⚠️</span>
+        <p>No authentication methods are currently enabled.</p>
+        <p>Please contact your administrator.</p>
+      </div>
+
+      <!-- Tab Navigation (only show if login methods are loaded and at least one is enabled) -->
+      <nav *ngIf="!isLoadingLoginMethods && hasAnyLoginMethod" class="auth-tabs">
         <button
+          *ngIf="loginMethods.appAccount.enabled"
           [class.active]="activeTab === 'local'"
           (click)="switchTab('local')"
           class="tab-button"
@@ -27,6 +41,7 @@
           <span class="tab-text">App Account</span>
         </button>
         <button
+          *ngIf="loginMethods.ldapEnabled"
           [class.active]="activeTab === 'ldap'"
           (click)="switchTab('ldap')"
           class="tab-button"
@@ -35,6 +50,7 @@
           <span class="tab-text">LDAP</span>
         </button>
         <button
+          *ngIf="loginMethods.oauth2Enabled"
           [class.active]="activeTab === 'oauth2'"
           (click)="switchTab('oauth2')"
           class="tab-button"
@@ -55,7 +71,7 @@
       </div>
 
       <!-- LOCAL Authentication Tab -->
-      <div *ngIf="activeTab === 'local'" class="tab-content active">
+      <div *ngIf="!isLoadingLoginMethods && loginMethods.appAccount.enabled && activeTab === 'local'" class="tab-content active">
         <form [formGroup]="localForm" (ngSubmit)="loginLocal()" class="login-form">
           <div class="form-group">
             <label for="username" class="form-label">Username</label>
@@ -100,10 +116,16 @@
             <span *ngIf="isLoading">Signing In...</span>
           </button>
         </form>
+
+        <!-- Registration Link -->
+        <div *ngIf="allowRegistration" class="register-link-section">
+          <p>Don't have an account?</p>
+          <a routerLink="/register" class="register-link">Create an account</a>
+        </div>
       </div>
 
       <!-- LDAP Authentication Tab -->
-      <div *ngIf="activeTab === 'ldap'" class="tab-content active">
+      <div *ngIf="!isLoadingLoginMethods && loginMethods.ldapEnabled && activeTab === 'ldap'" class="tab-content active">
         <form [formGroup]="ldapForm" (ngSubmit)="loginLdap()" class="login-form">
           <div class="form-group">
             <label for="ldapUsername" class="form-label">LDAP Username</label>
@@ -141,7 +163,7 @@
       </div>
 
       <!-- OAuth2 Authentication Tab -->
-      <div *ngIf="activeTab === 'oauth2'" class="tab-content active">
+      <div *ngIf="!isLoadingLoginMethods && loginMethods.oauth2Enabled && activeTab === 'oauth2'" class="tab-content active">
         <div class="oauth-buttons">
           <button
             type="button"

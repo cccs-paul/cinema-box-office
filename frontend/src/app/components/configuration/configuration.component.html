@@ -587,7 +587,7 @@
             type="button" 
             class="btn btn-primary"
             (click)="exportToCSV()"
-            [disabled]="isExporting">
+            [disabled]="isExporting || !isExportValid()">
             <span *ngIf="!isExporting">📤 Export to CSV</span>
             <span *ngIf="isExporting">Exporting...</span>
           </button>
