@@ -7,7 +7,9 @@ import { Component, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef } fr
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
+import { LanguageService } from '../../services/language.service';
 import { User } from '../../models/user.model';
 import { Subject, forkJoin } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -36,7 +38,7 @@ Chart.register(...registerables);
 @Component({
   selector: 'app-insights',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './insights.component.html',
   styleUrls: ['./insights.component.scss'],
 })
@@ -81,7 +83,9 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     private fyService: FiscalYearService,
     private fundingItemService: FundingItemService,
     private spendingItemService: SpendingItemService,
-    private procurementService: ProcurementService
+    private procurementService: ProcurementService,
+    private translate: TranslateService,
+    private languageService: LanguageService
   ) {}
 
   ngOnInit(): void {
@@ -91,6 +95,15 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
         this.router.navigate(['/login']);
       } else {
         this.loadSelectedContext();
+      }
+    });
+
+    // Subscribe to language changes and recreate charts
+    this.languageService.currentLanguage$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      // Only recreate charts if data is already loaded
+      if (this.fundingItems.length > 0 || this.spendingItems.length > 0 || this.procurementItems.length > 0) {
+        this.destroyCharts();
+        setTimeout(() => this.createCharts(), 50);
       }
     });
   }
@@ -216,7 +229,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
           },
           title: {
             display: true,
-            text: 'Funding by Category',
+            text: this.translate.instant('insights.fundingByCategory'),
             font: { size: 16, weight: 'bold' }
           }
         }
@@ -254,7 +267,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
           },
           title: {
             display: true,
-            text: 'Spending by Category',
+            text: this.translate.instant('insights.spendingByCategory'),
             font: { size: 16, weight: 'bold' }
           }
         }
@@ -291,14 +304,14 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
         labels: allCategories,
         datasets: [
           {
-            label: 'Funding',
+            label: this.translate.instant('insights.funding'),
             data: fundingValues,
             backgroundColor: 'rgba(59, 130, 246, 0.7)',
             borderColor: '#3b82f6',
             borderWidth: 1
           },
           {
-            label: 'Spending',
+            label: this.translate.instant('insights.spending'),
             data: spendingValues,
             backgroundColor: 'rgba(239, 68, 68, 0.7)',
             borderColor: '#ef4444',
@@ -315,7 +328,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
           },
           title: {
             display: true,
-            text: 'Funding vs Spending by Category',
+            text: this.translate.instant('insights.fundingVsSpending'),
             font: { size: 16, weight: 'bold' }
           }
         },
@@ -344,17 +357,17 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     const chart = new Chart(this.capVsOmChartRef.nativeElement, {
       type: 'bar',
       data: {
-        labels: ['Funding', 'Spending'],
+        labels: [this.translate.instant('insights.funding'), this.translate.instant('insights.spending')],
         datasets: [
           {
-            label: 'Capital (CAP)',
+            label: this.translate.instant('insights.capital'),
             data: [fundingCap, spendingCap],
             backgroundColor: 'rgba(16, 185, 129, 0.7)',
             borderColor: '#10b981',
             borderWidth: 1
           },
           {
-            label: 'O&M',
+            label: this.translate.instant('insights.om'),
             data: [fundingOm, spendingOm],
             backgroundColor: 'rgba(245, 158, 11, 0.7)',
             borderColor: '#f59e0b',
@@ -371,7 +384,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
           },
           title: {
             display: true,
-            text: 'Capital vs O&M Breakdown',
+            text: this.translate.instant('insights.capVsOm'),
             font: { size: 16, weight: 'bold' }
           }
         },
@@ -426,7 +439,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
           },
           title: {
             display: true,
-            text: 'Procurement by Status',
+            text: this.translate.instant('insights.procurementByStatus'),
             font: { size: 16, weight: 'bold' }
           }
         }
@@ -471,7 +484,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
           },
           title: {
             display: true,
-            text: 'Spending by Status',
+            text: this.translate.instant('insights.spendingByStatus'),
             font: { size: 16, weight: 'bold' }
           }
         }
@@ -481,13 +494,21 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
+   * Get the translated "Uncategorized" label.
+   */
+  getUncategorizedLabel(): string {
+    return this.translate.instant('common.uncategorized');
+  }
+
+  /**
    * Aggregate items by category.
    */
   private aggregateByCategory(items: any[], type: 'funding' | 'spending'): { labels: string[]; values: number[] } {
     const categoryMap = new Map<string, number>();
+    const uncategorizedLabel = this.getUncategorizedLabel();
     
     for (const item of items) {
-      const categoryName = item.categoryName || 'Uncategorized';
+      const categoryName = item.categoryName || uncategorizedLabel;
       let total = 0;
       
       if (item.moneyAllocations) {

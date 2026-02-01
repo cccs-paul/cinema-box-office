@@ -346,7 +346,7 @@
 
   tfoot {
     .total-row {
-      background-color: var(--bg-secondary, #f3f4f6);
+      background-color: var(--background-tertiary, #f3f4f6);
 
       td {
         padding: 16px;
@@ -428,7 +428,7 @@
 }
 
 .stats-card {
-  background-color: var(--bg-card, #fff);
+  background-color: var(--background-secondary, #fff);
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -665,6 +665,22 @@ html.dark-theme {
       border-bottom-color: var(--border-color);
     }
 
+    // Dark mode color overrides for stats card headers
+    &.funding .stats-header {
+      background: linear-gradient(135deg, #166534, #14532d);
+      color: #bbf7d0;
+    }
+
+    &.spending .stats-header {
+      background: linear-gradient(135deg, #991b1b, #7f1d1d);
+      color: #fecaca;
+    }
+
+    &.procurement .stats-header {
+      background: linear-gradient(135deg, #1e40af, #1e3a8a);
+      color: #bfdbfe;
+    }
+
     .stat-row {
       border-bottom-color: var(--border-color);
 
@@ -679,6 +695,33 @@ html.dark-theme {
       .stat-value {
         color: var(--text-primary);
       }
+    }
+  }
+
+  // Dark mode health-banner overrides
+  .health-banner {
+    &.status-good {
+      background: linear-gradient(135deg, #166534, #14532d);
+      color: #bbf7d0;
+      border-color: #22c55e;
+    }
+
+    &.status-caution {
+      background: linear-gradient(135deg, #92400e, #78350f);
+      color: #fef3c7;
+      border-color: #f59e0b;
+    }
+
+    &.status-warning {
+      background: linear-gradient(135deg, #c2410c, #9a3412);
+      color: #ffedd5;
+      border-color: #f97316;
+    }
+
+    &.status-danger {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: #fee2e2;
+      border-color: #ef4444;
     }
   }
 

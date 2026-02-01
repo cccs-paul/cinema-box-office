@@ -26,7 +26,7 @@ export interface LanguageConfig {
  */
 export const LANGUAGES: LanguageConfig[] = [
   { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'fr', name: 'French', nativeName: 'français' }
+  { code: 'fr', name: 'French', nativeName: 'Français' }
 ];
 
 /**

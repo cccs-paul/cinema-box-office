@@ -6,19 +6,21 @@
 import { ApplicationConfig, importProvidersFrom, APP_INITIALIZER } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withXsrfConfiguration } from '@angular/common/http';
-import { TranslateModule, TranslateService, TranslateLoader } from '@ngx-translate/core';
-import { provideTranslateHttpLoader, TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { routes } from './app.routes';
+import { firstValueFrom } from 'rxjs';
 
 /**
  * Initialize translations before app starts.
+ * Uses firstValueFrom instead of deprecated toPromise().
  */
 export function initializeApp(translate: TranslateService): () => Promise<void> {
-  return () => {
+  return async () => {
     translate.addLangs(['en', 'fr']);
     translate.setDefaultLang('en');
     const savedLang = localStorage.getItem('myrc_language') || 'en';
-    return translate.use(savedLang).toPromise().then(() => {});
+    await firstValueFrom(translate.use(savedLang));
   };
 }
 
@@ -39,19 +41,15 @@ export const appConfig: ApplicationConfig = {
         headerName: 'X-XSRF-TOKEN',
       })
     ),
+    importProvidersFrom(
+      TranslateModule.forRoot({
+        fallbackLang: 'en'
+      })
+    ),
     provideTranslateHttpLoader({
       prefix: './assets/i18n/',
       suffix: '.json'
     }),
-    importProvidersFrom(
-      TranslateModule.forRoot({
-        defaultLanguage: 'en',
-        loader: {
-          provide: TranslateLoader,
-          useClass: TranslateHttpLoader
-        }
-      })
-    ),
     {
       provide: APP_INITIALIZER,
       useFactory: initializeApp,

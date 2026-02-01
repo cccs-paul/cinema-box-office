@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, filter, take } from 'rxjs/operators';
+import { TranslateModule } from '@ngx-translate/core';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYearService } from '../../services/fiscal-year.service';
@@ -31,7 +32,7 @@ import { ThemeService, Theme } from '../../services/theme.service';
 @Component({
   selector: 'app-rc-selection',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './rc-selection.component.html',
   styleUrls: ['./rc-selection.component.scss']
 })

@@ -12,7 +12,7 @@
   <!-- Loading State -->
   <div class="loading-state" *ngIf="isLoading">
     <div class="spinner"></div>
-    <p>Loading financial summary...</p>
+    <p>{{ 'summary.loading' | translate }}</p>
   </div>
 
   <!-- Summary Content -->
@@ -23,10 +23,10 @@
       <div class="health-info">
         <span class="health-status">{{ getOnTargetText() }}</span>
         <span class="health-detail">
-          Spending is at {{ spendingPercentTotal | number:'1.1-1' }}% of total funding
+          {{ 'summary.spendingAt' | translate }} {{ spendingPercentTotal | number:'1.1-1' }}% {{ 'summary.ofFunding' | translate }}
         </span>
         <span class="target-range" *ngIf="selectedFY">
-          (Target range: {{ selectedFY.onTargetMin }}% to {{ selectedFY.onTargetMax }}% of funding)
+          ({{ 'summary.targetRange' | translate }}: {{ selectedFY.onTargetMin }}% {{ 'summary.to' | translate }} {{ selectedFY.onTargetMax }}% {{ 'summary.ofFunding' | translate }})
         </span>
       </div>
     </div>
@@ -34,13 +34,13 @@
     <!-- Main Comparison Table -->
     <div class="comparison-section" [class.collapsed]="!comparisonExpanded">
       <div class="section-header">
-        <h2>Funding vs Spending Comparison</h2>
+        <h2>{{ 'summary.fundingVsSpending' | translate }}</h2>
         <button 
           class="btn-toggle-section" 
           (click)="comparisonExpanded = !comparisonExpanded"
-          [title]="comparisonExpanded ? 'Collapse section' : 'Expand section'">
+          [title]="comparisonExpanded ? ('common.collapse' | translate) : ('common.expand' | translate)">
           <span class="toggle-icon" [class.collapsed]="!comparisonExpanded">▼</span>
-          <span class="toggle-label">{{ comparisonExpanded ? 'Hide Summary' : 'Show Summary' }}</span>
+          <span class="toggle-label">{{ comparisonExpanded ? ('common.hideSummary' | translate) : ('common.showSummary' | translate) }}</span>
         </button>
       </div>
       
@@ -48,18 +48,18 @@
         <table class="comparison-table">
           <thead>
             <tr>
-              <th>Category</th>
-              <th class="amount-col">Total Funding</th>
-              <th class="amount-col">Total Spending</th>
-              <th class="amount-col">Remaining</th>
-              <th class="percent-col">% Used</th>
+              <th>{{ 'common.category' | translate }}</th>
+              <th class="amount-col">{{ 'summary.totalFunding' | translate }}</th>
+              <th class="amount-col">{{ 'summary.totalSpending' | translate }}</th>
+              <th class="amount-col">{{ 'summary.remaining' | translate }}</th>
+              <th class="percent-col">{{ 'summary.percentUsed' | translate }}</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td class="category-label">
                 <span class="category-icon">💰</span>
-                Capital (CAP)
+                {{ 'summary.capitalCap' | translate }}
               </td>
               <td class="amount funding">{{ formatCurrency(totalFundingCap) }}</td>
               <td class="amount spending">{{ formatCurrency(totalSpendingCap) }}</td>
@@ -79,7 +79,7 @@
             <tr>
               <td class="category-label">
                 <span class="category-icon">🔧</span>
-                Operations & Maintenance (O&M)
+                {{ 'summary.operationsOm' | translate }}
               </td>
               <td class="amount funding">{{ formatCurrency(totalFundingOm) }}</td>
               <td class="amount spending">{{ formatCurrency(totalSpendingOm) }}</td>
@@ -100,7 +100,7 @@
           <tfoot>
             <tr class="total-row">
               <td class="category-label">
-                <strong>📊 TOTAL</strong>
+                <strong>📊 {{ 'common.total' | translate | uppercase }}</strong>
               </td>
               <td class="amount funding total">
                 <strong>{{ formatCurrency(totalFunding) }}</strong>
@@ -129,13 +129,13 @@
     <!-- Money Type Breakdown -->
     <div class="money-type-section" [class.collapsed]="!moneyTypeExpanded" *ngIf="moneyTypeSummaries.length > 0">
       <div class="section-header">
-        <h2>Left to Spend by Money Type</h2>
+        <h2>{{ 'summary.leftToSpendByMoneyType' | translate }}</h2>
         <button 
           class="btn-toggle-section" 
           (click)="moneyTypeExpanded = !moneyTypeExpanded"
-          [title]="moneyTypeExpanded ? 'Collapse section' : 'Expand section'">
+          [title]="moneyTypeExpanded ? ('common.collapse' | translate) : ('common.expand' | translate)">
           <span class="toggle-icon" [class.collapsed]="!moneyTypeExpanded">▼</span>
-          <span class="toggle-label">{{ moneyTypeExpanded ? 'Hide Summary' : 'Show Summary' }}</span>
+          <span class="toggle-label">{{ moneyTypeExpanded ? ('common.hideSummary' | translate) : ('common.showSummary' | translate) }}</span>
         </button>
       </div>
       
@@ -148,33 +148,33 @@
             </div>
             <div class="money-type-body">
               <div class="money-row">
-                <span class="money-label">Funding (CAP)</span>
+                <span class="money-label">{{ 'summary.fundingCap' | translate }}</span>
                 <span class="money-value">{{ formatCurrency(summary.fundingCap) }}</span>
               </div>
               <div class="money-row">
-                <span class="money-label">Spending (CAP)</span>
+                <span class="money-label">{{ 'summary.spendingCap' | translate }}</span>
                 <span class="money-value">{{ formatCurrency(summary.spendingCap) }}</span>
               </div>
               <div class="money-row left-to-spend" [class.negative]="summary.leftToSpendCap < 0">
-                <span class="money-label">Left to Spend (CAP)</span>
+                <span class="money-label">{{ 'summary.leftToSpendCap' | translate }}</span>
                 <span class="money-value">{{ formatCurrency(summary.leftToSpendCap) }}</span>
               </div>
               <div class="money-divider"></div>
               <div class="money-row">
-                <span class="money-label">Funding (O&M)</span>
+                <span class="money-label">{{ 'summary.fundingOm' | translate }}</span>
                 <span class="money-value">{{ formatCurrency(summary.fundingOm) }}</span>
               </div>
               <div class="money-row">
-                <span class="money-label">Spending (O&M)</span>
+                <span class="money-label">{{ 'summary.spendingOm' | translate }}</span>
                 <span class="money-value">{{ formatCurrency(summary.spendingOm) }}</span>
               </div>
               <div class="money-row left-to-spend" [class.negative]="summary.leftToSpendOm < 0">
-                <span class="money-label">Left to Spend (O&M)</span>
+                <span class="money-label">{{ 'summary.leftToSpendOm' | translate }}</span>
                 <span class="money-value">{{ formatCurrency(summary.leftToSpendOm) }}</span>
               </div>
               <div class="money-divider"></div>
               <div class="money-row total" [class.negative]="summary.leftToSpendTotal < 0">
-                <span class="money-label">Total Left to Spend</span>
+                <span class="money-label">{{ 'summary.totalLeftToSpend' | translate }}</span>
                 <span class="money-value">{{ formatCurrency(summary.leftToSpendTotal) }}</span>
               </div>
             </div>
@@ -187,15 +187,15 @@
     <div class="bottom-line" [ngClass]="getStatusClass(spendingPercentTotal)">
       <div class="bottom-line-icon">{{ getHealthIndicator() }}</div>
       <div class="bottom-line-content">
-        <span class="bottom-line-label">Bottom Line:</span>
+        <span class="bottom-line-label">{{ 'summary.bottomLine' | translate }}:</span>
         <span class="bottom-line-value">
-          Spending is at <strong>{{ spendingPercentTotal | number:'1.1-1' }}%</strong> of total funding
+          {{ 'summary.spendingAt' | translate }} <strong>{{ spendingPercentTotal | number:'1.1-1' }}%</strong> {{ 'summary.ofFunding' | translate }}
         </span>
         <span class="bottom-line-remaining" *ngIf="remainingTotal >= 0">
-          with <strong>{{ formatCurrency(remainingTotal) }}</strong> remaining
+          {{ 'summary.with' | translate }} <strong>{{ formatCurrency(remainingTotal) }}</strong> {{ 'summary.remainingBudget' | translate }}
         </span>
         <span class="bottom-line-remaining over-budget" *ngIf="remainingTotal < 0">
-          and <strong>{{ formatCurrency(Math.abs(remainingTotal)) }}</strong> over budget
+          {{ 'summary.and' | translate }} <strong>{{ formatCurrency(Math.abs(remainingTotal)) }}</strong> {{ 'summary.overBudget' | translate }}
         </span>
       </div>
     </div>
@@ -206,23 +206,23 @@
       <div class="stats-card funding">
         <div class="stats-header">
           <span class="stats-icon">📋</span>
-          <span class="stats-title">Funding</span>
+          <span class="stats-title">{{ 'summary.funding' | translate }}</span>
         </div>
         <div class="stats-body">
           <div class="stat-row">
-            <span class="stat-label">Items</span>
+            <span class="stat-label">{{ 'summary.items' | translate }}</span>
             <span class="stat-value">{{ fundingItems.length }}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">Capital (CAP)</span>
+            <span class="stat-label">{{ 'summary.capitalCap' | translate }}</span>
             <span class="stat-value">{{ formatCurrency(totalFundingCap) }}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">O&M</span>
+            <span class="stat-label">{{ 'summary.om' | translate }}</span>
             <span class="stat-value">{{ formatCurrency(totalFundingOm) }}</span>
           </div>
           <div class="stat-row total">
-            <span class="stat-label">Total</span>
+            <span class="stat-label">{{ 'common.total' | translate }}</span>
             <span class="stat-value">{{ formatCurrency(totalFunding) }}</span>
           </div>
         </div>
@@ -232,23 +232,23 @@
       <div class="stats-card spending">
         <div class="stats-header">
           <span class="stats-icon">💰</span>
-          <span class="stats-title">Spending</span>
+          <span class="stats-title">{{ 'summary.spending' | translate }}</span>
         </div>
         <div class="stats-body">
           <div class="stat-row">
-            <span class="stat-label">Items</span>
+            <span class="stat-label">{{ 'summary.items' | translate }}</span>
             <span class="stat-value">{{ spendingItems.length }}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">Capital (CAP)</span>
+            <span class="stat-label">{{ 'summary.capitalCap' | translate }}</span>
             <span class="stat-value">{{ formatCurrency(totalSpendingCap) }}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">O&M</span>
+            <span class="stat-label">{{ 'summary.om' | translate }}</span>
             <span class="stat-value">{{ formatCurrency(totalSpendingOm) }}</span>
           </div>
           <div class="stat-row total">
-            <span class="stat-label">Total</span>
+            <span class="stat-label">{{ 'common.total' | translate }}</span>
             <span class="stat-value">{{ formatCurrency(totalSpending) }}</span>
           </div>
         </div>
@@ -258,23 +258,23 @@
       <div class="stats-card procurement">
         <div class="stats-header">
           <span class="stats-icon">📦</span>
-          <span class="stats-title">Procurement</span>
+          <span class="stats-title">{{ 'summary.procurement' | translate }}</span>
         </div>
         <div class="stats-body">
           <div class="stat-row">
-            <span class="stat-label">Total Items</span>
+            <span class="stat-label">{{ 'summary.totalItems' | translate }}</span>
             <span class="stat-value">{{ procurementItems.length }}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">Completed</span>
+            <span class="stat-label">{{ 'summary.completed' | translate }}</span>
             <span class="stat-value status-good">{{ procurementCompleted }}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">In Progress</span>
+            <span class="stat-label">{{ 'summary.inProgress' | translate }}</span>
             <span class="stat-value status-caution">{{ procurementInProgress }}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">Pending</span>
+            <span class="stat-label">{{ 'summary.pending' | translate }}</span>
             <span class="stat-value status-warning">{{ procurementPending }}</span>
           </div>
         </div>

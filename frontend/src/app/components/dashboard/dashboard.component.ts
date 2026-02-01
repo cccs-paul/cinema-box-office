@@ -7,6 +7,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { Subject } from 'rxjs';
@@ -35,7 +36,7 @@ import { Category, categoryAllowsCap, categoryAllowsOm } from '../../models/cate
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
@@ -108,6 +109,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   grandTotalOm = 0;
   grandTotal = 0;
 
+  // Category grouping interface
+  groupedItems: { categoryName: string; categoryId: number | null; items: FundingItem[] }[] = [];
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -119,7 +123,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private currencyService: CurrencyService,
     private moneyService: MoneyService,
     private categoryService: CategoryService,
-    private fuzzySearchService: FuzzySearchService
+    private fuzzySearchService: FuzzySearchService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -312,6 +317,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // Maps for aggregation
     const moneyMap = new Map<string, { moneyCode: string; moneyName: string; totalCap: number; totalOm: number }>();
     const categoryMap = new Map<string, { categoryName: string; totalCap: number; totalOm: number }>();
+    const uncategorizedLabel = this.getUncategorizedLabel();
 
     for (const item of this.fundingItems) {
       // Add to grand totals
@@ -319,7 +325,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.grandTotalOm += item.totalOm || 0;
 
       // Aggregate by category
-      const catName = item.categoryName || 'Uncategorized';
+      const catName = item.categoryName || uncategorizedLabel;
       if (!categoryMap.has(catName)) {
         categoryMap.set(catName, { categoryName: catName, totalCap: 0, totalOm: 0 });
       }
@@ -393,6 +399,56 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get the translated "Uncategorized" label.
+   */
+  getUncategorizedLabel(): string {
+    return this.translate.instant('common.uncategorized');
+  }
+
+  /**
+   * Track funding items by ID to prevent unnecessary re-renders.
+   */
+  trackByItemId(index: number, item: FundingItem): number {
+    return item.id;
+  }
+
+  /**
+   * Track groups by category name to prevent unnecessary re-renders.
+   */
+  trackByGroupName(index: number, group: { categoryName: string; categoryId: number | null; items: FundingItem[] }): string {
+    return group.categoryName;
+  }
+
+  /**
+   * Get funding items grouped by category.
+   * Returns an array of category groups, each containing the category name and its items.
+   * Items within each group are sorted alphabetically.
+   */
+  get groupedFundingItems(): { categoryName: string; categoryId: number | null; items: FundingItem[] }[] {
+    const sortedItems = this.sortedFundingItems;
+    const groups = new Map<string, { categoryName: string; categoryId: number | null; items: FundingItem[] }>();
+    const uncategorizedLabel = this.getUncategorizedLabel();
+
+    // Group items by category
+    for (const item of sortedItems) {
+      const categoryName = item.categoryName || uncategorizedLabel;
+      const categoryId = item.categoryId || null;
+      
+      if (!groups.has(categoryName)) {
+        groups.set(categoryName, { categoryName, categoryId, items: [] });
+      }
+      groups.get(categoryName)!.items.push(item);
+    }
+
+    // Convert to array and sort by category name (Uncategorized last)
+    return Array.from(groups.values()).sort((a, b) => {
+      if (a.categoryId === null) return 1;
+      if (b.categoryId === null) return -1;
+      return a.categoryName.localeCompare(b.categoryName, undefined, { sensitivity: 'base' });
+    });
+  }
+
+  /**
    * Clear the search filter.
    */
   clearSearch(): void {
@@ -408,10 +464,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   /**
    * Filter funding items by category.
+   * Clicking the same category again will remove the filter (toggle behavior).
    * @param categoryId The category ID to filter by, or null for all categories
    */
   filterByCategory(categoryId: number | null): void {
-    this.selectedCategoryId = categoryId;
+    // Toggle off if clicking the same category
+    if (this.selectedCategoryId === categoryId) {
+      this.selectedCategoryId = null;
+    } else {
+      this.selectedCategoryId = categoryId;
+    }
   }
 
   /**

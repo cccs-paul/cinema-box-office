@@ -842,6 +842,50 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
+  &.grouped {
+    gap: 0;
+
+    .item-card {
+      border-radius: 0;
+      border-top: none;
+
+      &:last-child {
+        border-bottom-left-radius: 0.5rem;
+        border-bottom-right-radius: 0.5rem;
+        margin-bottom: 0.75rem;
+      }
+    }
+  }
+}
+
+/* Category Group Header - for grouped view */
+.category-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 0.5rem 0.5rem 0 0;
+  margin-top: 0.75rem;
+  box-shadow: var(--shadow-sm);
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  .category-group-name {
+    font-weight: 600;
+  }
+
+  .category-group-count {
+    font-weight: 400;
+    opacity: 0.9;
+    font-size: 0.85rem;
+  }
 }
 
 /* Item Card - Expandable */

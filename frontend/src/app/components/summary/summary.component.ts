@@ -7,6 +7,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { Subject, forkJoin } from 'rxjs';
@@ -51,7 +52,7 @@ interface MoneyTypeSummary {
 @Component({
   selector: 'app-summary',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './summary.component.html',
   styleUrls: ['./summary.component.scss'],
 })

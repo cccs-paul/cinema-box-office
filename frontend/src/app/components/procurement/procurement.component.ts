@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
 import { Subject } from 'rxjs';
@@ -46,7 +47,7 @@ import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/curren
 @Component({
   selector: 'app-procurement',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './procurement.component.html',
   styleUrls: ['./procurement.component.scss'],
 })
@@ -187,7 +188,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     private currencyService: CurrencyService,
     private fuzzySearchService: FuzzySearchService,
     private categoryService: CategoryService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -340,6 +342,55 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get the translated "Uncategorized" label.
+   */
+  getUncategorizedLabel(): string {
+    return this.translate.instant('common.uncategorized');
+  }
+
+  /**
+   * Get procurement items grouped by category.
+   * Returns an array of category groups, each containing the category name and its items.
+   */
+  get groupedProcurementItems(): { categoryName: string; categoryId: number | null; items: ProcurementItem[] }[] {
+    const filteredItems = this.filteredProcurementItems;
+    const groups = new Map<string, { categoryName: string; categoryId: number | null; items: ProcurementItem[] }>();
+    const uncategorizedLabel = this.getUncategorizedLabel();
+
+    // Group items by category
+    for (const item of filteredItems) {
+      const categoryName = item.categoryName || uncategorizedLabel;
+      const categoryId = item.categoryId || null;
+      
+      if (!groups.has(categoryName)) {
+        groups.set(categoryName, { categoryName, categoryId, items: [] });
+      }
+      groups.get(categoryName)!.items.push(item);
+    }
+
+    // Convert to array and sort by category name (Uncategorized last)
+    return Array.from(groups.values()).sort((a, b) => {
+      if (a.categoryId === null) return 1;
+      if (b.categoryId === null) return -1;
+      return a.categoryName.localeCompare(b.categoryName, undefined, { sensitivity: 'base' });
+    });
+  }
+
+  /**
+   * TrackBy function for procurement items to optimize rendering.
+   */
+  trackByItemId(index: number, item: ProcurementItem): number {
+    return item.id;
+  }
+
+  /**
+   * TrackBy function for category groups to optimize rendering.
+   */
+  trackByGroupName(index: number, group: { categoryName: string; categoryId: number | null; items: ProcurementItem[] }): string {
+    return group.categoryName;
+  }
+
+  /**
    * Clear the search filter.
    */
   clearSearch(): void {
@@ -374,9 +425,15 @@ export class ProcurementComponent implements OnInit, OnDestroy {
 
   /**
    * Filter procurement items by category.
+   * Clicking the same category again will remove the filter (toggle behavior).
    */
   filterByCategory(categoryId: number | null): void {
-    this.selectedCategoryId = categoryId;
+    // Toggle off if clicking the same category
+    if (this.selectedCategoryId === categoryId) {
+      this.selectedCategoryId = null;
+    } else {
+      this.selectedCategoryId = categoryId;
+    }
   }
 
   onSearch(): void {

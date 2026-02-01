@@ -8,9 +8,9 @@
   <div class="page-header">
     <div class="header-left">
       <button class="btn-back" (click)="goBack()">
-        <span class="back-icon">←</span> Back to RC Selection
+        <span class="back-icon">←</span> {{ 'rcPermissions.backToRcSelection' | translate }}
       </button>
-      <h1>🔐 RC Permissions</h1>
+      <h1>🔐 {{ 'rcPermissions.title' | translate }}</h1>
       <p class="subtitle" *ngIf="rc">{{ rc.name }}</p>
     </div>
   </div>
@@ -26,34 +26,34 @@
   <!-- Loading State -->
   <div class="loading-state" *ngIf="isLoading">
     <div class="spinner"></div>
-    <p>Loading permissions...</p>
+    <p>{{ 'rcPermissions.loadingPermissions' | translate }}</p>
   </div>
 
   <!-- Main Content -->
   <div class="content" *ngIf="!isLoading && rc?.isOwner">
     <!-- Access Level Legend -->
     <div class="legend-card">
-      <h3>Access Levels</h3>
+      <h3>{{ 'rcPermissions.accessLevels' | translate }}</h3>
       <div class="legend-items">
         <div class="legend-item">
           <span class="legend-icon">👑</span>
           <div class="legend-info">
-            <strong>Owner</strong>
-            <p>Can grant/revoke access, rename, delete RC, create FYs, and manage Money Types & Categories</p>
+            <strong>{{ 'rcPermissions.owner' | translate }}</strong>
+            <p>{{ 'rcPermissions.ownerDesc' | translate }}</p>
           </div>
         </div>
         <div class="legend-item">
           <span class="legend-icon">✏️</span>
           <div class="legend-info">
-            <strong>Read/Write</strong>
-            <p>Can create and edit Funding, Spending, Procurement items and quotes</p>
+            <strong>{{ 'rcPermissions.readWrite' | translate }}</strong>
+            <p>{{ 'rcPermissions.readWriteDesc' | translate }}</p>
           </div>
         </div>
         <div class="legend-item">
           <span class="legend-icon">👁️</span>
           <div class="legend-info">
-            <strong>Read Only</strong>
-            <p>Can view all data but cannot make any changes</p>
+            <strong>{{ 'rcPermissions.readOnly' | translate }}</strong>
+            <p>{{ 'rcPermissions.readOnlyDesc' | translate }}</p>
           </div>
         </div>
       </div>
@@ -61,16 +61,16 @@
 
     <!-- Grant Access Section -->
     <div class="grant-section">
-      <h2>Grant Access</h2>
+      <h2>{{ 'rcPermissions.grantAccess' | translate }}</h2>
       <div class="grant-buttons">
         <button class="btn-grant" (click)="openGrantForm('USER')">
-          <span>👤</span> Add User
+          <span>👤</span> {{ 'rcPermissions.addUser' | translate }}
         </button>
         <button class="btn-grant" (click)="openGrantForm('GROUP')">
-          <span>👥</span> Add Security Group
+          <span>👥</span> {{ 'rcPermissions.addSecurityGroup' | translate }}
         </button>
         <button class="btn-grant" (click)="openGrantForm('DISTRIBUTION_LIST')">
-          <span>📧</span> Add Distribution List
+          <span>📧</span> {{ 'rcPermissions.addDistributionList' | translate }}
         </button>
       </div>
 
@@ -78,48 +78,48 @@
       <div class="modal-overlay" *ngIf="showGrantForm" (click)="closeGrantForm()">
         <div class="modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h3>{{ getPrincipalTypeIcon(grantFormType) }} Grant {{ getFormTypeLabel() }} Access</h3>
+            <h3>{{ getPrincipalTypeIcon(grantFormType) }} {{ getFormTypeLabelTranslated() }}</h3>
             <button class="btn-close" (click)="closeGrantForm()">×</button>
           </div>
           <div class="modal-body">
             <div class="form-group">
-              <label *ngIf="grantFormType === 'USER'">Username</label>
-              <label *ngIf="grantFormType === 'GROUP'">Group Identifier</label>
-              <label *ngIf="grantFormType === 'DISTRIBUTION_LIST'">Distribution List</label>
+              <label *ngIf="grantFormType === 'USER'">{{ 'rcPermissions.username' | translate }}</label>
+              <label *ngIf="grantFormType === 'GROUP'">{{ 'rcPermissions.groupIdentifier' | translate }}</label>
+              <label *ngIf="grantFormType === 'DISTRIBUTION_LIST'">{{ 'rcPermissions.distributionList' | translate }}</label>
               <input 
                 type="text" 
                 [(ngModel)]="newPrincipalIdentifier" 
-                [placeholder]="getIdentifierPlaceholder()"
+                [placeholder]="getIdentifierPlaceholderTranslated()"
                 class="form-input"
               />
             </div>
             <div class="form-group" *ngIf="grantFormType !== 'USER'">
-              <label>Display Name (optional)</label>
+              <label>{{ 'rcPermissions.displayNameOptional' | translate }}</label>
               <input 
                 type="text" 
                 [(ngModel)]="newPrincipalDisplayName" 
-                placeholder="Human-readable name for this group"
+                [placeholder]="'rcPermissions.displayNamePlaceholder' | translate"
                 class="form-input"
               />
             </div>
             <div class="form-group">
-              <label>Access Level</label>
+              <label>{{ 'rcPermissions.accessLevel' | translate }}</label>
               <select [(ngModel)]="newAccessLevel" class="form-select">
-                <option value="OWNER">👑 Owner</option>
-                <option value="READ_WRITE">✏️ Read/Write</option>
-                <option value="READ_ONLY">👁️ Read Only</option>
+                <option value="OWNER">👑 {{ 'rcPermissions.owner' | translate }}</option>
+                <option value="READ_WRITE">✏️ {{ 'rcPermissions.readWrite' | translate }}</option>
+                <option value="READ_ONLY">👁️ {{ 'rcPermissions.readOnly' | translate }}</option>
               </select>
             </div>
           </div>
           <div class="modal-footer">
-            <button class="btn-cancel" (click)="closeGrantForm()">Cancel</button>
+            <button class="btn-cancel" (click)="closeGrantForm()">{{ 'common.cancel' | translate }}</button>
             <button 
               class="btn-primary" 
               (click)="grantAccess()" 
               [disabled]="isGranting || !newPrincipalIdentifier.trim()"
             >
-              <span *ngIf="isGranting">Granting...</span>
-              <span *ngIf="!isGranting">Grant Access</span>
+              <span *ngIf="isGranting">{{ 'rcPermissions.granting' | translate }}</span>
+              <span *ngIf="!isGranting">{{ 'rcPermissions.grantAccess' | translate }}</span>
             </button>
           </div>
         </div>
@@ -128,16 +128,16 @@
 
     <!-- Current Permissions Table -->
     <div class="permissions-table-section">
-      <h2>Current Permissions</h2>
+      <h2>{{ 'rcPermissions.currentPermissions' | translate }}</h2>
       <div class="table-wrapper" *ngIf="permissions.length > 0">
         <table class="permissions-table">
           <thead>
             <tr>
-              <th>Type</th>
-              <th>Principal</th>
-              <th>Access Level</th>
-              <th>Granted</th>
-              <th>Actions</th>
+              <th>{{ 'rcPermissions.tableType' | translate }}</th>
+              <th>{{ 'rcPermissions.tablePrincipal' | translate }}</th>
+              <th>{{ 'rcPermissions.tableAccessLevel' | translate }}</th>
+              <th>{{ 'rcPermissions.tableGranted' | translate }}</th>
+              <th>{{ 'rcPermissions.tableActions' | translate }}</th>
             </tr>
           </thead>
           <tbody>
@@ -146,7 +146,7 @@
                 [class.original-owner]="!permission.id">
               <td class="type-cell">
                 <span class="type-icon">{{ getPrincipalTypeIcon(permission.principalType) }}</span>
-                <span class="type-label">{{ getPrincipalTypeLabel(permission.principalType) }}</span>
+                <span class="type-label">{{ getPrincipalTypeLabelTranslated(permission.principalType) }}</span>
               </td>
               <td class="principal-cell">
                 <div class="principal-info">
@@ -159,7 +159,7 @@
               <td class="access-cell">
                 <!-- Normal view -->
                 <span *ngIf="editingPermissionId !== permission.id" class="access-badge" [class]="'level-' + permission.accessLevel.toLowerCase()">
-                  {{ getAccessLevelIcon(permission.accessLevel) }} {{ getAccessLevelLabel(permission.accessLevel) }}
+                  {{ getAccessLevelIcon(permission.accessLevel) }} {{ getAccessLevelLabelTranslated(permission.accessLevel) }}
                 </span>
                 <!-- Edit view -->
                 <select 
@@ -167,40 +167,40 @@
                   [(ngModel)]="editAccessLevel" 
                   class="form-select inline"
                 >
-                  <option value="OWNER">👑 Owner</option>
-                  <option value="READ_WRITE">✏️ Read/Write</option>
-                  <option value="READ_ONLY">👁️ Read Only</option>
+                  <option value="OWNER">👑 {{ 'rcPermissions.owner' | translate }}</option>
+                  <option value="READ_WRITE">✏️ {{ 'rcPermissions.readWrite' | translate }}</option>
+                  <option value="READ_ONLY">👁️ {{ 'rcPermissions.readOnly' | translate }}</option>
                 </select>
               </td>
               <td class="granted-cell">
                 <div class="granted-info">
                   <span class="granted-date">{{ permission.grantedAt | date:'mediumDate' }}</span>
-                  <span class="granted-by" *ngIf="permission.grantedBy">by {{ permission.grantedBy }}</span>
-                  <span class="granted-by" *ngIf="!permission.grantedBy && !permission.id">Original Owner</span>
+                  <span class="granted-by" *ngIf="permission.grantedBy">{{ 'rcPermissions.by' | translate }} {{ permission.grantedBy }}</span>
+                  <span class="granted-by" *ngIf="!permission.grantedBy && !permission.id">{{ 'rcPermissions.originalOwner' | translate }}</span>
                 </div>
               </td>
               <td class="actions-cell">
                 <!-- Normal actions -->
                 <div *ngIf="editingPermissionId !== permission.id && canEditPermission(permission)" class="action-buttons">
-                  <button class="btn-action btn-edit" (click)="startEdit(permission)" title="Edit">
+                  <button class="btn-action btn-edit" (click)="startEdit(permission)" [title]="'common.edit' | translate">
                     ✏️
                   </button>
-                  <button class="btn-action btn-delete" (click)="confirmDelete(permission)" title="Revoke">
+                  <button class="btn-action btn-delete" (click)="confirmDelete(permission)" [title]="'rcPermissions.revokeAccess' | translate">
                     🗑️
                   </button>
                 </div>
                 <!-- Edit actions -->
                 <div *ngIf="editingPermissionId === permission.id" class="action-buttons">
-                  <button class="btn-action btn-save" (click)="saveEdit()" title="Save">
+                  <button class="btn-action btn-save" (click)="saveEdit()" [title]="'common.save' | translate">
                     ✅
                   </button>
-                  <button class="btn-action btn-cancel-edit" (click)="cancelEdit()" title="Cancel">
+                  <button class="btn-action btn-cancel-edit" (click)="cancelEdit()" [title]="'common.cancel' | translate">
                     ❌
                   </button>
                 </div>
                 <!-- Original owner badge -->
                 <span *ngIf="!canEditPermission(permission)" class="original-badge">
-                  Original Owner
+                  {{ 'rcPermissions.originalOwner' | translate }}
                 </span>
               </td>
             </tr>
@@ -208,7 +208,7 @@
         </table>
       </div>
       <div class="empty-state" *ngIf="permissions.length === 0">
-        <p>No permissions configured yet. Use the buttons above to grant access.</p>
+        <p>{{ 'rcPermissions.noPermissions' | translate }}</p>
       </div>
     </div>
   </div>
@@ -217,15 +217,15 @@
   <div class="modal-overlay" *ngIf="deleteConfirmId" (click)="cancelDelete()">
     <div class="modal modal-danger" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>⚠️ Confirm Revoke Access</h3>
+        <h3>⚠️ {{ 'rcPermissions.confirmRevokeAccess' | translate }}</h3>
         <button class="btn-close" (click)="cancelDelete()">×</button>
       </div>
       <div class="modal-body">
-        <p>Are you sure you want to revoke this access? The user/group will no longer be able to access this RC.</p>
+        <p>{{ 'rcPermissions.revokeConfirmMessage' | translate }}</p>
       </div>
       <div class="modal-footer">
-        <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
-        <button class="btn-danger" (click)="deletePermission()">Revoke Access</button>
+        <button class="btn-cancel" (click)="cancelDelete()">{{ 'common.cancel' | translate }}</button>
+        <button class="btn-danger" (click)="deletePermission()">{{ 'rcPermissions.revokeAccess' | translate }}</button>
       </div>
     </div>
   </div>
@@ -233,8 +233,8 @@
   <!-- Not Owner Message -->
   <div class="not-owner-message" *ngIf="!isLoading && rc && !rc.isOwner">
     <div class="message-icon">🔒</div>
-    <h2>Access Denied</h2>
-    <p>Only RC owners can manage permissions for this Responsibility Centre.</p>
-    <button class="btn-primary" (click)="goBack()">Return to RC Selection</button>
+    <h2>{{ 'rcPermissions.accessDenied' | translate }}</h2>
+    <p>{{ 'rcPermissions.accessDeniedMessage' | translate }}</p>
+    <button class="btn-primary" (click)="goBack()">{{ 'rcPermissions.returnToRcSelection' | translate }}</button>
   </div>
 </div>

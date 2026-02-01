@@ -7,7 +7,7 @@
   <!-- Action Bar -->
   <div class="action-bar">
     <button class="btn btn-primary" (click)="showCreate()" *ngIf="canWrite && !showCreateForm" [disabled]="categories.length === 0">
-      + Add Spending Item
+      + {{ 'spending.addItem' | translate }}
     </button>
   </div>
 
@@ -27,9 +27,9 @@
       <button 
         class="btn-toggle-filters" 
         (click)="toggleFilters()"
-        [title]="filtersExpanded ? 'Collapse filters' : 'Expand filters'">
+        [title]="filtersExpanded ? ('common.hideFilters' | translate) : ('common.showFilters' | translate)">
         <span class="toggle-icon" [class.collapsed]="!filtersExpanded">▼</span>
-        <span class="toggle-label">{{ filtersExpanded ? 'Hide Filters' : 'Show Filters' }}</span>
+        <span class="toggle-label">{{ filtersExpanded ? ('common.hideFilters' | translate) : ('common.showFilters' | translate) }}</span>
       </button>
     </div>
     <div class="filters-content" *ngIf="filtersExpanded">
@@ -38,26 +38,26 @@
         <input
           type="text"
           [(ngModel)]="searchTerm"
-          placeholder="Search spending items..."
+          [placeholder]="'spending.searchPlaceholder' | translate"
           class="search-input"
         />
         <button 
           class="btn-clear" 
           *ngIf="searchTerm" 
           (click)="clearSearch()"
-          title="Clear search">
+          [title]="'common.clearSearch' | translate">
           ✕
         </button>
       </div>
 
       <!-- Category Filter -->
       <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
-        <span class="filter-label">Category:</span>
+        <span class="filter-label">{{ 'common.category' | translate }}:</span>
         <button 
           class="filter-btn"
           [class.active]="selectedCategoryId === null"
           (click)="filterByCategory(null)">
-          All
+          {{ 'common.all' | translate }}
         </button>
         <button 
           *ngFor="let category of categories"
@@ -73,20 +73,20 @@
   <!-- Create Form -->
   <div class="create-form-container" *ngIf="showCreateForm">
     <div class="create-form">
-      <h2>New Spending Item</h2>
+      <h2>{{ 'spending.createNewItem' | translate }}</h2>
       
       <div class="form-row">
         <div class="form-group">
-          <label for="name">Name *</label>
+          <label for="name">{{ 'common.name' | translate }} *</label>
           <input 
             type="text" 
             id="name" 
             [(ngModel)]="newItemName"
-            placeholder="Enter spending item name"
+            [placeholder]="'spending.enterItemName' | translate"
             class="form-control">
         </div>
         <div class="form-group">
-          <label for="category">Category *</label>
+          <label for="category">{{ 'common.category' | translate }} *</label>
           <select id="category" [(ngModel)]="newItemCategoryId" (ngModelChange)="onCategoryChange()" class="form-control">
             <option *ngFor="let category of categories" [ngValue]="category.id">
               {{ category.name }}
@@ -96,39 +96,39 @@
       </div>
 
       <div class="form-group">
-        <label for="description">Description</label>
+        <label for="description">{{ 'common.description' | translate }}</label>
         <textarea 
           id="description" 
           [(ngModel)]="newItemDescription"
-          placeholder="Enter description"
+          [placeholder]="'spending.enterDescription' | translate"
           class="form-control"
           rows="2"></textarea>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label for="vendor">Vendor</label>
+          <label for="vendor">{{ 'spending.vendor' | translate }}</label>
           <input 
             type="text" 
             id="vendor" 
             [(ngModel)]="newItemVendor"
-            placeholder="Vendor name"
+            [placeholder]="'spending.vendorName' | translate"
             class="form-control">
         </div>
         <div class="form-group">
-          <label for="referenceNumber">Reference Number</label>
+          <label for="referenceNumber">{{ 'spending.referenceNumber' | translate }}</label>
           <input 
             type="text" 
             id="referenceNumber" 
             [(ngModel)]="newItemReferenceNumber"
-            placeholder="PO/Invoice #"
+            [placeholder]="'spending.poInvoice' | translate"
             class="form-control">
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label for="status">Status</label>
+          <label for="status">{{ 'common.status' | translate }}</label>
           <select id="status" [(ngModel)]="newItemStatus" class="form-control">
             <option *ngFor="let status of statusOptions" [value]="status">
               {{ getStatusLabel(status) }}
@@ -136,7 +136,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label for="currency">Currency</label>
+          <label for="currency">{{ 'spending.currency' | translate }}</label>
           <select id="currency" [(ngModel)]="newItemCurrency" class="form-control">
             <option *ngFor="let currency of currencies" [value]="currency.code">
               {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
@@ -144,12 +144,12 @@
           </select>
         </div>
         <div class="form-group" *ngIf="newItemCurrency !== 'CAD'">
-          <label for="exchangeRate">Exchange Rate</label>
+          <label for="exchangeRate">{{ 'spending.exchangeRate' | translate }}</label>
           <input 
             type="number" 
             id="exchangeRate" 
             [(ngModel)]="newItemExchangeRate"
-            placeholder="Rate to CAD"
+            [placeholder]="'spending.rateToCad' | translate"
             step="0.0001"
             min="0"
             class="form-control">
@@ -158,26 +158,26 @@
 
       <!-- Money Allocations -->
       <div class="money-allocations-section">
-        <h3>Money Allocations</h3>
+        <h3>{{ 'spending.moneyAllocations' | translate }}</h3>
         <p class="allocation-hint">
           <span class="info-icon">ℹ️</span>
           <ng-container *ngIf="selectedCategoryAllowsCap() && selectedCategoryAllowsOm()">
-            At least one money type must have a CAP or OM amount greater than $0.00
+            {{ 'spending.allocationRequired' | translate }}
           </ng-container>
           <ng-container *ngIf="selectedCategoryAllowsCap() && !selectedCategoryAllowsOm()">
-            This category allows <strong>Capital (CAP) only</strong>. At least one CAP amount must be greater than $0.00
+            {{ 'spending.capOnlyHint' | translate }}
           </ng-container>
           <ng-container *ngIf="!selectedCategoryAllowsCap() && selectedCategoryAllowsOm()">
-            This category allows <strong>O&M only</strong>. At least one OM amount must be greater than $0.00
+            {{ 'spending.omOnlyHint' | translate }}
           </ng-container>
         </p>
         <div class="allocations-table">
           <table>
             <thead>
               <tr>
-                <th>Money Type</th>
-                <th *ngIf="selectedCategoryAllowsCap()">CAP Amount</th>
-                <th *ngIf="selectedCategoryAllowsOm()">OM Amount</th>
+                <th>{{ 'spending.moneyType' | translate }}</th>
+                <th *ngIf="selectedCategoryAllowsCap()">{{ 'spending.capAmount' | translate }}</th>
+                <th *ngIf="selectedCategoryAllowsOm()">{{ 'spending.omAmount' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -208,12 +208,12 @@
       </div>
 
       <div class="form-actions">
-        <button class="btn btn-secondary" (click)="cancelCreate()">Cancel</button>
+        <button class="btn btn-secondary" (click)="cancelCreate()">{{ 'common.cancel' | translate }}</button>
         <button 
           class="btn btn-primary" 
           (click)="createSpendingItem()"
           [disabled]="!newItemName.trim() || !newItemCategoryId || isCreating || !hasValidMoneyAllocation()">
-          {{ isCreating ? 'Creating...' : 'Create Spending Item' }}
+          {{ isCreating ? ('common.creating' | translate) : ('spending.createItem' | translate) }}
         </button>
       </div>
     </div>
@@ -222,322 +222,340 @@
   <!-- Loading State -->
   <div class="loading" *ngIf="isLoadingItems">
     <div class="loading-spinner"></div>
-    <p>Loading spending items...</p>
+    <p>{{ 'spending.loadingItems' | translate }}</p>
   </div>
 
   <!-- Empty State - No items match filter -->
   <div class="empty-state" *ngIf="!isLoadingItems && spendingItems.length > 0 && filteredSpendingItems.length === 0 && !showCreateForm">
     <div class="empty-icon">🔍</div>
-    <h3>No Matching Items</h3>
-    <p>No spending items match the current filter(s). Try adjusting your search or category filter.</p>
+    <h3>{{ 'spending.noMatchingItems' | translate }}</h3>
+    <p>{{ 'spending.noMatchingItemsHint' | translate }}</p>
     <button class="btn btn-secondary" (click)="clearSearch(); selectedCategoryId = null">
-      Clear Filters
+      {{ 'common.clearFilters' | translate }}
     </button>
   </div>
 
   <!-- Empty State - No items exist -->
   <div class="empty-state" *ngIf="!isLoadingItems && spendingItems.length === 0 && !showCreateForm">
     <div class="empty-icon">💰</div>
-    <h3>No Spending Items Yet</h3>
-    <p>Get started by creating your first spending item for this fiscal year.</p>
+    <h3>{{ 'spending.noItemsYet' | translate }}</h3>
+    <p>{{ 'spending.noItemsHint' | translate }}</p>
     <button class="btn btn-primary" (click)="showCreate()" *ngIf="canWrite && categories.length > 0">
-      Create First Spending Item
+      {{ 'spending.createFirstItem' | translate }}
     </button>
     <p class="hint" *ngIf="categories.length === 0">
-      Configure spending categories first in the Configuration page.
+      {{ 'spending.configureCategoriesFirst' | translate }}
     </p>
   </div>
 
-  <!-- Spending Items List -->
-  <div class="items-list" *ngIf="!isLoadingItems && filteredSpendingItems.length > 0">
-    <div class="item-card" *ngFor="let item of filteredSpendingItems" [class.expanded]="expandedItemId === item.id">
-      <!-- Item Summary Row -->
-      <div class="item-summary" (click)="toggleItemDetails(item)">
-        <div class="item-info">
-          <span class="item-name">{{ item.name }}</span>
-          <span class="category-badge" *ngIf="item.categoryName">{{ item.categoryName }}</span>
-          <span class="status-badge" [ngClass]="getStatusClass(item.status)">
-            {{ getStatusLabel(item.status) }}
-          </span>
-          <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
-            {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
-          </span>
-          <span class="total-amount">{{ formatCurrency(calculateTotal(item), item.currency) }}</span>
-        </div>
-        <div class="item-actions">
-          <button
-            class="btn-icon expand-btn"
-            [title]="expandedItemId === item.id ? 'Collapse' : 'Expand'"
-            (click)="toggleItemDetails(item); $event.stopPropagation()"
-          >
-            {{ expandedItemId === item.id ? '▲' : '▼' }}
-          </button>
-          <button
-            class="btn-icon btn-edit"
-            title="Edit"
-            *ngIf="canWrite && editingItemId !== item.id"
-            (click)="startEditSpendingItem(item); $event.stopPropagation()"
-          >
-            ✏️
-          </button>
-          <button
-            class="btn-icon btn-delete"
-            title="Delete"
-            *ngIf="canWrite"
-            (click)="deleteSpendingItem(item); $event.stopPropagation()"
-          >
-            🗑️
-          </button>
-        </div>
+  <!-- Spending Items List - Grouped by Category -->
+  <div class="items-list grouped" *ngIf="!isLoadingItems && filteredSpendingItems.length > 0 && selectedFY?.groupByCategory">
+    <ng-container *ngFor="let group of groupedSpendingItems; trackBy: trackByGroupName">
+      <div class="category-group-header">
+        <span class="category-group-name">{{ group.categoryName }}</span>
+        <span class="category-group-count">({{ group.items.length }} {{ group.items.length === 1 ? ('common.item' | translate) : ('common.items' | translate) }})</span>
       </div>
-
-      <!-- Expanded Details Section -->
-      <div class="item-details" *ngIf="expandedItemId === item.id">
-        <!-- View Mode -->
-        <div class="details-content" *ngIf="editingItemId !== item.id">
-          <div class="info-grid">
-            <div class="info-item" *ngIf="item.description">
-              <label>Description</label>
-              <span>{{ item.description }}</span>
-            </div>
-            <div class="info-item" *ngIf="item.vendor">
-              <label>Vendor</label>
-              <span>{{ item.vendor }}</span>
-            </div>
-            <div class="info-item" *ngIf="item.referenceNumber">
-              <label>Reference Number</label>
-              <span>{{ item.referenceNumber }}</span>
-            </div>
-            <div class="info-item" *ngIf="item.currency !== 'CAD' && item.exchangeRate">
-              <label>Exchange Rate</label>
-              <span>1 {{ item.currency }} = {{ item.exchangeRate }} CAD</span>
-            </div>
-          </div>
-          <!-- Money Allocations -->
-          <div class="money-section" *ngIf="item.moneyAllocations && item.moneyAllocations.length > 0">
-            <label>Money Allocations</label>
-            <div class="money-grid">
-              <div class="money-row" *ngFor="let allocation of item.moneyAllocations">
-                <span class="money-label">{{ allocation.moneyName || 'AB' }}:</span>
-                <span class="money-amounts">
-                  <ng-container *ngIf="categoryAllowsCapById(item.categoryId)">
-                    CAP: {{ formatCurrency(allocation.capAmount, item.currency) }}
-                  </ng-container>
-                  <ng-container *ngIf="categoryAllowsCapById(item.categoryId) && categoryAllowsOmById(item.categoryId)">, </ng-container>
-                  <ng-container *ngIf="categoryAllowsOmById(item.categoryId)">
-                    OM: {{ formatCurrency(allocation.omAmount, item.currency) }}
-                  </ng-container>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Edit Mode -->
-        <div class="edit-form" *ngIf="editingItemId === item.id">
-          <h4>Edit Spending Item</h4>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="editItemName">Name <span class="required">*</span></label>
-              <input
-                id="editItemName"
-                type="text"
-                [(ngModel)]="editItemName"
-                placeholder="Enter item name"
-                [disabled]="isUpdating"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="editItemDescription">Description</label>
-              <input
-                id="editItemDescription"
-                type="text"
-                [(ngModel)]="editItemDescription"
-                placeholder="Optional description"
-                [disabled]="isUpdating"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="editItemVendor">Vendor</label>
-              <input
-                id="editItemVendor"
-                type="text"
-                [(ngModel)]="editItemVendor"
-                placeholder="Vendor name"
-                [disabled]="isUpdating"
-              />
-            </div>
-            <div class="form-group">
-              <label for="editItemReferenceNumber">Reference Number</label>
-              <input
-                id="editItemReferenceNumber"
-                type="text"
-                [(ngModel)]="editItemReferenceNumber"
-                placeholder="Reference number"
-                [disabled]="isUpdating"
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="editItemCurrency">Currency</label>
-              <div class="currency-selector">
-                <span class="currency-flag">{{ getCurrencyFlag(editItemCurrency) }}</span>
-                <select id="editItemCurrency" [(ngModel)]="editItemCurrency" [disabled]="isUpdating"
-                        (change)="onEditCurrencyChange()">
-                  <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
-                  <option value="USD">🇺🇸 USD - US Dollar</option>
-                  <option value="EUR">🇪🇺 EUR - Euro</option>
-                  <option value="GBP">🇬🇧 GBP - British Pound</option>
-                  <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
-                  <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
-                  <option value="CHF">🇨🇭 CHF - Swiss Franc</option>
-                  <option value="CNY">🇨🇳 CNY - Chinese Yuan</option>
-                  <option value="INR">🇮🇳 INR - Indian Rupee</option>
-                  <option value="MXN">🇲🇽 MXN - Mexican Peso</option>
-                  <option value="BRL">🇧🇷 BRL - Brazilian Real</option>
-                  <option value="KRW">🇰🇷 KRW - South Korean Won</option>
-                  <option value="SGD">🇸🇬 SGD - Singapore Dollar</option>
-                  <option value="HKD">🇭🇰 HKD - Hong Kong Dollar</option>
-                  <option value="NZD">🇳🇿 NZD - New Zealand Dollar</option>
-                  <option value="SEK">🇸🇪 SEK - Swedish Krona</option>
-                  <option value="NOK">🇳🇴 NOK - Norwegian Krone</option>
-                  <option value="DKK">🇩🇰 DKK - Danish Krone</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group" *ngIf="editItemCurrency !== 'CAD'">
-              <label for="editItemExchangeRate">Exchange Rate <span class="required">*</span></label>
-              <div class="exchange-rate-field">
-                1 {{ editItemCurrency }} = 
-                <input
-                  id="editItemExchangeRate"
-                  type="number"
-                  [(ngModel)]="editItemExchangeRate"
-                  placeholder="Enter exchange rate"
-                  [disabled]="isUpdating"
-                  step="0.000001"
-                  min="0.000001"
-                  class="exchange-rate-input"
-                /> CAD
-              </div>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="editItemStatus">Status <span class="required">*</span></label>
-              <select id="editItemStatus" [(ngModel)]="editItemStatus" [disabled]="isUpdating" required>
-                <option *ngFor="let status of statusOptions" [value]="status">
-                  {{ getStatusLabel(status) }}
-                </option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="editItemCategory">Category</label>
-              <select 
-                id="editItemCategory" 
-                [(ngModel)]="editItemCategoryId" 
-                [disabled]="isUpdating || isLoadingCategories"
-              >
-                <option [ngValue]="null">-- No Category --</option>
-                <option *ngFor="let category of categories" [ngValue]="category.id">
-                  {{ category.name }}
-                </option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Edit Money Allocations -->
-          <div class="money-allocations" *ngIf="editItemMoneyAllocations && editItemMoneyAllocations.length > 0">
-            <h4>Money Allocations</h4>
-            <p class="allocation-hint">
-              <ng-container *ngIf="editCategoryAllowsCap() && editCategoryAllowsOm()">
-                Enter spending amounts for each money type. 
-                <strong>At least one money type must have a CAP or OM amount greater than $0.00.</strong>
-              </ng-container>
-              <ng-container *ngIf="editCategoryAllowsCap() && !editCategoryAllowsOm()">
-                This category allows <strong>Capital (CAP) only</strong>. At least one CAP amount must be greater than $0.00.
-              </ng-container>
-              <ng-container *ngIf="!editCategoryAllowsCap() && editCategoryAllowsOm()">
-                This category allows <strong>O&M only</strong>. At least one OM amount must be greater than $0.00.
-              </ng-container>
-            </p>
-            <div class="allocations-grid">
-              <div class="allocation-row" *ngFor="let allocation of editItemMoneyAllocations; let i = index" [class.is-default]="allocation.isDefault">
-                <div class="allocation-header">
-                  <span class="money-code">{{ allocation.moneyName }}</span>
-                </div>
-                <div class="allocation-inputs">
-                  <div class="allocation-field" *ngIf="editCategoryAllowsCap()">
-                    <label [for]="'edit-cap-' + i">{{ allocation.moneyName }} (CAP)</label>
-                    <input
-                      [id]="'edit-cap-' + i"
-                      type="number"
-                      [(ngModel)]="allocation.capAmount"
-                      placeholder="0.00"
-                      [disabled]="isUpdating"
-                      step="0.01"
-                      min="0"
-                      class="money-input"
-                    />
-                  </div>
-                  <div class="allocation-field" *ngIf="editCategoryAllowsOm()">
-                    <label [for]="'edit-om-' + i">{{ allocation.moneyName }} (O&M)</label>
-                    <input
-                      [id]="'edit-om-' + i"
-                      type="number"
-                      [(ngModel)]="allocation.omAmount"
-                      placeholder="0.00"
-                      [disabled]="isUpdating"
-                      step="0.01"
-                      min="0"
-                      class="money-input"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button 
-              class="btn-secondary" 
-              (click)="cancelEditSpendingItem()"
-              [disabled]="isUpdating"
-            >
-              Cancel
-            </button>
-            <button 
-              class="btn-primary" 
-              (click)="updateSpendingItem()"
-              [disabled]="isUpdating || !editItemName.trim() || !hasValidEditMoneyAllocation()"
-            >
-              <span *ngIf="isUpdating">Updating...</span>
-              <span *ngIf="!isUpdating">Update Item</span>
-            </button>
-          </div>
-        </div>
+      <div class="item-card" *ngFor="let item of group.items; trackBy: trackByItemId" [class.expanded]="expandedItemId === item.id">
+        <ng-container *ngTemplateOutlet="spendingItemCardTemplate; context: { item: item }"></ng-container>
       </div>
+    </ng-container>
+  </div>
+
+  <!-- Spending Items List - Flat View (no grouping) -->
+  <div class="items-list" *ngIf="!isLoadingItems && filteredSpendingItems.length > 0 && !selectedFY?.groupByCategory">
+    <div class="item-card" *ngFor="let item of filteredSpendingItems; trackBy: trackByItemId" [class.expanded]="expandedItemId === item.id">
+      <ng-container *ngTemplateOutlet="spendingItemCardTemplate; context: { item: item }"></ng-container>
     </div>
   </div>
 
+  <!-- Spending Item Card Template (reused for both grouped and flat views) -->
+  <ng-template #spendingItemCardTemplate let-item="item">
+    <!-- Item Summary Row -->
+    <div class="item-summary" (click)="toggleItemDetails(item)">
+      <div class="item-info">
+        <span class="item-name">{{ item.name }}</span>
+        <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">{{ item.categoryName }}</span>
+        <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+          {{ getStatusLabel(item.status) }}
+        </span>
+        <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
+          {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
+        </span>
+        <span class="total-amount">{{ formatCurrency(calculateTotal(item), item.currency) }}</span>
+      </div>
+      <div class="item-actions">
+        <button
+          class="btn-icon expand-btn"
+          [title]="expandedItemId === item.id ? ('common.collapse' | translate) : ('common.expand' | translate)"
+          (click)="toggleItemDetails(item); $event.stopPropagation()"
+        >
+          {{ expandedItemId === item.id ? '▲' : '▼' }}
+        </button>
+        <button
+          class="btn-icon btn-edit"
+          [title]="'common.edit' | translate"
+          *ngIf="canWrite && editingItemId !== item.id"
+          (click)="startEditSpendingItem(item); $event.stopPropagation()"
+        >
+          ✏️
+        </button>
+        <button
+          class="btn-icon btn-delete"
+          [title]="'common.delete' | translate"
+          *ngIf="canWrite"
+          (click)="deleteSpendingItem(item); $event.stopPropagation()"
+        >
+          🗑️
+        </button>
+      </div>
+    </div>
+
+    <!-- Expanded Details Section -->
+    <div class="item-details" *ngIf="expandedItemId === item.id">
+      <!-- View Mode -->
+      <div class="details-content" *ngIf="editingItemId !== item.id">
+        <div class="info-grid">
+          <div class="info-item" *ngIf="item.description">
+            <label>{{ 'common.description' | translate }}</label>
+            <span>{{ item.description }}</span>
+          </div>
+          <div class="info-item" *ngIf="item.vendor">
+            <label>{{ 'spending.vendor' | translate }}</label>
+            <span>{{ item.vendor }}</span>
+          </div>
+          <div class="info-item" *ngIf="item.referenceNumber">
+            <label>{{ 'spending.referenceNumber' | translate }}</label>
+            <span>{{ item.referenceNumber }}</span>
+          </div>
+          <div class="info-item" *ngIf="item.currency !== 'CAD' && item.exchangeRate">
+            <label>{{ 'spending.exchangeRate' | translate }}</label>
+            <span>1 {{ item.currency }} = {{ item.exchangeRate }} CAD</span>
+          </div>
+        </div>
+        <!-- Money Allocations -->
+        <div class="money-section" *ngIf="item.moneyAllocations && item.moneyAllocations.length > 0">
+          <label>{{ 'spending.moneyAllocations' | translate }}</label>
+          <div class="money-grid">
+            <div class="money-row" *ngFor="let allocation of item.moneyAllocations">
+              <span class="money-label">{{ allocation.moneyName || 'AB' }}:</span>
+              <span class="money-amounts">
+                <ng-container *ngIf="categoryAllowsCapById(item.categoryId)">
+                  CAP: {{ formatCurrency(allocation.capAmount, item.currency) }}
+                </ng-container>
+                <ng-container *ngIf="categoryAllowsCapById(item.categoryId) && categoryAllowsOmById(item.categoryId)">, </ng-container>
+                <ng-container *ngIf="categoryAllowsOmById(item.categoryId)">
+                  OM: {{ formatCurrency(allocation.omAmount, item.currency) }}
+                </ng-container>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Mode -->
+      <div class="edit-form" *ngIf="editingItemId === item.id">
+        <h4>{{ 'spending.editItem' | translate }}</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editItemName">{{ 'common.name' | translate }} <span class="required">*</span></label>
+            <input
+              id="editItemName"
+              type="text"
+              [(ngModel)]="editItemName"
+              [placeholder]="'spending.enterItemName' | translate"
+              [disabled]="isUpdating"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="editItemDescription">{{ 'common.description' | translate }}</label>
+            <input
+              id="editItemDescription"
+              type="text"
+              [(ngModel)]="editItemDescription"
+              [placeholder]="'spending.optionalDescription' | translate"
+              [disabled]="isUpdating"
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editItemVendor">{{ 'spending.vendor' | translate }}</label>
+            <input
+              id="editItemVendor"
+              type="text"
+              [(ngModel)]="editItemVendor"
+              [placeholder]="'spending.vendorName' | translate"
+              [disabled]="isUpdating"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editItemReferenceNumber">{{ 'spending.referenceNumber' | translate }}</label>
+            <input
+              id="editItemReferenceNumber"
+              type="text"
+              [(ngModel)]="editItemReferenceNumber"
+              [placeholder]="'spending.referenceNumber' | translate"
+              [disabled]="isUpdating"
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editItemCurrency">{{ 'spending.currency' | translate }}</label>
+            <div class="currency-selector">
+              <span class="currency-flag">{{ getCurrencyFlag(editItemCurrency) }}</span>
+              <select id="editItemCurrency" [(ngModel)]="editItemCurrency" [disabled]="isUpdating"
+                      (change)="onEditCurrencyChange()">
+                <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
+                <option value="USD">🇺🇸 USD - US Dollar</option>
+                <option value="EUR">🇪🇺 EUR - Euro</option>
+                <option value="GBP">🇬🇧 GBP - British Pound</option>
+                <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
+                <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
+                <option value="CHF">🇨🇭 CHF - Swiss Franc</option>
+                <option value="CNY">🇨🇳 CNY - Chinese Yuan</option>
+                <option value="INR">🇮🇳 INR - Indian Rupee</option>
+                <option value="MXN">🇲🇽 MXN - Mexican Peso</option>
+                <option value="BRL">🇧🇷 BRL - Brazilian Real</option>
+                <option value="KRW">🇰🇷 KRW - South Korean Won</option>
+                <option value="SGD">🇸🇬 SGD - Singapore Dollar</option>
+                <option value="HKD">🇭🇰 HKD - Hong Kong Dollar</option>
+                <option value="NZD">🇳🇿 NZD - New Zealand Dollar</option>
+                <option value="SEK">🇸🇪 SEK - Swedish Krona</option>
+                <option value="NOK">🇳🇴 NOK - Norwegian Krone</option>
+                <option value="DKK">🇩🇰 DKK - Danish Krone</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group" *ngIf="editItemCurrency !== 'CAD'">
+            <label for="editItemExchangeRate">{{ 'spending.exchangeRate' | translate }} <span class="required">*</span></label>
+            <div class="exchange-rate-field">
+              1 {{ editItemCurrency }} = 
+              <input
+                id="editItemExchangeRate"
+                type="number"
+                [(ngModel)]="editItemExchangeRate"
+                [placeholder]="'spending.enterExchangeRate' | translate"
+                [disabled]="isUpdating"
+                step="0.000001"
+                min="0.000001"
+                class="exchange-rate-input"
+              /> CAD
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editItemStatus">{{ 'common.status' | translate }} <span class="required">*</span></label>
+            <select id="editItemStatus" [(ngModel)]="editItemStatus" [disabled]="isUpdating" required>
+              <option *ngFor="let status of statusOptions" [value]="status">
+                {{ getStatusLabel(status) }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editItemCategory">{{ 'common.category' | translate }}</label>
+            <select 
+              id="editItemCategory" 
+              [(ngModel)]="editItemCategoryId" 
+              [disabled]="isUpdating || isLoadingCategories"
+            >
+              <option [ngValue]="null">-- {{ 'spending.noCategory' | translate }} --</option>
+              <option *ngFor="let category of categories" [ngValue]="category.id">
+                {{ category.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Edit Money Allocations -->
+        <div class="money-allocations" *ngIf="editItemMoneyAllocations && editItemMoneyAllocations.length > 0">
+          <h4>{{ 'spending.moneyAllocations' | translate }}</h4>
+          <p class="allocation-hint">
+            <ng-container *ngIf="editCategoryAllowsCap() && editCategoryAllowsOm()">
+              {{ 'spending.allocationHint' | translate }}
+              <strong>{{ 'spending.allocationRequired' | translate }}</strong>
+            </ng-container>
+            <ng-container *ngIf="editCategoryAllowsCap() && !editCategoryAllowsOm()">
+              {{ 'spending.capOnlyHint' | translate }}
+            </ng-container>
+            <ng-container *ngIf="!editCategoryAllowsCap() && editCategoryAllowsOm()">
+              {{ 'spending.omOnlyHint' | translate }}
+            </ng-container>
+          </p>
+          <div class="allocations-grid">
+            <div class="allocation-row" *ngFor="let allocation of editItemMoneyAllocations; let i = index" [class.is-default]="allocation.isDefault">
+              <div class="allocation-header">
+                <span class="money-code">{{ allocation.moneyName }}</span>
+              </div>
+              <div class="allocation-inputs">
+                <div class="allocation-field" *ngIf="editCategoryAllowsCap()">
+                  <label [for]="'edit-cap-' + i">{{ allocation.moneyName }} (CAP)</label>
+                  <input
+                    [id]="'edit-cap-' + i"
+                    type="number"
+                    [(ngModel)]="allocation.capAmount"
+                    placeholder="0.00"
+                    [disabled]="isUpdating"
+                    step="0.01"
+                    min="0"
+                    class="money-input"
+                  />
+                </div>
+                <div class="allocation-field" *ngIf="editCategoryAllowsOm()">
+                  <label [for]="'edit-om-' + i">{{ allocation.moneyName }} (O&M)</label>
+                  <input
+                    [id]="'edit-om-' + i"
+                    type="number"
+                    [(ngModel)]="allocation.omAmount"
+                    placeholder="0.00"
+                    [disabled]="isUpdating"
+                    step="0.01"
+                    min="0"
+                    class="money-input"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button 
+            class="btn-secondary" 
+            (click)="cancelEditSpendingItem()"
+            [disabled]="isUpdating"
+          >
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button 
+            class="btn-primary" 
+            (click)="updateSpendingItem()"
+            [disabled]="isUpdating || !editItemName.trim() || !hasValidEditMoneyAllocation()"
+          >
+            <span *ngIf="isUpdating">{{ 'common.updating' | translate }}</span>
+            <span *ngIf="!isUpdating">{{ 'spending.updateItem' | translate }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
   <!-- Summary Section -->
   <div class="summary-section" *ngIf="spendingItems.length > 0">
-    <h3>Summary</h3>
+    <h3>{{ 'common.summary' | translate }}</h3>
     
     <!-- Summary by Money Type -->
     <div class="summary-group">
-      <h4>Totals by Money Type</h4>
+      <h4>{{ 'spending.totalsByMoneyType' | translate }}</h4>
       <table class="summary-table">
         <thead>
           <tr>
-            <th>Money Type</th>
-            <th>Total CAP</th>
-            <th>Total OM</th>
-            <th>Total</th>
+            <th>{{ 'spending.moneyType' | translate }}</th>
+            <th>{{ 'spending.totalCap' | translate }}</th>
+            <th>{{ 'spending.totalOm' | translate }}</th>
+            <th>{{ 'common.total' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -553,14 +571,14 @@
     
     <!-- Summary by Category -->
     <div class="summary-group" *ngIf="summaryByCategory.length > 0">
-      <h4>Totals by Category</h4>
+      <h4>{{ 'spending.totalsByCategory' | translate }}</h4>
       <table class="summary-table">
         <thead>
           <tr>
-            <th>Category</th>
-            <th>Total CAP</th>
-            <th>Total OM</th>
-            <th>Total</th>
+            <th>{{ 'common.category' | translate }}</th>
+            <th>{{ 'spending.totalCap' | translate }}</th>
+            <th>{{ 'spending.totalOm' | translate }}</th>
+            <th>{{ 'common.total' | translate }}</th>
           </tr>
         </thead>
         <tbody>
@@ -579,7 +597,7 @@
       <table class="summary-table">
         <tbody>
           <tr class="grand-total-row">
-            <td><strong>Grand Total (All Spending Items)</strong></td>
+            <td><strong>{{ 'spending.grandTotal' | translate }}</strong></td>
             <td class="amount"><strong>{{ formatCurrency(grandTotalCap) }}</strong></td>
             <td class="amount"><strong>{{ formatCurrency(grandTotalOm) }}</strong></td>
             <td class="amount total"><strong>{{ formatCurrency(grandTotal) }}</strong></td>

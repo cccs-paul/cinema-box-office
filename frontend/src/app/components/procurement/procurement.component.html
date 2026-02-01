@@ -7,7 +7,7 @@
   <!-- Action Bar -->
   <div class="action-bar" *ngIf="canWrite && !showCreateItemForm">
     <button class="btn btn-primary" (click)="showCreateItem()">
-      + Add Procurement Item
+      + {{ 'procurement.addItem' | translate }}
     </button>
   </div>
 
@@ -31,9 +31,9 @@
           <button 
             class="btn-toggle-filters" 
             (click)="toggleFilters()"
-            [title]="filtersExpanded ? 'Collapse filters' : 'Expand filters'">
+            [title]="(filtersExpanded ? 'procurement.hideFilters' : 'procurement.showFilters') | translate">
             <span class="toggle-icon" [class.collapsed]="!filtersExpanded">▼</span>
-            <span class="toggle-label">{{ filtersExpanded ? 'Hide Filters' : 'Show Filters' }}</span>
+            <span class="toggle-label">{{ (filtersExpanded ? 'procurement.hideFilters' : 'procurement.showFilters') | translate }}</span>
           </button>
         </div>
         <div class="filters-content" *ngIf="filtersExpanded">
@@ -42,20 +42,20 @@
             <input
               type="text"
               [(ngModel)]="searchTerm"
-              placeholder="Search by PR, PO, name, vendor..."
+              [placeholder]="'procurement.searchPlaceholder' | translate"
               class="search-input"
             />
             <button 
               class="btn-clear" 
               *ngIf="searchTerm" 
               (click)="clearSearch()"
-              title="Clear search">
+              [title]="'common.clear' | translate">
               ✕
             </button>
           </div>
           <div class="filter-dropdown">
             <select [(ngModel)]="selectedStatusFilter" (change)="filterByStatus(selectedStatusFilter)">
-              <option [ngValue]="null">All Statuses</option>
+              <option [ngValue]="null">{{ 'procurement.allStatuses' | translate }}</option>
               <option *ngFor="let status of statusOptions" [ngValue]="status">
                 {{ getStatusLabel(status) }}
               </option>
@@ -64,12 +64,12 @@
 
           <!-- Category Filter -->
           <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
-            <span class="filter-label">Category:</span>
+            <span class="filter-label">{{ 'common.category' | translate }}:</span>
             <button 
               class="filter-btn"
               [class.active]="selectedCategoryId === null"
               (click)="filterByCategory(null)">
-              All
+              {{ 'common.all' | translate }}
             </button>
             <button 
               *ngFor="let category of categories"
@@ -84,47 +84,47 @@
 
       <!-- Create Item Form -->
       <div class="create-form" *ngIf="showCreateItemForm">
-        <h3>Create Procurement Item</h3>
+        <h3>{{ 'procurement.createTitle' | translate }}</h3>
         <form (ngSubmit)="createProcurementItem()">
           <div class="form-row">
             <div class="form-group">
-              <label for="newItemPR">Purchase Requisition (PR) *</label>
+              <label for="newItemPR">{{ 'procurement.purchaseRequisition' | translate }} *</label>
               <input
                 type="text"
                 id="newItemPR"
                 [(ngModel)]="newItemPR"
                 name="newItemPR"
                 required
-                placeholder="e.g., PR-2026-001"
+                [placeholder]="'procurement.enterPrPlaceholder' | translate"
               />
             </div>
             <div class="form-group">
-              <label for="newItemPO">Purchase Order (PO)</label>
+              <label for="newItemPO">{{ 'procurement.purchaseOrder' | translate }}</label>
               <input
                 type="text"
                 id="newItemPO"
                 [(ngModel)]="newItemPO"
                 name="newItemPO"
-                placeholder="e.g., PO-2026-001"
+                [placeholder]="'procurement.enterPoPlaceholder' | translate"
               />
             </div>
           </div>
           <div class="form-group">
-            <label for="newItemName">Name *</label>
+            <label for="newItemName">{{ 'common.name' | translate }} *</label>
             <input
               type="text"
               id="newItemName"
               [(ngModel)]="newItemName"
               name="newItemName"
               required
-              placeholder="Brief name for this procurement"
+              [placeholder]="'procurement.enterName' | translate"
             />
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="newItemCategory">Category</label>
+              <label for="newItemCategory">{{ 'common.category' | translate }}</label>
               <select id="newItemCategory" [(ngModel)]="newItemCategoryId" name="newItemCategory">
-                <option [ngValue]="null">-- No Category --</option>
+                <option [ngValue]="null">-- {{ 'procurement.noCategory' | translate }} --</option>
                 <option *ngFor="let category of categories" [ngValue]="category.id">
                   {{ category.name }}
                 </option>
@@ -132,18 +132,18 @@
             </div>
           </div>
           <div class="form-group">
-            <label for="newItemDescription">Description</label>
+            <label for="newItemDescription">{{ 'common.description' | translate }}</label>
             <textarea
               id="newItemDescription"
               [(ngModel)]="newItemDescription"
               name="newItemDescription"
-              placeholder="Detailed description..."
+              [placeholder]="'procurement.enterDescription' | translate"
               rows="3"
             ></textarea>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="newItemCurrency">Currency</label>
+              <label for="newItemCurrency">{{ 'common.currency' | translate }}</label>
               <select id="newItemCurrency" [(ngModel)]="newItemCurrency" name="newItemCurrency">
                 <option *ngFor="let currency of currencies" [value]="currency.code">
                   {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
@@ -151,7 +151,7 @@
               </select>
             </div>
             <div class="form-group" *ngIf="newItemCurrency !== 'CAD'">
-              <label for="newItemExchangeRate">Exchange Rate to CAD</label>
+              <label for="newItemExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
               <input
                 type="number"
                 id="newItemExchangeRate"
@@ -159,7 +159,7 @@
                 name="newItemExchangeRate"
                 step="0.0001"
                 min="0"
-                placeholder="e.g., 1.35"
+                [placeholder]="'procurement.exchangeRatePlaceholder' | translate"
               />
             </div>
           </div>
@@ -167,29 +167,29 @@
           <!-- Contract & Vendor Fields -->
           <div class="form-row">
             <div class="form-group">
-              <label for="newItemPreferredVendor">Preferred Vendor</label>
+              <label for="newItemPreferredVendor">{{ 'procurement.preferredVendor' | translate }}</label>
               <input
                 type="text"
                 id="newItemPreferredVendor"
                 [(ngModel)]="newItemPreferredVendor"
                 name="newItemPreferredVendor"
-                placeholder="e.g., Acme Corp"
+                [placeholder]="'procurement.vendorPlaceholder' | translate"
               />
             </div>
             <div class="form-group">
-              <label for="newItemContractNumber">Contract Number</label>
+              <label for="newItemContractNumber">{{ 'procurement.contractNumber' | translate }}</label>
               <input
                 type="text"
                 id="newItemContractNumber"
                 [(ngModel)]="newItemContractNumber"
                 name="newItemContractNumber"
-                placeholder="e.g., CON-2026-001"
+                [placeholder]="'procurement.contractPlaceholder' | translate"
               />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="newItemContractStartDate">Contract Start Date</label>
+              <label for="newItemContractStartDate">{{ 'procurement.contractStartDate' | translate }}</label>
               <input
                 type="date"
                 id="newItemContractStartDate"
@@ -198,7 +198,7 @@
               />
             </div>
             <div class="form-group">
-              <label for="newItemContractEndDate">Contract End Date</label>
+              <label for="newItemContractEndDate">{{ 'procurement.contractEndDate' | translate }}</label>
               <input
                 type="date"
                 id="newItemContractEndDate"
@@ -215,10 +215,10 @@
                 [(ngModel)]="newItemProcurementCompleted"
                 name="newItemProcurementCompleted"
               />
-              <label for="newItemProcurementCompleted">Procurement Completed</label>
+              <label for="newItemProcurementCompleted">{{ 'procurement.procurementCompleted' | translate }}</label>
             </div>
             <div class="form-group" *ngIf="newItemProcurementCompleted">
-              <label for="newItemProcurementCompletedDate">Completion Date</label>
+              <label for="newItemProcurementCompletedDate">{{ 'procurement.completionDate' | translate }}</label>
               <input
                 type="date"
                 id="newItemProcurementCompletedDate"
@@ -229,13 +229,13 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn btn-secondary" (click)="cancelCreateItem()">Cancel</button>
+            <button type="button" class="btn btn-secondary" (click)="cancelCreateItem()">{{ 'common.cancel' | translate }}</button>
             <button
               type="submit"
               class="btn btn-primary"
               [disabled]="isCreatingItem || !newItemPR.trim() || !newItemName.trim()"
             >
-              {{ isCreatingItem ? 'Creating...' : 'Create' }}
+              {{ isCreatingItem ? ('procurement.creating' | translate) : ('common.create' | translate) }}
             </button>
           </div>
         </form>
@@ -244,66 +244,86 @@
       <!-- Items List -->
       <div class="items-list-container">
         <div class="loading" *ngIf="isLoadingItems">
-          <span class="spinner"></span> Loading...
+          <span class="spinner"></span> {{ 'common.loading' | translate }}
         </div>
 
-        <div class="items-list" *ngIf="!isLoadingItems && filteredProcurementItems.length > 0">
-          <div class="item-card" *ngFor="let item of filteredProcurementItems" [class.expanded]="selectedItem?.id === item.id">
-            <!-- Item Summary Row -->
-            <div class="item-summary" (click)="toggleItemDetails(item)">
-              <div class="item-info">
-                <span class="item-pr">{{ item.purchaseRequisition }}</span>
-                <span class="item-po" *ngIf="item.purchaseOrder">/ {{ item.purchaseOrder }}</span>
-                <span class="item-name">{{ item.name }}</span>
-                <span class="status-badge" [ngClass]="getStatusClass(item.status)">
-                  {{ getStatusLabel(item.status) }}
-                </span>
-                <span class="category-badge" *ngIf="item.categoryName">📁 {{ item.categoryName }}</span>
-                <span class="quotes-count">📋 {{ item.quoteCount || 0 }}</span>
-              </div>
-              <div class="item-actions">
-                <button
-                  class="btn-icon expand-btn"
-                  [title]="selectedItem?.id === item.id ? 'Collapse' : 'Expand'"
-                  (click)="toggleItemDetails(item); $event.stopPropagation()"
-                >
-                  {{ selectedItem?.id === item.id ? '▲' : '▼' }}
-                </button>
-                <button
-                  class="btn-icon btn-edit"
-                  title="Edit"
-                  *ngIf="canWrite && editingItemId !== item.id"
-                  (click)="startEditProcurementItem(item); $event.stopPropagation()"
-                >
-                  ✏️
-                </button>
-                <button
-                  class="btn-icon btn-danger"
-                  title="Delete"
-                  *ngIf="canWrite"
-                  (click)="deleteProcurementItem(item); $event.stopPropagation()"
-                >
-                  🗑️
-                </button>
-              </div>
+        <!-- Grouped View -->
+        <div class="items-list grouped" *ngIf="!isLoadingItems && filteredProcurementItems.length > 0 && selectedFY?.groupByCategory">
+          <ng-container *ngFor="let group of groupedProcurementItems; trackBy: trackByGroupName">
+            <div class="category-group-header">
+              <span class="category-group-name">{{ group.categoryName }}</span>
+              <span class="category-group-count">({{ group.items.length }} {{ group.items.length === 1 ? ('common.item' | translate) : ('common.items' | translate) }})</span>
             </div>
+            <div class="item-card" *ngFor="let item of group.items; trackBy: trackByItemId" [class.expanded]="selectedItem?.id === item.id">
+              <ng-container *ngTemplateOutlet="procurementItemTemplate; context: { item: item }"></ng-container>
+            </div>
+          </ng-container>
+        </div>
 
-            <!-- Expanded Details Section -->
-            <div class="item-details" *ngIf="selectedItem?.id === item.id">
+        <!-- Flat View -->
+        <div class="items-list" *ngIf="!isLoadingItems && filteredProcurementItems.length > 0 && !selectedFY?.groupByCategory">
+          <div class="item-card" *ngFor="let item of filteredProcurementItems; trackBy: trackByItemId" [class.expanded]="selectedItem?.id === item.id">
+            <ng-container *ngTemplateOutlet="procurementItemTemplate; context: { item: item }"></ng-container>
+          </div>
+        </div>
+
+        <!-- Procurement Item Template -->
+        <ng-template #procurementItemTemplate let-item="item">
+          <!-- Item Summary Row -->
+          <div class="item-summary" (click)="toggleItemDetails(item)">
+            <div class="item-info">
+              <span class="item-pr">{{ item.purchaseRequisition }}</span>
+              <span class="item-po" *ngIf="item.purchaseOrder">/ {{ item.purchaseOrder }}</span>
+              <span class="item-name">{{ item.name }}</span>
+              <span class="status-badge" [ngClass]="getStatusClass(item.status)">
+                {{ getStatusLabel(item.status) }}
+              </span>
+              <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">📁 {{ item.categoryName }}</span>
+              <span class="quotes-count">📋 {{ item.quoteCount || 0 }}</span>
+            </div>
+            <div class="item-actions">
+              <button
+                class="btn-icon expand-btn"
+                [title]="(selectedItem?.id === item.id ? 'common.collapse' : 'common.expand') | translate"
+                (click)="toggleItemDetails(item); $event.stopPropagation()"
+              >
+                {{ selectedItem?.id === item.id ? '▲' : '▼' }}
+              </button>
+              <button
+                class="btn-icon btn-edit"
+                [title]="'common.edit' | translate"
+                *ngIf="canWrite && editingItemId !== item.id"
+                (click)="startEditProcurementItem(item); $event.stopPropagation()"
+              >
+                ✏️
+              </button>
+              <button
+                class="btn-icon btn-danger"
+                [title]="'common.delete' | translate"
+                *ngIf="canWrite"
+                (click)="deleteProcurementItem(item); $event.stopPropagation()"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          <!-- Expanded Details Section -->
+          <div class="item-details" *ngIf="selectedItem?.id === item.id">
               <div class="details-content">
                 <!-- Item Info View Mode -->
                 <div class="info-section" *ngIf="editingItemId !== item.id">
                   <div class="info-grid">
                     <div class="info-item">
-                      <label>Purchase Requisition (PR)</label>
+                      <label>{{ 'procurement.purchaseRequisition' | translate }}</label>
                       <span>{{ item.purchaseRequisition }}</span>
                     </div>
                     <div class="info-item">
-                      <label>Purchase Order (PO)</label>
+                      <label>{{ 'procurement.purchaseOrder' | translate }}</label>
                       <span>{{ item.purchaseOrder || '-' }}</span>
                     </div>
                     <div class="info-item">
-                      <label>Currency</label>
+                      <label>{{ 'common.currency' | translate }}</label>
                       <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
                         {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
                       </span>
@@ -312,21 +332,21 @@
                       </span>
                     </div>
                     <div class="info-item">
-                      <label>Status</label>
+                      <label>{{ 'common.status' | translate }}</label>
                       <span class="status-badge" [ngClass]="getStatusClass(item.status)">
                         {{ getStatusLabel(item.status) }}
                       </span>
                     </div>
                     <div class="info-item" *ngIf="item.preferredVendor">
-                      <label>Preferred Vendor</label>
+                      <label>{{ 'procurement.preferredVendor' | translate }}</label>
                       <span>{{ item.preferredVendor }}</span>
                     </div>
                     <div class="info-item" *ngIf="item.contractNumber">
-                      <label>Contract Number</label>
+                      <label>{{ 'procurement.contractNumber' | translate }}</label>
                       <span>{{ item.contractNumber }}</span>
                     </div>
                     <div class="info-item" *ngIf="item.contractStartDate || item.contractEndDate">
-                      <label>Contract Period</label>
+                      <label>{{ 'procurement.contractPeriod' | translate }}</label>
                       <span>
                         {{ item.contractStartDate | date:'mediumDate' }}
                         <ng-container *ngIf="item.contractStartDate && item.contractEndDate"> - </ng-container>
@@ -334,74 +354,74 @@
                       </span>
                     </div>
                     <div class="info-item">
-                      <label>Procurement Completed</label>
+                      <label>{{ 'procurement.procurementCompleted' | translate }}</label>
                       <span class="completion-badge" [class.completed]="item.procurementCompleted">
-                        {{ item.procurementCompleted ? '✅ Yes' : '⏳ No' }}
+                        {{ item.procurementCompleted ? ('common.yes' | translate) + ' ✅' : ('common.no' | translate) + ' ⏳' }}
                       </span>
                       <span *ngIf="item.procurementCompleted && item.procurementCompletedDate" class="completion-date">
                         ({{ item.procurementCompletedDate | date:'mediumDate' }})
                       </span>
                     </div>
                     <div class="info-item">
-                      <label>Created</label>
+                      <label>{{ 'procurement.created' | translate }}</label>
                       <span>{{ item.createdAt | date:'medium' }}</span>
                     </div>
                   </div>
                   <div class="description" *ngIf="item.description">
-                    <label>Description</label>
+                    <label>{{ 'common.description' | translate }}</label>
                     <p>{{ item.description }}</p>
                   </div>
                 </div>
 
                 <!-- Edit Mode -->
                 <div class="edit-form" *ngIf="editingItemId === item.id">
-                  <h4>Edit Procurement Item</h4>
+                  <h4>{{ 'procurement.editTitle' | translate }}</h4>
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="editItemPR">Purchase Requisition (PR) <span class="required">*</span></label>
+                      <label for="editItemPR">{{ 'procurement.purchaseRequisition' | translate }} <span class="required">*</span></label>
                       <input
                         id="editItemPR"
                         type="text"
                         [(ngModel)]="editItemPR"
-                        placeholder="e.g., PR-2026-001"
+                        [placeholder]="'procurement.enterPrPlaceholder' | translate"
                         [disabled]="isUpdatingItem"
                         required
                       />
                     </div>
                     <div class="form-group">
-                      <label for="editItemPO">Purchase Order (PO)</label>
+                      <label for="editItemPO">{{ 'procurement.purchaseOrder' | translate }}</label>
                       <input
                         id="editItemPO"
                         type="text"
                         [(ngModel)]="editItemPO"
-                        placeholder="e.g., PO-2026-001"
+                        [placeholder]="'procurement.enterPoPlaceholder' | translate"
                         [disabled]="isUpdatingItem"
                       />
                     </div>
                   </div>
                   <div class="form-group">
-                    <label for="editItemName">Name <span class="required">*</span></label>
+                    <label for="editItemName">{{ 'common.name' | translate }} <span class="required">*</span></label>
                     <input
                       id="editItemName"
                       type="text"
                       [(ngModel)]="editItemName"
-                      placeholder="Brief name for this procurement"
+                      [placeholder]="'procurement.enterName' | translate"
                       [disabled]="isUpdatingItem"
                       required
                     />
                   </div>
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="editItemCategory">Category</label>
+                      <label for="editItemCategory">{{ 'common.category' | translate }}</label>
                       <select id="editItemCategory" [(ngModel)]="editItemCategoryId" [disabled]="isUpdatingItem">
-                        <option [ngValue]="null">-- No Category --</option>
+                        <option [ngValue]="null">-- {{ 'procurement.noCategory' | translate }} --</option>
                         <option *ngFor="let category of categories" [ngValue]="category.id">
                           {{ category.name }}
                         </option>
                       </select>
                     </div>
                     <div class="form-group">
-                      <label for="editItemStatus">Status <span class="required">*</span></label>
+                      <label for="editItemStatus">{{ 'common.status' | translate }} <span class="required">*</span></label>
                       <select id="editItemStatus" [(ngModel)]="editItemStatus" [disabled]="isUpdatingItem" required>
                         <option *ngFor="let status of procurementStatuses" [value]="status">
                           {{ getStatusLabel(status) }}
@@ -410,18 +430,18 @@
                     </div>
                   </div>
                   <div class="form-group">
-                    <label for="editItemDescription">Description</label>
+                    <label for="editItemDescription">{{ 'common.description' | translate }}</label>
                     <textarea
                       id="editItemDescription"
                       [(ngModel)]="editItemDescription"
-                      placeholder="Detailed description..."
+                      [placeholder]="'procurement.enterDescription' | translate"
                       [disabled]="isUpdatingItem"
                       rows="3"
                     ></textarea>
                   </div>
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="editItemCurrency">Currency</label>
+                      <label for="editItemCurrency">{{ 'common.currency' | translate }}</label>
                       <select id="editItemCurrency" [(ngModel)]="editItemCurrency" [disabled]="isUpdatingItem">
                         <option *ngFor="let currency of currencies" [value]="currency.code">
                           {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
@@ -429,7 +449,7 @@
                       </select>
                     </div>
                     <div class="form-group" *ngIf="editItemCurrency !== 'CAD'">
-                      <label for="editItemExchangeRate">Exchange Rate to CAD</label>
+                      <label for="editItemExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
                       <input
                         id="editItemExchangeRate"
                         type="number"
@@ -442,29 +462,29 @@
                   </div>
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="editItemPreferredVendor">Preferred Vendor</label>
+                      <label for="editItemPreferredVendor">{{ 'procurement.preferredVendor' | translate }}</label>
                       <input
                         id="editItemPreferredVendor"
                         type="text"
                         [(ngModel)]="editItemPreferredVendor"
-                        placeholder="Vendor name"
+                        [placeholder]="'procurement.vendorPlaceholder' | translate"
                         [disabled]="isUpdatingItem"
                       />
                     </div>
                     <div class="form-group">
-                      <label for="editItemContractNumber">Contract Number</label>
+                      <label for="editItemContractNumber">{{ 'procurement.contractNumber' | translate }}</label>
                       <input
                         id="editItemContractNumber"
                         type="text"
                         [(ngModel)]="editItemContractNumber"
-                        placeholder="Contract number"
+                        [placeholder]="'procurement.contractPlaceholder' | translate"
                         [disabled]="isUpdatingItem"
                       />
                     </div>
                   </div>
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="editItemContractStartDate">Contract Start Date</label>
+                      <label for="editItemContractStartDate">{{ 'procurement.contractStartDate' | translate }}</label>
                       <input
                         id="editItemContractStartDate"
                         type="date"
@@ -473,7 +493,7 @@
                       />
                     </div>
                     <div class="form-group">
-                      <label for="editItemContractEndDate">Contract End Date</label>
+                      <label for="editItemContractEndDate">{{ 'procurement.contractEndDate' | translate }}</label>
                       <input
                         id="editItemContractEndDate"
                         type="date"
@@ -490,11 +510,11 @@
                           [(ngModel)]="editItemProcurementCompleted"
                           [disabled]="isUpdatingItem"
                         />
-                        Procurement Completed
+                        {{ 'procurement.procurementCompleted' | translate }}
                       </label>
                     </div>
                     <div class="form-group" *ngIf="editItemProcurementCompleted">
-                      <label for="editItemProcurementCompletedDate">Completion Date</label>
+                      <label for="editItemProcurementCompletedDate">{{ 'procurement.completionDate' | translate }}</label>
                       <input
                         id="editItemProcurementCompletedDate"
                         type="date"
@@ -510,7 +530,7 @@
                       (click)="cancelEditProcurementItem()"
                       [disabled]="isUpdatingItem"
                     >
-                      Cancel
+                      {{ 'common.cancel' | translate }}
                     </button>
                     <button 
                       type="button"
@@ -518,8 +538,8 @@
                       (click)="updateProcurementItem()"
                       [disabled]="isUpdatingItem || !editItemPR.trim() || !editItemName.trim()"
                     >
-                      <span *ngIf="isUpdatingItem">Updating...</span>
-                      <span *ngIf="!isUpdatingItem">Update Item</span>
+                      <span *ngIf="isUpdatingItem">{{ 'procurement.updating' | translate }}</span>
+                      <span *ngIf="!isUpdatingItem">{{ 'procurement.updateItem' | translate }}</span>
                     </button>
                   </div>
                 </div>
@@ -527,19 +547,19 @@
                 <!-- Quotes Section -->
                 <div class="quotes-section">
                   <div class="section-header">
-                    <h3>Quotes ({{ quotes.length }})</h3>
+                    <h3>{{ 'procurement.quotes' | translate }} ({{ quotes.length }})</h3>
                     <button class="btn-primary" (click)="showCreateQuote()" *ngIf="canWrite && !showCreateQuoteForm">
-                      ➕ Add Quote
+                      ➕ {{ 'procurement.addQuote' | translate }}
                     </button>
                   </div>
 
                   <!-- Create Quote Form -->
                   <div class="create-form" *ngIf="showCreateQuoteForm">
-                    <h4>Add New Quote</h4>
+                    <h4>{{ 'procurement.addNewQuote' | translate }}</h4>
                     <form (ngSubmit)="createQuote()">
                       <div class="form-row">
                         <div class="form-group">
-                          <label for="newQuoteVendorName">Vendor Name *</label>
+                          <label for="newQuoteVendorName">{{ 'procurement.vendorName' | translate }} *</label>
                           <input
                             type="text"
                             id="newQuoteVendorName"
@@ -549,7 +569,7 @@
                           />
                         </div>
                         <div class="form-group">
-                          <label for="newQuoteVendorContact">Vendor Contact</label>
+                          <label for="newQuoteVendorContact">{{ 'procurement.vendorContact' | translate }}</label>
                           <input
                             type="text"
                             id="newQuoteVendorContact"
@@ -560,7 +580,7 @@
                       </div>
                       <div class="form-row">
                         <div class="form-group">
-                          <label for="newQuoteReference">Quote Reference</label>
+                          <label for="newQuoteReference">{{ 'procurement.quoteReference' | translate }}</label>
                           <input
                             type="text"
                             id="newQuoteReference"
@@ -569,7 +589,7 @@
                           />
                         </div>
                         <div class="form-group">
-                          <label for="newQuoteAmount">Amount</label>
+                          <label for="newQuoteAmount">{{ 'common.amount' | translate }}</label>
                           <div class="amount-input">
                             <select [(ngModel)]="newQuoteCurrency" name="newQuoteCurrency">
                               <option *ngFor="let currency of currencies" [value]="currency.code">
@@ -589,7 +609,7 @@
                       </div>
                       <div class="form-row">
                         <div class="form-group">
-                          <label for="newQuoteReceivedDate">Received Date</label>
+                          <label for="newQuoteReceivedDate">{{ 'procurement.receivedDate' | translate }}</label>
                           <input
                             type="date"
                             id="newQuoteReceivedDate"
@@ -598,7 +618,7 @@
                           />
                         </div>
                         <div class="form-group">
-                          <label for="newQuoteExpiryDate">Expiry Date</label>
+                          <label for="newQuoteExpiryDate">{{ 'procurement.expiryDate' | translate }}</label>
                           <input
                             type="date"
                             id="newQuoteExpiryDate"
@@ -608,7 +628,7 @@
                         </div>
                       </div>
                       <div class="form-group">
-                        <label for="newQuoteNotes">Notes</label>
+                        <label for="newQuoteNotes">{{ 'procurement.notes' | translate }}</label>
                         <textarea
                           id="newQuoteNotes"
                           [(ngModel)]="newQuoteNotes"
@@ -618,7 +638,7 @@
                       </div>
                       <!-- Attach File Section -->
                       <div class="form-group file-attach-section">
-                        <label for="newQuoteFile">Attach File (Optional)</label>
+                        <label for="newQuoteFile">{{ 'procurement.attachFile' | translate }}</label>
                         <div class="file-input-wrapper">
                           <input
                             type="file"
@@ -626,7 +646,7 @@
                             (change)="onQuoteFileSelected($event)"
                             accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv"
                           />
-                          <span class="file-hint">PDF, images, documents up to 10MB</span>
+                          <span class="file-hint">{{ 'procurement.fileHint' | translate }}</span>
                         </div>
                         <div *ngIf="newQuoteFile" class="selected-file-info">
                           <span class="file-icon">📎</span>
@@ -635,24 +655,24 @@
                           <button type="button" class="btn-remove-file" (click)="removeQuoteFile()">✕</button>
                         </div>
                         <div class="form-group file-description" *ngIf="newQuoteFile">
-                          <label for="newQuoteFileDescription">File Description</label>
+                          <label for="newQuoteFileDescription">{{ 'procurement.fileDescription' | translate }}</label>
                           <input
                             type="text"
                             id="newQuoteFileDescription"
                             [(ngModel)]="newQuoteFileDescription"
                             name="newQuoteFileDescription"
-                            placeholder="Brief description of the attached file"
+                            [placeholder]="'procurement.fileDescriptionPlaceholder' | translate"
                           />
                         </div>
                       </div>
                       <div class="form-actions">
-                        <button type="button" class="btn-secondary" (click)="cancelCreateQuote()">Cancel</button>
+                        <button type="button" class="btn-secondary" (click)="cancelCreateQuote()">{{ 'common.cancel' | translate }}</button>
                         <button
                           type="submit"
                           class="btn-primary"
                           [disabled]="isCreatingQuote || !newQuoteVendorName.trim()"
                         >
-                          {{ isCreatingQuote ? 'Adding...' : 'Add Quote' }}
+                          {{ isCreatingQuote ? ('procurement.adding' | translate) : ('procurement.addQuote' | translate) }}
                         </button>
                       </div>
                     </form>
@@ -661,7 +681,7 @@
                   <!-- Quotes List -->
                   <div class="quotes-list">
                     <div class="loading" *ngIf="isLoadingQuotes">
-                      <span class="spinner"></span> Loading quotes...
+                      <span class="spinner"></span> {{ 'procurement.loadingQuotes' | translate }}
                     </div>
 
                     <div class="quote-card" *ngFor="let quote of quotes" [class.selected]="quote.selected">
@@ -680,27 +700,27 @@
                           {{ formatCurrency(quote.amount, quote.currency) }}
                         </div>
                         <div class="quote-dates">
-                          <span *ngIf="quote.receivedDate">Received: {{ quote.receivedDate | date:'shortDate' }}</span>
-                          <span *ngIf="quote.expiryDate">Expires: {{ quote.expiryDate | date:'shortDate' }}</span>
+                          <span *ngIf="quote.receivedDate">{{ 'procurement.received' | translate }}: {{ quote.receivedDate | date:'shortDate' }}</span>
+                          <span *ngIf="quote.expiryDate">{{ 'procurement.expires' | translate }}: {{ quote.expiryDate | date:'shortDate' }}</span>
                         </div>
                         <p class="quote-notes" *ngIf="quote.notes">{{ quote.notes }}</p>
                       </div>
                       <div class="quote-actions">
-                        <button class="btn-icon" title="View Files" (click)="viewQuoteFiles(quote)">
-                          📁 Files ({{ quote.fileCount || 0 }})
+                        <button class="btn-icon" [title]="'procurement.viewFiles' | translate" (click)="viewQuoteFiles(quote)">
+                          📁 {{ 'procurement.files' | translate }} ({{ quote.fileCount || 0 }})
                         </button>
                         <button
                           class="btn-icon btn-select"
-                          title="Select Quote (Coming Soon)"
+                          [title]="'procurement.selectQuoteComingSoon' | translate"
                           *ngIf="canWrite && !quote.selected && quote.status !== 'REJECTED'"
                           disabled
                           [class.disabled]="true"
                         >
-                          ✅ Select
+                          ✅ {{ 'procurement.select' | translate }}
                         </button>
                         <button
                           class="btn-icon btn-danger"
-                          title="Delete"
+                          [title]="'common.delete' | translate"
                           *ngIf="canWrite"
                           (click)="deleteQuote(quote)"
                         >
@@ -708,13 +728,13 @@
                         </button>
                       </div>
                       <div class="selected-badge" *ngIf="quote.selected">
-                        ✓ Selected Quote
+                        ✓ {{ 'procurement.selectedQuote' | translate }}
                       </div>
                     </div>
 
                     <div class="empty-state" *ngIf="!isLoadingQuotes && quotes.length === 0">
-                      <p>No quotes added yet.</p>
-                      <p *ngIf="canWrite">Click "Add Quote" to add one.</p>
+                      <p>{{ 'procurement.noQuotes' | translate }}</p>
+                      <p *ngIf="canWrite">{{ 'procurement.clickAddQuote' | translate }}</p>
                     </div>
                   </div>
                 </div>
@@ -722,19 +742,19 @@
                 <!-- Procurement Events/Tracking Section -->
                 <div class="events-section">
                   <div class="section-header">
-                    <h3>📋 Procurement Tracking ({{ events.length }})</h3>
+                    <h3>📋 {{ 'procurement.tracking' | translate }} ({{ events.length }})</h3>
                     <div class="section-actions">
                       <button 
                         class="btn-toggle" 
                         (click)="toggleEventsPanel()"
                         [class.active]="showEventsPanel">
-                        {{ showEventsPanel ? '▼ Hide' : '▶ Show' }}
+                        {{ showEventsPanel ? ('procurement.hide' | translate) + ' ▼' : ('procurement.show' | translate) + ' ▶' }}
                       </button>
                       <button 
                         class="btn-primary" 
                         (click)="showCreateEvent()" 
                         *ngIf="canWrite && showEventsPanel && !showCreateEventForm">
-                        ➕ Add Event
+                        ➕ {{ 'procurement.addEvent' | translate }}
                       </button>
                     </div>
                   </div>
@@ -742,11 +762,11 @@
                   <div class="events-content" *ngIf="showEventsPanel">
                     <!-- Create/Edit Event Form -->
                     <div class="create-form event-form" *ngIf="showCreateEventForm">
-                      <h4>{{ editingEvent ? 'Edit Event' : 'Add New Event' }}</h4>
+                      <h4>{{ editingEvent ? ('procurement.editEvent' | translate) : ('procurement.addNewEvent' | translate) }}</h4>
                       <form (ngSubmit)="editingEvent ? updateEvent() : createEvent()">
                         <div class="form-row">
                           <div class="form-group">
-                            <label for="newEventType">Event Type *</label>
+                            <label for="newEventType">{{ 'procurement.eventType' | translate }} *</label>
                             <select 
                               id="newEventType" 
                               [(ngModel)]="newEventType" 
@@ -758,7 +778,7 @@
                             </select>
                           </div>
                           <div class="form-group">
-                            <label for="newEventDate">Date *</label>
+                            <label for="newEventDate">{{ 'common.date' | translate }} *</label>
                             <input
                               type="date"
                               id="newEventDate"
@@ -769,22 +789,22 @@
                           </div>
                         </div>
                         <div class="form-group">
-                          <label for="newEventComment">Comment/Notes</label>
+                          <label for="newEventComment">{{ 'procurement.commentNotes' | translate }}</label>
                           <textarea
                             id="newEventComment"
                             [(ngModel)]="newEventComment"
                             name="newEventComment"
                             rows="2"
-                            placeholder="Optional comment or description..."
+                            [placeholder]="'procurement.optionalComment' | translate"
                           ></textarea>
                         </div>
                         <div class="form-actions">
-                          <button type="button" class="btn-secondary" (click)="cancelEventForm()">Cancel</button>
+                          <button type="button" class="btn-secondary" (click)="cancelEventForm()">{{ 'common.cancel' | translate }}</button>
                           <button
                             type="submit"
                             class="btn-primary"
                             [disabled]="isCreatingEvent || !newEventDate">
-                            {{ isCreatingEvent ? (editingEvent ? 'Updating...' : 'Adding...') : (editingEvent ? 'Update' : 'Add Event') }}
+                            {{ isCreatingEvent ? (editingEvent ? ('procurement.updating' | translate) : ('procurement.adding' | translate)) : (editingEvent ? ('common.edit' | translate) : ('procurement.addEvent' | translate)) }}
                           </button>
                         </div>
                       </form>
@@ -793,7 +813,7 @@
                     <!-- Events Timeline -->
                     <div class="events-timeline">
                       <div class="loading" *ngIf="isLoadingEvents">
-                        <span class="spinner"></span> Loading events...
+                        <span class="spinner"></span> {{ 'procurement.loadingEvents' | translate }}
                       </div>
 
                       <div class="event-item" 
@@ -812,45 +832,44 @@
                             <span class="new-status">{{ event.newStatus }}</span>
                           </div>
                           <div class="event-meta">
-                            <span class="created-by" *ngIf="event.createdBy">By: {{ event.createdBy }}</span>
+                            <span class="created-by" *ngIf="event.createdBy">{{ 'procurement.by' | translate }}: {{ event.createdBy }}</span>
                             <span class="created-at" *ngIf="event.createdAt">{{ event.createdAt | date:'short' }}</span>
                           </div>
                         </div>
                         <div class="event-actions" *ngIf="canWrite">
-                          <button class="btn-icon" title="Edit" (click)="editEvent(event)">✏️</button>
-                          <button class="btn-icon btn-danger" title="Delete" (click)="deleteEvent(event)">🗑️</button>
+                          <button class="btn-icon" [title]="'common.edit' | translate" (click)="editEvent(event)">✏️</button>
+                          <button class="btn-icon btn-danger" [title]="'common.delete' | translate" (click)="deleteEvent(event)">🗑️</button>
                         </div>
                       </div>
 
                       <div class="empty-state" *ngIf="!isLoadingEvents && events.length === 0">
-                        <p>No tracking events recorded yet.</p>
-                        <p *ngIf="canWrite">Click "Add Event" to add one.</p>
+                        <p>{{ 'procurement.noEvents' | translate }}</p>
+                        <p *ngIf="canWrite">{{ 'procurement.clickAddEvent' | translate }}</p>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+        </ng-template>
 
         <!-- Empty State - No items match filter -->
         <div class="empty-state" *ngIf="!isLoadingItems && procurementItems.length > 0 && filteredProcurementItems.length === 0">
           <div class="empty-icon">🔍</div>
-          <h3>No Matching Items</h3>
-          <p>No procurement items match the current filter(s). Try adjusting your search or category filter.</p>
+          <h3>{{ 'procurement.noMatchingItems' | translate }}</h3>
+          <p>{{ 'procurement.noMatchingItemsDesc' | translate }}</p>
           <button class="btn-secondary" (click)="clearSearch(); selectedCategoryId = null">
-            Clear Filters
+            {{ 'procurement.clearFilters' | translate }}
           </button>
         </div>
 
         <!-- Empty State - No items exist -->
         <div class="empty-state" *ngIf="!isLoadingItems && procurementItems.length === 0">
           <div class="empty-icon">🛒</div>
-          <h3>No Procurement Items Yet</h3>
-          <p>Get started by creating your first procurement item for this fiscal year.</p>
+          <h3>{{ 'procurement.noItems' | translate }}</h3>
+          <p>{{ 'procurement.createFirst' | translate }}</p>
           <button class="btn btn-primary" (click)="showCreateItem()" *ngIf="canWrite">
-            Create First Procurement Item
+            {{ 'procurement.createFirstItem' | translate }}
           </button>
         </div>
       </div>
@@ -861,19 +880,19 @@
   <div class="modal-overlay" *ngIf="selectedQuote" (click)="closeQuoteFiles()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h3>Files for Quote: {{ selectedQuote.vendorName }}</h3>
+        <h3>{{ 'procurement.filesForQuote' | translate }}: {{ selectedQuote.vendorName }}</h3>
         <button class="btn-close" (click)="closeQuoteFiles()">✕</button>
       </div>
       <div class="modal-body">
         <!-- Upload Form -->
         <div class="upload-section" *ngIf="canWrite">
           <button class="btn-primary" (click)="showFileUploadForm()" *ngIf="!showFileUpload">
-            📎 Upload File
+            📎 {{ 'procurement.uploadFile' | translate }}
           </button>
 
           <div class="upload-form" *ngIf="showFileUpload">
             <div class="form-group">
-              <label for="fileInput">Select File</label>
+              <label for="fileInput">{{ 'procurement.selectFile' | translate }}</label>
               <input
                 type="file"
                 id="fileInput"
@@ -882,23 +901,23 @@
               />
             </div>
             <div class="form-group">
-              <label for="fileDescription">Description (optional)</label>
+              <label for="fileDescription">{{ 'procurement.descriptionOptional' | translate }}</label>
               <input
                 type="text"
                 id="fileDescription"
                 [(ngModel)]="fileDescription"
-                placeholder="Brief description of the file"
+                [placeholder]="'procurement.fileDescriptionPlaceholder' | translate"
               />
             </div>
             <div class="form-actions">
-              <button type="button" class="btn-secondary" (click)="cancelFileUpload()">Cancel</button>
+              <button type="button" class="btn-secondary" (click)="cancelFileUpload()">{{ 'common.cancel' | translate }}</button>
               <button
                 type="button"
                 class="btn-primary"
                 [disabled]="isUploadingFile || !selectedFile"
                 (click)="uploadFile()"
               >
-                {{ isUploadingFile ? 'Uploading...' : 'Upload' }}
+                {{ isUploadingFile ? ('common.uploading' | translate) : ('common.upload' | translate) }}
               </button>
             </div>
           </div>
@@ -907,23 +926,23 @@
         <!-- Files List -->
         <div class="files-list">
           <div class="loading" *ngIf="isLoadingFiles">
-            <span class="spinner"></span> Loading files...
+            <span class="spinner"></span> {{ 'procurement.loadingFiles' | translate }}
           </div>
 
           <div class="file-item" *ngFor="let file of files">
             <span class="file-icon">{{ getFileIcon(file.contentType) }}</span>
             <div class="file-info">
               <span class="file-name">{{ file.fileName }}</span>
-              <span class="file-meta">{{ file.fileSize | number }} bytes</span>
+              <span class="file-meta">{{ file.fileSize | number }} {{ 'procurement.bytes' | translate }}</span>
               <span class="file-desc" *ngIf="file.description">{{ file.description }}</span>
             </div>
             <div class="file-actions">
-              <button class="btn-icon" title="Preview" (click)="previewFile(file)" *ngIf="isPreviewable(file.contentType)">👁️</button>
-              <button class="btn-icon" title="Open in New Tab" (click)="viewFile(file)">🔗</button>
-              <button class="btn-icon" title="Download" (click)="downloadFile(file)">⬇️</button>
+              <button class="btn-icon" [title]="'procurement.preview' | translate" (click)="previewFile(file)" *ngIf="isPreviewable(file.contentType)">👁️</button>
+              <button class="btn-icon" [title]="'procurement.openInNewTab' | translate" (click)="viewFile(file)">🔗</button>
+              <button class="btn-icon" [title]="'common.download' | translate" (click)="downloadFile(file)">⬇️</button>
               <button
                 class="btn-icon btn-danger"
-                title="Delete"
+                [title]="'common.delete' | translate"
                 *ngIf="canWrite"
                 (click)="deleteFile(file)"
               >
@@ -933,8 +952,8 @@
           </div>
 
           <div class="empty-state" *ngIf="!isLoadingFiles && files.length === 0">
-            <p>No files uploaded.</p>
-            <p *ngIf="canWrite">Click "Upload File" to add one.</p>
+            <p>{{ 'procurement.noFilesUploaded' | translate }}</p>
+            <p *ngIf="canWrite">{{ 'procurement.clickUploadFile' | translate }}</p>
           </div>
         </div>
       </div>
@@ -947,26 +966,26 @@
       <div class="preview-header">
         <h3>{{ previewingFile.fileName }}</h3>
         <div class="preview-actions">
-          <button class="btn-icon" title="Open in New Tab" (click)="viewFile(previewingFile)">🔗</button>
-          <button class="btn-icon" title="Download" (click)="downloadFile(previewingFile)">⬇️</button>
+          <button class="btn-icon" [title]="'procurement.openInNewTab' | translate" (click)="viewFile(previewingFile)">🔗</button>
+          <button class="btn-icon" [title]="'common.download' | translate" (click)="downloadFile(previewingFile)">⬇️</button>
           <button class="btn-close" (click)="closePreview()">✕</button>
         </div>
       </div>
       <div class="preview-content">
         <div class="loading" *ngIf="isLoadingPreview">
-          <span class="spinner"></span> Loading preview...
+          <span class="spinner"></span> {{ 'procurement.loadingPreview' | translate }}
         </div>
         <iframe 
           *ngIf="!isLoadingPreview && previewUrl && previewingFile.contentType === 'application/pdf'" 
           [src]="previewUrl" 
           class="pdf-preview"
-          title="PDF Preview">
+          [title]="'procurement.pdfPreview' | translate">
         </iframe>
         <img 
           *ngIf="!isLoadingPreview && previewUrl && previewingFile.contentType.startsWith('image/')" 
           [src]="previewUrl" 
           class="image-preview"
-          alt="Image Preview"
+          [alt]="'procurement.imagePreview' | translate"
         />
         <div class="text-preview" *ngIf="!isLoadingPreview && previewUrl && previewingFile.contentType.startsWith('text/')">
           <pre>{{ previewTextContent }}</pre>

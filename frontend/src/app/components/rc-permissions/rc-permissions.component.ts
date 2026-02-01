@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RCPermissionService, RCAccess, GrantUserAccessRequest, GrantGroupAccessRequest } from '../../services/rc-permission.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
@@ -25,7 +26,7 @@ import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.mode
 @Component({
   selector: 'app-rc-permissions',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './rc-permissions.component.html',
   styleUrls: ['./rc-permissions.component.scss']
 })
@@ -61,7 +62,8 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
     private permissionService: RCPermissionService,
     private rcService: ResponsibilityCentreService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -100,11 +102,11 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
         this.rc = rc;
         // Check if user is owner
         if (!rc.isOwner) {
-          this.errorMessage = 'You do not have permission to manage this RC\'s permissions.';
+          this.errorMessage = this.translate.instant('rcPermissions.noPermissionToManage');
         }
       },
       error: (error) => {
-        this.errorMessage = 'Failed to load RC information.';
+        this.errorMessage = this.translate.instant('rcPermissions.loadRCError');
         console.error('Error loading RC:', error);
       }
     });
@@ -122,7 +124,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       },
       error: (error) => {
-        this.errorMessage = error.message || 'Failed to load permissions.';
+        this.errorMessage = error.message || this.translate.instant('rcPermissions.loadPermissionsError');
         this.isLoading = false;
       }
     });
@@ -158,13 +160,13 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
       this.permissionService.grantUserAccess(this.rcId, request).subscribe({
         next: () => {
-          this.showSuccessMessage(`Access granted to ${this.newPrincipalIdentifier}`);
+          this.showSuccessMessage(this.translate.instant('rcPermissions.accessGrantedSuccess', { principal: this.newPrincipalIdentifier }));
           this.closeGrantForm();
           this.loadPermissions();
           this.isGranting = false;
         },
         error: (error) => {
-          this.errorMessage = error.message || 'Failed to grant access.';
+          this.errorMessage = error.message || this.translate.instant('rcPermissions.accessGrantedError');
           this.isGranting = false;
         }
       });
@@ -178,13 +180,13 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
       this.permissionService.grantGroupAccess(this.rcId, request).subscribe({
         next: () => {
-          this.showSuccessMessage(`Access granted to ${this.newPrincipalIdentifier}`);
+          this.showSuccessMessage(this.translate.instant('rcPermissions.accessGrantedSuccess', { principal: this.newPrincipalIdentifier }));
           this.closeGrantForm();
           this.loadPermissions();
           this.isGranting = false;
         },
         error: (error) => {
-          this.errorMessage = error.message || 'Failed to grant access.';
+          this.errorMessage = error.message || this.translate.instant('rcPermissions.accessGrantedError');
           this.isGranting = false;
         }
       });
@@ -208,12 +210,12 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
     this.permissionService.updatePermission(this.editingPermissionId, { accessLevel: this.editAccessLevel }).subscribe({
       next: () => {
-        this.showSuccessMessage('Permission updated successfully.');
+        this.showSuccessMessage(this.translate.instant('rcPermissions.permissionUpdatedSuccess'));
         this.editingPermissionId = null;
         this.loadPermissions();
       },
       error: (error) => {
-        this.errorMessage = error.message || 'Failed to update permission.';
+        this.errorMessage = error.message || this.translate.instant('rcPermissions.permissionUpdatedError');
       }
     });
   }
@@ -234,12 +236,12 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
     this.permissionService.revokeAccess(this.deleteConfirmId).subscribe({
       next: () => {
-        this.showSuccessMessage('Access revoked successfully.');
+        this.showSuccessMessage(this.translate.instant('rcPermissions.accessRevokedSuccess'));
         this.deleteConfirmId = null;
         this.loadPermissions();
       },
       error: (error) => {
-        this.errorMessage = error.message || 'Failed to revoke access.';
+        this.errorMessage = error.message || this.translate.instant('rcPermissions.accessRevokedError');
         this.deleteConfirmId = null;
       }
     });
@@ -291,6 +293,70 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
         return 'Enter distribution list (e.g., finance-team@company.com)';
       default:
         return '';
+    }
+  }
+
+  /**
+   * Get translated form type label.
+   */
+  getFormTypeLabelTranslated(): string {
+    switch (this.grantFormType) {
+      case 'USER':
+        return this.translate.instant('rcPermissions.grantUserAccess');
+      case 'GROUP':
+        return this.translate.instant('rcPermissions.grantGroupAccess');
+      case 'DISTRIBUTION_LIST':
+        return this.translate.instant('rcPermissions.grantDistListAccess');
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Get translated identifier placeholder.
+   */
+  getIdentifierPlaceholderTranslated(): string {
+    switch (this.grantFormType) {
+      case 'USER':
+        return this.translate.instant('rcPermissions.enterUsername');
+      case 'GROUP':
+        return this.translate.instant('rcPermissions.enterGroupId');
+      case 'DISTRIBUTION_LIST':
+        return this.translate.instant('rcPermissions.enterDistList');
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Get translated principal type label.
+   */
+  getPrincipalTypeLabelTranslated(type: string): string {
+    switch (type) {
+      case 'USER':
+        return this.translate.instant('rcPermissions.user');
+      case 'GROUP':
+        return this.translate.instant('rcPermissions.group');
+      case 'DISTRIBUTION_LIST':
+        return this.translate.instant('rcPermissions.distList');
+      default:
+        return type;
+    }
+  }
+
+  /**
+   * Get translated access level label.
+   */
+  getAccessLevelLabelTranslated(level: string): string {
+    switch (level) {
+      case 'OWNER':
+        return this.translate.instant('rcPermissions.owner');
+      case 'READ_WRITE':
+        return this.translate.instant('rcPermissions.readWrite');
+      case 'READ_ONLY':
+        return this.translate.instant('rcPermissions.readOnly');
+      default:
+        return level;
     }
   }
 
