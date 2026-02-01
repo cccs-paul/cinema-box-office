@@ -29,6 +29,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 
 /**
  * Entity representing a Money Allocation for a Funding Item.
@@ -78,6 +79,14 @@ public class MoneyAllocation {
   @UpdateTimestamp
   @Column(nullable = false)
   private LocalDateTime updatedAt;
+
+  /**
+   * Version for optimistic locking.
+   * Prevents lost updates when multiple users edit the same record.
+   */
+  @Version
+  @Column(nullable = false)
+  private Long version = 0L;
 
   // Constructors
   public MoneyAllocation() {
@@ -167,6 +176,24 @@ public class MoneyAllocation {
 
   public void setUpdatedAt(LocalDateTime updatedAt) {
     this.updatedAt = updatedAt;
+  }
+
+  /**
+   * Get the version for optimistic locking.
+   *
+   * @return the version number
+   */
+  public Long getVersion() {
+    return version;
+  }
+
+  /**
+   * Set the version for optimistic locking.
+   *
+   * @param version the version number
+   */
+  public void setVersion(Long version) {
+    this.version = version;
   }
 
   /**

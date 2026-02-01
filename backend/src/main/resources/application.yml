@@ -1,6 +1,16 @@
 spring:
   application:
     name: myrc-api
+  session:
+    # Use JDBC for session storage to enable HA deployment
+    store-type: jdbc
+    jdbc:
+      # Initialize the session schema if not exists
+      initialize-schema: always
+      # Table name prefix for session tables
+      table-name: SPRING_SESSION
+    # Session timeout (30 minutes)
+    timeout: 30m
   jpa:
     hibernate:
       ddl-auto: update

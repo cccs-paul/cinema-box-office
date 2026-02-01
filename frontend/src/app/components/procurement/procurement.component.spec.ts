@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { DomSanitizer } from '@angular/platform-browser';
 import { of, BehaviorSubject, throwError } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 import { ProcurementComponent } from './procurement.component';
 import { AuthService } from '../../services/auth.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
@@ -175,6 +176,7 @@ describe('ProcurementComponent', () => {
         HttpClientTestingModule,
         FormsModule,
         RouterTestingModule,
+        TranslateModule.forRoot(),
         ProcurementComponent
       ],
       providers: [

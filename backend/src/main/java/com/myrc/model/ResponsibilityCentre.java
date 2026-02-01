@@ -5,8 +5,19 @@
  */
 package com.myrc.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
+
 import java.time.LocalDateTime;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -45,6 +56,14 @@ public class ResponsibilityCentre {
   @UpdateTimestamp
   @Column(nullable = false)
   private LocalDateTime updatedAt;
+
+  /**
+   * Version for optimistic locking.
+   * Prevents lost updates when multiple users edit the same record.
+   */
+  @Version
+  @Column(nullable = false)
+  private Long version = 0L;
 
   @Column(nullable = false)
   private Boolean active = true;
@@ -113,6 +132,24 @@ public class ResponsibilityCentre {
 
   public void setActive(Boolean active) {
     this.active = active;
+  }
+
+  /**
+   * Get the version for optimistic locking.
+   *
+   * @return the version number
+   */
+  public Long getVersion() {
+    return version;
+  }
+
+  /**
+   * Set the version for optimistic locking.
+   *
+   * @param version the version number
+   */
+  public void setVersion(Long version) {
+    this.version = version;
   }
 
   @Override

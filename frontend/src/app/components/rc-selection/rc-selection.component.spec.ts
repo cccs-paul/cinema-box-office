@@ -7,6 +7,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { of, throwError, BehaviorSubject } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 import { RCSelectionComponent } from './rc-selection.component';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
@@ -67,7 +68,8 @@ describe('RCSelectionComponent', () => {
       imports: [
         RCSelectionComponent,
         RouterTestingModule.withRoutes([]),
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        TranslateModule.forRoot()
       ],
       providers: [
         { provide: ResponsibilityCentreService, useValue: rcServiceMock },

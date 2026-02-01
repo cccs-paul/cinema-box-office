@@ -12,6 +12,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { of, throwError, BehaviorSubject, Subject } from 'rxjs';
 import { Directive, Input } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { RegisterComponent } from './register.component';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
@@ -82,7 +83,8 @@ describe('RegisterComponent', () => {
       imports: [
         HttpClientTestingModule,
         FormsModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        TranslateModule.forRoot()
       ],
       providers: [
         { provide: AuthService, useValue: authSpy },

@@ -1235,6 +1235,11 @@
     background: var(--background-tertiary);
   }
 
+  .item-card.expanded & {
+    background: var(--background-tertiary);
+    border-bottom: 1px solid var(--border-color);
+  }
+
   .item-info {
     display: flex;
     align-items: center;

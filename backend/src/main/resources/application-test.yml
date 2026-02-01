@@ -3,6 +3,9 @@ spring:
     name: myrc-api-test
   classformat:
     ignore: true
+  session:
+    # Disable JDBC session store for tests (use in-memory)
+    store-type: none
   jpa:
     hibernate:
       ddl-auto: create-drop

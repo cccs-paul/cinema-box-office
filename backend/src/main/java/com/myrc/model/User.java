@@ -11,7 +11,23 @@
 
 package com.myrc.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -84,6 +100,14 @@ public class User {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    /**
+     * Version for optimistic locking.
+     * Prevents lost updates when multiple users edit the same record.
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version = 0L;
 
     @Column
     private LocalDateTime passwordChangedAt;
@@ -166,6 +190,24 @@ public class User {
 
     public String getTheme() { return theme; }
     public void setTheme(String theme) { this.theme = theme; }
+
+    /**
+     * Get the version for optimistic locking.
+     *
+     * @return the version number
+     */
+    public Long getVersion() {
+        return version;
+    }
+
+    /**
+     * Set the version for optimistic locking.
+     *
+     * @param version the version number
+     */
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
     // Builder pattern support
     public static UserBuilder builder() {

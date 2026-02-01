@@ -458,7 +458,15 @@
     "funding": "Financement",
     "spending": "Dépenses",
     "capital": "Capital (CAP)",
-    "om": "E&E"
+    "om": "E&E",
+    "loading": "Chargement des analyses...",
+    "noFundingData": "Aucune donnée de financement disponible",
+    "noSpendingData": "Aucune donnée de dépenses disponible",
+    "noComparisonData": "Aucune donnée de comparaison disponible",
+    "noProcurementData": "Aucune donnée d'approvisionnement disponible",
+    "fundingItems": "Éléments de financement",
+    "spendingItems": "Éléments de dépenses",
+    "procurementItems": "Éléments d'approvisionnement"
   },
   "configuration": {
     "title": "Configuration",

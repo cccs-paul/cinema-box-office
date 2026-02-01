@@ -11,6 +11,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of, BehaviorSubject, throwError } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 import { SpendingComponent } from './spending.component';
 import { AuthService } from '../../services/auth.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
@@ -166,6 +167,7 @@ describe('SpendingComponent', () => {
         HttpClientTestingModule,
         FormsModule,
         RouterTestingModule,
+        TranslateModule.forRoot(),
         SpendingComponent
       ],
       providers: [
@@ -571,6 +573,30 @@ describe('SpendingComponent', () => {
         { moneyId: 1, moneyName: 'A-Base', isDefault: true, capAmount: 0, omAmount: 500 }
       ];
       expect(component.hasValidMoneyAllocation()).toBeTrue();
+    });
+  });
+
+  describe('trackBy functions', () => {
+    it('trackByItemId should return item id', () => {
+      const mockItem = { id: 42, name: 'Test Item' } as any;
+      expect(component.trackByItemId(0, mockItem)).toBe(42);
+    });
+
+    it('trackByGroupName should return group category name', () => {
+      const mockGroup = { categoryName: 'Test Category', categoryId: 1, items: [] } as any;
+      expect(component.trackByGroupName(0, mockGroup)).toBe('Test Category');
+    });
+
+    it('trackByItemId should work with different indices', () => {
+      const mockItem1 = { id: 1, name: 'Item 1' } as any;
+      const mockItem2 = { id: 2, name: 'Item 2' } as any;
+      expect(component.trackByItemId(0, mockItem1)).toBe(1);
+      expect(component.trackByItemId(5, mockItem2)).toBe(2);
+    });
+
+    it('trackByGroupName should handle empty category names', () => {
+      const mockGroup = { categoryName: '', categoryId: null, items: [] } as any;
+      expect(component.trackByGroupName(0, mockGroup)).toBe('');
     });
   });
 });

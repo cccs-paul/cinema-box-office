@@ -55,6 +55,13 @@
             <artifactId>spring-boot-starter-oauth2-client</artifactId>
         </dependency>
 
+        <!-- Spring Session JDBC for distributed session storage -->
+        <!-- Enables HA deployment with multiple replicas in Kubernetes -->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-jdbc</artifactId>
+        </dependency>
+
         <!-- LDAP -->
         <dependency>
             <groupId>org.springframework.ldap</groupId>

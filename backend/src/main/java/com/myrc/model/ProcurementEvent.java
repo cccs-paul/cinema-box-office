@@ -29,6 +29,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 /**
  * Entity representing a Procurement Event/Update associated with a Procurement Item.
@@ -129,6 +130,14 @@ public class ProcurementEvent {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    /**
+     * Version for optimistic locking.
+     * Prevents lost updates when multiple users edit the same record.
+     */
+    @Version
+    @Column(nullable = false)
+    private Long version = 0L;
 
     @Column(nullable = false)
     private Boolean active = true;
@@ -258,6 +267,24 @@ public class ProcurementEvent {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    /**
+     * Get the version for optimistic locking.
+     *
+     * @return the version number
+     */
+    public Long getVersion() {
+        return version;
+    }
+
+    /**
+     * Set the version for optimistic locking.
+     *
+     * @param version the version number
+     */
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     @Override
