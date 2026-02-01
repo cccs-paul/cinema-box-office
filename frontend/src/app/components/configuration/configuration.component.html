@@ -30,45 +30,44 @@
       [class.active]="activeTab === 'general'"
       (click)="setActiveTab('general')">
       <span class="tab-icon">⚙️</span>
-      <span class="tab-label">General</span>
+      <span class="tab-label">{{ 'configuration.general' | translate }}</span>
     </button>
     <button 
       class="tab-btn" 
       [class.active]="activeTab === 'monies'"
       (click)="setActiveTab('monies')">
       <span class="tab-icon">💰</span>
-      <span class="tab-label">Monies</span>
+      <span class="tab-label">{{ 'configuration.monies' | translate }}</span>
     </button>
     <button 
       class="tab-btn" 
       [class.active]="activeTab === 'categories'"
       (click)="setActiveTab('categories')">
       <span class="tab-icon">📁</span>
-      <span class="tab-label">Categories</span>
+      <span class="tab-label">{{ 'configuration.categories' | translate }}</span>
     </button>
     <button 
       class="tab-btn" 
       [class.active]="activeTab === 'summary'"
       (click)="setActiveTab('summary')">
       <span class="tab-icon">📊</span>
-      <span class="tab-label">Summary</span>
+      <span class="tab-label">{{ 'summary.title' | translate }}</span>
     </button>
     <button 
       class="tab-btn" 
       [class.active]="activeTab === 'import-export'"
       (click)="setActiveTab('import-export')">
       <span class="tab-icon">📥</span>
-      <span class="tab-label">Import/Export</span>
+      <span class="tab-label">{{ 'configuration.importExport' | translate }}</span>
     </button>
   </div>
 
   <!-- Monies Tab Content -->
   <div class="tab-content" *ngIf="activeTab === 'monies'">
     <div class="section-header">
-      <h2>Money Types</h2>
+      <h2>{{ 'configuration.moneyTypesTitle' | translate }}</h2>
       <p class="section-description">
-        Configure money types for this fiscal year. Each money type has two parts: Capital (CAP) and O&M (OM).
-        The default "AB" money type cannot be deleted.
+        {{ 'configuration.moneyTypesDesc' | translate }}
       </p>
     </div>
 
@@ -84,8 +83,8 @@
         <div class="money-content" *ngIf="editingMoneyId !== money.id">
           <div class="money-header">
             <span class="money-code">{{ money.code }}</span>
-            <span class="default-badge" *ngIf="money.isDefault">Default</span>
-            <span class="readonly-badge" *ngIf="money.isDefault">Read-only</span>
+            <span class="default-badge" *ngIf="money.isDefault">{{ 'configuration.default' | translate }}</span>
+            <span class="readonly-badge" *ngIf="money.isDefault">{{ 'configuration.readOnly' | translate }}</span>
           </div>
           <div class="money-name">{{ money.name }}</div>
           <div class="money-description" *ngIf="money.description">{{ money.description }}</div>
@@ -98,33 +97,33 @@
               class="btn btn-secondary" 
               (click)="startEditMoney(money)"
               [disabled]="isSaving || isDeleting">
-              Edit
+              {{ 'common.edit' | translate }}
             </button>
             <button 
               class="btn btn-danger" 
               (click)="deleteMoney(money)"
               [disabled]="isSaving || isDeleting"
-              title="Delete">
-              Delete
+              [title]="'common.delete' | translate">
+              {{ 'common.delete' | translate }}
             </button>
           </div>
         </div>
 
         <!-- Edit Mode -->
         <div class="money-edit-form" *ngIf="editingMoneyId === money.id">
-          <h4>Edit Money Type</h4>
+          <h4>{{ 'configuration.editMoneyType' | translate }}</h4>
           <div class="form-row">
             <div class="form-group">
-              <label>Code</label>
+              <label>{{ 'configuration.code' | translate }}</label>
               <input 
                 type="text" 
                 [(ngModel)]="editMoney.code"
                 maxlength="10"
                 [disabled]="money.isDefault || isSaving">
-              <span class="form-hint" *ngIf="money.isDefault">Cannot change default code</span>
+              <span class="form-hint" *ngIf="money.isDefault">{{ 'configuration.cannotChangeDefaultCode' | translate }}</span>
             </div>
             <div class="form-group">
-              <label>Name *</label>
+              <label>{{ 'common.name' | translate }} *</label>
               <input 
                 type="text" 
                 [(ngModel)]="editMoney.name"
@@ -133,7 +132,7 @@
             </div>
           </div>
           <div class="form-group full-width">
-            <label>Description</label>
+            <label>{{ 'common.description' | translate }}</label>
             <textarea 
               [(ngModel)]="editMoney.description"
               rows="2"
@@ -145,14 +144,14 @@
               class="btn btn-secondary" 
               (click)="cancelEditMoney()"
               [disabled]="isSaving">
-              Cancel
+              {{ 'common.cancel' | translate }}
             </button>
             <button 
               class="btn btn-primary" 
               (click)="updateMoney(money)"
               [disabled]="isSaving || !editMoney.name">
-              <span *ngIf="isSaving">Saving...</span>
-              <span *ngIf="!isSaving">Update</span>
+              <span *ngIf="isSaving">{{ 'common.save' | translate }}...</span>
+              <span *ngIf="!isSaving">{{ 'configuration.update' | translate }}</span>
             </button>
           </div>
         </div>
@@ -161,9 +160,9 @@
       <!-- Empty State -->
       <div class="empty-state" *ngIf="monies.length === 0 && !isAddingMoney">
         <span class="empty-icon">💰</span>
-        <p>No money types configured yet.</p>
+        <p>{{ 'configuration.noMoneyTypes' | translate }}</p>
         <button class="btn btn-primary" (click)="startAddMoney()">
-          Add Your First Money Type
+          {{ 'configuration.addFirstMoneyType' | translate }}
         </button>
       </div>
     </div>
@@ -175,48 +174,48 @@
         (click)="startAddMoney()"
         [disabled]="isAddingMoney || isSaving">
         <span class="btn-icon">+</span>
-        Add Money Type
+        {{ 'configuration.addMoney' | translate }}
       </button>
     </div>
 
     <!-- Add Money Form -->
     <div class="money-form" *ngIf="isAddingMoney">
-      <h3>Add New Money Type</h3>
+      <h3>{{ 'configuration.addNewMoneyType' | translate }}</h3>
       <div class="form-row">
         <div class="form-group">
-          <label for="new-code">Code *</label>
+          <label for="new-code">{{ 'configuration.code' | translate }} *</label>
           <input 
             type="text" 
             id="new-code"
             [(ngModel)]="newMoney.code"
-            placeholder="e.g., OA, WCF"
+            [placeholder]="'configuration.codePlaceholder' | translate"
             maxlength="10"
             [disabled]="isSaving">
-          <span class="form-hint">Short code (max 10 characters)</span>
+          <span class="form-hint">{{ 'configuration.codeHint' | translate }}</span>
         </div>
         <div class="form-group">
-          <label for="new-name">Name *</label>
+          <label for="new-name">{{ 'common.name' | translate }} *</label>
           <input 
             type="text" 
             id="new-name"
             [(ngModel)]="newMoney.name"
-            placeholder="e.g., Operating Allotment"
+            [placeholder]="'configuration.namePlaceholder' | translate"
             maxlength="100"
             [disabled]="isSaving">
         </div>
       </div>
       <div class="form-group full-width">
-        <label for="new-description">Description</label>
+        <label for="new-description">{{ 'common.description' | translate }}</label>
         <textarea 
           id="new-description"
           [(ngModel)]="newMoney.description"
-          placeholder="Optional description"
+          [placeholder]="'configuration.descriptionPlaceholder' | translate"
           rows="2"
           maxlength="500"
           [disabled]="isSaving"></textarea>
       </div>
       <div class="form-preview" *ngIf="newMoney.code">
-        <span class="preview-label">Preview:</span>
+        <span class="preview-label">{{ 'configuration.preview' | translate }}</span>
         <span class="preview-tag">{{ newMoney.code | uppercase }} (CAP)</span>
         <span class="preview-tag">{{ newMoney.code | uppercase }} (O&M)</span>
       </div>
@@ -225,14 +224,14 @@
           class="btn btn-secondary" 
           (click)="cancelAddMoney()"
           [disabled]="isSaving">
-          Cancel
+          {{ 'common.cancel' | translate }}
         </button>
         <button 
           class="btn btn-primary" 
           (click)="saveMoney()"
           [disabled]="isSaving || !newMoney.code || !newMoney.name">
-          <span *ngIf="isSaving">Saving...</span>
-          <span *ngIf="!isSaving">Save Money Type</span>
+          <span *ngIf="isSaving">{{ 'common.save' | translate }}...</span>
+          <span *ngIf="!isSaving">{{ 'configuration.saveMoneyType' | translate }}</span>
         </button>
       </div>
     </div>
@@ -240,17 +239,16 @@
     <!-- Loading State -->
     <div class="loading-state" *ngIf="isLoadingMonies">
       <span class="loading-spinner"></span>
-      <p>Loading money types...</p>
+      <p>{{ 'configuration.loadingMoneyTypes' | translate }}</p>
     </div>
   </div>
 
   <!-- Categories Tab Content -->
   <div class="tab-content" *ngIf="activeTab === 'categories'">
     <div class="section-header">
-      <h2>Categories</h2>
+      <h2>{{ 'configuration.categories' | translate }}</h2>
       <p class="section-description">
-        Configure categories for this fiscal year. Categories are used to group and organize both funding and spending items.
-        Default categories are system-defined and cannot be modified or deleted.
+        {{ 'configuration.categoriesDesc' | translate }}
       </p>
     </div>
 
@@ -266,13 +264,13 @@
         <div class="category-content" *ngIf="editingCategoryId !== category.id">
           <div class="category-header">
             <span class="category-code">{{ category.name }}</span>
-            <span class="default-badge" *ngIf="category.isDefault">Default</span>
-            <span class="readonly-badge" *ngIf="category.isDefault">Read-only</span>
+            <span class="default-badge" *ngIf="category.isDefault">{{ 'configuration.default' | translate }}</span>
+            <span class="readonly-badge" *ngIf="category.isDefault">{{ 'configuration.readOnly' | translate }}</span>
           </div>
           <div class="category-description" *ngIf="category.description">{{ category.description }}</div>
           <div class="category-tags">
             <span class="category-tag" [class.default-category]="category.isDefault" [class.custom-category]="!category.isDefault">
-              {{ category.isDefault ? 'System' : 'Custom' }}
+              {{ category.isDefault ? ('configuration.system' | translate) : ('configuration.custom' | translate) }}
             </span>
             <span class="funding-type-tag" 
                   [class.cap-only]="category.fundingType === 'CAP_ONLY'"
@@ -286,23 +284,23 @@
               class="btn btn-secondary" 
               (click)="startEditCategory(category)"
               [disabled]="isSaving || isDeleting">
-              Edit
+              {{ 'common.edit' | translate }}
             </button>
             <button 
               class="btn btn-danger" 
               (click)="deleteCategory(category)"
               [disabled]="isSaving || isDeleting"
-              title="Delete">
-              Delete
+              [title]="'common.delete' | translate">
+              {{ 'common.delete' | translate }}
             </button>
           </div>
         </div>
 
         <!-- Edit Mode (only for custom categories) -->
         <div class="category-edit-form" *ngIf="editingCategoryId === category.id && !category.isDefault">
-          <h4>Edit Category</h4>
+          <h4>{{ 'configuration.editCategory' | translate }}</h4>
           <div class="form-group">
-            <label>Name *</label>
+            <label>{{ 'common.name' | translate }} *</label>
             <input 
               type="text" 
               [(ngModel)]="editCategory.name"
@@ -310,7 +308,7 @@
               [disabled]="isSaving">
           </div>
           <div class="form-group full-width">
-            <label>Description</label>
+            <label>{{ 'common.description' | translate }}</label>
             <textarea 
               [(ngModel)]="editCategory.description"
               rows="2"
@@ -318,27 +316,27 @@
               [disabled]="isSaving"></textarea>
           </div>
           <div class="form-group">
-            <label>Funding Type</label>
+            <label>{{ 'configuration.fundingType' | translate }}</label>
             <select [(ngModel)]="editCategory.fundingType" [disabled]="isSaving">
               <option *ngFor="let ft of fundingTypeOptions" [value]="ft">
                 {{ fundingTypeLabels[ft] }}
               </option>
             </select>
-            <span class="form-hint">Determines which money allocation fields (CAP, OM, or both) are available</span>
+            <span class="form-hint">{{ 'configuration.fundingTypeHint' | translate }}</span>
           </div>
           <div class="form-actions">
             <button 
               class="btn btn-secondary" 
               (click)="cancelEditCategory()"
               [disabled]="isSaving">
-              Cancel
+              {{ 'common.cancel' | translate }}
             </button>
             <button 
               class="btn btn-primary" 
               (click)="updateCategory(category)"
               [disabled]="isSaving || !editCategory.name">
-              <span *ngIf="isSaving">Saving...</span>
-              <span *ngIf="!isSaving">Update</span>
+              <span *ngIf="isSaving">{{ 'common.save' | translate }}...</span>
+              <span *ngIf="!isSaving">{{ 'configuration.update' | translate }}</span>
             </button>
           </div>
         </div>
@@ -347,9 +345,9 @@
       <!-- Empty State -->
       <div class="empty-state" *ngIf="categories.length === 0 && !isAddingCategory">
         <span class="empty-icon">📁</span>
-        <p>No categories configured yet.</p>
+        <p>{{ 'configuration.noCategories' | translate }}</p>
         <button class="btn btn-primary" (click)="startAddCategory()">
-          Add Your First Category
+          {{ 'configuration.addFirstCategory' | translate }}
         </button>
       </div>
     </div>
@@ -361,35 +359,35 @@
         (click)="startAddCategory()"
         [disabled]="isAddingCategory || isSaving">
         <span class="btn-icon">+</span>
-        Add Category
+        {{ 'configuration.addCategory' | translate }}
       </button>
     </div>
 
     <!-- Add Category Form -->
     <div class="category-form" *ngIf="isAddingCategory">
-      <h3>Add New Custom Category</h3>
+      <h3>{{ 'configuration.addNewCategory' | translate }}</h3>
       <div class="form-group">
-        <label for="new-category-name">Name *</label>
+        <label for="new-category-name">{{ 'common.name' | translate }} *</label>
         <input 
           type="text" 
           id="new-category-name"
           [(ngModel)]="newCategory.name"
-          placeholder="e.g., Cloud Services, Maintenance"
+          [placeholder]="'configuration.categoryNamePlaceholder' | translate"
           maxlength="100"
           [disabled]="isSaving">
       </div>
       <div class="form-group full-width">
-        <label for="new-category-description">Description</label>
+        <label for="new-category-description">{{ 'common.description' | translate }}</label>
         <textarea 
           id="new-category-description"
           [(ngModel)]="newCategory.description"
-          placeholder="Optional description"
+          [placeholder]="'configuration.descriptionPlaceholder' | translate"
           rows="2"
           maxlength="500"
           [disabled]="isSaving"></textarea>
       </div>
       <div class="form-group">
-        <label for="new-category-funding-type">Funding Type</label>
+        <label for="new-category-funding-type">{{ 'configuration.fundingType' | translate }}</label>
         <select 
           id="new-category-funding-type"
           [(ngModel)]="newCategory.fundingType" 
@@ -399,9 +397,9 @@
           </option>
         </select>
         <span class="form-hint">
-          CAP Only = Capital expenditures only<br>
-          O&M Only = Operations &amp; Maintenance only<br>
-          Both = Both CAP and O&M allowed
+          {{ 'configuration.fundingTypeCapOnlyDesc' | translate }}<br>
+          {{ 'configuration.fundingTypeOmOnlyDesc' | translate }}<br>
+          {{ 'configuration.fundingTypeBothDesc' | translate }}
         </span>
       </div>
       <div class="form-actions">
@@ -409,14 +407,14 @@
           class="btn btn-secondary" 
           (click)="cancelAddCategory()"
           [disabled]="isSaving">
-          Cancel
+          {{ 'common.cancel' | translate }}
         </button>
         <button 
           class="btn btn-primary" 
           (click)="saveCategory()"
           [disabled]="isSaving || !newCategory.name">
-          <span *ngIf="isSaving">Saving...</span>
-          <span *ngIf="!isSaving">Save Category</span>
+          <span *ngIf="isSaving">{{ 'common.save' | translate }}...</span>
+          <span *ngIf="!isSaving">{{ 'configuration.saveCategory' | translate }}</span>
         </button>
       </div>
     </div>
@@ -424,27 +422,27 @@
     <!-- Loading State -->
     <div class="loading-state" *ngIf="isLoadingCategories">
       <span class="loading-spinner"></span>
-      <p>Loading categories...</p>
+      <p>{{ 'configuration.loadingCategories' | translate }}</p>
     </div>
   </div>
 
   <!-- General Tab Content -->
   <div class="tab-content" *ngIf="activeTab === 'general'">
     <div class="section-header">
-      <h2>General Settings</h2>
+      <h2>{{ 'configuration.generalSettings' | translate }}</h2>
       <p class="section-description">
-        Configure display options for funding and spending pages.
+        {{ 'configuration.generalSettingsDesc' | translate }}
       </p>
     </div>
 
     <!-- Display Settings -->
     <div class="settings-section">
-      <h3>Display Settings</h3>
+      <h3>{{ 'configuration.displaySettings' | translate }}</h3>
       
       <div class="setting-card">
         <div class="setting-info">
-          <span class="setting-label">Show Category Filter</span>
-          <span class="setting-description">Display the category filter bar on funding and spending pages</span>
+          <span class="setting-label">{{ 'configuration.showCategoryFilter' | translate }}</span>
+          <span class="setting-description">{{ 'configuration.showCategoryFilterDesc' | translate }}</span>
         </div>
         <div class="setting-control">
           <label class="toggle-switch">
@@ -459,8 +457,8 @@
 
       <div class="setting-card">
         <div class="setting-info">
-          <span class="setting-label">Group Items by Category</span>
-          <span class="setting-description">Group funding and spending items by their category with section headers</span>
+          <span class="setting-label">{{ 'configuration.groupByCategory' | translate }}</span>
+          <span class="setting-description">{{ 'configuration.groupByCategoryDesc' | translate }}</span>
         </div>
         <div class="setting-control">
           <label class="toggle-switch">
@@ -478,26 +476,24 @@
   <!-- Summary Tab Content -->
   <div class="tab-content" *ngIf="activeTab === 'summary'">
     <div class="section-header">
-      <h2>Summary Settings</h2>
+      <h2>{{ 'configuration.summarySettings' | translate }}</h2>
       <p class="section-description">
-        Configure settings for the Summary page display and indicators.
+        {{ 'configuration.summarySettingsDesc' | translate }}
       </p>
     </div>
 
     <!-- On Target Settings -->
     <div class="settings-section">
-      <h3>On Target Settings</h3>
+      <h3>{{ 'configuration.onTargetSettings' | translate }}</h3>
       <p class="section-description">
-        Configure the thresholds for the "On Target" indicator on the Summary page.
-        The indicator compares Funding vs Spending percentages. When the difference falls
-        within the configured range, the status shows as "On Target".
+        {{ 'configuration.onTargetSettingsDesc' | translate }}
       </p>
       
       <div class="setting-card range-setting">
         <div class="setting-info">
-          <span class="setting-label">Minimum Threshold</span>
+          <span class="setting-label">{{ 'configuration.minimumThreshold' | translate }}</span>
           <span class="setting-description">
-            Lower bound of the "On Target" range. Values below this show as "Under Budget".
+            {{ 'configuration.minimumThresholdDesc' | translate }}
           </span>
         </div>
         <div class="setting-control range-control">
@@ -516,9 +512,9 @@
 
       <div class="setting-card range-setting">
         <div class="setting-info">
-          <span class="setting-label">Maximum Threshold</span>
+          <span class="setting-label">{{ 'configuration.maximumThreshold' | translate }}</span>
           <span class="setting-description">
-            Upper bound of the "On Target" range. Values above this show as "Over Budget".
+            {{ 'configuration.maximumThresholdDesc' | translate }}
           </span>
         </div>
         <div class="setting-control range-control">
@@ -536,13 +532,13 @@
       </div>
 
       <div class="on-target-preview">
-        <span class="preview-label">Preview:</span>
+        <span class="preview-label">{{ 'configuration.preview' | translate }}</span>
         <div class="preview-range">
-          <span class="preview-under">Under Budget</span>
+          <span class="preview-under">{{ 'configuration.underBudget' | translate }}</span>
           <span class="preview-target">
-            On Target ({{ selectedFY?.onTargetMin ?? -2 }}% to {{ selectedFY?.onTargetMax ?? 2 }}%)
+            {{ 'configuration.onTarget' | translate }} ({{ selectedFY?.onTargetMin ?? -2 }}% to {{ selectedFY?.onTargetMax ?? 2 }}%)
           </span>
-          <span class="preview-over">Over Budget</span>
+          <span class="preview-over">{{ 'configuration.overBudget' | translate }}</span>
         </div>
       </div>
     </div>
@@ -551,25 +547,25 @@
   <!-- Import/Export Tab Content -->
   <div class="tab-content" *ngIf="activeTab === 'import-export'">
     <div class="section-header">
-      <h2>Import/Export Data</h2>
+      <h2>{{ 'configuration.exportDataTitle' | translate }}</h2>
     </div>
 
     <!-- Export Section -->
     <div class="import-export-section">
-      <h3>Export Line Items</h3>
+      <h3>{{ 'configuration.exportTitle' | translate }}</h3>
       <p class="section-description">
-        Export all Funding, Procurement, and Spending line items to a CSV file for backup or analysis.
+        {{ 'configuration.exportLineItemsDesc' | translate }}
       </p>
       
       <div class="export-options">
         <div class="form-group">
-          <label for="exportPath">Export Destination</label>
+          <label for="exportPath">{{ 'configuration.exportDestination' | translate }}</label>
           <div class="file-input-group">
             <input 
               type="text" 
               id="exportPath" 
               [(ngModel)]="exportPath"
-              placeholder="Select export destination..."
+              [placeholder]="'configuration.selectDestination' | translate"
               readonly
               class="file-path-input"
             />
@@ -577,7 +573,7 @@
               type="button" 
               class="btn btn-secondary"
               (click)="selectExportDestination()">
-              Browse...
+              {{ 'configuration.browse' | translate }}
             </button>
           </div>
         </div>
@@ -588,8 +584,8 @@
             class="btn btn-primary"
             (click)="exportToCSV()"
             [disabled]="isExporting || !isExportValid()">
-            <span *ngIf="!isExporting">📤 Export to CSV</span>
-            <span *ngIf="isExporting">Exporting...</span>
+            <span *ngIf="!isExporting">📤 {{ 'configuration.exportToCsv' | translate }}</span>
+            <span *ngIf="isExporting">{{ 'configuration.exporting' | translate }}</span>
           </button>
         </div>
       </div>
@@ -604,19 +600,19 @@
 
     <!-- Import Section -->
     <div class="import-export-section">
-      <h3>Import Line Items</h3>
+      <h3>{{ 'configuration.importTitle' | translate }}</h3>
       <p class="section-description">
-        Import line items from a CSV file. This feature is currently under development.
+        {{ 'configuration.importLineItemsDesc' | translate }}
       </p>
       
       <div class="import-options">
         <div class="form-group">
-          <label for="importPath">Import File</label>
+          <label for="importPath">{{ 'configuration.importFile' | translate }}</label>
           <div class="file-input-group">
             <input 
               type="text" 
               id="importPath" 
-              placeholder="Select CSV file to import..."
+              [placeholder]="'configuration.selectFile' | translate"
               readonly
               disabled
               class="file-path-input"
@@ -625,7 +621,7 @@
               type="button" 
               class="btn btn-secondary"
               disabled>
-              Browse...
+              {{ 'configuration.browse' | translate }}
             </button>
           </div>
         </div>
@@ -635,15 +631,15 @@
             type="button" 
             class="btn btn-primary"
             disabled
-            title="Import functionality coming soon">
-            📥 Import from CSV
+            [title]="'configuration.importNotice' | translate">
+            📥 {{ 'configuration.importFromCsv' | translate }}
           </button>
         </div>
       </div>
       
       <div class="import-notice">
         <span class="notice-icon">ℹ️</span>
-        <span class="notice-text">Import functionality will be available in a future update.</span>
+        <span class="notice-text">{{ 'configuration.importNotice' | translate }}</span>
       </div>
     </div>
   </div>

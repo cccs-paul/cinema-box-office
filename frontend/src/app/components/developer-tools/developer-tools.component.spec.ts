@@ -7,6 +7,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { DeveloperToolsComponent } from './developer-tools.component';
 
@@ -32,6 +33,7 @@ describe('DeveloperToolsComponent', () => {
         RouterTestingModule.withRoutes([
           { path: 'dashboard', component: DeveloperToolsComponent },
         ]),
+        TranslateModule.forRoot(),
       ],
     }).compileComponents();
 

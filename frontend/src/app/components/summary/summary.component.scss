@@ -605,6 +605,30 @@ html.dark-theme {
 
   .bottom-line {
     box-shadow: 0 1px 3px var(--shadow-light);
+
+    &.status-good {
+      background: linear-gradient(135deg, #166534, #14532d);
+      color: #bbf7d0;
+      border-color: #22c55e;
+    }
+
+    &.status-caution {
+      background: linear-gradient(135deg, #92400e, #78350f);
+      color: #fef3c7;
+      border-color: #f59e0b;
+    }
+
+    &.status-warning {
+      background: linear-gradient(135deg, #c2410c, #9a3412);
+      color: #ffedd5;
+      border-color: #f97316;
+    }
+
+    &.status-danger {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: #fee2e2;
+      border-color: #ef4444;
+    }
   }
 
   .comparison-table {

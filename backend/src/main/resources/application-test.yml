@@ -28,4 +28,4 @@ app:
 logging:
   level:
     root: WARN
-    com.boxoffice: DEBUG
+    com.myrc: DEBUG

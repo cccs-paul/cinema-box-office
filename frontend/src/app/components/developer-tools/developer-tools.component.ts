@@ -7,6 +7,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 /**
  * Developer tools page providing links to API documentation, health checks, and database management.
@@ -18,7 +19,7 @@ import { HttpClient } from '@angular/common/http';
 @Component({
   selector: 'app-developer-tools',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './developer-tools.component.html',
   styleUrls: ['./developer-tools.component.scss'],
 })

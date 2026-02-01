@@ -7,10 +7,10 @@
   <!-- Header -->
   <header class="dev-tools-header">
     <div class="header-content">
-      <button (click)="goBack()" class="btn-back" title="Back to dashboard">
+      <button (click)="goBack()" class="btn-back" [title]="'common.back' | translate">
         <span class="back-icon">←</span>
       </button>
-      <h1>{{ title }}</h1>
+      <h1>{{ 'developerTools.title' | translate }}</h1>
     </div>
   </header>
 
@@ -20,18 +20,18 @@
       <!-- Status Section -->
       <section class="card status-section">
         <div class="card-header">
-          <h2>🔧 System Status</h2>
+          <h2>🔧 {{ 'developerTools.systemStatus' | translate }}</h2>
         </div>
         <div class="card-body">
           <div class="status-item">
-            <label>REST API</label>
+            <label>{{ 'developerTools.restApi' | translate }}</label>
             <div [class.healthy]="isApiHealthy" [class.unhealthy]="!isApiHealthy" class="status-indicator">
               <span class="status-dot"></span>
               <span class="status-text">{{ apiStatus }}</span>
             </div>
           </div>
           <div class="status-item">
-            <label>Database</label>
+            <label>{{ 'developerTools.database' | translate }}</label>
             <div [class.healthy]="isDatabaseHealthy" [class.unhealthy]="!isDatabaseHealthy" class="status-indicator">
               <span class="status-dot"></span>
               <span class="status-text">{{ databaseStatus }}</span>
@@ -43,29 +43,29 @@
       <!-- Documentation Links Section -->
       <section class="card links-section">
         <div class="card-header">
-          <h2>📚 Documentation & Tools</h2>
+          <h2>📚 {{ 'developerTools.docTools' | translate }}</h2>
         </div>
         <div class="card-body">
           <div class="tools-grid">
             <a href="http://localhost:8080/api/swagger-ui.html" target="_blank" class="tool-link">
               <span class="tool-icon">📚</span>
-              <span class="tool-name">API Swagger</span>
-              <span class="tool-desc">Interactive API documentation</span>
+              <span class="tool-name">{{ 'developerTools.apiSwagger' | translate }}</span>
+              <span class="tool-desc">{{ 'developerTools.apiSwaggerDesc' | translate }}</span>
             </a>
             <a href="http://localhost:5050" target="_blank" class="tool-link">
               <span class="tool-icon">🗄️</span>
-              <span class="tool-name">Database Console</span>
-              <span class="tool-desc">PostgreSQL management (pgAdmin)</span>
+              <span class="tool-name">{{ 'developerTools.databaseConsole' | translate }}</span>
+              <span class="tool-desc">{{ 'developerTools.databaseConsoleDesc' | translate }}</span>
             </a>
             <a href="http://localhost:8080/api/health" target="_blank" class="tool-link">
               <span class="tool-icon">❤️</span>
-              <span class="tool-name">API Health</span>
-              <span class="tool-desc">API health check endpoint</span>
+              <span class="tool-name">{{ 'developerTools.apiHealth' | translate }}</span>
+              <span class="tool-desc">{{ 'developerTools.apiHealthDesc' | translate }}</span>
             </a>
             <a href="http://localhost:8080/api/health/db" target="_blank" class="tool-link">
               <span class="tool-icon">📊</span>
-              <span class="tool-name">DB Health</span>
-              <span class="tool-desc">Database health check endpoint</span>
+              <span class="tool-name">{{ 'developerTools.dbHealth' | translate }}</span>
+              <span class="tool-desc">{{ 'developerTools.dbHealthDesc' | translate }}</span>
             </a>
           </div>
         </div>
@@ -74,42 +74,42 @@
       <!-- Quick Info Section -->
       <section class="card info-section">
         <div class="card-header">
-          <h2>ℹ️ Quick Info</h2>
+          <h2>ℹ️ {{ 'developerTools.quickInfo' | translate }}</h2>
         </div>
         <div class="card-body">
           <div class="info-item">
             <p>
-              <strong>Application:</strong> myRC Management System
+              <strong>{{ 'developerTools.application' | translate }}:</strong> myRC Management System
             </p>
           </div>
           <div class="info-item">
             <p>
-              <strong>Version:</strong> 1.0.0
+              <strong>{{ 'developerTools.version' | translate }}:</strong> 1.0.0
             </p>
           </div>
           <div class="info-item">
             <p>
-              <strong>Authentication:</strong> LOCAL (App-managed), LDAP, OAuth2
+              <strong>{{ 'developerTools.authentication' | translate }}:</strong> LOCAL (App-managed), LDAP, OAuth2
             </p>
           </div>
           <div class="info-item">
             <p>
-              <strong>Frontend:</strong> Angular 17
+              <strong>{{ 'developerTools.frontend' | translate }}:</strong> Angular 17
             </p>
           </div>
           <div class="info-item">
             <p>
-              <strong>Backend:</strong> Spring Boot 3.2.0 (Java 21)
+              <strong>{{ 'developerTools.backend' | translate }}:</strong> Spring Boot 3.2.0 (Java 21)
             </p>
           </div>
           <div class="info-item">
             <p>
-              <strong>Database:</strong> PostgreSQL 16
+              <strong>{{ 'developerTools.database' | translate }}:</strong> PostgreSQL 16
             </p>
           </div>
           <div class="info-item">
             <p>
-              <strong>License:</strong> MIT
+              <strong>{{ 'developerTools.license' | translate }}:</strong> MIT
             </p>
           </div>
         </div>
@@ -119,6 +119,6 @@
 
   <!-- Footer -->
   <footer class="dev-tools-footer">
-    <p>&copy; 2026 myRC. All rights reserved.</p>
+    <p>{{ 'developerTools.copyright' | translate }}</p>
   </footer>
 </div>

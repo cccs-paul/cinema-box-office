@@ -97,4 +97,4 @@ springdoc:
 logging:
   level:
     root: INFO
-    com.boxoffice: DEBUG
+    com.myrc: DEBUG

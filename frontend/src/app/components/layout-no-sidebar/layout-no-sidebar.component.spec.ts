@@ -8,6 +8,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { LayoutNoSidebarComponent } from './layout-no-sidebar.component';
 import { HeaderComponent } from '../header/header.component';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { TranslateModule } from '@ngx-translate/core';
 
 describe('LayoutNoSidebarComponent', () => {
   let component: LayoutNoSidebarComponent;
@@ -18,7 +19,8 @@ describe('LayoutNoSidebarComponent', () => {
       imports: [
         LayoutNoSidebarComponent,
         RouterTestingModule,
-        HttpClientTestingModule
+        HttpClientTestingModule,
+        TranslateModule.forRoot()
       ]
     }).compileComponents();
 

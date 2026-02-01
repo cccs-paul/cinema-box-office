@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, filter, switchMap } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { MoneyService } from '../../services/money.service';
@@ -29,7 +30,7 @@ import { FiscalYear } from '../../models/fiscal-year.model';
 @Component({
   selector: 'app-configuration',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './configuration.component.html',
   styleUrls: ['./configuration.component.scss'],
 })
@@ -682,7 +683,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    * Fetch funding items for export.
    */
   private fetchFundingItems(): Promise<any[]> {
-    return fetch(`/api/responsibility-centres/${this.rcId}/fiscal-years/${this.fyId}/funding-items`)
+    return fetch(`/api/fiscal-years/${this.fyId}/funding-items`)
       .then(response => {
         if (!response.ok) throw new Error('Failed to fetch funding items');
         return response.json();
