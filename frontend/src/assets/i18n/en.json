@@ -226,14 +226,15 @@
     "moneyType": "Money Type",
     "noItemsYet": "No Funding Items Yet",
     "noItemsYetDesc": "Get started by creating your first funding item for this fiscal year.",
-    "createFirstItem": "Create First Funding Item"
+    "createFirstItem": "Create First Funding Item",
+    "noItemsHint": "Click Add Funding Item to create your first funding entry."
   },
   "procurement": {
     "title": "Procurement",
     "addItem": "Add Procurement Item",
     "hideFilters": "Hide Filters",
     "showFilters": "Show Filters",
-    "searchPlaceholder": "Search by PR, PO, name, vendor...",
+    "searchPlaceholder": "Search procurement items...",
     "allStatuses": "All Statuses",
     "createTitle": "Create New Procurement Item",
     "editTitle": "Edit Procurement Item",
@@ -380,6 +381,7 @@
     "noItemsYet": "No Spending Items Yet",
     "noItemsYetDesc": "Get started by creating your first spending item for this fiscal year.",
     "createFirstItem": "Create First Spending Item",
+    "noItemsHint": "Click Add Spending Item to create your first spending entry.",
     "totalCap": "Total CAP",
     "totalOm": "Total O&M",
     "grandTotal": "Grand Total",

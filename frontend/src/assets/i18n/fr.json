@@ -226,14 +226,15 @@
     "moneyType": "Type de fonds",
     "noItemsYet": "Aucun financement",
     "noItemsYetDesc": "Commencez par créer votre premier financement pour cet exercice.",
-    "createFirstItem": "Créer le premier financement"
+    "createFirstItem": "Créer le premier financement",
+    "noItemsHint": "Cliquez sur Ajouter un financement pour créer votre première entrée de financement."
   },
   "procurement": {
     "title": "Approvisionnement",
     "addItem": "Ajouter un approvisionnement",
     "hideFilters": "Masquer les filtres",
     "showFilters": "Afficher les filtres",
-    "searchPlaceholder": "Rechercher par DA, BC, nom, fournisseur...",
+    "searchPlaceholder": "Rechercher les approvisionnements...",
     "allStatuses": "Tous les statuts",
     "createTitle": "Créer un nouvel approvisionnement",
     "editTitle": "Modifier l'approvisionnement",
@@ -380,6 +381,7 @@
     "noItemsYet": "Aucune dépense",
     "noItemsYetDesc": "Commencez par créer votre première dépense pour cet exercice.",
     "createFirstItem": "Créer la première dépense",
+    "noItemsHint": "Cliquez sur Ajouter une dépense pour créer votre première entrée de dépense.",
     "totalCap": "Total CAP",
     "totalOm": "Total F&E",
     "grandTotal": "Total général",

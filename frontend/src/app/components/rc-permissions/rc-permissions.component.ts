@@ -52,9 +52,11 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   // Edit form
   editingPermissionId: number | null = null;
   editAccessLevel: 'OWNER' | 'READ_WRITE' | 'READ_ONLY' = 'READ_WRITE';
+  isSaving = false;
 
   // Delete confirmation
   deleteConfirmId: number | null = null;
+  isDeleting = false;
 
   private destroy$ = new Subject<void>();
 
@@ -208,14 +210,17 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   saveEdit(): void {
     if (!this.editingPermissionId) return;
 
+    this.isSaving = true;
     this.permissionService.updatePermission(this.editingPermissionId, { accessLevel: this.editAccessLevel }).subscribe({
       next: () => {
         this.showSuccessMessage(this.translate.instant('rcPermissions.permissionUpdatedSuccess'));
         this.editingPermissionId = null;
+        this.isSaving = false;
         this.loadPermissions();
       },
       error: (error) => {
         this.errorMessage = error.message || this.translate.instant('rcPermissions.permissionUpdatedError');
+        this.isSaving = false;
       }
     });
   }
@@ -234,15 +239,18 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   deletePermission(): void {
     if (!this.deleteConfirmId) return;
 
+    this.isDeleting = true;
     this.permissionService.revokeAccess(this.deleteConfirmId).subscribe({
       next: () => {
         this.showSuccessMessage(this.translate.instant('rcPermissions.accessRevokedSuccess'));
         this.deleteConfirmId = null;
+        this.isDeleting = false;
         this.loadPermissions();
       },
       error: (error) => {
         this.errorMessage = error.message || this.translate.instant('rcPermissions.accessRevokedError');
         this.deleteConfirmId = null;
+        this.isDeleting = false;
       }
     });
   }

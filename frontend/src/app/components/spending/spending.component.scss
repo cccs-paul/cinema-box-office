@@ -539,6 +539,11 @@ textarea.form-control {
       &:last-child {
         border-bottom: 1px solid var(--border-color);
       }
+
+      /* Ensure expanded items always have a bottom border */
+      &.expanded {
+        border-bottom: 1px solid var(--primary-gradient-start);
+      }
     }
 
     .category-group-header + .item-card {
@@ -551,6 +556,10 @@ textarea.form-control {
       border-bottom-right-radius: 0.5rem;
       border-bottom: 1px solid var(--border-color);
       margin-bottom: 1rem;
+
+      &.expanded {
+        border-bottom: 1px solid var(--primary-gradient-start);
+      }
     }
   }
 }

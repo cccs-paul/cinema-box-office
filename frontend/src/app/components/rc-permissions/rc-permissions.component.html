@@ -191,10 +191,11 @@
                 </div>
                 <!-- Edit actions -->
                 <div *ngIf="editingPermissionId === permission.id" class="action-buttons">
-                  <button class="btn-action btn-save" (click)="saveEdit()" [title]="'common.save' | translate">
-                    ✅
+                  <button class="btn-action btn-save" (click)="saveEdit()" [title]="'common.save' | translate" [disabled]="isSaving">
+                    <span *ngIf="!isSaving">✅</span>
+                    <span *ngIf="isSaving" class="spinner-small"></span>
                   </button>
-                  <button class="btn-action btn-cancel-edit" (click)="cancelEdit()" [title]="'common.cancel' | translate">
+                  <button class="btn-action btn-cancel-edit" (click)="cancelEdit()" [title]="'common.cancel' | translate" [disabled]="isSaving">
                     ❌
                   </button>
                 </div>
@@ -224,8 +225,11 @@
         <p>{{ 'rcPermissions.revokeConfirmMessage' | translate }}</p>
       </div>
       <div class="modal-footer">
-        <button class="btn-cancel" (click)="cancelDelete()">{{ 'common.cancel' | translate }}</button>
-        <button class="btn-danger" (click)="deletePermission()">{{ 'rcPermissions.revokeAccess' | translate }}</button>
+        <button class="btn-cancel" (click)="cancelDelete()" [disabled]="isDeleting">{{ 'common.cancel' | translate }}</button>
+        <button class="btn-danger" (click)="deletePermission()" [disabled]="isDeleting">
+          <span *ngIf="!isDeleting">{{ 'rcPermissions.revokeAccess' | translate }}</span>
+          <span *ngIf="isDeleting">{{ 'common.deleting' | translate }}</span>
+        </button>
       </div>
     </div>
   </div>
