@@ -22,7 +22,7 @@ import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.mode
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { FundingItem } from '../../models/funding-item.model';
 import { SpendingItem } from '../../models/spending-item.model';
-import { ProcurementItem } from '../../models/procurement.model';
+import { ProcurementItem, PROCUREMENT_STATUS_INFO, ProcurementItemStatus } from '../../models/procurement.model';
 
 // Chart.js imports
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
@@ -571,19 +571,10 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   private countByStatus(items: ProcurementItem[]): { labels: string[]; values: number[] } {
     const statusMap = new Map<string, number>();
     
-    const statusLabels: Record<string, string> = {
-      'DRAFT': 'Draft',
-      'PENDING_QUOTES': 'Pending Quotes',
-      'QUOTES_RECEIVED': 'Quotes Received',
-      'UNDER_REVIEW': 'Under Review',
-      'APPROVED': 'Approved',
-      'PO_ISSUED': 'PO Issued',
-      'COMPLETED': 'Completed',
-      'CANCELLED': 'Cancelled'
-    };
-    
     for (const item of items) {
-      const label = statusLabels[item.status] || item.status;
+      // Use PROCUREMENT_STATUS_INFO for user-friendly labels
+      const statusInfo = PROCUREMENT_STATUS_INFO[item.status as ProcurementItemStatus];
+      const label = statusInfo?.label || item.status;
       statusMap.set(label, (statusMap.get(label) || 0) + 1);
     }
     

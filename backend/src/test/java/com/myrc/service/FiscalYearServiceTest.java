@@ -299,8 +299,9 @@ class FiscalYearServiceTest {
     Optional<FiscalYearDTO> result = fiscalYearService.updateDisplaySettings(
         1L,
         "testuser",
-        true,
-        false,
+        true,   // showSearchBox
+        true,   // showCategoryFilter
+        false,  // groupByCategory
         -2,
         2
     );
@@ -317,8 +318,9 @@ class FiscalYearServiceTest {
     Optional<FiscalYearDTO> result = fiscalYearService.updateDisplaySettings(
         999L,
         "testuser",
-        true,
-        false,
+        true,   // showSearchBox
+        true,   // showCategoryFilter
+        false,  // groupByCategory
         null,
         null
     );
@@ -345,7 +347,7 @@ class FiscalYearServiceTest {
         .thenReturn(Optional.of(access));
 
     assertThrows(IllegalArgumentException.class,
-        () -> fiscalYearService.updateDisplaySettings(1L, "anotheruser", true, false, null, null));
+        () -> fiscalYearService.updateDisplaySettings(1L, "anotheruser", true, true, false, null, null));
   }
 
   @Test
@@ -362,8 +364,9 @@ class FiscalYearServiceTest {
     Optional<FiscalYearDTO> result = fiscalYearService.updateDisplaySettings(
         1L,
         "testuser",
-        null,
-        null,
+        null,   // showSearchBox
+        null,   // showCategoryFilter
+        null,   // groupByCategory
         -20,
         15
     );
@@ -388,8 +391,9 @@ class FiscalYearServiceTest {
     Optional<FiscalYearDTO> result = fiscalYearService.updateDisplaySettings(
         1L,
         "testuser",
-        null,
-        null,
+        null,   // showSearchBox
+        null,   // showCategoryFilter
+        null,   // groupByCategory
         -150,
         200
     );

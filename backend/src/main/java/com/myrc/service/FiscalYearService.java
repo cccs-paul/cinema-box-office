@@ -72,6 +72,7 @@ public interface FiscalYearService {
    *
    * @param fiscalYearId the fiscal year ID
    * @param username the username
+   * @param showSearchBox whether to show search box and filters
    * @param showCategoryFilter whether to show category filter
    * @param groupByCategory whether to group items by category
    * @param onTargetMin minimum percentage for "On Target" status (-100 to +100)
@@ -79,6 +80,6 @@ public interface FiscalYearService {
    * @return optional updated fiscal year DTO
    */
   Optional<FiscalYearDTO> updateDisplaySettings(Long fiscalYearId, String username,
-                                                  Boolean showCategoryFilter, Boolean groupByCategory,
+                                                  Boolean showSearchBox, Boolean showCategoryFilter, Boolean groupByCategory,
                                                   Integer onTargetMin, Integer onTargetMax);
 }

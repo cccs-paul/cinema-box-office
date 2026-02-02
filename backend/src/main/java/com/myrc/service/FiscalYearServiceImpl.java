@@ -182,7 +182,7 @@ public class FiscalYearServiceImpl implements FiscalYearService {
 
   @Override
   public Optional<FiscalYearDTO> updateDisplaySettings(Long fiscalYearId, String username,
-      Boolean showCategoryFilter, Boolean groupByCategory,
+      Boolean showSearchBox, Boolean showCategoryFilter, Boolean groupByCategory,
       Integer onTargetMin, Integer onTargetMax) {
     Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);
     if (fyOpt.isEmpty()) {
@@ -199,6 +199,9 @@ public class FiscalYearServiceImpl implements FiscalYearService {
     }
 
     // Update settings if provided
+    if (showSearchBox != null) {
+      fy.setShowSearchBox(showSearchBox);
+    }
     if (showCategoryFilter != null) {
       fy.setShowCategoryFilter(showCategoryFilter);
     }
@@ -218,7 +221,8 @@ public class FiscalYearServiceImpl implements FiscalYearService {
 
     FiscalYear saved = fiscalYearRepository.save(fy);
     logger.info("Updated display settings for fiscal year '" + fy.getName() + 
-        "' - showCategoryFilter: " + fy.getShowCategoryFilter() + 
+        "' - showSearchBox: " + fy.getShowSearchBox() +
+        ", showCategoryFilter: " + fy.getShowCategoryFilter() + 
         ", groupByCategory: " + fy.getGroupByCategory() +
         ", onTargetMin: " + fy.getOnTargetMin() +
         ", onTargetMax: " + fy.getOnTargetMax());

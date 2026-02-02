@@ -441,6 +441,22 @@
       
       <div class="setting-card">
         <div class="setting-info">
+          <span class="setting-label">{{ 'configuration.showSearchBox' | translate }}</span>
+          <span class="setting-description">{{ 'configuration.showSearchBoxDesc' | translate }}</span>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-switch">
+            <input 
+              type="checkbox" 
+              [checked]="selectedFY?.showSearchBox !== false"
+              (change)="updateDisplaySettings('showSearchBox', $any($event.target).checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-card">
+        <div class="setting-info">
           <span class="setting-label">{{ 'configuration.showCategoryFilter' | translate }}</span>
           <span class="setting-description">{{ 'configuration.showCategoryFilterDesc' | translate }}</span>
         </div>

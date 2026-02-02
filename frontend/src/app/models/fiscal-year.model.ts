@@ -22,6 +22,9 @@ export interface FiscalYear {
   /** ID of the parent responsibility centre */
   responsibilityCentreId: number;
 
+  /** Whether to show search box and category filters in list pages */
+  showSearchBox: boolean;
+
   /** Whether to show category filter in funding/spending pages */
   showCategoryFilter: boolean;
 
@@ -67,6 +70,9 @@ export interface FiscalYearUpdateRequest {
  * Request payload for updating fiscal year display settings.
  */
 export interface DisplaySettingsRequest {
+  /** Whether to show search box and category filters in list pages */
+  showSearchBox?: boolean;
+
   /** Whether to show category filter in funding/spending pages */
   showCategoryFilter?: boolean;
 

@@ -18,6 +18,7 @@ describe('FiscalYearService', () => {
     description: 'Test Fiscal Year',
     active: true,
     responsibilityCentreId: 1,
+    showSearchBox: true,
     showCategoryFilter: true,
     groupByCategory: false,
     onTargetMin: -2,

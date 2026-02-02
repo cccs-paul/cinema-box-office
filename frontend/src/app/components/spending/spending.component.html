@@ -22,7 +22,7 @@
   </div>
 
   <!-- Search and Category Filter -->
-  <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateForm">
+  <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateForm && selectedFY?.showSearchBox !== false">
     <div class="filters-header">
       <button 
         class="btn-toggle-filters" 

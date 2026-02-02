@@ -58,6 +58,7 @@ class FiscalYearControllerTest {
         LocalDateTime.now(),
         LocalDateTime.now(),
         true,
+        true,   // showSearchBox
         true,   // showCategoryFilter
         false,  // groupByCategory
         -2,     // onTargetMin
@@ -195,6 +196,7 @@ class FiscalYearControllerTest {
         LocalDateTime.now(),
         LocalDateTime.now(),
         true,
+        true,   // showSearchBox
         true,   // showCategoryFilter
         false,  // groupByCategory
         -2,     // onTargetMin

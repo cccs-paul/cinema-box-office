@@ -521,6 +521,8 @@
     "categories": "Categories",
     "importExport": "Import/Export",
     "displaySettings": "Display Settings",
+    "showSearchBox": "Show Search Box / Category Filters",
+    "showSearchBoxDesc": "Display the search box and category filter bar in Funding, Spending, and Procurement views",
     "showCategoryFilter": "Show Category Filter",
     "showCategoryFilterDesc": "Display the category filter in Funding and Spending views",
     "onTargetThresholds": "On Target Thresholds",

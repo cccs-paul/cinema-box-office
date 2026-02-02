@@ -26,7 +26,7 @@
     <!-- Items Panel -->
     <div class="items-panel">
       <!-- Search and Category Filter -->
-      <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateItemForm">
+      <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateItemForm && selectedFY?.showSearchBox !== false">
         <div class="filters-header">
           <button 
             class="btn-toggle-filters" 

@@ -514,6 +514,8 @@
     "categories": "Catégories",
     "importExport": "Import/Export",
     "displaySettings": "Paramètres d'affichage",
+    "showSearchBox": "Afficher la barre de recherche / filtres de catégorie",
+    "showSearchBoxDesc": "Afficher la barre de recherche et le filtre de catégorie dans les vues Financement, Dépenses et Approvisionnement",
     "showCategoryFilter": "Afficher le filtre de catégorie",
     "showCategoryFilterDesc": "Afficher le filtre de catégorie dans les vues Financement et Dépenses",
     "onTargetThresholds": "Seuils de la cible",

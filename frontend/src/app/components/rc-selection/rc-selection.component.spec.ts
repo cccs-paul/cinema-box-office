@@ -31,8 +31,8 @@ describe('RCSelectionComponent', () => {
   ];
 
   const createMockFiscalYears = (): FiscalYear[] => [
-    { id: 1, name: 'FY 2025-2026', description: 'Current year', active: true, responsibilityCentreId: 1, showCategoryFilter: true, groupByCategory: false, onTargetMin: -2, onTargetMax: 2 },
-    { id: 2, name: 'FY 2024-2025', description: 'Previous year', active: false, responsibilityCentreId: 1, showCategoryFilter: true, groupByCategory: false, onTargetMin: -2, onTargetMax: 2 }
+    { id: 1, name: 'FY 2025-2026', description: 'Current year', active: true, responsibilityCentreId: 1, showSearchBox: true, showCategoryFilter: true, groupByCategory: false, onTargetMin: -2, onTargetMax: 2 },
+    { id: 2, name: 'FY 2024-2025', description: 'Previous year', active: false, responsibilityCentreId: 1, showSearchBox: true, showCategoryFilter: true, groupByCategory: false, onTargetMin: -2, onTargetMax: 2 }
   ];
 
   beforeEach(async () => {
@@ -415,6 +415,7 @@ describe('RCSelectionComponent', () => {
         description: 'Next year',
         active: true,
         responsibilityCentreId: 1,
+        showSearchBox: true,
         showCategoryFilter: true,
         groupByCategory: false,
         onTargetMin: -2,
@@ -460,6 +461,7 @@ describe('RCSelectionComponent', () => {
         description: 'Updated description',
         active: true,
         responsibilityCentreId: 1,
+        showSearchBox: true,
         showCategoryFilter: true,
         groupByCategory: false,
         onTargetMin: -2,

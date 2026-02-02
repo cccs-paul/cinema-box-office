@@ -517,7 +517,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   /**
    * Update display settings for the fiscal year.
    */
-  updateDisplaySettings(setting: 'showCategoryFilter' | 'groupByCategory', value: boolean): void {
+  updateDisplaySettings(setting: 'showSearchBox' | 'showCategoryFilter' | 'groupByCategory', value: boolean): void {
     if (!this.rcId || !this.fyId || !this.selectedFY) {
       return;
     }
@@ -527,8 +527,12 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     this.fyService.updateDisplaySettings(this.rcId, this.fyId, request).subscribe({
       next: (updatedFY) => {
         this.selectedFY = updatedFY;
-        const settingLabel = setting === 'showCategoryFilter' ? 'Category filter' : 'Group by category';
-        this.showSuccess(`${settingLabel} setting updated`);
+        const settingLabels: Record<string, string> = {
+          'showSearchBox': 'Search box and filters',
+          'showCategoryFilter': 'Category filter',
+          'groupByCategory': 'Group by category'
+        };
+        this.showSuccess(`${settingLabels[setting]} setting updated`);
       },
       error: (error) => {
         this.moneyError = error.message || 'Failed to update display settings';

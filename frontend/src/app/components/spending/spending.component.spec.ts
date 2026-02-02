@@ -209,6 +209,7 @@ describe('SpendingComponent', () => {
       description: '',
       active: true,
       responsibilityCentreId: 1,
+      showSearchBox: true,
       showCategoryFilter: true,
       groupByCategory: false,
       onTargetMin: -2,

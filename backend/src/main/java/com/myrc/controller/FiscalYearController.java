@@ -302,6 +302,7 @@ public class FiscalYearController {
       Optional<FiscalYearDTO> updatedFY = fiscalYearService.updateDisplaySettings(
           fyId,
           username,
+          request.getShowSearchBox(),
           request.getShowCategoryFilter(),
           request.getGroupByCategory(),
           request.getOnTargetMin(),
@@ -365,6 +366,7 @@ public class FiscalYearController {
   }
 
   public static class DisplaySettingsRequest {
+    private Boolean showSearchBox;
     private Boolean showCategoryFilter;
     private Boolean groupByCategory;
     private Integer onTargetMin;
@@ -372,12 +374,21 @@ public class FiscalYearController {
 
     public DisplaySettingsRequest() {}
 
-    public DisplaySettingsRequest(Boolean showCategoryFilter, Boolean groupByCategory,
+    public DisplaySettingsRequest(Boolean showSearchBox, Boolean showCategoryFilter, Boolean groupByCategory,
                                    Integer onTargetMin, Integer onTargetMax) {
+      this.showSearchBox = showSearchBox;
       this.showCategoryFilter = showCategoryFilter;
       this.groupByCategory = groupByCategory;
       this.onTargetMin = onTargetMin;
       this.onTargetMax = onTargetMax;
+    }
+
+    public Boolean getShowSearchBox() {
+      return showSearchBox;
+    }
+
+    public void setShowSearchBox(Boolean showSearchBox) {
+      this.showSearchBox = showSearchBox;
     }
 
     public Boolean getShowCategoryFilter() {

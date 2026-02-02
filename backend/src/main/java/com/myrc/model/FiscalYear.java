@@ -68,6 +68,9 @@ public class FiscalYear {
   @Column(nullable = false)
   private Boolean active = true;
 
+  @Column(name = "show_search_box", nullable = false)
+  private Boolean showSearchBox = true;
+
   @Column(name = "show_category_filter", nullable = false)
   private Boolean showCategoryFilter = true;
 
@@ -144,6 +147,14 @@ public class FiscalYear {
 
   public void setActive(Boolean active) {
     this.active = active;
+  }
+
+  public Boolean getShowSearchBox() {
+    return showSearchBox;
+  }
+
+  public void setShowSearchBox(Boolean showSearchBox) {
+    this.showSearchBox = showSearchBox;
   }
 
   public Boolean getShowCategoryFilter() {

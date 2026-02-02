@@ -26,6 +26,7 @@ public class FiscalYearDTO {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
+  private Boolean showSearchBox;
   private Boolean showCategoryFilter;
   private Boolean groupByCategory;
   private Integer onTargetMin;
@@ -37,7 +38,7 @@ public class FiscalYearDTO {
   public FiscalYearDTO(Long id, String name, String description,
                        Long responsibilityCentreId, String responsibilityCentreName,
                        LocalDateTime createdAt, LocalDateTime updatedAt, Boolean active,
-                       Boolean showCategoryFilter, Boolean groupByCategory,
+                       Boolean showSearchBox, Boolean showCategoryFilter, Boolean groupByCategory,
                        Integer onTargetMin, Integer onTargetMax) {
     this.id = id;
     this.name = name;
@@ -47,6 +48,7 @@ public class FiscalYearDTO {
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
     this.active = active;
+    this.showSearchBox = showSearchBox;
     this.showCategoryFilter = showCategoryFilter;
     this.groupByCategory = groupByCategory;
     this.onTargetMin = onTargetMin;
@@ -72,6 +74,7 @@ public class FiscalYearDTO {
         fiscalYear.getCreatedAt(),
         fiscalYear.getUpdatedAt(),
         fiscalYear.getActive(),
+        fiscalYear.getShowSearchBox(),
         fiscalYear.getShowCategoryFilter(),
         fiscalYear.getGroupByCategory(),
         fiscalYear.getOnTargetMin(),
@@ -142,6 +145,14 @@ public class FiscalYearDTO {
 
   public void setActive(Boolean active) {
     this.active = active;
+  }
+
+  public Boolean getShowSearchBox() {
+    return showSearchBox;
+  }
+
+  public void setShowSearchBox(Boolean showSearchBox) {
+    this.showSearchBox = showSearchBox;
   }
 
   public Boolean getShowCategoryFilter() {
