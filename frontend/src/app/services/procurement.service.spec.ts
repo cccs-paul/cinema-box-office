@@ -30,7 +30,7 @@ describe('ProcurementService', () => {
     purchaseOrder: 'PO-001',
     name: 'Test Procurement Item',
     description: 'Test Description',
-    status: 'DRAFT',
+    status: 'NOT_STARTED',
     fiscalYearId: 1,
     currency: 'CAD',
     quotes: [],
@@ -79,10 +79,10 @@ describe('ProcurementService', () => {
     });
 
     it('should filter by status', () => {
-      service.getProcurementItems(1, 1, 'DRAFT').subscribe();
+      service.getProcurementItems(1, 1, 'NOT_STARTED').subscribe();
 
       const req = httpMock.expectOne(
-        '/api/responsibility-centres/1/fiscal-years/1/procurement-items?status=DRAFT'
+        '/api/responsibility-centres/1/fiscal-years/1/procurement-items?status=NOT_STARTED'
       );
       expect(req.request.method).toBe('GET');
       req.flush([mockProcurementItem]);
@@ -165,7 +165,7 @@ describe('ProcurementService', () => {
         purchaseRequisition: 'PR-002',
         name: 'New Procurement Item',
         description: 'New Description',
-        status: 'DRAFT',
+        status: 'NOT_STARTED',
       };
 
       service.createProcurementItem(1, 1, createRequest).subscribe((item) => {
@@ -290,7 +290,7 @@ describe('ProcurementService', () => {
 
   describe('updateProcurementItemStatus', () => {
     it('should update item status', () => {
-      service.updateProcurementItemStatus(1, 1, 1, 'PENDING_QUOTES').subscribe((item) => {
+      service.updateProcurementItemStatus(1, 1, 1, 'QUOTE').subscribe((item) => {
         expect(item).toBeTruthy();
       });
 
@@ -298,7 +298,7 @@ describe('ProcurementService', () => {
         '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/status'
       );
       expect(req.request.method).toBe('PUT');
-      expect(req.request.body).toEqual({ status: 'PENDING_QUOTES' });
+      expect(req.request.body).toEqual({ status: 'QUOTE' });
       req.flush(mockProcurementItem);
     });
 

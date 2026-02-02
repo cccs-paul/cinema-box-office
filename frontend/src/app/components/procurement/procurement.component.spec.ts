@@ -91,7 +91,7 @@ describe('ProcurementComponent', () => {
       purchaseOrder: 'PO-2026-001',
       name: 'GPU Purchase',
       description: 'NVIDIA A100 GPUs',
-      status: 'DRAFT',
+      status: 'NOT_STARTED',
       currency: 'CAD',
       exchangeRate: undefined,
       preferredVendor: 'NVIDIA',
@@ -116,7 +116,7 @@ describe('ProcurementComponent', () => {
       purchaseOrder: undefined,
       name: 'Server Purchase',
       description: 'Dell PowerEdge Servers',
-      status: 'PENDING_QUOTES',
+      status: 'QUOTE',
       currency: 'USD',
       exchangeRate: 1.35,
       preferredVendor: 'Dell',
@@ -314,15 +314,15 @@ describe('ProcurementComponent', () => {
   describe('filterByStatus', () => {
     it('should filter items by status', () => {
       procurementService.getProcurementItems.calls.reset();
-      component.filterByStatus('DRAFT');
+      component.filterByStatus('NOT_STARTED');
 
-      expect(component.selectedStatusFilter).toBe('DRAFT');
-      expect(procurementService.getProcurementItems).toHaveBeenCalledWith(1, 1, 'DRAFT', undefined);
+      expect(component.selectedStatusFilter).toBe('NOT_STARTED');
+      expect(procurementService.getProcurementItems).toHaveBeenCalledWith(1, 1, 'NOT_STARTED', undefined);
     });
 
     it('should clear filter when status is null', () => {
       procurementService.getProcurementItems.calls.reset();
-      component.selectedStatusFilter = 'DRAFT';
+      component.selectedStatusFilter = 'NOT_STARTED';
       component.filterByStatus(null);
 
       expect(component.selectedStatusFilter).toBeNull();
@@ -470,9 +470,9 @@ describe('ProcurementComponent', () => {
 
   describe('Status Options', () => {
     it('should have all status options defined', () => {
-      expect(component.statusOptions).toContain('DRAFT');
-      expect(component.statusOptions).toContain('PENDING_QUOTES');
-      expect(component.statusOptions).toContain('COMPLETED');
+      expect(component.statusOptions).toContain('NOT_STARTED');
+      expect(component.statusOptions).toContain('QUOTE');
+      expect(component.statusOptions).toContain('CONTRACT_AWARDED');
       expect(component.statusOptions).toContain('CANCELLED');
     });
   });

@@ -163,18 +163,24 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   editItemProcurementCompleted = false;
   editItemProcurementCompletedDate = '';
   editItemCategoryId: number | null = null;
-  editItemStatus: ProcurementItemStatus = 'DRAFT';
+  editItemStatus: ProcurementItemStatus = 'NOT_STARTED';
 
   // Status options
   statusOptions: ProcurementItemStatus[] = [
-    'DRAFT', 'PENDING_QUOTES', 'QUOTES_RECEIVED', 'UNDER_REVIEW',
-    'APPROVED', 'PO_ISSUED', 'COMPLETED', 'CANCELLED'
+    'NOT_STARTED', 'QUOTE', 'SAM_ACKNOWLEDGEMENT_REQUESTED', 'SAM_ACKNOWLEDGEMENT_RECEIVED',
+    'PACKAGE_SENT_TO_PROCUREMENT', 'ACKNOWLEDGED_BY_PROCUREMENT', 'PAUSED', 'CANCELLED',
+    'CONTRACT_AWARDED', 'GOODS_RECEIVED', 'FULL_INVOICE_RECEIVED', 'PARTIAL_INVOICE_RECEIVED',
+    'MONTHLY_INVOICE_RECEIVED', 'FULL_INVOICE_SIGNED', 'PARTIAL_INVOICE_SIGNED',
+    'MONTHLY_INVOICE_SIGNED', 'CONTRACT_AMENDED'
   ];
 
   // Procurement statuses for dropdown
   procurementStatuses: ProcurementItemStatus[] = [
-    'DRAFT', 'PENDING_QUOTES', 'QUOTES_RECEIVED', 'UNDER_REVIEW',
-    'APPROVED', 'PO_ISSUED', 'COMPLETED', 'CANCELLED'
+    'NOT_STARTED', 'QUOTE', 'SAM_ACKNOWLEDGEMENT_REQUESTED', 'SAM_ACKNOWLEDGEMENT_RECEIVED',
+    'PACKAGE_SENT_TO_PROCUREMENT', 'ACKNOWLEDGED_BY_PROCUREMENT', 'PAUSED', 'CANCELLED',
+    'CONTRACT_AWARDED', 'GOODS_RECEIVED', 'FULL_INVOICE_RECEIVED', 'PARTIAL_INVOICE_RECEIVED',
+    'MONTHLY_INVOICE_RECEIVED', 'FULL_INVOICE_SIGNED', 'PARTIAL_INVOICE_SIGNED',
+    'MONTHLY_INVOICE_SIGNED', 'CONTRACT_AMENDED'
   ];
 
   private destroy$ = new Subject<void>();

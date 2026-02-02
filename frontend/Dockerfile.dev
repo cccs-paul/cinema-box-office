@@ -25,6 +25,9 @@ EXPOSE 4200
 # Copy package files first for better layer caching
 COPY frontend/package*.json ./
 
+# Configure npm to handle SSL certificate issues (for corporate proxies)
+RUN npm config set strict-ssl false
+
 # Install dependencies and clean cache to reduce image size
 # Using --legacy-peer-deps to handle peer dependency conflicts
 RUN npm ci --legacy-peer-deps && \

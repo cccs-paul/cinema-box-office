@@ -93,6 +93,11 @@ public class ProcurementEventServiceImpl implements ProcurementEventService {
 
         ResponsibilityCentre rc = rcOpt.get();
 
+        // Demo RC is accessible to all users in read-only mode
+        if ("Demo".equals(rc.getName())) {
+            return true;
+        }
+
         // Check if owner
         if (rc.getOwner().getId().equals(user.getId())) {
             return true;

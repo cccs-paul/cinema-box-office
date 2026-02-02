@@ -216,7 +216,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         }
 
         // Parse status
-        ProcurementItem.Status itemStatus = ProcurementItem.Status.DRAFT;
+        ProcurementItem.Status itemStatus = ProcurementItem.Status.NOT_STARTED;
         if (dto.getStatus() != null && !dto.getStatus().trim().isEmpty()) {
             try {
                 itemStatus = ProcurementItem.Status.valueOf(dto.getStatus().toUpperCase());
@@ -801,6 +801,11 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             return false;
         }
         ResponsibilityCentre rc = rcOpt.get();
+
+        // Demo RC is accessible to all users in read-only mode
+        if ("Demo".equals(rc.getName())) {
+            return true;
+        }
 
         // Check if owner
         if (rc.getOwner() != null && rc.getOwner().getId().equals(user.getId())) {

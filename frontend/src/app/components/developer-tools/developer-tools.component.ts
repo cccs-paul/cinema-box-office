@@ -29,6 +29,7 @@ export class DeveloperToolsComponent implements OnInit {
   isApiHealthy = false;
   databaseStatus = 'Checking...';
   isDatabaseHealthy = false;
+  authMethods = 'Loading...';
 
   /**
    * Constructor.
@@ -44,6 +45,7 @@ export class DeveloperToolsComponent implements OnInit {
   ngOnInit(): void {
     this.checkApiHealth();
     this.checkDatabaseHealth();
+    this.loadAuthMethods();
   }
 
   /**
@@ -83,6 +85,35 @@ export class DeveloperToolsComponent implements OnInit {
         this.isDatabaseHealthy = false;
         this.databaseStatus = 'Database is not available';
         console.error('Database health check failed:', error);
+      },
+    });
+  }
+
+  /**
+   * Load enabled authentication methods from the API.
+   */
+  private loadAuthMethods(): void {
+    this.http.get<{
+      appAccount: { enabled: boolean; allowRegistration: boolean };
+      ldapEnabled: boolean;
+      oauth2Enabled: boolean;
+    }>('/api/auth/login-methods').subscribe({
+      next: (response) => {
+        const methods: string[] = [];
+        if (response.appAccount?.enabled) {
+          methods.push('LOCAL (App-managed)');
+        }
+        if (response.ldapEnabled) {
+          methods.push('LDAP');
+        }
+        if (response.oauth2Enabled) {
+          methods.push('OAuth2');
+        }
+        this.authMethods = methods.length > 0 ? methods.join(', ') : 'None configured';
+      },
+      error: (error) => {
+        this.authMethods = 'Unable to determine';
+        console.error('Failed to load auth methods:', error);
       },
     });
   }

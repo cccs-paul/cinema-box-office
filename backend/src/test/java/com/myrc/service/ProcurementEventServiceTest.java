@@ -105,7 +105,7 @@ class ProcurementEventServiceTest {
         testProcurementItem.setId(1L);
         testProcurementItem.setPurchaseRequisition("PR-2025-001");
         testProcurementItem.setName("Test Procurement Item");
-        testProcurementItem.setStatus(ProcurementItem.Status.DRAFT);
+        testProcurementItem.setStatus(ProcurementItem.Status.NOT_STARTED);
         testProcurementItem.setFiscalYear(testFY);
         testProcurementItem.setActive(true);
 

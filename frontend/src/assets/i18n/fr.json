@@ -60,7 +60,10 @@
     "clearFilters": "Effacer les filtres",
     "updating": "Mise à jour...",
     "summary": "Sommaire",
-    "uncategorized": "Non catégorisé"
+    "uncategorized": "Non catégorisé",
+    "comments": "Commentaires",
+    "creating": "Création...",
+    "deleting": "Suppression..."
   },
   "header": {
     "userMenu": "Menu utilisateur",
@@ -227,7 +230,23 @@
     "noItemsYet": "Aucun financement",
     "noItemsYetDesc": "Commencez par créer votre premier financement pour cet exercice.",
     "createFirstItem": "Créer le premier financement",
-    "noItemsHint": "Cliquez sur Ajouter un financement pour créer votre première entrée de financement."
+    "noItemsHint": "Cliquez sur Ajouter un financement pour créer votre première entrée de financement.",
+    "createNewItem": "Créer un nouveau financement",
+    "enterItemName": "Entrez le nom du financement",
+    "editItem": "Modifier le financement",
+    "updateItem": "Mettre à jour le financement",
+    "allocationHint": "Ajouter au moins une allocation",
+    "allocationRequired": "Au moins une allocation est requise",
+    "capOnlyHint": "Cette catégorie permet uniquement les allocations CAP",
+    "omOnlyHint": "Cette catégorie permet uniquement les allocations E&E",
+    "loadingItems": "Chargement des financements...",
+    "noCategory": "Sans catégorie",
+    "noMatchingItems": "Aucun élément correspondant",
+    "noMatchingItemsHint": "Aucun financement ne correspond aux filtres actuels.",
+    "exchangeRateToCad": "Taux de change vers CAD",
+    "enterComments": "Entrez les commentaires (optionnel)",
+    "enterExchangeRate": "Entrez le taux de change",
+    "optionalDescription": "Description optionnelle"
   },
   "procurement": {
     "title": "Approvisionnement",
@@ -388,7 +407,25 @@
     "totalsByMoneyType": "Totaux par type de fonds",
     "totalsByCategory": "Totaux par catégorie",
     "moneyType": "Type de fonds",
-    "updateItem": "Mettre à jour"
+    "updateItem": "Mettre à jour",
+    "createNewItem": "Créer une nouvelle dépense",
+    "enterItemName": "Entrez le nom de la dépense",
+    "editItem": "Modifier la dépense",
+    "allocationHint": "Ajouter au moins une allocation",
+    "allocationRequired": "Au moins une allocation est requise",
+    "capOnlyHint": "Cette catégorie permet uniquement les allocations CAP",
+    "omOnlyHint": "Cette catégorie permet uniquement les allocations E&E",
+    "loadingItems": "Chargement des dépenses...",
+    "noCategory": "Sans catégorie",
+    "noMatchingItems": "Aucun élément correspondant",
+    "noMatchingItemsHint": "Aucune dépense ne correspond aux filtres actuels.",
+    "vendorName": "Nom du fournisseur",
+    "configureCategoriesFirst": "Veuillez configurer les catégories dans Configuration",
+    "createItem": "Créer une dépense",
+    "enterExchangeRate": "Entrez le taux de change",
+    "optionalDescription": "Description optionnelle",
+    "poInvoice": "BC/Facture #",
+    "rateToCad": "Taux vers CAD"
   },
   "summary": {
     "title": "Sommaire",

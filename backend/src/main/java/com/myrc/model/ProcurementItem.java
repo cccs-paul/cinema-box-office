@@ -56,14 +56,23 @@ public class ProcurementItem {
      * Enumeration of procurement item status values.
      */
     public enum Status {
-        DRAFT,
-        PENDING_QUOTES,
-        QUOTES_RECEIVED,
-        UNDER_REVIEW,
-        APPROVED,
-        PO_ISSUED,
-        COMPLETED,
-        CANCELLED
+        NOT_STARTED,
+        QUOTE,
+        SAM_ACKNOWLEDGEMENT_REQUESTED,
+        SAM_ACKNOWLEDGEMENT_RECEIVED,
+        PACKAGE_SENT_TO_PROCUREMENT,
+        ACKNOWLEDGED_BY_PROCUREMENT,
+        PAUSED,
+        CANCELLED,
+        CONTRACT_AWARDED,
+        GOODS_RECEIVED,
+        FULL_INVOICE_RECEIVED,
+        PARTIAL_INVOICE_RECEIVED,
+        MONTHLY_INVOICE_RECEIVED,
+        FULL_INVOICE_SIGNED,
+        PARTIAL_INVOICE_SIGNED,
+        MONTHLY_INVOICE_SIGNED,
+        CONTRACT_AMENDED
     }
 
     @Id
@@ -90,8 +99,8 @@ public class ProcurementItem {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private Status status = Status.DRAFT;
+    @Column(nullable = false, length = 50)
+    private Status status = Status.NOT_STARTED;
 
     /**
      * The currency for this procurement item. Defaults to CAD.
@@ -191,12 +200,12 @@ public class ProcurementItem {
         this.purchaseRequisition = purchaseRequisition;
         this.name = name;
         this.description = description;
-        this.status = status != null ? status : Status.DRAFT;
+        this.status = status != null ? status : Status.NOT_STARTED;
         this.fiscalYear = fiscalYear;
     }
 
     public ProcurementItem(String purchaseRequisition, String name, FiscalYear fiscalYear) {
-        this(purchaseRequisition, name, null, Status.DRAFT, fiscalYear);
+        this(purchaseRequisition, name, null, Status.NOT_STARTED, fiscalYear);
     }
 
     // Getters and Setters

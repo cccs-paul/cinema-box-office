@@ -58,6 +58,14 @@ public interface ResponsibilityCentreRepository extends JpaRepository<Responsibi
   boolean existsByName(String name);
 
   /**
+   * Find a responsibility centre by name.
+   *
+   * @param name the name of the responsibility centre
+   * @return optional containing the responsibility centre if found
+   */
+  Optional<ResponsibilityCentre> findByName(String name);
+
+  /**
    * Check if a responsibility centre with the given name exists, excluding a specific RC ID.
    * Used for updates to allow keeping the same name.
    *

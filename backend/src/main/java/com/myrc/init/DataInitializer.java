@@ -601,8 +601,8 @@ public class DataInitializer implements ApplicationRunner {
         // Note: Final spending amounts may differ from quotes due to negotiations, partial deliveries, etc.
         for (ProcurementItem procItem : procurementItems) {
             // Only create spending items for procurement items that have progressed sufficiently
-            if (procItem.getStatus() == ProcurementItem.Status.DRAFT ||
-                procItem.getStatus() == ProcurementItem.Status.PENDING_QUOTES ||
+            if (procItem.getStatus() == ProcurementItem.Status.NOT_STARTED ||
+                procItem.getStatus() == ProcurementItem.Status.QUOTE ||
                 procItem.getStatus() == ProcurementItem.Status.CANCELLED) {
                 continue;
             }
@@ -881,49 +881,49 @@ public class DataInitializer implements ApplicationRunner {
         Object[][] demoItems = {
             {"PR-2025-001", "PO-2025-001", "Dell PowerEdge Servers", 
              "3x Dell PowerEdge R750 rack servers for data center expansion",
-             ProcurementItem.Status.COMPLETED, Currency.CAD, null},
+             ProcurementItem.Status.GOODS_RECEIVED, Currency.CAD, null},
             {"PR-2025-002", "PO-2025-002", "NVIDIA A100 GPUs", 
              "4x NVIDIA A100 80GB GPUs for machine learning workloads",
-             ProcurementItem.Status.PO_ISSUED, Currency.USD, new BigDecimal("1.360000")},
+             ProcurementItem.Status.ACKNOWLEDGED_BY_PROCUREMENT, Currency.USD, new BigDecimal("1.360000")},
             {"PR-2025-003", null, "Cisco Network Switches", 
              "Cisco Catalyst 9300 switches for network infrastructure upgrade",
-             ProcurementItem.Status.APPROVED, Currency.CAD, null},
+             ProcurementItem.Status.PACKAGE_SENT_TO_PROCUREMENT, Currency.CAD, null},
             {"PR-2025-004", null, "NetApp Storage Array", 
              "NetApp AFF A400 storage system with 50TB capacity for data center",
-             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null},
+             ProcurementItem.Status.SAM_ACKNOWLEDGEMENT_RECEIVED, Currency.CAD, null},
             {"PR-2025-005", null, "HP LaserJet Printers", 
              "5x HP LaserJet Enterprise printers for office deployment",
-             ProcurementItem.Status.PENDING_QUOTES, Currency.CAD, null},
+             ProcurementItem.Status.QUOTE, Currency.CAD, null},
             {"PR-2025-006", null, "IBM Cloud Credits", 
              "Annual IBM Cloud compute and storage credits",
-             ProcurementItem.Status.UNDER_REVIEW, Currency.USD, new BigDecimal("1.360000")},
+             ProcurementItem.Status.SAM_ACKNOWLEDGEMENT_RECEIVED, Currency.USD, new BigDecimal("1.360000")},
             {"PR-2025-007", "PO-2025-003", "Lenovo ThinkPads", 
              "25x Lenovo ThinkPad X1 Carbon laptops for staff refresh",
-             ProcurementItem.Status.COMPLETED, Currency.CAD, null},
+             ProcurementItem.Status.FULL_INVOICE_SIGNED, Currency.CAD, null},
             {"PR-2025-008", null, "Autodesk Licenses", 
              "50x Autodesk AutoCAD licenses - 3-year subscription",
-             ProcurementItem.Status.DRAFT, Currency.USD, new BigDecimal("1.360000")},
+             ProcurementItem.Status.NOT_STARTED, Currency.USD, new BigDecimal("1.360000")},
             {"PR-2025-009", null, "Laboratory Equipment", 
              "Oscilloscopes and signal generators for research laboratory",
-             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000")},
+             ProcurementItem.Status.QUOTE, Currency.EUR, new BigDecimal("1.470000")},
             {"PR-2025-010", "PO-2025-004", "AWS Reserved Instances", 
              "3-year reserved capacity for EC2 and RDS instances",
-             ProcurementItem.Status.PO_ISSUED, Currency.USD, new BigDecimal("1.360000")},
+             ProcurementItem.Status.ACKNOWLEDGED_BY_PROCUREMENT, Currency.USD, new BigDecimal("1.360000")},
             {"PR-2025-011", null, "Office Furniture", 
              "Standing desks and ergonomic chairs for new office space",
-             ProcurementItem.Status.APPROVED, Currency.CAD, null},
+             ProcurementItem.Status.PACKAGE_SENT_TO_PROCUREMENT, Currency.CAD, null},
             {"PR-2025-012", null, "Security Assessment Services", 
              "Annual penetration testing and security audit services",
-             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null},
+             ProcurementItem.Status.SAM_ACKNOWLEDGEMENT_RECEIVED, Currency.CAD, null},
             {"PR-2025-013", null, "UK Training Program", 
              "Staff training program with UK-based vendor",
-             ProcurementItem.Status.DRAFT, Currency.GBP, new BigDecimal("1.680000")},
+             ProcurementItem.Status.NOT_STARTED, Currency.GBP, new BigDecimal("1.680000")},
             {"PR-2025-014", null, "Video Conferencing System", 
              "Cisco Webex Board 85 for main conference room",
-             ProcurementItem.Status.UNDER_REVIEW, Currency.CAD, null},
+             ProcurementItem.Status.SAM_ACKNOWLEDGEMENT_RECEIVED, Currency.CAD, null},
             {"PR-2025-015", null, "European Instrumentation", 
              "Specialized instrumentation from European manufacturer",
-             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000")}
+             ProcurementItem.Status.QUOTE, Currency.EUR, new BigDecimal("1.470000")}
         };
 
         for (Object[] item : demoItems) {
@@ -972,9 +972,10 @@ public class DataInitializer implements ApplicationRunner {
      * @param procurementItem the procurement item to add quotes to
      */
     private void addDemoQuotes(ProcurementItem procurementItem) {
-        // Only add quotes to items that would have quotes (QUOTES_RECEIVED, UNDER_REVIEW, APPROVED, PO_ISSUED, COMPLETED)
+        // Only add quotes to items that would have quotes (SAM_ACKNOWLEDGEMENT_RECEIVED and beyond)
         ProcurementItem.Status status = procurementItem.getStatus();
-        if (status == ProcurementItem.Status.DRAFT || status == ProcurementItem.Status.PENDING_QUOTES) {
+        if (status == ProcurementItem.Status.NOT_STARTED || status == ProcurementItem.Status.QUOTE ||
+            status == ProcurementItem.Status.SAM_ACKNOWLEDGEMENT_REQUESTED) {
             return;
         }
 

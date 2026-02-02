@@ -111,6 +111,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
     User user = userOpt.get();
     List<ResponsibilityCentreDTO> result = new java.util.ArrayList<>();
+    java.util.Set<Long> addedRcIds = new java.util.HashSet<>();
 
     // Get RCs owned by the user
     List<ResponsibilityCentre> ownedRCs = rcRepository.findByOwner(user);
@@ -118,13 +119,24 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       // Demo RC is always read-only for all users, otherwise owner has OWNER access
       String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "OWNER";
       result.add(ResponsibilityCentreDTO.fromEntity(rc, username, accessLevel));
+      addedRcIds.add(rc.getId());
     }
 
     // Get RCs shared with the user
     List<RCAccess> accessRecords = accessRepository.findByUser(user);
     for (RCAccess access : accessRecords) {
       ResponsibilityCentre rc = access.getResponsibilityCentre();
-      result.add(ResponsibilityCentreDTO.fromEntityWithAccess(rc, username, access));
+      if (!addedRcIds.contains(rc.getId())) {
+        result.add(ResponsibilityCentreDTO.fromEntityWithAccess(rc, username, access));
+        addedRcIds.add(rc.getId());
+      }
+    }
+
+    // Always include Demo RC for all users (read-only) even if they don't have an explicit access record
+    Optional<ResponsibilityCentre> demoRcOpt = rcRepository.findByName(DEMO_RC_NAME);
+    if (demoRcOpt.isPresent() && !addedRcIds.contains(demoRcOpt.get().getId())) {
+      ResponsibilityCentre demoRc = demoRcOpt.get();
+      result.add(ResponsibilityCentreDTO.fromEntity(demoRc, username, "READ_ONLY"));
     }
 
     return result;
@@ -168,11 +180,14 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
     User user = userOpt.get();
 
+    // Demo RC is always accessible to all users in read-only mode
+    if (DEMO_RC_NAME.equals(rc.getName())) {
+      return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, "READ_ONLY"));
+    }
+
     // Check if user is the owner
     if (rc.getOwner().getId().equals(user.getId())) {
-      // Demo RC is always read-only for all users, otherwise owner has OWNER access
-      String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "OWNER";
-      return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, accessLevel));
+      return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, "OWNER"));
     }
 
     // Check if user has access

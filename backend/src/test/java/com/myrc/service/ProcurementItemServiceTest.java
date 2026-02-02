@@ -119,7 +119,7 @@ class ProcurementItemServiceTest {
     testProcurementItem.setName("Test Item");
     testProcurementItem.setDescription("Test Description");
     testProcurementItem.setFiscalYear(testFiscalYear);
-    testProcurementItem.setStatus(ProcurementItem.Status.DRAFT);
+    testProcurementItem.setStatus(ProcurementItem.Status.NOT_STARTED);
     testProcurementItem.setActive(true);
   }
 
