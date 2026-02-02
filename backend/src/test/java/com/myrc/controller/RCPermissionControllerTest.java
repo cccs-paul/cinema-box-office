@@ -202,6 +202,39 @@ class RCPermissionControllerTest {
 
       assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
+
+    @Test
+    @DisplayName("Should return bad request when user already has same access level")
+    void shouldReturnBadRequestWhenUserAlreadyHasSameAccessLevel() {
+      RCPermissionController.GrantUserAccessRequest request = new RCPermissionController.GrantUserAccessRequest();
+      request.setUsername("existinguser");
+      request.setAccessLevel("READ_WRITE");
+
+      when(permissionService.grantUserAccess(1L, "existinguser", AccessLevel.READ_WRITE, "testuser"))
+          .thenThrow(new IllegalArgumentException("User 'existinguser' already has READ_WRITE access to this RC."));
+
+      ResponseEntity<?> response = controller.grantUserAccess(1L, request, authentication);
+
+      assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+      assertTrue(response.getBody().toString().contains("already has READ_WRITE access"));
+    }
+
+    @Test
+    @DisplayName("Should return bad request when user already has different access level")
+    void shouldReturnBadRequestWhenUserAlreadyHasDifferentAccessLevel() {
+      RCPermissionController.GrantUserAccessRequest request = new RCPermissionController.GrantUserAccessRequest();
+      request.setUsername("existinguser");
+      request.setAccessLevel("READ_ONLY");
+
+      when(permissionService.grantUserAccess(1L, "existinguser", AccessLevel.READ_ONLY, "testuser"))
+          .thenThrow(new IllegalArgumentException("User 'existinguser' already has READ_WRITE access to this RC. Use update to change the access level."));
+
+      ResponseEntity<?> response = controller.grantUserAccess(1L, request, authentication);
+
+      assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+      assertTrue(response.getBody().toString().contains("already has READ_WRITE access"));
+      assertTrue(response.getBody().toString().contains("Use update to change the access level"));
+    }
   }
 
   @Nested
@@ -288,6 +321,45 @@ class RCPermissionControllerTest {
       ResponseEntity<?> response = controller.grantGroupAccess(1L, request, authentication);
 
       assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Should return bad request when group already has same access level")
+    void shouldReturnBadRequestWhenGroupAlreadyHasSameAccessLevel() {
+      RCPermissionController.GrantGroupAccessRequest request = new RCPermissionController.GrantGroupAccessRequest();
+      request.setPrincipalIdentifier("existing-group");
+      request.setPrincipalDisplayName("Existing Group");
+      request.setPrincipalType("GROUP");
+      request.setAccessLevel("READ_WRITE");
+
+      when(permissionService.grantGroupAccess(1L, "existing-group", "Existing Group", PrincipalType.GROUP, AccessLevel.READ_WRITE, "testuser"))
+          .thenThrow(new IllegalArgumentException("Group 'existing-group' already has READ_WRITE access to this RC."));
+
+      ResponseEntity<?> response = controller.grantGroupAccess(1L, request, authentication);
+
+      assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+      assertTrue(response.getBody().toString().contains("Group"));
+      assertTrue(response.getBody().toString().contains("already has READ_WRITE access"));
+    }
+
+    @Test
+    @DisplayName("Should return bad request when group already has different access level")
+    void shouldReturnBadRequestWhenGroupAlreadyHasDifferentAccessLevel() {
+      RCPermissionController.GrantGroupAccessRequest request = new RCPermissionController.GrantGroupAccessRequest();
+      request.setPrincipalIdentifier("existing-group");
+      request.setPrincipalDisplayName("Existing Group");
+      request.setPrincipalType("GROUP");
+      request.setAccessLevel("READ_ONLY");
+
+      when(permissionService.grantGroupAccess(1L, "existing-group", "Existing Group", PrincipalType.GROUP, AccessLevel.READ_ONLY, "testuser"))
+          .thenThrow(new IllegalArgumentException("Group 'existing-group' already has READ_WRITE access to this RC. Use update to change the access level."));
+
+      ResponseEntity<?> response = controller.grantGroupAccess(1L, request, authentication);
+
+      assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+      assertTrue(response.getBody().toString().contains("Group"));
+      assertTrue(response.getBody().toString().contains("already has READ_WRITE access"));
+      assertTrue(response.getBody().toString().contains("Use update to change the access level"));
     }
   }
 

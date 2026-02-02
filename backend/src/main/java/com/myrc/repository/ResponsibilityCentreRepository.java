@@ -50,6 +50,24 @@ public interface ResponsibilityCentreRepository extends JpaRepository<Responsibi
   boolean existsByNameAndOwner(String name, User owner);
 
   /**
+   * Check if a responsibility centre with the given name exists (globally unique).
+   *
+   * @param name the name of the responsibility centre
+   * @return true if exists, false otherwise
+   */
+  boolean existsByName(String name);
+
+  /**
+   * Check if a responsibility centre with the given name exists, excluding a specific RC ID.
+   * Used for updates to allow keeping the same name.
+   *
+   * @param name the name of the responsibility centre
+   * @param id the ID of the RC to exclude from the check
+   * @return true if another RC with this name exists, false otherwise
+   */
+  boolean existsByNameAndIdNot(String name, Long id);
+
+  /**
    * Find all active responsibility centres owned by a specific user.
    *
    * @param owner the owner user

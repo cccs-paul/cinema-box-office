@@ -45,11 +45,11 @@ public class RegistrationRequest {
         if (username.length() < 3 || username.length() > 50) {
             return false;
         }
-        if (email == null || email.trim().isEmpty()) {
-            return false;
-        }
-        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
-            return false;
+        // Email is optional, but if provided must be valid
+        if (email != null && !email.trim().isEmpty()) {
+            if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+                return false;
+            }
         }
         if (password == null || password.isEmpty()) {
             return false;
@@ -81,11 +81,11 @@ public class RegistrationRequest {
         if (!username.matches("^[a-zA-Z0-9_-]+$")) {
             return "Username can only contain letters, numbers, underscores, and hyphens";
         }
-        if (email == null || email.trim().isEmpty()) {
-            return "Email is required";
-        }
-        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
-            return "Invalid email format";
+        // Email is optional, but if provided must be valid
+        if (email != null && !email.trim().isEmpty()) {
+            if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+                return "Invalid email format";
+            }
         }
         if (password == null || password.isEmpty()) {
             return "Password is required";

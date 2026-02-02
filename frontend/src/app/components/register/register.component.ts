@@ -112,7 +112,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
         Validators.pattern(/^[a-zA-Z0-9_-]+$/)
       ]],
       email: ['', [
-        Validators.required,
+        // Email is optional, but if provided must be valid
         Validators.email,
         Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
       ]],

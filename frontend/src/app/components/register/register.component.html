@@ -69,19 +69,22 @@
           </small>
         </div>
 
-        <!-- Email Field -->
+        <!-- Email Field (Optional) -->
         <div class="form-group">
-          <label for="email" class="form-label">Email *</label>
+          <label for="email" class="form-label">Email</label>
           <input
             id="email"
             type="email"
             formControlName="email"
             class="form-input"
             [class.is-invalid]="hasError('email')"
-            placeholder="Enter your email address"
+            placeholder="Enter your email address (optional)"
             autocomplete="email"
           />
           <small *ngIf="hasError('email')" class="form-error">{{ getErrorMessage('email') }}</small>
+          <small *ngIf="!hasError('email')" class="form-hint">
+            Optional - can be added later in your profile
+          </small>
         </div>
 
         <!-- Full Name Field (Optional) -->

@@ -67,18 +67,24 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Username already exists: " + createUserRequest.getUsername());
         }
 
-        // Check if email already exists
-        if (userRepository.existsByEmailIgnoreCase(createUserRequest.getEmail())) {
-            throw new IllegalArgumentException("Email already registered: " + createUserRequest.getEmail());
+        // Generate placeholder email if not provided
+        String email = createUserRequest.getEmail();
+        if (email == null || email.trim().isEmpty()) {
+            email = createUserRequest.getUsername() + "@noemail.local";
+        }
+
+        // Check if email already exists (only if a real email was provided)
+        if (!email.endsWith("@noemail.local") && userRepository.existsByEmailIgnoreCase(email)) {
+            throw new IllegalArgumentException("Email already registered: " + email);
         }
 
         // Determine auth provider
         User.AuthProvider authProvider = User.AuthProvider.valueOf(createUserRequest.getAuthProvider().toUpperCase());
 
-        // Build user entity
+        // Build user entity (use the processed email, not the original)
         User user = User.builder()
             .username(createUserRequest.getUsername())
-            .email(createUserRequest.getEmail())
+            .email(email)
             .fullName(createUserRequest.getFullName())
             .authProvider(authProvider)
             .externalId(createUserRequest.getExternalId())

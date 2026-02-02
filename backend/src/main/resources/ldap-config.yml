@@ -1,0 +1,232 @@
+# ============================================================================
+# myRC LDAP Configuration
+# ============================================================================
+# This is an example LDAP configuration file for myRC.
+# Copy this file and modify it for your environment.
+#
+# Copyright (c) 2026 myRC Team
+# Licensed under MIT License
+# ============================================================================
+
+# To use this configuration:
+# 1. Copy this file to application-ldap.yml
+# 2. Set SPRING_PROFILES_ACTIVE=ldap when starting the application
+# 3. Or include these settings in your main application.yml
+
+app:
+  security:
+    # Enable LDAP in login methods
+    login-methods:
+      ldap:
+        enabled: true
+
+    # ========================================================================
+    # LDAP Configuration
+    # ========================================================================
+    ldap:
+      # Enable LDAP authentication
+      enabled: true
+
+      # ------------------------------------------------------------------------
+      # Server Connection
+      # ------------------------------------------------------------------------
+      # LDAP server URL
+      # - Use ldap:// for plain text (port 389)
+      # - Use ldaps:// for SSL (port 636)
+      # - Multiple URLs can be space-separated for failover:
+      #   "ldap://primary.example.com:389 ldap://secondary.example.com:389"
+      url: ldap://ldap.example.com:389
+
+      # Base DN - the root of your directory
+      base-dn: dc=example,dc=com
+
+      # Manager/Admin DN for binding to perform searches
+      # This account needs read access to users and groups
+      manager-dn: cn=admin,dc=example,dc=com
+      manager-password: ${LDAP_MANAGER_PASSWORD:your-admin-password}
+
+      # Connection timeouts in milliseconds
+      connect-timeout: 5000
+      read-timeout: 5000
+
+      # ------------------------------------------------------------------------
+      # User Search Configuration
+      # ------------------------------------------------------------------------
+      # Search base for users (relative to base-dn)
+      user-search-base: ou=users
+
+      # Search filter for finding users
+      # {0} = username entered by user
+      user-search-filter: "(uid={0})"
+
+      # Alternative: Use DN pattern for direct binding (faster, no search needed)
+      # If set, this is used instead of search+bind
+      # user-dn-pattern: "uid={0},ou=users,dc=example,dc=com"
+
+      # ------------------------------------------------------------------------
+      # Group Search Configuration
+      # ------------------------------------------------------------------------
+      # Search base for groups (relative to base-dn)
+      group-search-base: ou=groups
+
+      # Search filter for finding user's groups
+      # {0} = user's full DN
+      # {1} = username
+      group-search-filter: "(member={0})"
+
+      # Attribute containing the group name
+      group-name-attribute: cn
+
+      # ------------------------------------------------------------------------
+      # User Behavior
+      # ------------------------------------------------------------------------
+      # Allow automatic user creation when authenticating via LDAP
+      allow-sign-up: true
+
+      # Skip organization/RC role sync from LDAP groups
+      # Set to true if you want to manage permissions manually
+      skip-org-role-sync: false
+
+      # ------------------------------------------------------------------------
+      # Attribute Mapping
+      # ------------------------------------------------------------------------
+      # Map LDAP attributes to application user fields
+      attributes:
+        username: uid           # User ID attribute
+        email: mail             # Email address
+        name: cn                # Full name / display name
+        surname: sn             # Last name
+        given-name: givenName   # First name
+        member-of: memberOf     # Group membership attribute
+
+      # ------------------------------------------------------------------------
+      # SSL/TLS Configuration
+      # ------------------------------------------------------------------------
+      ssl:
+        # Enable SSL (use with ldaps:// URL)
+        enabled: false
+
+        # Use StartTLS for securing connection
+        start-tls: false
+
+        # Skip certificate verification (NOT recommended for production)
+        skip-verify: false
+
+        # Minimum TLS version
+        min-tls-version: TLSv1.2
+
+        # Path to CA certificate file (for certificate verification)
+        # ca-cert-path: /etc/ssl/certs/ldap-ca.crt
+
+        # Client certificate for mutual TLS (optional)
+        # client-cert-path: /etc/ssl/certs/client.crt
+        # client-key-path: /etc/ssl/private/client.key
+
+      # ------------------------------------------------------------------------
+      # Group to Role Mappings
+      # ------------------------------------------------------------------------
+      # Map LDAP groups to application roles and permissions
+      # Each mapping can specify:
+      # - group-dn: Full DN of the LDAP group
+      # - role: Application role (ADMIN, USER)
+      # - is-admin: Grant application admin privileges
+      # - rc-access: Map to specific Responsibility Centres
+      group-mappings:
+        # Administrators group - full admin access
+        - group-dn: "cn=admins,ou=groups,dc=example,dc=com"
+          role: ADMIN
+          is-admin: true
+
+        # Regular users group - basic user access
+        - group-dn: "cn=users,ou=groups,dc=example,dc=com"
+          role: USER
+          is-admin: false
+
+        # Finance team - read/write access to finance RC
+        - group-dn: "cn=finance-team,ou=groups,dc=example,dc=com"
+          role: USER
+          is-admin: false
+          rc-access:
+            FINANCE-RC: READ_WRITE
+
+        # Auditors - read-only access to all RCs
+        - group-dn: "cn=auditors,ou=groups,dc=example,dc=com"
+          role: USER
+          is-admin: false
+          rc-access:
+            FINANCE-RC: READ_ONLY
+            OPS-RC: READ_ONLY
+
+# ============================================================================
+# Example Configurations for Different LDAP Servers
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Active Directory Example
+# ----------------------------------------------------------------------------
+# app:
+#   security:
+#     ldap:
+#       enabled: true
+#       url: ldap://ad.company.com:389
+#       base-dn: dc=company,dc=com
+#       manager-dn: cn=ldap-bind,ou=service-accounts,dc=company,dc=com
+#       manager-password: ${LDAP_MANAGER_PASSWORD}
+#       user-search-base: ou=Users
+#       user-search-filter: "(sAMAccountName={0})"
+#       group-search-base: ou=Groups
+#       group-search-filter: "(member={0})"
+#       group-name-attribute: cn
+#       attributes:
+#         username: sAMAccountName
+#         email: mail
+#         name: displayName
+#         surname: sn
+#         given-name: givenName
+#         member-of: memberOf
+#       group-mappings:
+#         - group-dn: "cn=MyRC-Admins,ou=Groups,dc=company,dc=com"
+#           role: ADMIN
+#           is-admin: true
+#         - group-dn: "cn=MyRC-Users,ou=Groups,dc=company,dc=com"
+#           role: USER
+
+# ----------------------------------------------------------------------------
+# OpenLDAP Example
+# ----------------------------------------------------------------------------
+# app:
+#   security:
+#     ldap:
+#       enabled: true
+#       url: ldap://openldap.company.com:389
+#       base-dn: dc=company,dc=com
+#       manager-dn: cn=admin,dc=company,dc=com
+#       manager-password: ${LDAP_MANAGER_PASSWORD}
+#       user-search-base: ou=people
+#       user-search-filter: "(uid={0})"
+#       user-dn-pattern: "uid={0},ou=people,dc=company,dc=com"
+#       group-search-base: ou=groups
+#       group-search-filter: "(memberUid={1})"
+#       group-name-attribute: cn
+#       attributes:
+#         username: uid
+#         email: mail
+#         name: cn
+#         surname: sn
+#         given-name: givenName
+
+# ----------------------------------------------------------------------------
+# LDAPS (SSL) Example
+# ----------------------------------------------------------------------------
+# app:
+#   security:
+#     ldap:
+#       enabled: true
+#       url: ldaps://ldap.company.com:636
+#       base-dn: dc=company,dc=com
+#       manager-dn: cn=admin,dc=company,dc=com
+#       manager-password: ${LDAP_MANAGER_PASSWORD}
+#       ssl:
+#         enabled: true
+#         min-tls-version: TLSv1.2
+#         ca-cert-path: /etc/ssl/certs/ldap-ca.crt

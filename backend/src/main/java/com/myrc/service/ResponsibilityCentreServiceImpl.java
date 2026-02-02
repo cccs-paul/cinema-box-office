@@ -140,10 +140,10 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
     User user = userOpt.get();
 
-    // Check if name already exists for this user
-    if (rcRepository.existsByNameAndOwner(name, user)) {
+    // Check if name already exists globally (RC names must be unique across all users)
+    if (rcRepository.existsByName(name)) {
       throw new IllegalArgumentException(
-          "A Responsibility Centre with this name already exists for this user");
+          "A Responsibility Centre with this name already exists. RC names must be unique.");
     }
 
     ResponsibilityCentre rc = new ResponsibilityCentre(name, description, user);
@@ -204,6 +204,12 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     // Only owner can update
     if (!rc.getOwner().getId().equals(user.getId())) {
       throw new IllegalAccessError("Only the owner can update this RC");
+    }
+
+    // Check if the new name already exists (excluding the current RC)
+    if (!rc.getName().equals(name) && rcRepository.existsByNameAndIdNot(name, rcId)) {
+      throw new IllegalArgumentException(
+          "A Responsibility Centre with this name already exists. RC names must be unique.");
     }
 
     rc.setName(name);
@@ -430,10 +436,10 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       throw new IllegalAccessError("User does not have access to clone this RC");
     }
 
-    // Check if name already exists for this user
-    if (rcRepository.existsByNameAndOwner(newName, user)) {
+    // Check if name already exists globally (RC names must be unique across all users)
+    if (rcRepository.existsByName(newName)) {
       throw new IllegalArgumentException(
-          "A Responsibility Centre with this name already exists for this user");
+          "A Responsibility Centre with this name already exists. RC names must be unique.");
     }
 
     // Create the cloned RC

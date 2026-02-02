@@ -50,15 +50,64 @@ app:
         enabled: false
     ldap:
       enabled: false
-      # LDAP server configuration
+      # LDAP server URL (ldap:// for plain, ldaps:// for SSL)
+      # Multiple URLs can be space-separated for failover
       url: ldap://ldap.example.com:389
+      # Base DN for all LDAP operations
       base-dn: dc=example,dc=com
+      # User search settings
       user-search-base: ou=users
       user-search-filter: "(uid={0})"
+      # Optional: Direct bind pattern (use instead of search+bind)
+      # user-dn-pattern: "uid={0},ou=users,dc=example,dc=com"
+      # Group search settings
       group-search-base: ou=groups
       group-search-filter: "(member={0})"
+      group-name-attribute: cn
+      # Manager credentials for search operations
       manager-dn: cn=admin,dc=example,dc=com
-      manager-password: admin_password
+      manager-password: ${LDAP_MANAGER_PASSWORD:admin_password}
+      # Timeouts
+      connect-timeout: 5000
+      read-timeout: 5000
+      # Allow automatic user creation on first login
+      allow-sign-up: true
+      # Skip organization/RC role sync from LDAP groups
+      skip-org-role-sync: false
+      # SSL/TLS configuration
+      ssl:
+        enabled: false
+        start-tls: false
+        skip-verify: false
+        min-tls-version: TLSv1.2
+        # ca-cert-path: /path/to/ca.crt
+        # client-cert-path: /path/to/client.crt
+        # client-key-path: /path/to/client.key
+      # Attribute mappings from LDAP to application fields
+      attributes:
+        username: uid
+        email: mail
+        name: cn
+        surname: sn
+        given-name: givenName
+        member-of: memberOf
+      # Group to role mappings
+      # Maps LDAP groups to application roles
+      group-mappings:
+        # Example: Map admins group to ADMIN role
+        # - group-dn: "cn=admins,ou=groups,dc=example,dc=com"
+        #   role: ADMIN
+        #   is-admin: true
+        # Example: Map users group to USER role
+        # - group-dn: "cn=users,ou=groups,dc=example,dc=com"
+        #   role: USER
+        #   is-admin: false
+        # Example: Map group with RC access
+        # - group-dn: "cn=finance-team,ou=groups,dc=example,dc=com"
+        #   role: USER
+        #   rc-access:
+        #     RC001: READ_WRITE
+        #     RC002: READ_ONLY
     oauth2:
       enabled: false
       # OAuth2 client configuration

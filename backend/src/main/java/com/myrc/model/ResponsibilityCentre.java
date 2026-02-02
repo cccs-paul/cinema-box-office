@@ -31,7 +31,7 @@ import org.hibernate.annotations.UpdateTimestamp;
  */
 @Entity
 @Table(name = "responsibility_centres", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"name", "owner_id"}, name = "uk_rc_name_owner")
+    @UniqueConstraint(columnNames = {"name"}, name = "uk_rc_name")
 })
 public class ResponsibilityCentre {
 

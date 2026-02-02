@@ -184,6 +184,58 @@ class AuthControllerTest {
         }
 
         @Test
+        @DisplayName("Should register user successfully without email")
+        void shouldRegisterUserSuccessfullyWithoutEmail() {
+            when(userService.getUserByUsername("newuser")).thenReturn(Optional.empty());
+
+            UserDTO createdUser = new UserDTO();
+            createdUser.setId(1L);
+            createdUser.setUsername("newuser");
+            createdUser.setEmail("newuser@noemail.local");
+            when(userService.createUser(any(CreateUserRequest.class))).thenReturn(createdUser);
+
+            RegistrationRequest request = new RegistrationRequest();
+            request.setUsername("newuser");
+            request.setEmail(null);  // No email provided
+            request.setPassword("Password123");
+            request.setConfirmPassword("Password123");
+            request.setFullName("New User");
+
+            ResponseEntity<?> response = controller.register(request);
+
+            assertEquals(HttpStatus.CREATED, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertTrue(response.getBody() instanceof UserDTO);
+            verify(userService).createUser(any(CreateUserRequest.class));
+        }
+
+        @Test
+        @DisplayName("Should register user successfully with empty email")
+        void shouldRegisterUserSuccessfullyWithEmptyEmail() {
+            when(userService.getUserByUsername("newuser")).thenReturn(Optional.empty());
+
+            UserDTO createdUser = new UserDTO();
+            createdUser.setId(1L);
+            createdUser.setUsername("newuser");
+            createdUser.setEmail("newuser@noemail.local");
+            when(userService.createUser(any(CreateUserRequest.class))).thenReturn(createdUser);
+
+            RegistrationRequest request = new RegistrationRequest();
+            request.setUsername("newuser");
+            request.setEmail("");  // Empty email
+            request.setPassword("Password123");
+            request.setConfirmPassword("Password123");
+            request.setFullName("New User");
+
+            ResponseEntity<?> response = controller.register(request);
+
+            assertEquals(HttpStatus.CREATED, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertTrue(response.getBody() instanceof UserDTO);
+            verify(userService).createUser(any(CreateUserRequest.class));
+        }
+
+        @Test
         @DisplayName("Should fail when App Account is disabled")
         void shouldFailWhenAppAccountDisabled() {
             loginMethodsProperties = createLoginMethodsProperties(false, true, true, true);

@@ -209,7 +209,7 @@ class ResponsibilityCentreServiceImplTest {
     @DisplayName("Should create RC successfully")
     void testCreateResponsibilityCentre() {
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.existsByNameAndOwner("Test RC", testUser)).thenReturn(false);
+      when(rcRepository.existsByName("Test RC")).thenReturn(false);
       when(rcRepository.save(any(ResponsibilityCentre.class))).thenReturn(testRC);
 
       ResponsibilityCentreDTO result = service.createResponsibilityCentre("testuser", "Test RC",
@@ -231,13 +231,15 @@ class ResponsibilityCentreServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when duplicate name")
+    @DisplayName("Should throw exception when duplicate name globally")
     void testCreateResponsibilityCentreDuplicateName() {
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.existsByNameAndOwner("Test RC", testUser)).thenReturn(true);
+      when(rcRepository.existsByName("Test RC")).thenReturn(true);
 
-      assertThrows(IllegalArgumentException.class,
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
           () -> service.createResponsibilityCentre("testuser", "Test RC", "desc"));
+      assertTrue(exception.getMessage().contains("already exists"));
+      assertTrue(exception.getMessage().contains("must be unique"));
     }
   }
 
@@ -296,12 +298,40 @@ class ResponsibilityCentreServiceImplTest {
     void testUpdateResponsibilityCentre() {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.existsByNameAndIdNot("Updated RC", 1L)).thenReturn(false);
       when(rcRepository.save(any(ResponsibilityCentre.class))).thenReturn(testRC);
 
       Optional<ResponsibilityCentreDTO> result = service.updateResponsibilityCentre(1L, "testuser",
           "Updated RC", "Updated description");
 
       assertTrue(result.isPresent());
+    }
+
+    @Test
+    @DisplayName("Should allow updating with same name")
+    void testUpdateResponsibilityCentreSameName() {
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      // No need to mock existsByNameAndIdNot because name hasn't changed
+      when(rcRepository.save(any(ResponsibilityCentre.class))).thenReturn(testRC);
+
+      Optional<ResponsibilityCentreDTO> result = service.updateResponsibilityCentre(1L, "testuser",
+          "Test RC", "Updated description only");
+
+      assertTrue(result.isPresent());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when renaming to existing name")
+    void testUpdateResponsibilityCentreDuplicateName() {
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.existsByNameAndIdNot("Existing RC", 1L)).thenReturn(true);
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+          () -> service.updateResponsibilityCentre(1L, "testuser", "Existing RC", "desc"));
+      assertTrue(exception.getMessage().contains("already exists"));
+      assertTrue(exception.getMessage().contains("must be unique"));
     }
   }
 
@@ -376,6 +406,45 @@ class ResponsibilityCentreServiceImplTest {
 
       assertTrue(result);
       verify(accessRepository).deleteByResponsibilityCentreAndUser(testRC, grantedToUser);
+    }
+  }
+
+  @Nested
+  @DisplayName("cloneResponsibilityCentre Tests")
+  class CloneTests {
+
+    @Test
+    @DisplayName("Should clone RC successfully")
+    void testCloneResponsibilityCentre() {
+      ResponsibilityCentre clonedRc = new ResponsibilityCentre();
+      clonedRc.setId(2L);
+      clonedRc.setName("Cloned RC");
+      clonedRc.setDescription("Test description");
+      clonedRc.setOwner(testUser);
+
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(rcRepository.existsByName("Cloned RC")).thenReturn(false);
+      when(rcRepository.save(any(ResponsibilityCentre.class))).thenReturn(clonedRc);
+
+      ResponsibilityCentreDTO result = service.cloneResponsibilityCentre(1L, "testuser", "Cloned RC");
+
+      assertNotNull(result);
+      assertEquals("Cloned RC", result.getName());
+      assertEquals("testuser", result.getOwnerUsername());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when clone name already exists globally")
+    void testCloneResponsibilityCentreDuplicateName() {
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(rcRepository.existsByName("Existing RC")).thenReturn(true);
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+          () -> service.cloneResponsibilityCentre(1L, "testuser", "Existing RC"));
+      assertTrue(exception.getMessage().contains("already exists"));
+      assertTrue(exception.getMessage().contains("must be unique"));
     }
   }
 }

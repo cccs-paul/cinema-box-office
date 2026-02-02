@@ -119,7 +119,14 @@ public class RCPermissionServiceImpl implements RCPermissionService {
     // Check if access already exists
     Optional<RCAccess> existingAccess = accessRepository.findByResponsibilityCentreAndUser(rc, targetUser);
     if (existingAccess.isPresent()) {
-      throw new IllegalArgumentException("User already has access to this RC. Use update to change access level.");
+      RCAccess existing = existingAccess.get();
+      if (existing.getAccessLevel() == accessLevel) {
+        throw new IllegalArgumentException("User '" + principalIdentifier + 
+            "' already has " + accessLevel.name() + " access to this RC.");
+      }
+      throw new IllegalArgumentException("User '" + principalIdentifier + 
+          "' already has " + existing.getAccessLevel().name() + 
+          " access to this RC. Use update to change the access level.");
     }
 
     // Don't allow granting access to the original owner (they already have implicit OWNER)
@@ -165,8 +172,15 @@ public class RCPermissionServiceImpl implements RCPermissionService {
     Optional<RCAccess> existingAccess = accessRepository
         .findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(rc, principalIdentifier, principalType);
     if (existingAccess.isPresent()) {
-      throw new IllegalArgumentException("This " + principalType.name().toLowerCase() + 
-          " already has access to this RC. Use update to change access level.");
+      RCAccess existing = existingAccess.get();
+      String principalTypeName = principalType == PrincipalType.GROUP ? "Group" : "Distribution list";
+      if (existing.getAccessLevel() == accessLevel) {
+        throw new IllegalArgumentException(principalTypeName + " '" + principalIdentifier + 
+            "' already has " + accessLevel.name() + " access to this RC.");
+      }
+      throw new IllegalArgumentException(principalTypeName + " '" + principalIdentifier + 
+          "' already has " + existing.getAccessLevel().name() + 
+          " access to this RC. Use update to change the access level.");
     }
 
     // Get the requesting user for audit trail

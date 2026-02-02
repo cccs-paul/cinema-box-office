@@ -103,17 +103,17 @@ class RegistrationRequestTest {
         }
 
         @Test
-        @DisplayName("Should return false for null email")
-        void shouldReturnFalseForNullEmail() {
+        @DisplayName("Should return true for null email (email is optional)")
+        void shouldReturnTrueForNullEmail() {
             request.setEmail(null);
-            assertFalse(request.isValid());
+            assertTrue(request.isValid());
         }
 
         @Test
-        @DisplayName("Should return false for empty email")
-        void shouldReturnFalseForEmptyEmail() {
+        @DisplayName("Should return true for empty email (email is optional)")
+        void shouldReturnTrueForEmptyEmail() {
             request.setEmail("");
-            assertFalse(request.isValid());
+            assertTrue(request.isValid());
         }
 
         @Test
@@ -223,21 +223,17 @@ class RegistrationRequestTest {
         }
 
         @Test
-        @DisplayName("Should return error for null email")
-        void shouldReturnErrorForNullEmail() {
+        @DisplayName("Should return null for null email (email is optional)")
+        void shouldReturnNullForNullEmail() {
             request.setEmail(null);
-            String error = request.getValidationError();
-            assertNotNull(error);
-            assertTrue(error.contains("Email is required"));
+            assertNull(request.getValidationError());
         }
 
         @Test
-        @DisplayName("Should return error for empty email")
-        void shouldReturnErrorForEmptyEmail() {
+        @DisplayName("Should return null for empty email (email is optional)")
+        void shouldReturnNullForEmptyEmail() {
             request.setEmail("   ");
-            String error = request.getValidationError();
-            assertNotNull(error);
-            assertTrue(error.contains("Email is required"));
+            assertNull(request.getValidationError());
         }
 
         @Test

@@ -67,6 +67,48 @@ class UserServiceTest {
 
     @Test
     @Transactional
+    void testCreateLocalUserWithoutEmail() {
+        CreateUserRequest request = new CreateUserRequest();
+        request.setUsername("noemailuser");
+        request.setEmail(null);  // No email provided
+        request.setFullName("No Email User");
+        request.setPassword("password123");
+        request.setAuthProvider("LOCAL");
+        Set<String> roles = new java.util.HashSet<>();
+        roles.add("USER");
+        request.setRoles(roles);
+
+        UserDTO result = userService.createUser(request);
+
+        assertNotNull(result);
+        assertEquals("noemailuser", result.getUsername());
+        assertEquals("noemailuser@noemail.local", result.getEmail());
+        assertEquals("LOCAL", result.getAuthProvider());
+    }
+
+    @Test
+    @Transactional
+    void testCreateLocalUserWithEmptyEmail() {
+        CreateUserRequest request = new CreateUserRequest();
+        request.setUsername("emptyemailuser");
+        request.setEmail("");  // Empty email
+        request.setFullName("Empty Email User");
+        request.setPassword("password123");
+        request.setAuthProvider("LOCAL");
+        Set<String> roles = new java.util.HashSet<>();
+        roles.add("USER");
+        request.setRoles(roles);
+
+        UserDTO result = userService.createUser(request);
+
+        assertNotNull(result);
+        assertEquals("emptyemailuser", result.getUsername());
+        assertEquals("emptyemailuser@noemail.local", result.getEmail());
+        assertEquals("LOCAL", result.getAuthProvider());
+    }
+
+    @Test
+    @Transactional
     void testDuplicateUsernameRejected() {
         CreateUserRequest request1 = new CreateUserRequest();
         request1.setUsername("testuser");

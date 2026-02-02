@@ -48,8 +48,8 @@ public class CreateUserRequest {
     public void setProfileDescription(String profileDescription) { this.profileDescription = profileDescription; }
 
     public boolean isValid() {
+        // Email is optional for self-registration
         return username != null && !username.trim().isEmpty() &&
-               email != null && !email.trim().isEmpty() &&
                authProvider != null && !authProvider.trim().isEmpty();
     }
 }

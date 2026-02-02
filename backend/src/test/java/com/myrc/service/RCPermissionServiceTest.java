@@ -201,16 +201,35 @@ class RCPermissionServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when user already has access")
+    @DisplayName("Should throw exception when user already has access with different level")
     void shouldThrowExceptionWhenUserAlreadyHasAccess() {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
       when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
-          .thenReturn(Optional.of(testAccess)); // Already has access
+          .thenReturn(Optional.of(testAccess)); // Already has READ_WRITE access
 
-      assertThrows(IllegalArgumentException.class, () ->
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
           permissionService.grantUserAccess(1L, "testuser", AccessLevel.READ_ONLY, "owner"));
+      
+      assertTrue(exception.getMessage().contains("already has READ_WRITE access"));
+      assertTrue(exception.getMessage().contains("Use update to change the access level"));
+    }
+
+    @Test
+    @DisplayName("Should throw exception with specific message when user already has same access level")
+    void shouldThrowExceptionWhenUserAlreadyHasSameAccessLevel() {
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
+          .thenReturn(Optional.of(testAccess)); // Already has READ_WRITE access
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+          permissionService.grantUserAccess(1L, "testuser", AccessLevel.READ_WRITE, "owner"));
+      
+      assertTrue(exception.getMessage().contains("already has READ_WRITE access"));
+      assertFalse(exception.getMessage().contains("Use update")); // Should NOT suggest update for same level
     }
   }
 
@@ -258,6 +277,81 @@ class RCPermissionServiceTest {
       assertThrows(IllegalArgumentException.class, () ->
           permissionService.grantGroupAccess(1L, "testuser", "Test User",
               PrincipalType.USER, AccessLevel.READ_ONLY, "owner"));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when group already has access with different level")
+    void shouldThrowExceptionWhenGroupAlreadyHasAccess() {
+      RCAccess existingGroupAccess = new RCAccess();
+      existingGroupAccess.setId(10L);
+      existingGroupAccess.setResponsibilityCentre(testRC);
+      existingGroupAccess.setPrincipalIdentifier("CN=TestGroup");
+      existingGroupAccess.setPrincipalType(PrincipalType.GROUP);
+      existingGroupAccess.setAccessLevel(AccessLevel.READ_WRITE);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+          eq(testRC), eq("CN=TestGroup"), eq(PrincipalType.GROUP)))
+          .thenReturn(Optional.of(existingGroupAccess));
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+          permissionService.grantGroupAccess(1L, "CN=TestGroup", "Test Group",
+              PrincipalType.GROUP, AccessLevel.READ_ONLY, "owner"));
+      
+      assertTrue(exception.getMessage().contains("Group"));
+      assertTrue(exception.getMessage().contains("already has READ_WRITE access"));
+      assertTrue(exception.getMessage().contains("Use update to change the access level"));
+    }
+
+    @Test
+    @DisplayName("Should throw exception with specific message when group already has same access level")
+    void shouldThrowExceptionWhenGroupAlreadyHasSameAccessLevel() {
+      RCAccess existingGroupAccess = new RCAccess();
+      existingGroupAccess.setId(10L);
+      existingGroupAccess.setResponsibilityCentre(testRC);
+      existingGroupAccess.setPrincipalIdentifier("CN=TestGroup");
+      existingGroupAccess.setPrincipalType(PrincipalType.GROUP);
+      existingGroupAccess.setAccessLevel(AccessLevel.READ_ONLY);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+          eq(testRC), eq("CN=TestGroup"), eq(PrincipalType.GROUP)))
+          .thenReturn(Optional.of(existingGroupAccess));
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+          permissionService.grantGroupAccess(1L, "CN=TestGroup", "Test Group",
+              PrincipalType.GROUP, AccessLevel.READ_ONLY, "owner"));
+      
+      assertTrue(exception.getMessage().contains("Group"));
+      assertTrue(exception.getMessage().contains("already has READ_ONLY access"));
+      assertFalse(exception.getMessage().contains("Use update")); // Should NOT suggest update for same level
+    }
+
+    @Test
+    @DisplayName("Should throw exception with specific message when distribution list already has same access level")
+    void shouldThrowExceptionWhenDistributionListAlreadyHasSameAccessLevel() {
+      RCAccess existingDlAccess = new RCAccess();
+      existingDlAccess.setId(10L);
+      existingDlAccess.setResponsibilityCentre(testRC);
+      existingDlAccess.setPrincipalIdentifier("DL-Finance@corp.local");
+      existingDlAccess.setPrincipalType(PrincipalType.DISTRIBUTION_LIST);
+      existingDlAccess.setAccessLevel(AccessLevel.READ_WRITE);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+          eq(testRC), eq("DL-Finance@corp.local"), eq(PrincipalType.DISTRIBUTION_LIST)))
+          .thenReturn(Optional.of(existingDlAccess));
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+          permissionService.grantGroupAccess(1L, "DL-Finance@corp.local", "Finance DL",
+              PrincipalType.DISTRIBUTION_LIST, AccessLevel.READ_WRITE, "owner"));
+      
+      assertTrue(exception.getMessage().contains("Distribution list"));
+      assertTrue(exception.getMessage().contains("already has READ_WRITE access"));
+      assertFalse(exception.getMessage().contains("Use update")); // Should NOT suggest update for same level
     }
   }
 

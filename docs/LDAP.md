@@ -1,300 +1,604 @@
-# LDAP Integration Guide
+# LDAP Authentication Guide
 
 ## Overview
 
-myRC supports LDAP (Lightweight Directory Access Protocol) for enterprise authentication. This guide covers configuring LDAP authentication with your Kubernetes deployment.
+myRC supports LDAP (Lightweight Directory Access Protocol) for enterprise authentication. This guide provides comprehensive instructions for configuring LDAP authentication with group-based permission management, similar to how Grafana handles LDAP authentication.
+
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Configuration Reference](#configuration-reference)
+- [Group Mapping](#group-mapping)
+- [LDAP Server Examples](#ldap-server-examples)
+- [SSL/TLS Configuration](#ssltls-configuration)
+- [Kubernetes Deployment](#kubernetes-deployment)
+- [Docker Development](#docker-development)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+- [Security Best Practices](#security-best-practices)
+
+## Features
+
+- **User Authentication**: Authenticate users against LDAP/Active Directory
+- **Group-Based Permissions**: Map LDAP groups to application roles
+- **RC Access Control**: Grant access to Responsibility Centres via group membership
+- **Automatic User Creation**: Create application users on first LDAP login
+- **Attribute Mapping**: Map LDAP attributes to user profile fields
+- **SSL/TLS Support**: Secure connections with LDAPS or StartTLS
+- **Failover Support**: Configure multiple LDAP servers for high availability
 
 ## Prerequisites
 
-- Active Directory or OpenLDAP server
-- Server hostname/IP and port (typically 389 for unencrypted, 636 for LDAPS)
-- LDAP bind user credentials
-- User search base DN (Distinguished Name)
-- Group search base DN (optional)
+- LDAP server (Active Directory, OpenLDAP, 389 Directory Server, etc.)
+- Server hostname/IP and port (typically 389 for LDAP, 636 for LDAPS)
+- LDAP bind/manager account credentials
+- Knowledge of your directory structure (base DN, user/group locations)
 
-## Configuration
+## Quick Start
 
-### 1. Prepare LDAP Credentials
+### 1. Enable LDAP Authentication
 
-Create a secret with your LDAP credentials:
+Add the following to your \`application.yml\`:
 
-```bash
-# Base64 encode your LDAP credentials
-echo -n "cn=admin,dc=example,dc=com" | base64
-echo -n "your-password" | base64
+\`\`\`yaml
+app:
+  security:
+    login-methods:
+      ldap:
+        enabled: true
+    ldap:
+      enabled: true
+      url: ldap://your-ldap-server:389
+      base-dn: dc=example,dc=com
+      manager-dn: cn=admin,dc=example,dc=com
+      manager-password: \${LDAP_MANAGER_PASSWORD}
+      user-search-base: ou=users
+      user-search-filter: "(uid={0})"
+      group-search-base: ou=groups
+      group-search-filter: "(member={0})"
+\`\`\`
 
-# Update k8s/secrets.yaml with the encoded values
-```
+### 2. Set Environment Variable
 
-### 2. Update Backend Configuration
+\`\`\`bash
+export LDAP_MANAGER_PASSWORD=your-secure-password
+\`\`\`
 
-Edit `k8s/configmap.yaml` to enable LDAP:
+### 3. Test Authentication
 
-```yaml
-data:
-  SPRING_PROFILES_ACTIVE: "ldap"
-  
-  # LDAP Server Configuration
-  LDAP_URL: "ldap://ldap.example.com:389"
-  LDAP_BASE_DN: "dc=example,dc=com"
-  LDAP_USER_DN_PATTERN: "uid={0},ou=users,dc=example,dc=com"
-  LDAP_GROUP_SEARCH_BASE: "ou=groups,dc=example,dc=com"
-  LDAP_GROUP_SEARCH_FILTER: "(memberUid={1})"
-```
+\`\`\`bash
+curl -X POST http://localhost:8080/api/users/authenticate/ldap \\
+  -H "Content-Type: application/json" \\
+  -d '{"username": "testuser", "password": "testpassword"}'
+\`\`\`
 
-### 3. Update Secrets
+## Configuration Reference
 
-Edit `k8s/secrets.yaml`:
+### Server Connection
 
-```yaml
+| Property | Description | Default | Example |
+|----------|-------------|---------|---------|
+| \`enabled\` | Enable LDAP authentication | \`false\` | \`true\` |
+| \`url\` | LDAP server URL(s) | \`ldap://localhost:389\` | \`ldap://ldap.example.com:389\` |
+| \`base-dn\` | Base Distinguished Name | \`dc=example,dc=com\` | \`dc=company,dc=com\` |
+| \`manager-dn\` | Manager/admin bind DN | - | \`cn=admin,dc=example,dc=com\` |
+| \`manager-password\` | Manager password | - | \`\${LDAP_MANAGER_PASSWORD}\` |
+| \`connect-timeout\` | Connection timeout (ms) | \`5000\` | \`10000\` |
+| \`read-timeout\` | Read timeout (ms) | \`5000\` | \`10000\` |
+
+### User Search
+
+| Property | Description | Default | Example |
+|----------|-------------|---------|---------|
+| \`user-search-base\` | User search base (relative to base-dn) | \`ou=users\` | \`ou=People\` |
+| \`user-search-filter\` | User search filter ({0}=username) | \`(uid={0})\` | \`(sAMAccountName={0})\` |
+| \`user-dn-pattern\` | Direct bind pattern (optional) | - | \`uid={0},ou=users,dc=example,dc=com\` |
+
+### Group Search
+
+| Property | Description | Default | Example |
+|----------|-------------|---------|---------|
+| \`group-search-base\` | Group search base | \`ou=groups\` | \`ou=Groups\` |
+| \`group-search-filter\` | Group search filter ({0}=user DN, {1}=username) | \`(member={0})\` | \`(memberUid={1})\` |
+| \`group-name-attribute\` | Attribute for group name | \`cn\` | \`cn\` |
+
+### User Behavior
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| \`allow-sign-up\` | Auto-create users on first login | \`true\` |
+| \`skip-org-role-sync\` | Skip role sync from groups | \`false\` |
+
+### Attribute Mapping
+
+| Property | LDAP Attribute | Description |
+|----------|---------------|-------------|
+| \`attributes.username\` | \`uid\` | User identifier |
+| \`attributes.email\` | \`mail\` | Email address |
+| \`attributes.name\` | \`cn\` | Full name |
+| \`attributes.surname\` | \`sn\` | Last name |
+| \`attributes.given-name\` | \`givenName\` | First name |
+| \`attributes.member-of\` | \`memberOf\` | Group membership |
+
+### SSL/TLS Configuration
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| \`ssl.enabled\` | Enable SSL (use with ldaps://) | \`false\` |
+| \`ssl.start-tls\` | Use StartTLS | \`false\` |
+| \`ssl.skip-verify\` | Skip certificate verification | \`false\` |
+| \`ssl.min-tls-version\` | Minimum TLS version | \`TLSv1.2\` |
+| \`ssl.ca-cert-path\` | CA certificate file path | - |
+| \`ssl.client-cert-path\` | Client certificate path | - |
+| \`ssl.client-key-path\` | Client key path | - |
+
+## Group Mapping
+
+Group mapping allows you to automatically assign application roles and RC permissions based on LDAP group membership.
+
+### Basic Role Mapping
+
+\`\`\`yaml
+app:
+  security:
+    ldap:
+      group-mappings:
+        # Map LDAP admins group to ADMIN role
+        - group-dn: "cn=myrc-admins,ou=groups,dc=example,dc=com"
+          role: ADMIN
+          is-admin: true
+        
+        # Map LDAP users group to USER role
+        - group-dn: "cn=myrc-users,ou=groups,dc=example,dc=com"
+          role: USER
+          is-admin: false
+\`\`\`
+
+### RC Access Mapping
+
+Grant Responsibility Centre access based on group membership:
+
+\`\`\`yaml
+app:
+  security:
+    ldap:
+      group-mappings:
+        # Finance team gets read/write access to Finance RC
+        - group-dn: "cn=finance-team,ou=groups,dc=example,dc=com"
+          role: USER
+          is-admin: false
+          rc-access:
+            FINANCE-RC: READ_WRITE
+            
+        # Auditors get read-only access to multiple RCs
+        - group-dn: "cn=auditors,ou=groups,dc=example,dc=com"
+          role: USER
+          is-admin: false
+          rc-access:
+            FINANCE-RC: READ_ONLY
+            OPERATIONS-RC: READ_ONLY
+            HR-RC: READ_ONLY
+\`\`\`
+
+### Access Levels
+
+- \`OWNER\`: Full control - manage permissions, delete RC
+- \`READ_WRITE\`: Create and edit items
+- \`READ_ONLY\`: View only
+
+## LDAP Server Examples
+
+### Active Directory
+
+\`\`\`yaml
+app:
+  security:
+    ldap:
+      enabled: true
+      url: ldap://ad.company.com:389
+      base-dn: dc=company,dc=com
+      manager-dn: cn=ldap-bind,ou=Service Accounts,dc=company,dc=com
+      manager-password: \${LDAP_MANAGER_PASSWORD}
+      
+      # AD uses sAMAccountName for username
+      user-search-base: ou=Users
+      user-search-filter: "(sAMAccountName={0})"
+      
+      # AD group membership
+      group-search-base: ou=Groups
+      group-search-filter: "(member={0})"
+      
+      # AD attribute mapping
+      attributes:
+        username: sAMAccountName
+        email: mail
+        name: displayName
+        surname: sn
+        given-name: givenName
+        member-of: memberOf
+      
+      group-mappings:
+        - group-dn: "cn=MyRC-Admins,ou=Groups,dc=company,dc=com"
+          role: ADMIN
+          is-admin: true
+        - group-dn: "cn=MyRC-Users,ou=Groups,dc=company,dc=com"
+          role: USER
+\`\`\`
+
+### OpenLDAP
+
+\`\`\`yaml
+app:
+  security:
+    ldap:
+      enabled: true
+      url: ldap://openldap.company.com:389
+      base-dn: dc=company,dc=com
+      manager-dn: cn=admin,dc=company,dc=com
+      manager-password: \${LDAP_MANAGER_PASSWORD}
+      
+      # OpenLDAP uses uid
+      user-search-base: ou=people
+      user-search-filter: "(uid={0})"
+      # Optional: direct bind pattern
+      user-dn-pattern: "uid={0},ou=people,dc=company,dc=com"
+      
+      # OpenLDAP group membership (may use memberUid)
+      group-search-base: ou=groups
+      group-search-filter: "(memberUid={1})"
+      
+      attributes:
+        username: uid
+        email: mail
+        name: cn
+        surname: sn
+        given-name: givenName
+\`\`\`
+
+### 389 Directory Server
+
+\`\`\`yaml
+app:
+  security:
+    ldap:
+      enabled: true
+      url: ldap://389ds.company.com:389
+      base-dn: dc=company,dc=com
+      manager-dn: cn=Directory Manager
+      manager-password: \${LDAP_MANAGER_PASSWORD}
+      
+      user-search-base: ou=People
+      user-search-filter: "(uid={0})"
+      
+      group-search-base: ou=Groups
+      group-search-filter: "(member={0})"
+\`\`\`
+
+## SSL/TLS Configuration
+
+### LDAPS (SSL on port 636)
+
+\`\`\`yaml
+app:
+  security:
+    ldap:
+      enabled: true
+      url: ldaps://ldap.company.com:636
+      base-dn: dc=company,dc=com
+      
+      ssl:
+        enabled: true
+        min-tls-version: TLSv1.2
+        # Path to CA certificate (required if using self-signed certs)
+        ca-cert-path: /etc/ssl/certs/ldap-ca.crt
+\`\`\`
+
+### StartTLS (upgrade connection on port 389)
+
+\`\`\`yaml
+app:
+  security:
+    ldap:
+      enabled: true
+      url: ldap://ldap.company.com:389
+      base-dn: dc=company,dc=com
+      
+      ssl:
+        enabled: false
+        start-tls: true
+        min-tls-version: TLSv1.2
+\`\`\`
+
+### Mutual TLS (Client Certificates)
+
+\`\`\`yaml
+app:
+  security:
+    ldap:
+      ssl:
+        enabled: true
+        ca-cert-path: /etc/ssl/certs/ldap-ca.crt
+        client-cert-path: /etc/ssl/certs/client.crt
+        client-key-path: /etc/ssl/private/client.key
+\`\`\`
+
+## Kubernetes Deployment
+
+### 1. Create LDAP Secret
+
+\`\`\`bash
+# Create secret with LDAP credentials
+kubectl create secret generic myrc-ldap-secret \\
+  --namespace=myrc \\
+  --from-literal=manager-dn='cn=admin,dc=example,dc=com' \\
+  --from-literal=manager-password='your-secure-password'
+\`\`\`
+
+Or use a YAML file:
+
+\`\`\`yaml
 apiVersion: v1
 kind: Secret
 metadata:
   name: myrc-ldap-secret
   namespace: myrc
 type: Opaque
+stringData:
+  manager-dn: cn=admin,dc=example,dc=com
+  manager-password: your-secure-password
+\`\`\`
+
+### 2. Update ConfigMap
+
+\`\`\`yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myrc-config
+  namespace: myrc
 data:
-  ldap-user-dn: Y249YWRtaW4sZGM9ZXhhbXBsZSxkYz1jb20=
-  ldap-password: eW91ci1wYXNzd29yZA==
-```
+  SPRING_PROFILES_ACTIVE: "ldap"
+  APP_SECURITY_LDAP_ENABLED: "true"
+  APP_SECURITY_LDAP_URL: "ldap://ldap.company.com:389"
+  APP_SECURITY_LDAP_BASE_DN: "dc=company,dc=com"
+  APP_SECURITY_LDAP_USER_SEARCH_BASE: "ou=users"
+  APP_SECURITY_LDAP_USER_SEARCH_FILTER: "(uid={0})"
+  APP_SECURITY_LDAP_GROUP_SEARCH_BASE: "ou=groups"
+  APP_SECURITY_LDAP_GROUP_SEARCH_FILTER: "(member={0})"
+\`\`\`
 
-### 4. Add Environment Variables to Backend Deployment
+### 3. Update Backend Deployment
 
-Edit `k8s/backend.yaml` deployment spec:
+\`\`\`yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: myrc
+spec:
+  template:
+    spec:
+      containers:
+      - name: api
+        env:
+        - name: APP_SECURITY_LDAP_MANAGER_DN
+          valueFrom:
+            secretKeyRef:
+              name: myrc-ldap-secret
+              key: manager-dn
+        - name: APP_SECURITY_LDAP_MANAGER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: myrc-ldap-secret
+              key: manager-password
+        envFrom:
+        - configMapRef:
+            name: myrc-config
+\`\`\`
 
-```yaml
-containers:
-- name: api
-  env:
-  - name: APP_SECURITY_LDAP_ENABLED
-    value: "true"
-  - name: APP_SECURITY_LDAP_URL
-    valueFrom:
-      configMapKeyRef:
-        name: myrc-config
-        key: LDAP_URL
-  - name: APP_SECURITY_LDAP_BASE_DN
-    valueFrom:
-      configMapKeyRef:
-        name: myrc-config
-        key: LDAP_BASE_DN
-  - name: APP_SECURITY_LDAP_USER_DN_PATTERN
-    valueFrom:
-      configMapKeyRef:
-        name: myrc-config
-        key: LDAP_USER_DN_PATTERN
-  - name: APP_SECURITY_LDAP_BIND_DN
-    valueFrom:
-      secretKeyRef:
-        name: myrc-ldap-secret
-        key: ldap-user-dn
-  - name: APP_SECURITY_LDAP_BIND_PASSWORD
-    valueFrom:
-      secretKeyRef:
-        name: myrc-ldap-secret
-        key: ldap-password
-```
+### 4. Deploy
 
-## LDAP Configuration Examples
-
-### Active Directory
-
-```yaml
-LDAP_URL: "ldap://ad.company.com:389"
-LDAP_BASE_DN: "dc=company,dc=com"
-LDAP_USER_DN_PATTERN: "{0}@company.com"
-LDAP_GROUP_SEARCH_BASE: "ou=Groups,dc=company,dc=com"
-LDAP_GROUP_SEARCH_FILTER: "(member={0})"
-```
-
-### OpenLDAP
-
-```yaml
-LDAP_URL: "ldap://ldap.example.com:389"
-LDAP_BASE_DN: "dc=example,dc=com"
-LDAP_USER_DN_PATTERN: "uid={0},ou=users,dc=example,dc=com"
-LDAP_GROUP_SEARCH_BASE: "ou=groups,dc=example,dc=com"
-LDAP_GROUP_SEARCH_FILTER: "(memberUid={1})"
-```
-
-### LDAPS (Secure)
-
-For encrypted LDAP connections on port 636:
-
-```yaml
-LDAP_URL: "ldaps://ldap.example.com:636"
-APP_SECURITY_LDAP_SSL_ENABLED: "true"
-# Optional: Trust all certificates (not recommended for production)
-APP_SECURITY_LDAP_SSL_TRUST_ALL: "false"
-```
-
-## Testing LDAP Configuration
-
-### 1. Verify LDAP Connectivity
-
-```bash
-# From within the pod
-kubectl exec -it deployment/api -n myrc -- /bin/bash
-
-# Test LDAP connection
-ldapsearch -x -H ldap://ldap.example.com:389 \
-  -D "cn=admin,dc=example,dc=com" \
-  -w "password" \
-  -b "dc=example,dc=com" \
-  "uid=testuser"
-```
-
-### 2. Check Application Logs
-
-```bash
-# View backend logs for LDAP errors
-kubectl logs -f deployment/api -n myrc | grep -i ldap
-```
-
-### 3. Test Authentication
-
-```bash
-# Test with curl
-curl -u username:password http://localhost:8080/api/health
-
-# Check response
-# 200 OK = authentication successful
-# 401 Unauthorized = authentication failed
-```
-
-## LDAP Configuration in Backend
-
-The backend uses Spring Security LDAP authentication. See `backend/src/main/java/com/myrc/config/LdapSecurityConfig.java` for implementation details.
-
-### Key Configuration Properties
-
-| Property | Description | Example |
-|----------|-------------|---------|
-| `app.security.ldap.enabled` | Enable/disable LDAP | `true` |
-| `app.security.ldap.url` | LDAP server URL | `ldap://ldap.example.com:389` |
-| `app.security.ldap.base-dn` | Base Distinguished Name | `dc=example,dc=com` |
-| `app.security.ldap.user-dn-pattern` | User DN pattern | `uid={0},ou=users,dc=example,dc=com` |
-| `app.security.ldap.bind-dn` | Bind DN for server connection | `cn=admin,dc=example,dc=com` |
-| `app.security.ldap.bind-password` | Bind password | `password` |
-| `app.security.ldap.group-search-base` | Group search base | `ou=groups,dc=example,dc=com` |
-| `app.security.ldap.group-search-filter` | Group filter | `(memberUid={1})` |
-
-## Deployment
-
-### Apply Configuration
-
-```bash
-# Update secrets
+\`\`\`bash
 kubectl apply -f k8s/secrets.yaml
-
-# Update configmap
 kubectl apply -f k8s/configmap.yaml
-
-# Restart backend deployment to pick up changes
 kubectl rollout restart deployment/api -n myrc
+\`\`\`
 
-# Check rollout status
-kubectl rollout status deployment/api -n myrc
-```
+## Docker Development
 
-### Troubleshooting
+### Using Docker Compose with OpenLDAP
 
-**LDAP connection refused:**
-- Check server hostname/IP and port
-- Verify firewall rules
-- Check bind user credentials
+The project includes a Docker Compose file for local LDAP testing:
 
-**User authentication fails:**
-- Verify user exists in LDAP directory
-- Check user DN pattern matches your directory structure
-- Review backend logs for detailed error messages
+\`\`\`bash
+# Start with LDAP support
+docker compose -f docker-compose.dev.yml -f docker-compose.oauth2.yml up -d
+\`\`\`
 
-**Groups not working:**
-- Verify group search base DN is correct
-- Check group search filter matches your group structure
-- Ensure user is member of appropriate groups
+### Test Users (from ldap-init.ldif)
 
-## Local Development with Docker
+| Username | Password | Groups |
+|----------|----------|--------|
+| \`testuser\` | \`testpassword123\` | users |
+| \`adminuser\` | \`adminpassword123\` | users, admins |
+| \`movieuser\` | \`moviepassword123\` | users, managers, staff |
+| \`ticketuser\` | \`ticketpassword123\` | users |
 
-For testing LDAP locally, you can use a containerized LDAP server:
+### Manual OpenLDAP Setup
 
-```bash
+\`\`\`bash
 # Run OpenLDAP in Docker
-docker run -d \
-  --name openldap \
-  -p 389:389 \
-  -e LDAP_ORGANIZATION="Example" \
-  -e LDAP_DOMAIN="example.com" \
-  -e LDAP_ADMIN_PASSWORD="admin" \
+docker run -d \\
+  --name openldap \\
+  -p 389:389 \\
+  -e LDAP_ORGANISATION="myRC" \\
+  -e LDAP_DOMAIN="myrc.local" \\
+  -e LDAP_ADMIN_PASSWORD="admin" \\
   osixia/openldap:latest
 
 # Run phpLDAPadmin for management
-docker run -d \
-  --name phpldapadmin \
-  -p 6443:443 \
-  -e PHPLDAPADMIN_LDAP_HOSTS=openldap \
+docker run -d \\
+  --name phpldapadmin \\
+  -p 6443:443 \\
+  --link openldap \\
+  -e PHPLDAPADMIN_LDAP_HOSTS=openldap \\
   osixia/phpldapadmin:latest
-```
+\`\`\`
 
-## Advanced Scenarios
+Access phpLDAPadmin at https://localhost:6443
 
-### Multiple LDAP Servers
+## Testing
 
-Configure failover with multiple LDAP servers:
+### 1. Verify LDAP Connectivity
 
-```yaml
-LDAP_URL: "ldap://primary.example.com:389 ldap://secondary.example.com:389"
-```
+\`\`\`bash
+# Using ldapsearch
+ldapsearch -x -H ldap://localhost:389 \\
+  -D "cn=admin,dc=myrc,dc=local" \\
+  -w "admin" \\
+  -b "dc=myrc,dc=local" \\
+  "objectClass=*"
+\`\`\`
 
-### LDAP with Roles/Groups
+### 2. Test User Authentication
 
-Map LDAP groups to application roles:
+\`\`\`bash
+# Bind as a user
+ldapwhoami -x -H ldap://localhost:389 \\
+  -D "uid=testuser,ou=users,dc=myrc,dc=local" \\
+  -w "testpassword123"
+\`\`\`
 
-```yaml
-APP_SECURITY_LDAP_GROUP_ROLE_MAPPING: |
-  myrc-admin=ADMIN
-  myrc-users=USER
-```
+### 3. Test via API
 
-### Custom LDAP Attributes
+\`\`\`bash
+# Authenticate via myRC API
+curl -X POST http://localhost:8080/api/users/authenticate/ldap \\
+  -H "Content-Type: application/json" \\
+  -d '{"username": "testuser", "password": "testpassword123"}'
+\`\`\`
 
-Map custom LDAP attributes to user details:
+### 4. View Application Logs
 
-```yaml
-APP_SECURITY_LDAP_USER_ATTRIBUTES: "mail,phone,department"
-```
+\`\`\`bash
+# Docker
+docker logs -f myrc-api-dev | grep -i ldap
+
+# Kubernetes
+kubectl logs -f deployment/api -n myrc | grep -i ldap
+\`\`\`
+
+## Troubleshooting
+
+### Connection Refused
+
+**Symptoms**: LDAP connection fails immediately
+
+**Solutions**:
+1. Verify hostname/IP and port
+2. Check firewall rules
+3. Ensure LDAP server is running
+4. Test with \`telnet ldap-server 389\`
+
+### Authentication Failed
+
+**Symptoms**: User credentials are rejected
+
+**Solutions**:
+1. Verify user exists: \`ldapsearch -x -b "base-dn" "(uid=username)"\`
+2. Check user-search-filter matches your directory
+3. Verify password is correct
+4. Check if user account is enabled/not locked
+
+### Groups Not Found
+
+**Symptoms**: User authenticates but has no roles
+
+**Solutions**:
+1. Verify group-search-base is correct
+2. Check group-search-filter matches your group structure
+3. Ensure user is actually a member of the group
+4. Check group-mappings configuration
+
+### SSL/TLS Errors
+
+**Symptoms**: Certificate validation failures
+
+**Solutions**:
+1. Verify certificate is valid and not expired
+2. Check CA certificate is trusted
+3. Use \`openssl s_client -connect ldap-server:636\` to debug
+4. Temporarily set \`ssl.skip-verify: true\` for testing (not production!)
+
+### Timeout Errors
+
+**Symptoms**: Slow or hanging connections
+
+**Solutions**:
+1. Increase \`connect-timeout\` and \`read-timeout\`
+2. Check network latency to LDAP server
+3. Verify LDAP server performance
 
 ## Security Best Practices
 
-1. **Use LDAPS (Encrypted)**
-   - Always use port 636 with SSL/TLS in production
-   - Validate server certificates
+### 1. Use LDAPS or StartTLS
 
-2. **Bind User Credentials**
-   - Use a dedicated read-only LDAP user
-   - Store credentials in Kubernetes Secrets
-   - Rotate credentials regularly
+Always encrypt LDAP connections in production:
 
-3. **User DN Pattern**
-   - Ensure pattern is specific to prevent unauthorized access
-   - Test pattern with known users before deployment
+\`\`\`yaml
+# Option 1: LDAPS
+url: ldaps://ldap.company.com:636
+ssl:
+  enabled: true
 
-4. **Network Security**
-   - Restrict LDAP server access to authorized clients
-   - Use network policies in Kubernetes
-   - Monitor LDAP connection logs
+# Option 2: StartTLS
+url: ldap://ldap.company.com:389
+ssl:
+  start-tls: true
+\`\`\`
+
+### 2. Use a Dedicated Bind Account
+
+- Create a dedicated service account for myRC
+- Grant minimal permissions (read-only to users/groups)
+- Use a strong, unique password
+- Rotate credentials regularly
+
+### 3. Protect Credentials
+
+- Store manager password in Kubernetes Secrets or environment variables
+- Never commit passwords to version control
+- Use secret management tools (Vault, AWS Secrets Manager, etc.)
+
+### 4. Network Security
+
+- Restrict LDAP server access to authorized clients
+- Use network policies in Kubernetes
+- Consider VPN or private network for LDAP access
+
+### 5. Audit and Monitor
+
+- Enable LDAP server audit logging
+- Monitor for failed authentication attempts
+- Set up alerts for suspicious activity
 
 ## References
 
-- [Spring Security LDAP Documentation](https://spring.io/projects/spring-security-ldap)
+- [Spring Security LDAP Documentation](https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/ldap.html)
 - [LDAP RFC 4511](https://tools.ietf.org/html/rfc4511)
 - [Active Directory LDAP Guide](https://docs.microsoft.com/en-us/windows/win32/adsi/ldap-provider)
 - [OpenLDAP Administrator's Guide](https://www.openldap.org/doc/admin/)
+- [Grafana LDAP Configuration](https://grafana.com/docs/grafana/latest/setup-grafana/configure-security/configure-authentication/ldap/)
 
 ## Support
 
-For issues or questions about LDAP integration:
-1. Check the backend logs: `kubectl logs -f deployment/api -n myrc`
+For issues or questions:
+1. Check application logs for detailed error messages
 2. Verify LDAP server connectivity
-3. Review configuration against this guide
-4. Contact support with detailed error messages
+3. Review this guide and configuration reference
+4. Open an issue on GitHub with:
+   - Configuration (without passwords)
+   - Error messages
+   - LDAP server type
