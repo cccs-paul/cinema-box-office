@@ -311,25 +311,6 @@ describe('ProcurementComponent', () => {
     });
   });
 
-  describe('filterByStatus', () => {
-    it('should filter items by status', () => {
-      procurementService.getProcurementItems.calls.reset();
-      component.filterByStatus('NOT_STARTED');
-
-      expect(component.selectedStatusFilter).toBe('NOT_STARTED');
-      expect(procurementService.getProcurementItems).toHaveBeenCalledWith(1, 1, 'NOT_STARTED', undefined);
-    });
-
-    it('should clear filter when status is null', () => {
-      procurementService.getProcurementItems.calls.reset();
-      component.selectedStatusFilter = 'NOT_STARTED';
-      component.filterByStatus(null);
-
-      expect(component.selectedStatusFilter).toBeNull();
-      expect(procurementService.getProcurementItems).toHaveBeenCalledWith(1, 1, undefined, undefined);
-    });
-  });
-
   describe('filterByCategory', () => {
     it('should set selected category ID', () => {
       component.filterByCategory(2);

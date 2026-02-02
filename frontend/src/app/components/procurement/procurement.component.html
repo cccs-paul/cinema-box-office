@@ -53,14 +53,6 @@
               ✕
             </button>
           </div>
-          <div class="filter-dropdown">
-            <select [(ngModel)]="selectedStatusFilter" (change)="filterByStatus(selectedStatusFilter)">
-              <option [ngValue]="null">{{ 'procurement.allStatuses' | translate }}</option>
-              <option *ngFor="let status of statusOptions" [ngValue]="status">
-                {{ getStatusLabel(status) }}
-              </option>
-            </select>
-          </div>
 
           <!-- Category Filter -->
           <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">

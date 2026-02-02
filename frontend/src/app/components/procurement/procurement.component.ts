@@ -61,7 +61,6 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   // Procurement Items
   procurementItems: ProcurementItem[] = [];
   isLoadingItems = false;
-  selectedStatusFilter: ProcurementItemStatus | null = null;
   searchTerm = '';
   filtersExpanded = true;
 
@@ -293,13 +292,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     if (!this.selectedRC || !this.selectedFY) return;
 
     this.isLoadingItems = true;
-    const status = this.selectedStatusFilter || undefined;
     const search = this.searchTerm.trim() || undefined;
 
     this.procurementService.getProcurementItems(
       this.selectedRC.id,
       this.selectedFY.id,
-      status,
+      undefined, // status filter removed - now using client-side fuzzy search
       search
     ).subscribe({
       next: (items) => {
@@ -423,11 +421,6 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   // ==========================
   // Procurement Item Methods
   // ==========================
-
-  filterByStatus(status: ProcurementItemStatus | null): void {
-    this.selectedStatusFilter = status;
-    this.loadProcurementItems();
-  }
 
   /**
    * Filter procurement items by category.
