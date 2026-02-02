@@ -623,13 +623,21 @@ public class DataInitializer implements ApplicationRunner {
             // Determine status based on procurement status
             SpendingItem.Status spendingStatus;
             switch (procItem.getStatus()) {
-                case COMPLETED:
+                case FULL_INVOICE_SIGNED:
+                case PARTIAL_INVOICE_SIGNED:
+                case MONTHLY_INVOICE_SIGNED:
                     spendingStatus = SpendingItem.Status.PAID;
                     break;
-                case PO_ISSUED:
+                case ACKNOWLEDGED_BY_PROCUREMENT:
+                case CONTRACT_AWARDED:
+                case GOODS_RECEIVED:
+                case FULL_INVOICE_RECEIVED:
+                case PARTIAL_INVOICE_RECEIVED:
+                case MONTHLY_INVOICE_RECEIVED:
+                case CONTRACT_AMENDED:
                     spendingStatus = SpendingItem.Status.COMMITTED;
                     break;
-                case APPROVED:
+                case PACKAGE_SENT_TO_PROCUREMENT:
                     spendingStatus = SpendingItem.Status.APPROVED;
                     break;
                 default:
@@ -1231,59 +1239,73 @@ public class DataInitializer implements ApplicationRunner {
 
             // Add status-appropriate events
             switch (status) {
-                case COMPLETED:
+                case FULL_INVOICE_SIGNED:
+                case PARTIAL_INVOICE_SIGNED:
+                case MONTHLY_INVOICE_SIGNED:
                     // Full lifecycle events
-                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(1), "Submitted for quotes");
-                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "QUOTES_RECEIVED", baseDate.plusDays(14), "3 vendor quotes received");
-                    addStatusChangeEvent(procurementItem, "QUOTES_RECEIVED", "UNDER_REVIEW", baseDate.plusDays(15), "Evaluation committee reviewing quotes");
-                    addStatusChangeEvent(procurementItem, "UNDER_REVIEW", "APPROVED", baseDate.plusDays(21), "Approved by finance director");
-                    addStatusChangeEvent(procurementItem, "APPROVED", "PO_ISSUED", baseDate.plusDays(25), "PO issued to vendor");
-                    addStatusChangeEvent(procurementItem, "PO_ISSUED", "COMPLETED", baseDate.plusDays(60), "Items received and verified");
-                    addNoteEvent(procurementItem, baseDate.plusDays(45), "Vendor confirmed delivery date");
-                    addNoteEvent(procurementItem, baseDate.plusDays(62), "All items passed quality inspection");
+                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(1), "Obtained quote from vendor");
+                    addStatusChangeEvent(procurementItem, "QUOTE", "SAM_ACKNOWLEDGEMENT_REQUESTED", baseDate.plusDays(5), "Requested SAM acknowledgement");
+                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_REQUESTED", "SAM_ACKNOWLEDGEMENT_RECEIVED", baseDate.plusDays(10), "SAM acknowledgement received");
+                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_RECEIVED", "PACKAGE_SENT_TO_PROCUREMENT", baseDate.plusDays(15), "Documentation package sent");
+                    addStatusChangeEvent(procurementItem, "PACKAGE_SENT_TO_PROCUREMENT", "ACKNOWLEDGED_BY_PROCUREMENT", baseDate.plusDays(20), "Procurement acknowledged, PO issued");
+                    addStatusChangeEvent(procurementItem, "ACKNOWLEDGED_BY_PROCUREMENT", "CONTRACT_AWARDED", baseDate.plusDays(30), "Contract awarded");
+                    addStatusChangeEvent(procurementItem, "CONTRACT_AWARDED", "GOODS_RECEIVED", baseDate.plusDays(45), "Goods received");
+                    addStatusChangeEvent(procurementItem, "GOODS_RECEIVED", "FULL_INVOICE_RECEIVED", baseDate.plusDays(50), "Invoice received");
+                    addStatusChangeEvent(procurementItem, "FULL_INVOICE_RECEIVED", "FULL_INVOICE_SIGNED", baseDate.plusDays(55), "Invoice signed for Section 34");
+                    addNoteEvent(procurementItem, baseDate.plusDays(56), "Submitted to Accounts Payable");
                     break;
 
-                case PO_ISSUED:
-                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(5), "Sent RFQ to vendors");
-                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "QUOTES_RECEIVED", baseDate.plusDays(20), "Quotes received from vendors");
-                    addStatusChangeEvent(procurementItem, "QUOTES_RECEIVED", "UNDER_REVIEW", baseDate.plusDays(22), "Technical review in progress");
-                    addStatusChangeEvent(procurementItem, "UNDER_REVIEW", "APPROVED", baseDate.plusDays(30), "Approved after technical review");
-                    addStatusChangeEvent(procurementItem, "APPROVED", "PO_ISSUED", baseDate.plusDays(35), "Purchase order submitted to vendor");
+                case ACKNOWLEDGED_BY_PROCUREMENT:
+                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(5), "Quote obtained");
+                    addStatusChangeEvent(procurementItem, "QUOTE", "SAM_ACKNOWLEDGEMENT_REQUESTED", baseDate.plusDays(10), "SAM review requested");
+                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_REQUESTED", "SAM_ACKNOWLEDGEMENT_RECEIVED", baseDate.plusDays(18), "SAM approved");
+                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_RECEIVED", "PACKAGE_SENT_TO_PROCUREMENT", baseDate.plusDays(25), "Procurement package submitted");
+                    addStatusChangeEvent(procurementItem, "PACKAGE_SENT_TO_PROCUREMENT", "ACKNOWLEDGED_BY_PROCUREMENT", baseDate.plusDays(35), "PO issued by procurement");
                     addNoteEvent(procurementItem, baseDate.plusDays(40), "Expected delivery in 4 weeks");
                     break;
 
-                case APPROVED:
-                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(7), "Requesting quotes from vendors");
-                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "QUOTES_RECEIVED", baseDate.plusDays(28), "Received quotes");
-                    addStatusChangeEvent(procurementItem, "QUOTES_RECEIVED", "UNDER_REVIEW", baseDate.plusDays(30), "Reviewing vendor proposals");
-                    addStatusChangeEvent(procurementItem, "UNDER_REVIEW", "APPROVED", baseDate.plusDays(45), "Budget approved, ready for PO");
+                case PACKAGE_SENT_TO_PROCUREMENT:
+                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(7), "Requested quote from vendor");
+                    addStatusChangeEvent(procurementItem, "QUOTE", "SAM_ACKNOWLEDGEMENT_REQUESTED", baseDate.plusDays(14), "SAM acknowledgement requested");
+                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_REQUESTED", "SAM_ACKNOWLEDGEMENT_RECEIVED", baseDate.plusDays(21), "SAM acknowledgement received");
+                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_RECEIVED", "PACKAGE_SENT_TO_PROCUREMENT", baseDate.plusDays(28), "Package sent to procurement");
                     break;
 
-                case UNDER_REVIEW:
-                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(10), "Quote requests sent");
-                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "QUOTES_RECEIVED", baseDate.plusDays(30), "Multiple quotes received");
-                    addStatusChangeEvent(procurementItem, "QUOTES_RECEIVED", "UNDER_REVIEW", baseDate.plusDays(35), "Evaluation started");
-                    addNoteEvent(procurementItem, baseDate.plusDays(40), "Awaiting clarification from vendor");
+                case SAM_ACKNOWLEDGEMENT_RECEIVED:
+                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(10), "Quote requests sent");
+                    addStatusChangeEvent(procurementItem, "QUOTE", "SAM_ACKNOWLEDGEMENT_REQUESTED", baseDate.plusDays(20), "SAM review requested");
+                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_REQUESTED", "SAM_ACKNOWLEDGEMENT_RECEIVED", baseDate.plusDays(30), "SAM acknowledgement received");
+                    addNoteEvent(procurementItem, baseDate.plusDays(35), "Preparing procurement package");
                     break;
 
-                case QUOTES_RECEIVED:
-                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(5), "RFQ sent to 3 vendors");
-                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "QUOTES_RECEIVED", baseDate.plusDays(25), "Quotes received, pending review");
-                    addNoteEvent(procurementItem, baseDate.plusDays(26), "Need to schedule evaluation meeting");
+                case GOODS_RECEIVED:
+                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(3), "Quote obtained");
+                    addStatusChangeEvent(procurementItem, "QUOTE", "SAM_ACKNOWLEDGEMENT_REQUESTED", baseDate.plusDays(7), "SAM requested");
+                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_REQUESTED", "SAM_ACKNOWLEDGEMENT_RECEIVED", baseDate.plusDays(12), "SAM received");
+                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_RECEIVED", "PACKAGE_SENT_TO_PROCUREMENT", baseDate.plusDays(18), "Package sent");
+                    addStatusChangeEvent(procurementItem, "PACKAGE_SENT_TO_PROCUREMENT", "ACKNOWLEDGED_BY_PROCUREMENT", baseDate.plusDays(25), "PO issued");
+                    addStatusChangeEvent(procurementItem, "ACKNOWLEDGED_BY_PROCUREMENT", "CONTRACT_AWARDED", baseDate.plusDays(30), "Contract awarded");
+                    addStatusChangeEvent(procurementItem, "CONTRACT_AWARDED", "GOODS_RECEIVED", baseDate.plusDays(50), "Goods received at receiving building");
+                    addNoteEvent(procurementItem, baseDate.plusDays(52), "Awaiting invoice from vendor");
                     break;
 
-                case PENDING_QUOTES:
-                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(3), "Request for quotes submitted");
-                    addNoteEvent(procurementItem, baseDate.plusDays(10), "Following up with vendors");
+                case QUOTE:
+                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(3), "Quote obtained from vendor");
+                    addNoteEvent(procurementItem, baseDate.plusDays(10), "Preparing SAM request");
                     break;
 
-                case DRAFT:
+                case NOT_STARTED:
                     addNoteEvent(procurementItem, baseDate.plusDays(2), "Requirements being finalized");
                     break;
 
                 case CANCELLED:
-                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(5), "Started procurement process");
-                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "CANCELLED", baseDate.plusDays(15), "Project cancelled due to budget constraints");
+                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(5), "Started procurement process");
+                    addStatusChangeEvent(procurementItem, "QUOTE", "CANCELLED", baseDate.plusDays(15), "Procurement cancelled due to budget constraints");
+                    break;
+
+                default:
+                    // For other statuses, just add a note
+                    addNoteEvent(procurementItem, baseDate.plusDays(5), "Procurement in progress");
                     break;
             }
 

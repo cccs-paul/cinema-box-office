@@ -584,7 +584,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemProcurementCompleted = false;
     this.editItemProcurementCompletedDate = '';
     this.editItemCategoryId = null;
-    this.editItemStatus = 'DRAFT';
+    this.editItemStatus = 'NOT_STARTED';
   }
 
   /**
