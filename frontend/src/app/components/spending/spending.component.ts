@@ -6,7 +6,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
@@ -116,11 +116,15 @@ export class SpendingComponent implements OnInit, OnDestroy {
   // Category grouping interface
   groupedItems: { categoryName: string; categoryId: number | null; items: SpendingItem[] }[] = [];
 
+  // For navigation with query params (expand specific item)
+  private pendingExpandItemId: number | null = null;
+
   private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
     private spendingItemService: SpendingItemService,
@@ -132,6 +136,13 @@ export class SpendingComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Check for query params (e.g., expandItem=123)
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['expandItem']) {
+        this.pendingExpandItemId = Number(params['expandItem']);
+      }
+    });
+
     // Load currencies
     this.loadCurrencies();
 
@@ -266,6 +277,24 @@ export class SpendingComponent implements OnInit, OnDestroy {
         this.spendingItems = items;
         this.isLoadingItems = false;
         this.calculateSummaries();
+
+        // If we have a pending item to expand from query params, expand it and scroll to it
+        if (this.pendingExpandItemId) {
+          const itemToExpand = items.find(item => item.id === this.pendingExpandItemId);
+          if (itemToExpand) {
+            this.expandedItemId = itemToExpand.id;
+            // Scroll to the item after a short delay to allow rendering
+            setTimeout(() => {
+              const element = document.getElementById('spending-item-' + this.pendingExpandItemId);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+              this.pendingExpandItemId = null;
+            }, 100);
+          } else {
+            this.pendingExpandItemId = null;
+          }
+        }
       },
       error: (error) => {
         this.spendingItems = [];
@@ -918,9 +947,65 @@ export class SpendingComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Calculate the total for a spending item in CAD.
+   */
+  calculateTotalCad(item: SpendingItem): number {
+    const total = this.calculateTotal(item);
+    if (item.currency === 'CAD' || !item.exchangeRate) {
+      return total;
+    }
+    return total * item.exchangeRate;
+  }
+
+  /**
+   * Get the procurement price in CAD (final price if available, otherwise quoted).
+   */
+  getProcurementPriceCad(item: SpendingItem): number {
+    if (item.procurementFinalPriceCad != null) {
+      return item.procurementFinalPriceCad;
+    }
+    if (item.procurementQuotedPriceCad != null) {
+      return item.procurementQuotedPriceCad;
+    }
+    // Fallback to non-CAD prices if CAD versions not available
+    if (item.procurementFinalPrice != null) {
+      return item.procurementFinalPrice;
+    }
+    if (item.procurementQuotedPrice != null) {
+      return item.procurementQuotedPrice;
+    }
+    return 0;
+  }
+
+  /**
+   * Check if there's a price mismatch between spending and procurement.
+   * Returns true if the spending total doesn't match the procurement price.
+   */
+  hasPriceMismatch(item: SpendingItem): boolean {
+    // Only check for linked items with procurement prices
+    if (!item.procurementItemId) return false;
+    
+    const procurementPriceCad = this.getProcurementPriceCad(item);
+    if (procurementPriceCad === 0) return false; // No procurement price to compare
+    
+    const spendingTotalCad = this.calculateTotalCad(item);
+    
+    // Allow small tolerance for floating point comparison (0.01 CAD)
+    const tolerance = 0.01;
+    return Math.abs(spendingTotalCad - procurementPriceCad) > tolerance;
+  }
+
+  /**
    * Navigate to the procurement page to view the linked procurement item.
    */
   viewLinkedProcurement(): void {
-    this.router.navigate(['/app/procurement']);
+    const item = this.expandedItemId ? this.spendingItems.find(i => i.id === this.expandedItemId) : null;
+    if (item?.procurementItemId) {
+      this.router.navigate(['/app/procurement'], { 
+        queryParams: { expandItem: item.procurementItemId } 
+      });
+    } else {
+      this.router.navigate(['/app/procurement']);
+    }
   }
 }

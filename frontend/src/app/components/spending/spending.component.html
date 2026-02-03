@@ -126,7 +126,7 @@
         </div>
       </div>
 
-      <div class="form-row">
+      <div class="form-row" [class.three-cols]="newItemCurrency !== 'CAD'">
         <div class="form-group">
           <label for="status">{{ 'common.status' | translate }}</label>
           <select id="status" [(ngModel)]="newItemStatus" class="form-control">
@@ -253,7 +253,7 @@
         <span class="category-group-name">{{ group.categoryName }}</span>
         <span class="category-group-count">({{ group.items.length }} {{ group.items.length === 1 ? ('common.item' | translate) : ('common.items' | translate) }})</span>
       </div>
-      <div class="item-card" *ngFor="let item of group.items; trackBy: trackByItemId" [class.expanded]="expandedItemId === item.id">
+      <div class="item-card" *ngFor="let item of group.items; trackBy: trackByItemId" [class.expanded]="expandedItemId === item.id" [id]="'spending-item-' + item.id">
         <ng-container *ngTemplateOutlet="spendingItemCardTemplate; context: { item: item }"></ng-container>
       </div>
     </ng-container>
@@ -261,7 +261,7 @@
 
   <!-- Spending Items List - Flat View (no grouping) -->
   <div class="items-list" *ngIf="!isLoadingItems && filteredSpendingItems.length > 0 && !selectedFY?.groupByCategory">
-    <div class="item-card" *ngFor="let item of filteredSpendingItems; trackBy: trackByItemId" [class.expanded]="expandedItemId === item.id">
+    <div class="item-card" *ngFor="let item of filteredSpendingItems; trackBy: trackByItemId" [class.expanded]="expandedItemId === item.id" [id]="'spending-item-' + item.id">
       <ng-container *ngTemplateOutlet="spendingItemCardTemplate; context: { item: item }"></ng-container>
     </div>
   </div>
@@ -299,9 +299,11 @@
         </button>
         <button
           class="btn-icon btn-delete"
-          [title]="'common.delete' | translate"
+          [title]="item.procurementItemId ? ('spending.cannotDeleteLinked' | translate) : ('common.delete' | translate)"
           *ngIf="canWrite"
-          (click)="deleteSpendingItem(item); $event.stopPropagation()"
+          [disabled]="!!item.procurementItemId"
+          [class.disabled]="!!item.procurementItemId"
+          (click)="!item.procurementItemId && deleteSpendingItem(item); $event.stopPropagation()"
         >
           🗑️
         </button>
@@ -330,18 +332,52 @@
             <span>1 {{ item.currency }} = {{ item.exchangeRate }} CAD</span>
           </div>
           <!-- Linked Procurement Item -->
-          <div class="info-item procurement-link" *ngIf="item.procurementItemId">
+          <div class="info-item procurement-link-box" *ngIf="item.procurementItemId">
             <label>{{ 'spending.linkedProcurement' | translate }}</label>
-            <span class="procurement-item-link">
-              <span class="procurement-icon">📦</span>
-              <span class="procurement-name">{{ item.procurementItemName || ('spending.procurementItem' | translate) }}</span>
-              <button 
-                class="btn-link" 
-                [title]="'spending.viewInProcurement' | translate"
-                (click)="viewLinkedProcurement()">
-                {{ 'common.view' | translate }} →
-              </button>
-            </span>
+            <div class="procurement-link-content">
+              <div class="procurement-item-link">
+                <span class="procurement-icon">📦</span>
+                <span class="procurement-name">{{ item.procurementItemName || ('spending.procurementItem' | translate) }}</span>
+                <button 
+                  class="btn-link" 
+                  [title]="'spending.viewInProcurement' | translate"
+                  (click)="viewLinkedProcurement()">
+                  {{ 'common.view' | translate }} →
+                </button>
+              </div>
+              <!-- Procurement Price Display -->
+              <div class="procurement-price-info">
+                <div class="price-row" *ngIf="item.procurementFinalPrice != null">
+                  <span class="price-label">{{ 'procurement.finalPrice' | translate }}:</span>
+                  <span class="price-value">
+                    {{ formatCurrency(item.procurementFinalPrice, item.procurementPriceCurrency || 'CAD') }}
+                    <span class="price-cad" *ngIf="item.procurementPriceCurrency !== 'CAD' && item.procurementFinalPriceCad != null">
+                      ({{ formatCurrency(item.procurementFinalPriceCad, 'CAD') }})
+                    </span>
+                  </span>
+                </div>
+                <div class="price-row" *ngIf="item.procurementFinalPrice == null && item.procurementQuotedPrice != null">
+                  <span class="price-label">{{ 'procurement.quotedPrice' | translate }}:</span>
+                  <span class="price-value">
+                    {{ formatCurrency(item.procurementQuotedPrice, item.procurementPriceCurrency || 'CAD') }}
+                    <span class="price-cad" *ngIf="item.procurementPriceCurrency !== 'CAD' && item.procurementQuotedPriceCad != null">
+                      ({{ formatCurrency(item.procurementQuotedPriceCad, 'CAD') }})
+                    </span>
+                  </span>
+                </div>
+              </div>
+              <!-- Price Mismatch Warning -->
+              <div class="price-mismatch-warning" *ngIf="hasPriceMismatch(item)">
+                <span class="warning-icon">⚠️</span>
+                <span class="warning-text">{{ 'spending.priceMismatchWarning' | translate }}</span>
+                <span class="warning-details">
+                  {{ 'spending.spendingTotal' | translate }}: {{ formatCurrency(calculateTotal(item), item.currency) }}
+                  <span *ngIf="item.currency !== 'CAD'"> ({{ formatCurrency(calculateTotalCad(item), 'CAD') }})</span>
+                  vs
+                  {{ 'spending.procurementPrice' | translate }}: {{ formatCurrency(getProcurementPriceCad(item), 'CAD') }}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
         <!-- Money Allocations -->

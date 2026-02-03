@@ -106,6 +106,21 @@ export interface SpendingItem {
   /** Name of the linked procurement item */
   procurementItemName?: string | null;
 
+  /** Final price from procurement item (if available) */
+  procurementFinalPrice?: number | null;
+
+  /** Quoted/estimated price from procurement item */
+  procurementQuotedPrice?: number | null;
+
+  /** Currency of procurement prices */
+  procurementPriceCurrency?: string | null;
+
+  /** Final price in CAD (converted) */
+  procurementFinalPriceCad?: number | null;
+
+  /** Quoted price in CAD (converted) */
+  procurementQuotedPriceCad?: number | null;
+
   /** Whether the spending item is active */
   active: boolean;
 

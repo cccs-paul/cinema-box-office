@@ -320,7 +320,9 @@
               <span class="category-group-name">{{ group.categoryName }}</span>
               <span class="category-group-count">({{ group.items.length }} {{ group.items.length === 1 ? ('common.item' | translate) : ('common.items' | translate) }})</span>
             </div>
-            <div class="item-card" *ngFor="let item of group.items; trackBy: trackByItemId" [class.expanded]="selectedItem?.id === item.id">
+            <div class="item-card" *ngFor="let item of group.items; trackBy: trackByItemId" 
+                 [id]="'procurement-item-' + item.id"
+                 [class.expanded]="selectedItem?.id === item.id">
               <ng-container *ngTemplateOutlet="procurementItemTemplate; context: { item: item }"></ng-container>
             </div>
           </ng-container>
@@ -328,7 +330,9 @@
 
         <!-- Flat View -->
         <div class="items-list" *ngIf="!isLoadingItems && filteredProcurementItems.length > 0 && !selectedFY?.groupByCategory">
-          <div class="item-card" *ngFor="let item of filteredProcurementItems; trackBy: trackByItemId" [class.expanded]="selectedItem?.id === item.id">
+          <div class="item-card" *ngFor="let item of filteredProcurementItems; trackBy: trackByItemId" 
+               [id]="'procurement-item-' + item.id"
+               [class.expanded]="selectedItem?.id === item.id">
             <ng-container *ngTemplateOutlet="procurementItemTemplate; context: { item: item }"></ng-container>
           </div>
         </div>
@@ -373,9 +377,10 @@
               </button>
               <button
                 class="btn-icon btn-spending-link"
-                [title]="(item.trackingStatus === 'CANCELLED' ? 'procurement.cannotLinkCancelled' : (hasLinkedSpendingItems() ? 'procurement.unlinkSpending' : 'procurement.linkSpending')) | translate"
+                [title]="(editingItemId !== item.id ? 'procurement.editModeRequiredForLink' : (item.trackingStatus === 'CANCELLED' ? 'procurement.cannotLinkCancelled' : (hasLinkedSpendingItems() ? 'procurement.unlinkSpending' : 'procurement.linkSpending'))) | translate"
                 *ngIf="canWrite && item.trackingStatus !== 'CANCELLED'"
-                [disabled]="isTogglingSpendingLink"
+                [disabled]="isTogglingSpendingLink || editingItemId !== item.id"
+                [class.disabled]="editingItemId !== item.id"
                 (click)="toggleSpendingLink(); $event.stopPropagation()"
               >
                 {{ isTogglingSpendingLink ? '⏳' : (item.linkedSpendingItemIds && item.linkedSpendingItemIds.length > 0 ? '🔗' : '➕💰') }}
@@ -399,18 +404,7 @@
                     </div>
                     <div class="info-item">
                       <label>{{ 'procurement.trackingStatus' | translate }}</label>
-                      <div class="tracking-status-toggle" *ngIf="canWrite">
-                        <button 
-                          *ngFor="let ts of trackingStatusOptions"
-                          class="status-toggle-btn"
-                          [class.active]="item.trackingStatus === ts || (!item.trackingStatus && ts === 'ON_TRACK')"
-                          [ngClass]="getTrackingStatusClass(ts)"
-                          (click)="updateTrackingStatus(item, ts); $event.stopPropagation()"
-                        >
-                          {{ getTrackingStatusIcon(ts) }} {{ getTrackingStatusLabel(ts) }}
-                        </button>
-                      </div>
-                      <span *ngIf="!canWrite" class="status-badge" [ngClass]="getTrackingStatusClass(item.trackingStatus)">
+                      <span class="status-badge" [ngClass]="getTrackingStatusClass(item.trackingStatus)">
                         {{ getTrackingStatusIcon(item.trackingStatus) }} {{ getTrackingStatusLabel(item.trackingStatus) }}
                       </span>
                     </div>
@@ -443,9 +437,9 @@
                     <div class="info-item" *ngIf="item.contractStartDate || item.contractEndDate">
                       <label>{{ 'procurement.contractPeriod' | translate }}</label>
                       <span>
-                        {{ item.contractStartDate | date:'mediumDate' }}
+                        {{ item.contractStartDate | date:'dd/MM/yyyy' }}
                         <ng-container *ngIf="item.contractStartDate && item.contractEndDate"> - </ng-container>
-                        {{ item.contractEndDate | date:'mediumDate' }}
+                        {{ item.contractEndDate | date:'dd/MM/yyyy' }}
                       </span>
                     </div>
                     <div class="info-item">
@@ -454,12 +448,12 @@
                         {{ item.procurementCompleted ? ('common.yes' | translate) + ' ✅' : ('common.no' | translate) + ' ⏳' }}
                       </span>
                       <span *ngIf="item.procurementCompleted && item.procurementCompletedDate" class="completion-date">
-                        ({{ item.procurementCompletedDate | date:'mediumDate' }})
+                        ({{ item.procurementCompletedDate | date:'dd/MM/yyyy' }})
                       </span>
                     </div>
                     <div class="info-item">
                       <label>{{ 'procurement.created' | translate }}</label>
-                      <span>{{ item.createdAt | date:'medium' }}</span>
+                      <span>{{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
                     </div>
                   </div>
                   <div class="description" *ngIf="item.description">
@@ -487,6 +481,25 @@
                 <!-- Edit Mode -->
                 <div class="edit-form" *ngIf="editingItemId === item.id">
                   <h4>{{ 'procurement.editTitle' | translate }}</h4>
+                  
+                  <!-- Tracking Status Toggle -->
+                  <div class="form-group">
+                    <label>{{ 'procurement.trackingStatus' | translate }}</label>
+                    <div class="tracking-status-toggle">
+                      <button 
+                        *ngFor="let ts of trackingStatusOptions"
+                        type="button"
+                        class="status-toggle-btn"
+                        [class.active]="editItemTrackingStatus === ts"
+                        [ngClass]="getTrackingStatusClass(ts)"
+                        (click)="editItemTrackingStatus = ts"
+                        [disabled]="isUpdatingItem"
+                      >
+                        {{ getTrackingStatusIcon(ts) }} {{ getTrackingStatusLabel(ts) }}
+                      </button>
+                    </div>
+                  </div>
+                  
                   <div class="form-row">
                     <div class="form-group">
                       <label for="editItemPR">{{ 'procurement.purchaseRequisition' | translate }}</label>
@@ -1081,8 +1094,8 @@
                             {{ formatCurrency(quote.amount, quote.currency) }}
                           </div>
                           <div class="quote-dates">
-                            <span *ngIf="quote.receivedDate">{{ 'procurement.received' | translate }}: {{ quote.receivedDate | date:'shortDate' }}</span>
-                            <span *ngIf="quote.expiryDate">{{ 'procurement.expires' | translate }}: {{ quote.expiryDate | date:'shortDate' }}</span>
+                            <span *ngIf="quote.receivedDate">{{ 'procurement.received' | translate }}: {{ quote.receivedDate | date:'dd/MM/yyyy' }}</span>
+                            <span *ngIf="quote.expiryDate">{{ 'procurement.expires' | translate }}: {{ quote.expiryDate | date:'dd/MM/yyyy' }}</span>
                           </div>
                           <p class="quote-notes" *ngIf="quote.notes">{{ quote.notes }}</p>
                         </div>
@@ -1156,7 +1169,7 @@
                       <div class="event-content">
                         <div class="event-header">
                           <span class="event-type">{{ getEventTypeLabel(mostRecentEvent.eventType) }}</span>
-                          <span class="event-date">{{ mostRecentEvent.eventDate | date:'mediumDate' }}</span>
+                          <span class="event-date">{{ mostRecentEvent.eventDate | date:'dd/MM/yyyy' }}</span>
                           <span class="status-badge small" *ngIf="mostRecentEvent.newStatus" [ngClass]="getEventStatusClass(mostRecentEvent.newStatus)">
                             {{ getEventStatusLabel(mostRecentEvent.newStatus) }}
                           </span>
@@ -1233,15 +1246,16 @@
                         <div class="event-content">
                           <div class="event-header">
                             <span class="event-type">{{ getEventTypeLabel(event.eventType) }}</span>
-                            <span class="event-date">{{ event.eventDate | date:'mediumDate' }}</span>
+                            <span class="event-date">{{ event.eventDate | date:'dd/MM/yyyy' }}</span>
                             <span class="status-badge small" *ngIf="event.newStatus" [ngClass]="getEventStatusClass(event.newStatus)">
                               {{ getEventStatusLabel(event.newStatus) }}
                             </span>
                           </div>
+                          <p class="event-description">{{ getEventTypeDescription(event.eventType) }}</p>
                           <p class="event-comment" *ngIf="event.comment">{{ event.comment }}</p>
                           <div class="event-meta">
                             <span class="created-by" *ngIf="event.createdBy">{{ 'procurement.by' | translate }}: {{ event.createdBy }}</span>
-                            <span class="created-at" *ngIf="event.createdAt">{{ event.createdAt | date:'short' }}</span>
+                            <span class="created-at" *ngIf="event.createdAt">{{ event.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
                           </div>
                         </div>
                         <div class="event-actions" *ngIf="canWrite">

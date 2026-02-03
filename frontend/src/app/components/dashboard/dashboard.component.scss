@@ -1067,7 +1067,8 @@
 
 /* Edit Form Styles */
 .edit-form {
-  padding: 1rem;
+  width: 100%;
+  padding: 1.5rem;
   background: var(--card-background);
   border-radius: 8px;
   border: 1px solid var(--border-color);
@@ -1077,6 +1078,33 @@
     color: var(--text-primary);
     font-size: 1.1rem;
     font-weight: 600;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    
+    @media (min-width: 1200px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-group {
+    &.full-width {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    justify-content: flex-end;
   }
 }
 

@@ -348,25 +348,30 @@ export interface ProcurementItem {
  * Enum for procurement event types.
  */
 export type ProcurementEventType =
-  | 'CREATED'
-  | 'STATUS_CHANGE'
-  | 'NOTE_ADDED'
-  | 'QUOTE_RECEIVED'
-  | 'QUOTE_SELECTED'
-  | 'QUOTE_REJECTED'
-  | 'PO_ISSUED'
-  | 'DELIVERED'
-  | 'INVOICED'
-  | 'PAYMENT_MADE'
-  | 'COMPLETED'
+  | 'NOT_STARTED'
+  | 'QUOTE'
+  | 'SAM_ACKNOWLEDGEMENT_REQUESTED'
+  | 'SAM_ACKNOWLEDGEMENT_RECEIVED'
+  | 'PACKAGE_SENT_TO_PROCUREMENT'
+  | 'ACKNOWLEDGED_BY_PROCUREMENT'
+  | 'PAUSED'
   | 'CANCELLED'
-  | 'OTHER';
+  | 'CONTRACT_AWARDED'
+  | 'GOODS_RECEIVED'
+  | 'FULL_INVOICE_RECEIVED'
+  | 'PARTIAL_INVOICE_RECEIVED'
+  | 'MONTHLY_INVOICE_RECEIVED'
+  | 'FULL_INVOICE_SIGNED'
+  | 'PARTIAL_INVOICE_SIGNED'
+  | 'MONTHLY_INVOICE_SIGNED'
+  | 'CONTRACT_AMENDED';
 
 /**
  * Event type display information.
  */
 export interface EventTypeInfo {
   label: string;
+  description: string;
   color: string;
   icon: string;
 }
@@ -375,19 +380,23 @@ export interface EventTypeInfo {
  * Map of event type to display information.
  */
 export const EVENT_TYPE_INFO: Record<ProcurementEventType, EventTypeInfo> = {
-  CREATED: { label: 'Created', color: 'blue', icon: '🆕' },
-  STATUS_CHANGE: { label: 'Status Change', color: 'orange', icon: '🔄' },
-  NOTE_ADDED: { label: 'Note Added', color: 'gray', icon: '📝' },
-  QUOTE_RECEIVED: { label: 'Quote Received', color: 'blue', icon: '📥' },
-  QUOTE_SELECTED: { label: 'Quote Selected', color: 'green', icon: '✅' },
-  QUOTE_REJECTED: { label: 'Quote Rejected', color: 'red', icon: '❌' },
-  PO_ISSUED: { label: 'PO Issued', color: 'purple', icon: '📋' },
-  DELIVERED: { label: 'Delivered', color: 'green', icon: '📦' },
-  INVOICED: { label: 'Invoiced', color: 'yellow', icon: '🧾' },
-  PAYMENT_MADE: { label: 'Payment Made', color: 'green', icon: '💰' },
-  COMPLETED: { label: 'Completed', color: 'success', icon: '✔️' },
-  CANCELLED: { label: 'Cancelled', color: 'red', icon: '🚫' },
-  OTHER: { label: 'Other', color: 'gray', icon: '📌' }
+  NOT_STARTED: { label: 'Not Started', description: 'Procurement process has not yet started.', color: 'gray', icon: '⏸️' },
+  QUOTE: { label: 'Quote', description: 'Quote/estimate obtained from vendor.', color: 'blue', icon: '💬' },
+  SAM_ACKNOWLEDGEMENT_REQUESTED: { label: 'SAM Acknowledgement requested', description: 'Requested acknowledgement from Software Asset Management team.', color: 'orange', icon: '📤' },
+  SAM_ACKNOWLEDGEMENT_RECEIVED: { label: 'SAM Acknowledgement received', description: 'Received acknowledgement from Software Asset Management team.', color: 'green', icon: '📥' },
+  PACKAGE_SENT_TO_PROCUREMENT: { label: 'Package sent to Procurement', description: 'Documentation package sent to Procurement.', color: 'blue', icon: '📦' },
+  ACKNOWLEDGED_BY_PROCUREMENT: { label: 'Acknowledged by Procurement / In Progress', description: 'Procurement has accepted the package and provided a Purchase Order.', color: 'purple', icon: '✅' },
+  PAUSED: { label: 'Paused', description: 'Procurement process put on pause. Reason should be detailed in comments.', color: 'yellow', icon: '⏸️' },
+  CANCELLED: { label: 'Cancelled', description: 'Procurement process cancelled. Reason should be detailed in comments.', color: 'red', icon: '🚫' },
+  CONTRACT_AWARDED: { label: 'Contract Awarded', description: 'Procurement process completed and contract awarded, awaiting delivery if applicable.', color: 'green', icon: '🏆' },
+  GOODS_RECEIVED: { label: 'Goods received', description: 'The goods of the procurement has been received at the receiving building.', color: 'green', icon: '📦' },
+  FULL_INVOICE_RECEIVED: { label: 'Full Invoice received', description: 'Invoice for all goods received.', color: 'blue', icon: '🧾' },
+  PARTIAL_INVOICE_RECEIVED: { label: 'Partial Invoice received', description: 'Invoice for some, but not all goods received.', color: 'orange', icon: '🧾' },
+  MONTHLY_INVOICE_RECEIVED: { label: 'Monthly Invoice received', description: 'Invoice for last delivery period of services received.', color: 'blue', icon: '📅' },
+  FULL_INVOICE_SIGNED: { label: 'Full Invoice signed', description: 'Invoice for all goods/services received signed for Section 34 and submitted to Accounts Payable.', color: 'green', icon: '✍️' },
+  PARTIAL_INVOICE_SIGNED: { label: 'Partial Invoice signed', description: 'Invoice for some, but not all goods signed for Section 34 and submitted to Accounts Payable.', color: 'orange', icon: '✍️' },
+  MONTHLY_INVOICE_SIGNED: { label: 'Monthly Invoice signed', description: 'Invoice for last delivery period of services signed for Section 34 and submitted to Accounts Payable.', color: 'green', icon: '📅' },
+  CONTRACT_AMENDED: { label: 'Contract Amended', description: 'Procurement process completed and existing contract amended, awaiting delivery if applicable.', color: 'purple', icon: '📝' }
 };
 
 /**

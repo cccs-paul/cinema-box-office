@@ -6,7 +6,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
@@ -89,13 +89,15 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   showCreateEventForm = false;
   isCreatingEvent = false;
   editingEvent: ProcurementEvent | null = null;
-  newEventType: ProcurementEventType = 'NOTE_ADDED';
+  newEventType: ProcurementEventType = 'NOT_STARTED';
   newEventDate: string = '';
   newEventComment: string = '';
   eventTypeOptions: ProcurementEventType[] = [
-    'NOTE_ADDED', 'STATUS_CHANGE', 'QUOTE_RECEIVED', 'QUOTE_SELECTED',
-    'QUOTE_REJECTED', 'PO_ISSUED', 'DELIVERED', 'INVOICED',
-    'PAYMENT_MADE', 'COMPLETED', 'CANCELLED', 'OTHER'
+    'NOT_STARTED', 'QUOTE', 'SAM_ACKNOWLEDGEMENT_REQUESTED', 'SAM_ACKNOWLEDGEMENT_RECEIVED',
+    'PACKAGE_SENT_TO_PROCUREMENT', 'ACKNOWLEDGED_BY_PROCUREMENT', 'PAUSED', 'CANCELLED',
+    'CONTRACT_AWARDED', 'GOODS_RECEIVED', 'FULL_INVOICE_RECEIVED', 'PARTIAL_INVOICE_RECEIVED',
+    'MONTHLY_INVOICE_RECEIVED', 'FULL_INVOICE_SIGNED', 'PARTIAL_INVOICE_SIGNED',
+    'MONTHLY_INVOICE_SIGNED', 'CONTRACT_AMENDED'
   ];
 
   // Currencies
@@ -205,6 +207,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   editItemProcurementCompleted = false;
   editItemProcurementCompletedDate = '';
   editItemCategoryId: number | null = null;
+  editItemTrackingStatus: TrackingStatus = 'ON_TRACK';
 
   // Status options - these are the new status values tracked via procurement events
   statusOptions: ProcurementItemStatus[] = [
@@ -219,10 +222,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   ];
 
   private destroy$ = new Subject<void>();
+  private pendingExpandItemId: number | null = null;
 
   constructor(
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
     private procurementService: ProcurementService,
@@ -235,6 +240,13 @@ export class ProcurementComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCurrencies();
+
+    // Check for expandItem query parameter
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      if (params['expandItem']) {
+        this.pendingExpandItemId = +params['expandItem'];
+      }
+    });
 
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe((user: User | null) => {
       this.currentUser = user;
@@ -339,6 +351,24 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       next: (items) => {
         this.procurementItems = items;
         this.isLoadingItems = false;
+        
+        // Handle pending expand item from query params
+        if (this.pendingExpandItemId) {
+          const itemToExpand = items.find(i => i.id === this.pendingExpandItemId);
+          if (itemToExpand) {
+            setTimeout(() => {
+              this.viewItemDetails(itemToExpand);
+              // Scroll the item into view
+              const element = document.getElementById(`procurement-item-${itemToExpand.id}`);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }, 100);
+          }
+          this.pendingExpandItemId = null;
+          // Clear the query param
+          this.router.navigate([], { queryParams: {}, replaceUrl: true });
+        }
       },
       error: (error) => {
         this.procurementItems = [];
@@ -623,6 +653,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemProcurementCompleted = item.procurementCompleted || false;
     this.editItemProcurementCompletedDate = item.procurementCompletedDate ? item.procurementCompletedDate.split('T')[0] : '';
     this.editItemCategoryId = item.categoryId !== undefined && item.categoryId !== null ? item.categoryId : null;
+    this.editItemTrackingStatus = (item.trackingStatus as TrackingStatus) || 'ON_TRACK';
     
     // Expand the item to show the edit form
     this.selectedItem = item;
@@ -659,6 +690,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemProcurementCompleted = false;
     this.editItemProcurementCompletedDate = '';
     this.editItemCategoryId = null;
+    this.editItemTrackingStatus = 'ON_TRACK';
   }
 
   /**
@@ -697,7 +729,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       procurementCompletedDate: this.editItemProcurementCompleted && this.editItemProcurementCompletedDate 
         ? this.editItemProcurementCompletedDate 
         : undefined,
-      categoryId: this.editItemCategoryId || undefined
+      categoryId: this.editItemCategoryId || undefined,
+      trackingStatus: this.editItemTrackingStatus
     };
 
     this.procurementService.updateProcurementItem(this.selectedRC.id, this.selectedFY.id, this.editingItemId, updateRequest)
@@ -1417,7 +1450,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    * Reset the event form.
    */
   private resetEventForm(): void {
-    this.newEventType = 'NOTE_ADDED';
+    this.newEventType = 'NOT_STARTED';
     this.newEventDate = new Date().toISOString().split('T')[0];
     this.newEventComment = '';
   }
@@ -1549,6 +1582,13 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get the description for an event type.
+   */
+  getEventTypeDescription(eventType: ProcurementEventType): string {
+    return EVENT_TYPE_INFO[eventType]?.description || '';
+  }
+
+  /**
    * Get the icon for an event type.
    */
   getEventTypeIcon(eventType: ProcurementEventType): string {
@@ -1671,7 +1711,10 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     if (!this.selectedItem || !this.selectedItem.linkedSpendingItemIds || this.selectedItem.linkedSpendingItemIds.length === 0) {
       return;
     }
-    this.router.navigate(['/app/spending']);
+    // Navigate with the first linked spending item ID to expand
+    this.router.navigate(['/app/spending'], {
+      queryParams: { expandItem: this.selectedItem.linkedSpendingItemIds[0] }
+    });
   }
 
   /**
@@ -1720,8 +1763,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           }
           
           const actionKey = response.spendingLinked 
-            ? 'PROCUREMENT.SPENDING_LINK_CREATED' 
-            : 'PROCUREMENT.SPENDING_LINK_REMOVED';
+            ? 'procurement.spendingLinkCreated' 
+            : 'procurement.spendingLinkRemoved';
           this.showSuccess(this.translate.instant(actionKey));
           this.showSpendingLinkWarning = false;
           this.spendingLinkWarningMessage = null;

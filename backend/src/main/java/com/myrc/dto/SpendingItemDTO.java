@@ -46,6 +46,11 @@ public class SpendingItemDTO {
   private String responsibilityCentreName;
   private Long procurementItemId;
   private String procurementItemName;
+  private BigDecimal procurementFinalPrice;
+  private BigDecimal procurementQuotedPrice;
+  private String procurementPriceCurrency;
+  private BigDecimal procurementFinalPriceCad;
+  private BigDecimal procurementQuotedPriceCad;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
@@ -122,8 +127,23 @@ public class SpendingItemDTO {
         spendingItem.getActive(),
         allocations
     );
-    dto.setProcurementItemId(spendingItem.getProcurementItem() != null ? spendingItem.getProcurementItem().getId() : null);
-    dto.setProcurementItemName(spendingItem.getProcurementItem() != null ? spendingItem.getProcurementItem().getName() : null);
+    // Set procurement item details if linked
+    if (spendingItem.getProcurementItem() != null) {
+      var procItem = spendingItem.getProcurementItem();
+      dto.setProcurementItemId(procItem.getId());
+      dto.setProcurementItemName(procItem.getName());
+      dto.setProcurementFinalPrice(procItem.getFinalPrice());
+      dto.setProcurementQuotedPrice(procItem.getQuotedPrice());
+      // Use final price currency if available, otherwise quoted price currency
+      String priceCurrency = procItem.getFinalPriceCurrency() != null 
+          ? procItem.getFinalPriceCurrency().getCode() 
+          : (procItem.getQuotedPriceCurrency() != null 
+              ? procItem.getQuotedPriceCurrency().getCode() 
+              : null);
+      dto.setProcurementPriceCurrency(priceCurrency);
+      dto.setProcurementFinalPriceCad(procItem.getFinalPriceCad());
+      dto.setProcurementQuotedPriceCad(procItem.getQuotedPriceCad());
+    }
     return dto;
   }
 
@@ -262,6 +282,46 @@ public class SpendingItemDTO {
 
   public void setProcurementItemName(String procurementItemName) {
     this.procurementItemName = procurementItemName;
+  }
+
+  public BigDecimal getProcurementFinalPrice() {
+    return procurementFinalPrice;
+  }
+
+  public void setProcurementFinalPrice(BigDecimal procurementFinalPrice) {
+    this.procurementFinalPrice = procurementFinalPrice;
+  }
+
+  public BigDecimal getProcurementQuotedPrice() {
+    return procurementQuotedPrice;
+  }
+
+  public void setProcurementQuotedPrice(BigDecimal procurementQuotedPrice) {
+    this.procurementQuotedPrice = procurementQuotedPrice;
+  }
+
+  public String getProcurementPriceCurrency() {
+    return procurementPriceCurrency;
+  }
+
+  public void setProcurementPriceCurrency(String procurementPriceCurrency) {
+    this.procurementPriceCurrency = procurementPriceCurrency;
+  }
+
+  public BigDecimal getProcurementFinalPriceCad() {
+    return procurementFinalPriceCad;
+  }
+
+  public void setProcurementFinalPriceCad(BigDecimal procurementFinalPriceCad) {
+    this.procurementFinalPriceCad = procurementFinalPriceCad;
+  }
+
+  public BigDecimal getProcurementQuotedPriceCad() {
+    return procurementQuotedPriceCad;
+  }
+
+  public void setProcurementQuotedPriceCad(BigDecimal procurementQuotedPriceCad) {
+    this.procurementQuotedPriceCad = procurementQuotedPriceCad;
   }
 
   public LocalDateTime getCreatedAt() {

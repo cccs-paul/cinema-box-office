@@ -381,6 +381,7 @@
     "pdfPreview": "Aperçu PDF",
     "imagePreview": "Aperçu de l'image",
     "linkSpending": "Lier aux dépenses",
+    "editModeRequiredForLink": "Entrez en mode édition pour créer ou dissocier les dépenses",
     "unlinkSpending": "Délier des dépenses",
     "spendingLinkCreated": "Article de dépense créé à partir de l'approvisionnement",
     "spendingLinkRemoved": "Lien avec l'article de dépense supprimé",
@@ -461,7 +462,14 @@
     "enterExchangeRate": "Entrez le taux de change",
     "optionalDescription": "Description optionnelle",
     "poInvoice": "BC/Facture #",
-    "rateToCad": "Taux vers CAD"
+    "rateToCad": "Taux vers CAD",
+    "linkedProcurement": "Approvisionnement lié",
+    "viewInProcurement": "Voir dans Approvisionnement",
+    "procurementItem": "Article d'approvisionnement",
+    "cannotDeleteLinked": "Impossible de supprimer les articles de dépenses liés. Dissociez-les de la page Approvisionnement d'abord.",
+    "priceMismatchWarning": "Le total des dépenses ne correspond pas au prix d'approvisionnement",
+    "spendingTotal": "Total des dépenses",
+    "procurementPrice": "Prix d'approvisionnement"
   },
   "summary": {
     "title": "Sommaire",
@@ -541,7 +549,9 @@
     "noProcurementData": "Aucune donnée d'approvisionnement disponible",
     "fundingItems": "Éléments de financement",
     "spendingItems": "Éléments de dépenses",
-    "procurementItems": "Éléments d'approvisionnement"
+    "procurementItems": "Éléments d'approvisionnement",
+    "linkedProcurement": "Approvisionnement lié",
+    "viewInProcurement": "Voir dans l'approvisionnement"
   },
   "configuration": {
     "title": "Configuration",

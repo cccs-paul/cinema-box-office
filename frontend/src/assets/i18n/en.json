@@ -400,6 +400,7 @@
     "linkedSpendingItem": "Linked Spending Item",
     "viewSpendingItem": "View Spending Item",
     "linkSpending": "Link to Spending",
+    "editModeRequiredForLink": "Enter edit mode to create or unlink spending",
     "unlinkSpending": "Unlink from Spending",
     "spendingLinkCreated": "Spending item created from procurement",
     "spendingLinkRemoved": "Spending item link removed",
@@ -480,7 +481,14 @@
     "enterExchangeRate": "Enter exchange rate",
     "optionalDescription": "Optional description",
     "poInvoice": "ECO/PO/other",
-    "rateToCad": "Rate to CAD"
+    "rateToCad": "Rate to CAD",
+    "linkedProcurement": "Linked Procurement",
+    "viewInProcurement": "View in Procurement",
+    "procurementItem": "Procurement Item",
+    "cannotDeleteLinked": "Cannot delete linked spending items. Unlink from the Procurement page first.",
+    "priceMismatchWarning": "Spending total does not match procurement price",
+    "spendingTotal": "Spending total",
+    "procurementPrice": "Procurement price"
   },
   "summary": {
     "title": "Summary",
@@ -536,6 +544,8 @@
     "fundingItems": "Funding Items",
     "spendingItems": "Spending Items",
     "procurementItems": "Procurement Items",
+    "linkedProcurement": "Linked Procurement",
+    "viewInProcurement": "View in Procurement",
     "with": "with",
     "remainingBudget": "remaining",
     "and": "and",
@@ -567,7 +577,9 @@
     "noProcurementData": "No procurement data available",
     "fundingItems": "Funding Items",
     "spendingItems": "Spending Items",
-    "procurementItems": "Procurement Items"
+    "procurementItems": "Procurement Items",
+    "linkedProcurement": "Linked Procurement",
+    "viewInProcurement": "View in Procurement"
   },
   "configuration": {
     "title": "Configuration",

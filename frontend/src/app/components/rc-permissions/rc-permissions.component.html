@@ -174,7 +174,7 @@
               </td>
               <td class="granted-cell">
                 <div class="granted-info">
-                  <span class="granted-date">{{ permission.grantedAt | date:'mediumDate' }}</span>
+                  <span class="granted-date">{{ permission.grantedAt | date:'dd/MM/yyyy' }}</span>
                   <span class="granted-by" *ngIf="permission.grantedBy">{{ 'rcPermissions.by' | translate }} {{ permission.grantedBy }}</span>
                   <span class="granted-by" *ngIf="!permission.grantedBy && !permission.id">{{ 'rcPermissions.originalOwner' | translate }}</span>
                 </div>

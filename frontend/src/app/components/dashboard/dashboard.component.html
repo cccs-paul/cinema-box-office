@@ -88,38 +88,6 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="itemCurrency">{{ 'funding.currency' | translate }}</label>
-            <select 
-              id="itemCurrency" 
-              [(ngModel)]="newItemCurrency" 
-              [disabled]="isCreating || isLoadingCurrencies"
-              (change)="onCurrencyChange()"
-            >
-              <option *ngFor="let currency of currencies" [value]="currency.code">
-                {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
-              </option>
-            </select>
-          </div>
-        </div>
-        <div class="form-row" *ngIf="requiresExchangeRate(newItemCurrency)">
-          <div class="form-group full-width">
-            <label for="itemExchangeRate">{{ 'funding.exchangeRateToCad' | translate }} *</label>
-            <div class="exchange-rate-help">
-              1 {{ newItemCurrency }} = <input
-                id="itemExchangeRate"
-                type="number"
-                [(ngModel)]="newItemExchangeRate"
-                [placeholder]="'funding.enterExchangeRate' | translate"
-                [disabled]="isCreating"
-                step="0.000001"
-                min="0.000001"
-                class="exchange-rate-input"
-              /> CAD
-            </div>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
             <label for="itemSource">{{ 'funding.source' | translate }} <span class="required">*</span></label>
             <select id="itemSource" [(ngModel)]="newItemSource" [disabled]="isCreating" required>
               <option *ngFor="let source of sourceOptions" [value]="source">
@@ -210,7 +178,7 @@
         </div>
 
         <div class="form-actions">
-          <button class="btn btn-primary" (click)="createFundingItem()" [disabled]="isCreating || !newItemName.trim() || (requiresExchangeRate(newItemCurrency) && (!newItemExchangeRate || newItemExchangeRate <= 0)) || !hasValidMoneyAllocation()">
+          <button class="btn btn-primary" (click)="createFundingItem()" [disabled]="isCreating || !newItemName.trim() || !hasValidMoneyAllocation()">
             {{ isCreating ? ('common.creating' | translate) : ('common.create' | translate) }}
           </button>
           <button class="btn btn-secondary" (click)="toggleCreateForm()" [disabled]="isCreating">
@@ -272,8 +240,8 @@
           </span>
           <!-- Show CAP/OM totals - always with prefix even for single-type categories -->
           <span class="cap-om-totals">
-            <span class="cap-total" *ngIf="categoryAllowsCapById(item.categoryId)">CAP: {{ formatCurrency(item.totalCap, item.currency) }}</span>
-            <span class="om-total" *ngIf="categoryAllowsOmById(item.categoryId)">OM: {{ formatCurrency(item.totalOm, item.currency) }}</span>
+            <span class="cap-total" *ngIf="categoryAllowsCapById(item.categoryId)">CAP: {{ formatCurrency(item.totalCap, 'CAD') }}</span>
+            <span class="om-total" *ngIf="categoryAllowsOmById(item.categoryId)">OM: {{ formatCurrency(item.totalOm, 'CAD') }}</span>
           </span>
         </div>
         <div class="item-actions">
@@ -314,15 +282,11 @@
             </div>
             <div class="info-item">
               <label>{{ 'funding.totalCap' | translate }}</label>
-              <span>{{ formatCurrency(item.totalCap, item.currency) }}</span>
+              <span>{{ formatCurrency(item.totalCap, 'CAD') }}</span>
             </div>
             <div class="info-item">
               <label>{{ 'funding.totalOm' | translate }}</label>
-              <span>{{ formatCurrency(item.totalOm, item.currency) }}</span>
-            </div>
-            <div class="info-item" *ngIf="item.currency !== 'CAD' && item.exchangeRate">
-              <label>{{ 'funding.exchangeRate' | translate }}</label>
-              <span>1 {{ item.currency }} = {{ item.exchangeRate }} CAD</span>
+              <span>{{ formatCurrency(item.totalOm, 'CAD') }}</span>
             </div>
             <div class="info-item" *ngIf="item.comments">
               <label>{{ 'common.comments' | translate }}</label>
@@ -337,11 +301,11 @@
                 <span class="money-label">{{ allocation.moneyCode }}:</span>
                 <span class="money-amounts">
                   <ng-container *ngIf="categoryAllowsCapById(item.categoryId)">
-                    CAP: {{ formatCurrency(allocation.capAmount, item.currency) }}
+                    CAP: {{ formatCurrency(allocation.capAmount, 'CAD') }}
                   </ng-container>
                   <ng-container *ngIf="categoryAllowsCapById(item.categoryId) && categoryAllowsOmById(item.categoryId)">, </ng-container>
                   <ng-container *ngIf="categoryAllowsOmById(item.categoryId)">
-                    OM: {{ formatCurrency(allocation.omAmount, item.currency) }}
+                    OM: {{ formatCurrency(allocation.omAmount, 'CAD') }}
                   </ng-container>
                 </span>
               </div>
@@ -373,51 +337,6 @@
                 [placeholder]="'funding.optionalDescription' | translate"
                 [disabled]="isUpdating"
               />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="editItemCurrency">{{ 'funding.currency' | translate }}</label>
-              <div class="currency-selector">
-                <span class="currency-flag">{{ getCurrencyFlag(editItemCurrency) }}</span>
-                <select id="editItemCurrency" [(ngModel)]="editItemCurrency" [disabled]="isUpdating"
-                        (change)="onEditCurrencyChange()">
-                  <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
-                  <option value="USD">🇺🇸 USD - US Dollar</option>
-                  <option value="EUR">🇪🇺 EUR - Euro</option>
-                  <option value="GBP">🇬🇧 GBP - British Pound</option>
-                  <option value="JPY">🇯🇵 JPY - Japanese Yen</option>
-                  <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
-                  <option value="CHF">🇨🇭 CHF - Swiss Franc</option>
-                  <option value="CNY">🇨🇳 CNY - Chinese Yuan</option>
-                  <option value="INR">🇮🇳 INR - Indian Rupee</option>
-                  <option value="MXN">🇲🇽 MXN - Mexican Peso</option>
-                  <option value="BRL">🇧🇷 BRL - Brazilian Real</option>
-                  <option value="KRW">🇰🇷 KRW - South Korean Won</option>
-                  <option value="SGD">🇸🇬 SGD - Singapore Dollar</option>
-                  <option value="HKD">🇭🇰 HKD - Hong Kong Dollar</option>
-                  <option value="NZD">🇳🇿 NZD - New Zealand Dollar</option>
-                  <option value="SEK">🇸🇪 SEK - Swedish Krona</option>
-                  <option value="NOK">🇳🇴 NOK - Norwegian Krone</option>
-                  <option value="DKK">🇩🇰 DKK - Danish Krone</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group" *ngIf="editItemCurrency !== 'CAD'">
-              <label for="editItemExchangeRate">{{ 'funding.exchangeRate' | translate }} <span class="required">*</span></label>
-              <div class="exchange-rate-field">
-                1 {{ editItemCurrency }} = 
-                <input
-                  id="editItemExchangeRate"
-                  type="number"
-                  [(ngModel)]="editItemExchangeRate"
-                  [placeholder]="'funding.enterExchangeRate' | translate"
-                  [disabled]="isUpdating"
-                  step="0.000001"
-                  min="0.000001"
-                  class="exchange-rate-input"
-                /> CAD
-              </div>
             </div>
           </div>
           <div class="form-row">
