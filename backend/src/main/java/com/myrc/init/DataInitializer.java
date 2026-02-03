@@ -1223,10 +1223,10 @@ public class DataInitializer implements ApplicationRunner {
         LocalDate baseDate = LocalDate.of(2025, 8, 1);
 
         try {
-            // All items start with a CREATED event
+            // All items start with a NOT_STARTED event
             ProcurementEvent createdEvent = new ProcurementEvent(
                 procurementItem,
-                ProcurementEvent.EventType.CREATED,
+                ProcurementEvent.EventType.NOT_STARTED,
                 baseDate,
                 "Procurement item created for " + procurementItem.getName()
             );
@@ -1339,7 +1339,7 @@ public class DataInitializer implements ApplicationRunner {
     private void addNoteEvent(ProcurementItem item, LocalDate eventDate, String comment) {
         ProcurementEvent event = new ProcurementEvent(
             item,
-            ProcurementEvent.EventType.NOTE_ADDED,
+            ProcurementEvent.EventType.QUOTE,
             eventDate,
             comment
         );

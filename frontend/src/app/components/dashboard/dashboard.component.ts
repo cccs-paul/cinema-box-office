@@ -875,8 +875,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const allowsOm = this.selectedCategoryAllowsOm();
     
     return this.newItemMoneyAllocations.some(allocation => {
-      const hasValidCap = allowsCap && allocation.capAmount && allocation.capAmount > 0;
-      const hasValidOm = allowsOm && allocation.omAmount && allocation.omAmount > 0;
+      const capValue = Number(allocation.capAmount) || 0;
+      const omValue = Number(allocation.omAmount) || 0;
+      const hasValidCap = allowsCap && capValue > 0;
+      const hasValidOm = allowsOm && omValue > 0;
       return hasValidCap || hasValidOm;
     });
   }

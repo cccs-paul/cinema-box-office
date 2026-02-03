@@ -217,7 +217,7 @@ public class ProcurementEventServiceImpl implements ProcurementEventService {
         ProcurementItem procurementItem = getProcurementItemWithAccess(procurementItemId, username, true);
 
         // Parse event type
-        ProcurementEvent.EventType eventType = ProcurementEvent.EventType.NOTE_ADDED;
+        ProcurementEvent.EventType eventType = ProcurementEvent.EventType.NOT_STARTED;
         if (dto.getEventType() != null && !dto.getEventType().trim().isEmpty()) {
             try {
                 eventType = ProcurementEvent.EventType.valueOf(dto.getEventType().toUpperCase());

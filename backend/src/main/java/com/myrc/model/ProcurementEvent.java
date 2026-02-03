@@ -52,32 +52,40 @@ public class ProcurementEvent {
      * Enumeration of procurement event types.
      */
     public enum EventType {
-        /** Procurement item was created */
-        CREATED,
-        /** Status was changed */
-        STATUS_CHANGE,
-        /** A note/comment was added */
-        NOTE_ADDED,
-        /** A quote was received */
-        QUOTE_RECEIVED,
-        /** A quote was selected */
-        QUOTE_SELECTED,
-        /** A quote was rejected */
-        QUOTE_REJECTED,
-        /** Purchase Order was issued */
-        PO_ISSUED,
-        /** Item was delivered */
-        DELIVERED,
-        /** Item was invoiced */
-        INVOICED,
-        /** Payment was made */
-        PAYMENT_MADE,
-        /** Procurement was completed */
-        COMPLETED,
-        /** Procurement was cancelled */
+        /** Procurement process has not yet started */
+        NOT_STARTED,
+        /** Quote/estimate obtained from vendor */
+        QUOTE,
+        /** Requested acknowledgement from Software Asset Management team */
+        SAM_ACKNOWLEDGEMENT_REQUESTED,
+        /** Received acknowledgement from Software Asset Management team */
+        SAM_ACKNOWLEDGEMENT_RECEIVED,
+        /** Documentation package sent to Procurement */
+        PACKAGE_SENT_TO_PROCUREMENT,
+        /** Procurement has accepted the package and provided a Purchase Order */
+        ACKNOWLEDGED_BY_PROCUREMENT,
+        /** Procurement process put on pause */
+        PAUSED,
+        /** Procurement process cancelled */
         CANCELLED,
-        /** Other/custom event */
-        OTHER
+        /** Procurement process completed and contract awarded */
+        CONTRACT_AWARDED,
+        /** The goods of the procurement has been received */
+        GOODS_RECEIVED,
+        /** Invoice for all goods received */
+        FULL_INVOICE_RECEIVED,
+        /** Invoice for some, but not all goods received */
+        PARTIAL_INVOICE_RECEIVED,
+        /** Invoice for last delivery period of services received */
+        MONTHLY_INVOICE_RECEIVED,
+        /** Invoice for all goods/services signed for Section 34 */
+        FULL_INVOICE_SIGNED,
+        /** Invoice for some goods signed for Section 34 */
+        PARTIAL_INVOICE_SIGNED,
+        /** Invoice for last delivery period of services signed for Section 34 */
+        MONTHLY_INVOICE_SIGNED,
+        /** Procurement process completed and existing contract amended */
+        CONTRACT_AMENDED
     }
 
     @Id
@@ -95,8 +103,8 @@ public class ProcurementEvent {
      * The type of event.
      */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
-    private EventType eventType = EventType.NOTE_ADDED;
+    @Column(nullable = false, length = 35)
+    private EventType eventType = EventType.NOT_STARTED;
 
     /**
      * The date of the event. Defaults to today's date.
@@ -161,14 +169,14 @@ public class ProcurementEvent {
 
     public ProcurementEvent(ProcurementItem procurementItem, EventType eventType, String comment) {
         this.procurementItem = procurementItem;
-        this.eventType = eventType != null ? eventType : EventType.NOTE_ADDED;
+        this.eventType = eventType != null ? eventType : EventType.NOT_STARTED;
         this.comment = comment;
         this.eventDate = LocalDate.now();
     }
 
     public ProcurementEvent(ProcurementItem procurementItem, EventType eventType, LocalDate eventDate, String comment) {
         this.procurementItem = procurementItem;
-        this.eventType = eventType != null ? eventType : EventType.NOTE_ADDED;
+        this.eventType = eventType != null ? eventType : EventType.NOT_STARTED;
         this.eventDate = eventDate != null ? eventDate : LocalDate.now();
         this.comment = comment;
     }
@@ -185,7 +193,7 @@ public class ProcurementEvent {
      */
     public static ProcurementEvent createStatusChangeEvent(ProcurementItem procurementItem,
             String oldStatus, String newStatus, String comment, String createdBy) {
-        ProcurementEvent event = new ProcurementEvent(procurementItem, EventType.STATUS_CHANGE, comment);
+        ProcurementEvent event = new ProcurementEvent(procurementItem, EventType.NOT_STARTED, comment);
         event.setOldStatus(oldStatus);
         event.setNewStatus(newStatus);
         event.setCreatedBy(createdBy);

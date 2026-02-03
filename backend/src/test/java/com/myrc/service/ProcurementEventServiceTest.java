@@ -112,7 +112,7 @@ class ProcurementEventServiceTest {
         testEvent = new ProcurementEvent();
         testEvent.setId(1L);
         testEvent.setProcurementItem(testProcurementItem);
-        testEvent.setEventType(ProcurementEvent.EventType.NOTE_ADDED);
+        testEvent.setEventType(ProcurementEvent.EventType.NOT_STARTED);
         testEvent.setEventDate(LocalDate.now());
         testEvent.setComment("Test comment");
         testEvent.setCreatedBy("testuser");
@@ -147,7 +147,7 @@ class ProcurementEventServiceTest {
             // Then
             assertNotNull(result);
             assertEquals(1, result.size());
-            assertEquals("NOTE_ADDED", result.get(0).getEventType());
+            assertEquals("NOT_STARTED", result.get(0).getEventType());
             verify(eventRepository).findByProcurementItemIdAndActiveTrue(1L);
         }
 
@@ -189,7 +189,7 @@ class ProcurementEventServiceTest {
         void shouldCreateEventSuccessfully() {
             // Given
             ProcurementEventDTO dto = new ProcurementEventDTO();
-            dto.setEventType("NOTE_ADDED");
+            dto.setEventType("NOT_STARTED");
             dto.setEventDate(LocalDate.now());
             dto.setComment("New test comment");
 
@@ -208,7 +208,7 @@ class ProcurementEventServiceTest {
 
             // Then
             assertNotNull(result);
-            assertEquals("NOTE_ADDED", result.getEventType());
+            assertEquals("NOT_STARTED", result.getEventType());
             assertEquals("New test comment", result.getComment());
             
             ArgumentCaptor<ProcurementEvent> eventCaptor = ArgumentCaptor.forClass(ProcurementEvent.class);
@@ -238,7 +238,7 @@ class ProcurementEventServiceTest {
         void shouldThrowExceptionWithoutWriteAccess() {
             // Given
             ProcurementEventDTO dto = new ProcurementEventDTO();
-            dto.setEventType("NOTE_ADDED");
+            dto.setEventType("NOT_STARTED");
             
             // Create a different user who is not the owner
             User otherUser = new User();
@@ -375,7 +375,7 @@ class ProcurementEventServiceTest {
 
             // Then
             assertNotNull(result);
-            assertEquals("NOTE_ADDED", result.getEventType());
+            assertEquals("NOT_STARTED", result.getEventType());
         }
 
         @Test
