@@ -11,7 +11,7 @@
  * Entity representing a Spending Category associated with a Fiscal Year.
  * Categories are used to group spending items for better organization.
  * Default categories include: Compute, GPUs, Storage, Software Licenses,
- * Small Procurement, and Contractors.
+ * Hardware Support/Licensing, Small Procurement, and Contractors.
  */
 package com.myrc.model;
 

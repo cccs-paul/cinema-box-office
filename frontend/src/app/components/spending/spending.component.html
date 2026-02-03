@@ -187,18 +187,16 @@
                 </td>
                 <td *ngIf="selectedCategoryAllowsCap()">
                   <input 
-                    type="number" 
+                    type="text"
+                    currencyInput
                     [(ngModel)]="allocation.capAmount"
-                    min="0"
-                    step="0.01"
                     class="form-control amount-input">
                 </td>
                 <td *ngIf="selectedCategoryAllowsOm()">
                   <input 
-                    type="number" 
+                    type="text"
+                    currencyInput
                     [(ngModel)]="allocation.omAmount"
-                    min="0"
-                    step="0.01"
                     class="form-control amount-input">
                 </td>
               </tr>
@@ -508,12 +506,11 @@
                   <label [for]="'edit-cap-' + i">{{ allocation.moneyName }} (CAP)</label>
                   <input
                     [id]="'edit-cap-' + i"
-                    type="number"
+                    type="text"
+                    currencyInput
                     [(ngModel)]="allocation.capAmount"
                     placeholder="0.00"
                     [disabled]="isUpdating"
-                    step="0.01"
-                    min="0"
                     class="money-input"
                   />
                 </div>
@@ -521,12 +518,11 @@
                   <label [for]="'edit-om-' + i">{{ allocation.moneyName }} (O&M)</label>
                   <input
                     [id]="'edit-om-' + i"
-                    type="number"
+                    type="text"
+                    currencyInput
                     [(ngModel)]="allocation.omAmount"
                     placeholder="0.00"
                     [disabled]="isUpdating"
-                    step="0.01"
-                    min="0"
                     class="money-input"
                   />
                 </div>

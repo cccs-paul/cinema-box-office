@@ -325,6 +325,70 @@ public class ProcurementItemController {
         }
     }
 
+    /**
+     * Toggle creating a spending item from this procurement item.
+     * If no spending item is linked, creates a new one.
+     * If a spending item is linked and has not been modified, removes the link.
+     * Returns a warning if the spending item has been modified after creation.
+     *
+     * @param rcId the responsibility centre ID
+     * @param fyId the fiscal year ID
+     * @param procurementItemId the procurement item ID
+     * @param request the toggle request
+     * @param authentication the authentication principal
+     * @return the updated procurement item or warning response
+     */
+    @PostMapping("/{procurementItemId}/toggle-spending-link")
+    @Operation(summary = "Toggle spending item link",
+            description = "Creates or removes a spending item linked to this procurement item")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Spending link toggled successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request - spending item has been modified"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "Procurement item not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> toggleSpendingLink(
+            @PathVariable Long rcId,
+            @PathVariable Long fyId,
+            @PathVariable Long procurementItemId,
+            @RequestBody(required = false) ToggleSpendingLinkRequest request,
+            Authentication authentication) {
+        String username = getUsername(authentication);
+        logger.info("POST /responsibility-centres/" + rcId + "/fiscal-years/" + fyId +
+                "/procurement-items/" + procurementItemId + "/toggle-spending-link - Toggling spending link for user: " + username);
+
+        try {
+            boolean forceUnlink = request != null && request.forceUnlink() != null && request.forceUnlink();
+            ProcurementItemService.ToggleSpendingLinkResult result = 
+                    procurementItemService.toggleSpendingLink(procurementItemId, username, forceUnlink);
+            
+            ToggleSpendingLinkResponse response = new ToggleSpendingLinkResponse(
+                    result.procurementItem(),
+                    result.spendingLinked(),
+                    result.hasWarning(),
+                    result.warningMessage());
+            
+            if (response.hasWarning() && !forceUnlink) {
+                // Return warning to ask for confirmation
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+            }
+            
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            logger.warning("Failed to toggle spending link: " + e.getMessage());
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            logger.severe("Failed to toggle spending link: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
     // ==========================
     // Quote Endpoints
     // ==========================
@@ -908,4 +972,27 @@ public class ProcurementItemController {
      * Record for status update requests.
      */
     public record StatusUpdateRequest(String status) {}
+
+    /**
+     * Record for toggle spending link requests.
+     */
+    public record ToggleSpendingLinkRequest(Boolean forceUnlink) {}
+
+    /**
+     * Response for toggle spending link operation.
+     */
+    public record ToggleSpendingLinkResponse(
+            ProcurementItemDTO procurementItem,
+            boolean spendingLinked,
+            boolean hasWarning,
+            String warningMessage) {
+        
+        public static ToggleSpendingLinkResponse success(ProcurementItemDTO item, boolean linked) {
+            return new ToggleSpendingLinkResponse(item, linked, false, null);
+        }
+        
+        public static ToggleSpendingLinkResponse warning(ProcurementItemDTO item, String message) {
+            return new ToggleSpendingLinkResponse(item, true, true, message);
+        }
+    }
 }

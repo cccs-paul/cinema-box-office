@@ -49,6 +49,7 @@ public class SpendingCategoryServiceImpl implements SpendingCategoryService {
       {"GPUs", "Graphics Processing Units for AI/ML and rendering"},
       {"Storage", "Data storage and backup services"},
       {"Software Licenses", "Software licensing and subscriptions"},
+      {"Hardware Support/Licensing", "Hardware support contracts and licensing fees"},
       {"Small Procurement", "Miscellaneous small purchases and equipment"},
       {"Contractors", "External contractors and consulting services"}
   };

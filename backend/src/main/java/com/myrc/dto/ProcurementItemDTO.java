@@ -77,6 +77,12 @@ public class ProcurementItemDTO {
      */
     private List<String> linkedSpendingItemNames;
 
+    /**
+     * Tracking status indicating the overall health/risk of the procurement.
+     * Values: ON_TRACK, AT_RISK, CANCELLED
+     */
+    private String trackingStatus;
+
     // Constructors
     public ProcurementItemDTO() {
         this.quotes = new ArrayList<>();
@@ -169,6 +175,9 @@ public class ProcurementItemDTO {
             dto.setLinkedSpendingItemNames(new ArrayList<>());
         }
         
+        // Populate tracking status
+        dto.setTrackingStatus(item.getTrackingStatus() != null ? item.getTrackingStatus().name() : "ON_TRACK");
+        
         return dto;
     }
 
@@ -230,6 +239,9 @@ public class ProcurementItemDTO {
             dto.setLinkedSpendingItemIds(new ArrayList<>());
             dto.setLinkedSpendingItemNames(new ArrayList<>());
         }
+        
+        // Populate tracking status
+        dto.setTrackingStatus(item.getTrackingStatus() != null ? item.getTrackingStatus().name() : "ON_TRACK");
         
         return dto;
     }
@@ -506,5 +518,13 @@ public class ProcurementItemDTO {
 
     public void setLinkedSpendingItemNames(List<String> linkedSpendingItemNames) {
         this.linkedSpendingItemNames = linkedSpendingItemNames;
+    }
+
+    public String getTrackingStatus() {
+        return trackingStatus;
+    }
+
+    public void setTrackingStatus(String trackingStatus) {
+        this.trackingStatus = trackingStatus;
     }
 }

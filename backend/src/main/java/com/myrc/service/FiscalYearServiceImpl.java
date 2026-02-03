@@ -287,4 +287,47 @@ public class FiscalYearServiceImpl implements FiscalYearService {
     Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
     return accessOpt.isPresent() && RCAccess.AccessLevel.READ_WRITE.equals(accessOpt.get().getAccessLevel());
   }
+
+  /**
+   * Check if user is the owner of the RC.
+   */
+  private boolean isRCOwner(Long rcId, String username) {
+    Optional<User> userOpt = userRepository.findByUsername(username);
+    if (userOpt.isEmpty()) {
+      return false;
+    }
+
+    User user = userOpt.get();
+    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
+    if (rcOpt.isEmpty()) {
+      return false;
+    }
+
+    ResponsibilityCentre rc = rcOpt.get();
+    return rc.getOwner().getId().equals(user.getId());
+  }
+
+  @Override
+  public Optional<FiscalYearDTO> toggleActiveStatus(Long fiscalYearId, String username) {
+    Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);
+    if (fyOpt.isEmpty()) {
+      return Optional.empty();
+    }
+
+    FiscalYear fy = fyOpt.get();
+    Long rcId = fy.getResponsibilityCentre().getId();
+
+    // Only the RC owner can toggle active status
+    if (!isRCOwner(rcId, username)) {
+      throw new IllegalArgumentException(
+          "Only the RC owner can toggle the active status of a fiscal year");
+    }
+
+    // Toggle the active status
+    fy.setActive(!fy.getActive());
+    FiscalYear saved = fiscalYearRepository.save(fy);
+    logger.info("Toggled active status for fiscal year '" + fy.getName() + 
+        "' to " + (fy.getActive() ? "active" : "inactive") + " by user " + username);
+    return Optional.of(FiscalYearDTO.fromEntity(saved));
+  }
 }

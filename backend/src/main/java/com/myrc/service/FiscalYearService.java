@@ -82,4 +82,16 @@ public interface FiscalYearService {
   Optional<FiscalYearDTO> updateDisplaySettings(Long fiscalYearId, String username,
                                                   Boolean showSearchBox, Boolean showCategoryFilter, Boolean groupByCategory,
                                                   Integer onTargetMin, Integer onTargetMax);
+
+  /**
+   * Toggle the active status of a fiscal year.
+   * Only the RC owner can toggle the active status.
+   * An inactive FY is accessible but read-only.
+   *
+   * @param fiscalYearId the fiscal year ID
+   * @param username the username (must be RC owner)
+   * @return optional updated fiscal year DTO
+   * @throws IllegalArgumentException if user is not the RC owner
+   */
+  Optional<FiscalYearDTO> toggleActiveStatus(Long fiscalYearId, String username);
 }

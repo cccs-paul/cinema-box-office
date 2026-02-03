@@ -319,6 +319,52 @@ public class FiscalYearController {
     }
   }
 
+  /**
+   * Toggle the active status of a fiscal year.
+   * Only the RC owner can toggle the active status.
+   *
+   * @param rcId the responsibility centre ID
+   * @param fyId the fiscal year ID
+   * @param authentication the authentication principal
+   * @return the updated fiscal year
+   */
+  @PatchMapping("/{fyId}/toggle-active")
+  @Operation(summary = "Toggle fiscal year active status",
+      description = "Toggles whether a fiscal year is active or inactive. Only RC owners can toggle.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Active status toggled successfully"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied - only RC owners can toggle"),
+      @ApiResponse(responseCode = "404", description = "Fiscal year not found"),
+      @ApiResponse(responseCode = "500", description = "Internal server error")
+  })
+  public ResponseEntity<?> toggleActiveStatus(
+      @PathVariable Long rcId,
+      @PathVariable Long fyId,
+      Authentication authentication) {
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
+    }
+    logger.info("PATCH /responsibility-centres/" + rcId + "/fiscal-years/" + fyId + "/toggle-active - Toggling active status for user: " + username);
+    
+    try {
+      Optional<FiscalYearDTO> updatedFY = fiscalYearService.toggleActiveStatus(fyId, username);
+      return updatedFY.map(ResponseEntity::ok)
+          .orElseGet(() -> ResponseEntity.notFound().build());
+    } catch (IllegalArgumentException e) {
+      String message = e.getMessage();
+      logger.warning("Toggle active status failed: " + message);
+      if (message != null && message.contains("owner")) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(message));
+      }
+      return ResponseEntity.badRequest().body(new ErrorResponse(message));
+    } catch (Exception e) {
+      logger.severe("Toggle active status failed: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+    }
+  }
+
   // Request DTOs
   public static class FiscalYearCreateRequest {
     private static final String INVALID_FILENAME_CHARS = "<>:\"/\\|?*";

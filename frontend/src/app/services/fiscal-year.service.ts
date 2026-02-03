@@ -98,6 +98,19 @@ export class FiscalYearService {
   }
 
   /**
+   * Toggle the active status of a fiscal year.
+   * Only RC owners can toggle.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @returns Observable of the updated fiscal year
+   */
+  toggleActiveStatus(rcId: number, fyId: number): Observable<FiscalYear> {
+    return this.http.patch<FiscalYear>(`${this.baseUrl}/${rcId}/fiscal-years/${fyId}/toggle-active`, {})
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
    * Handle HTTP errors.
    *
    * @param error The HTTP error response

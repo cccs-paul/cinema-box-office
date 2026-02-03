@@ -250,4 +250,35 @@ public interface ProcurementItemService {
      * @throws IllegalArgumentException if user doesn't have write access
      */
     void deleteFile(Long fileId, String username);
+
+    /**
+     * Toggle the link between a procurement item and a spending item.
+     * If no spending item is linked, creates one from the procurement item data.
+     * If a spending item is linked, unlinks it (optionally with force if modified).
+     *
+     * @param procurementItemId the procurement item ID
+     * @param username the requesting user's username
+     * @param forceUnlink if true, unlinks even if spending item was modified
+     * @return result containing the updated procurement item and link status
+     * @throws IllegalArgumentException if user doesn't have write access
+     */
+    ToggleSpendingLinkResult toggleSpendingLink(Long procurementItemId, String username, boolean forceUnlink);
+
+    /**
+     * Result record for toggle spending link operation.
+     */
+    record ToggleSpendingLinkResult(
+            ProcurementItemDTO procurementItem,
+            boolean spendingLinked,
+            boolean hasWarning,
+            String warningMessage) {
+        
+        public static ToggleSpendingLinkResult success(ProcurementItemDTO item, boolean linked) {
+            return new ToggleSpendingLinkResult(item, linked, false, null);
+        }
+        
+        public static ToggleSpendingLinkResult warning(ProcurementItemDTO item, String message) {
+            return new ToggleSpendingLinkResult(item, true, true, message);
+        }
+    }
 }

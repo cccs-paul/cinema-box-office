@@ -23,6 +23,8 @@ import com.myrc.model.ProcurementQuote;
 import com.myrc.model.ProcurementQuoteFile;
 import com.myrc.model.RCAccess;
 import com.myrc.model.ResponsibilityCentre;
+import com.myrc.model.SpendingCategory;
+import com.myrc.model.SpendingItem;
 import com.myrc.model.User;
 import com.myrc.repository.CategoryRepository;
 import com.myrc.repository.FiscalYearRepository;
@@ -32,6 +34,8 @@ import com.myrc.repository.ProcurementQuoteFileRepository;
 import com.myrc.repository.ProcurementQuoteRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
+import com.myrc.repository.SpendingCategoryRepository;
+import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.UserRepository;
 import java.io.IOException;
 import java.util.List;
@@ -78,6 +82,8 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
     private final RCAccessRepository accessRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final SpendingItemRepository spendingItemRepository;
+    private final SpendingCategoryRepository spendingCategoryRepository;
 
     public ProcurementItemServiceImpl(ProcurementItemRepository procurementItemRepository,
                                        ProcurementQuoteRepository quoteRepository,
@@ -87,7 +93,9 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
                                        ResponsibilityCentreRepository rcRepository,
                                        RCAccessRepository accessRepository,
                                        UserRepository userRepository,
-                                       CategoryRepository categoryRepository) {
+                                       CategoryRepository categoryRepository,
+                                       SpendingItemRepository spendingItemRepository,
+                                       SpendingCategoryRepository spendingCategoryRepository) {
         this.procurementItemRepository = procurementItemRepository;
         this.quoteRepository = quoteRepository;
         this.fileRepository = fileRepository;
@@ -97,6 +105,8 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         this.accessRepository = accessRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
+        this.spendingItemRepository = spendingItemRepository;
+        this.spendingCategoryRepository = spendingCategoryRepository;
     }
 
     // ==========================
@@ -282,6 +292,17 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
                 .ifPresent(item::setCategory);
         }
         
+        // Set tracking status if provided
+        if (dto.getTrackingStatus() != null) {
+            try {
+                item.setTrackingStatus(ProcurementItem.TrackingStatus.valueOf(dto.getTrackingStatus().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                item.setTrackingStatus(ProcurementItem.TrackingStatus.ON_TRACK);
+            }
+        } else {
+            item.setTrackingStatus(ProcurementItem.TrackingStatus.ON_TRACK);
+        }
+        
         item.setActive(true);
 
         ProcurementItem saved = procurementItemRepository.save(item);
@@ -394,6 +415,15 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         } else if (dto.getCategoryId() == null && dto.getCategoryName() == null) {
             // Only clear category if both are null (explicit removal)
             // If neither field is in the request, don't change the category
+        }
+
+        // Update tracking status if provided
+        if (dto.getTrackingStatus() != null) {
+            try {
+                item.setTrackingStatus(ProcurementItem.TrackingStatus.valueOf(dto.getTrackingStatus().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // Keep existing tracking status if invalid value provided
+            }
         }
 
         ProcurementItem saved = procurementItemRepository.save(item);
@@ -948,5 +978,78 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             return false;
         }
         return accessOpt.get().getAccessLevel() == RCAccess.AccessLevel.READ_WRITE;
+    }
+
+    @Override
+    public ToggleSpendingLinkResult toggleSpendingLink(Long procurementItemId, String username, boolean forceUnlink) {
+        // Validate user has write access
+        Optional<ProcurementItem> itemOpt = procurementItemRepository.findById(procurementItemId);
+        if (itemOpt.isEmpty()) {
+            throw new IllegalArgumentException("Procurement item not found: " + procurementItemId);
+        }
+
+        ProcurementItem procurementItem = itemOpt.get();
+        Long rcId = procurementItem.getFiscalYear().getResponsibilityCentre().getId();
+
+        if (!hasWriteAccessToRC(rcId, username)) {
+            throw new IllegalArgumentException("User does not have write access to this RC");
+        }
+
+        // Don't allow linking cancelled procurement items to spending
+        if (procurementItem.getTrackingStatus() == ProcurementItem.TrackingStatus.CANCELLED) {
+            throw new IllegalArgumentException("Cannot link a cancelled procurement item to spending");
+        }
+
+        List<SpendingItem> linkedSpendingItems = procurementItem.getSpendingItems().stream()
+                .filter(SpendingItem::getActive)
+                .collect(Collectors.toList());
+
+        if (linkedSpendingItems.isEmpty()) {
+            // Create a new spending item from the procurement item
+            SpendingItem spendingItem = new SpendingItem();
+            spendingItem.setName(procurementItem.getName());
+            spendingItem.setDescription(procurementItem.getDescription());
+            spendingItem.setVendor(procurementItem.getVendor());
+            spendingItem.setReferenceNumber(procurementItem.getPurchaseOrder());
+            spendingItem.setCategory(procurementItem.getCategory());
+            spendingItem.setFiscalYear(procurementItem.getFiscalYear());
+            spendingItem.setProcurementItem(procurementItem);
+            spendingItem.setStatus(SpendingItem.Status.DRAFT);
+            spendingItem.setCurrency(procurementItem.getFinalPriceCurrency() != null 
+                    ? procurementItem.getFinalPriceCurrency() : Currency.CAD);
+            spendingItem.setAmount(procurementItem.getFinalPrice() != null 
+                    ? procurementItem.getFinalPrice() : procurementItem.getQuotedPrice());
+            spendingItem.setActive(true);
+
+            spendingItemRepository.save(spendingItem);
+            logger.info("Created spending item from procurement item: " + procurementItemId);
+
+            ProcurementItemDTO dto = ProcurementItemDTO.fromEntityWithoutQuotes(procurementItem);
+            return ToggleSpendingLinkResult.success(dto, true);
+        } else {
+            // Unlink the spending item
+            SpendingItem spendingItem = linkedSpendingItems.get(0);
+
+            // Check if the spending item was modified after creation
+            boolean wasModified = spendingItem.getVersion() > 0 
+                    || (spendingItem.getUpdatedAt() != null 
+                        && spendingItem.getCreatedAt() != null 
+                        && !spendingItem.getUpdatedAt().equals(spendingItem.getCreatedAt()));
+
+            if (wasModified && !forceUnlink) {
+                // Return warning - the frontend should show a confirmation dialog
+                ProcurementItemDTO dto = ProcurementItemDTO.fromEntityWithoutQuotes(procurementItem);
+                return ToggleSpendingLinkResult.warning(dto, 
+                        "The linked spending item has been modified. Are you sure you want to unlink it?");
+            }
+
+            // Soft delete the spending item
+            spendingItem.setActive(false);
+            spendingItemRepository.save(spendingItem);
+            logger.info("Unlinked spending item from procurement item: " + procurementItemId);
+
+            ProcurementItemDTO dto = ProcurementItemDTO.fromEntityWithoutQuotes(procurementItem);
+            return ToggleSpendingLinkResult.success(dto, false);
+        }
     }
 }

@@ -58,6 +58,7 @@ export const DEFAULT_SPENDING_CATEGORIES: Array<{ name: string; fundingType: Fun
   { name: 'GPUs', fundingType: 'BOTH' },
   { name: 'Storage', fundingType: 'BOTH' },
   { name: 'Software Licenses', fundingType: 'OM_ONLY' },
+  { name: 'Hardware Support/Licensing', fundingType: 'OM_ONLY' },
   { name: 'Small Procurement', fundingType: 'OM_ONLY' },
   { name: 'Contractors', fundingType: 'OM_ONLY' }
 ];

@@ -15,10 +15,11 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
-import { ProcurementService, ProcurementItemCreateRequest, QuoteCreateRequest } from '../../services/procurement.service';
+import { ProcurementService, ProcurementItemCreateRequest, QuoteCreateRequest, ToggleSpendingLinkResponse } from '../../services/procurement.service';
 import { CurrencyService } from '../../services/currency.service';
 import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { CategoryService } from '../../services/category.service';
+import { CurrencyInputDirective } from '../../directives/currency-input.directive';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { Category } from '../../models/category.model';
@@ -28,8 +29,10 @@ import {
   ProcurementQuoteFile,
   ProcurementItemStatus,
   QuoteStatus,
+  TrackingStatus,
   PROCUREMENT_STATUS_INFO,
   QUOTE_STATUS_INFO,
+  TRACKING_STATUS_INFO,
   ProcurementEvent,
   ProcurementEventType,
   ProcurementEventRequest,
@@ -47,7 +50,7 @@ import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/curren
 @Component({
   selector: 'app-procurement',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, CurrencyInputDirective],
   templateUrl: './procurement.component.html',
   styleUrls: ['./procurement.component.scss'],
 })
@@ -605,20 +608,21 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemName = item.name;
     this.editItemDescription = item.description || '';
     this.editItemVendor = item.vendor || '';
-    this.editItemFinalPrice = item.finalPrice || null;
+    // Use explicit null checks for numeric fields to preserve 0 values
+    this.editItemFinalPrice = item.finalPrice !== undefined && item.finalPrice !== null ? item.finalPrice : null;
     this.editItemFinalPriceCurrency = item.finalPriceCurrency || DEFAULT_CURRENCY;
-    this.editItemFinalPriceExchangeRate = item.finalPriceExchangeRate || null;
-    this.editItemFinalPriceCad = item.finalPriceCad || null;
-    this.editItemQuotedPrice = item.quotedPrice || null;
+    this.editItemFinalPriceExchangeRate = item.finalPriceExchangeRate !== undefined && item.finalPriceExchangeRate !== null ? item.finalPriceExchangeRate : null;
+    this.editItemFinalPriceCad = item.finalPriceCad !== undefined && item.finalPriceCad !== null ? item.finalPriceCad : null;
+    this.editItemQuotedPrice = item.quotedPrice !== undefined && item.quotedPrice !== null ? item.quotedPrice : null;
     this.editItemQuotedPriceCurrency = item.quotedPriceCurrency || DEFAULT_CURRENCY;
-    this.editItemQuotedPriceExchangeRate = item.quotedPriceExchangeRate || null;
-    this.editItemQuotedPriceCad = item.quotedPriceCad || null;
+    this.editItemQuotedPriceExchangeRate = item.quotedPriceExchangeRate !== undefined && item.quotedPriceExchangeRate !== null ? item.quotedPriceExchangeRate : null;
+    this.editItemQuotedPriceCad = item.quotedPriceCad !== undefined && item.quotedPriceCad !== null ? item.quotedPriceCad : null;
     this.editItemContractNumber = item.contractNumber || '';
     this.editItemContractStartDate = item.contractStartDate ? item.contractStartDate.split('T')[0] : '';
     this.editItemContractEndDate = item.contractEndDate ? item.contractEndDate.split('T')[0] : '';
     this.editItemProcurementCompleted = item.procurementCompleted || false;
     this.editItemProcurementCompletedDate = item.procurementCompletedDate ? item.procurementCompletedDate.split('T')[0] : '';
-    this.editItemCategoryId = item.categoryId || null;
+    this.editItemCategoryId = item.categoryId !== undefined && item.categoryId !== null ? item.categoryId : null;
     
     // Expand the item to show the edit form
     this.selectedItem = item;
@@ -717,6 +721,47 @@ export class ProcurementComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.showError(error.message || 'Failed to update procurement item.');
           this.isUpdatingItem = false;
+        }
+      });
+  }
+
+  /**
+   * Update the tracking status for a procurement item.
+   */
+  updateTrackingStatus(item: ProcurementItem, status: TrackingStatus): void {
+    if (!this.selectedRC || !this.selectedFY || !this.canWrite) {
+      return;
+    }
+
+    // Prevent unnecessary updates
+    const currentStatus = item.trackingStatus || 'ON_TRACK';
+    if (currentStatus === status) {
+      return;
+    }
+
+    this.clearMessages();
+
+    const updateRequest = {
+      trackingStatus: status
+    };
+
+    this.procurementService.updateProcurementItem(this.selectedRC.id, this.selectedFY.id, item.id, updateRequest)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedItem) => {
+          // Update the item in the list
+          const index = this.procurementItems.findIndex(pi => pi.id === updatedItem.id);
+          if (index !== -1) {
+            this.procurementItems[index] = updatedItem;
+          }
+          // Update selectedItem if it's the one being updated
+          if (this.selectedItem?.id === updatedItem.id) {
+            this.selectedItem = updatedItem;
+          }
+          this.showSuccess(this.translate.instant('procurement.trackingStatusUpdated', { status: this.getTrackingStatusLabel(status) }));
+        },
+        error: (error) => {
+          this.showError(error.message || this.translate.instant('procurement.trackingStatusError'));
         }
       });
   }
@@ -1529,6 +1574,35 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   // Helper Methods
   // ==========================
 
+  /**
+   * Get the tracking status label.
+   */
+  getTrackingStatusLabel(status: TrackingStatus | string | undefined): string {
+    if (!status) return TRACKING_STATUS_INFO['ON_TRACK'].label;
+    return TRACKING_STATUS_INFO[status as TrackingStatus]?.label || status;
+  }
+
+  /**
+   * Get the tracking status CSS class.
+   */
+  getTrackingStatusClass(status: TrackingStatus | string | undefined): string {
+    if (!status) return 'status-green';
+    return `status-${TRACKING_STATUS_INFO[status as TrackingStatus]?.color || 'green'}`;
+  }
+
+  /**
+   * Get the tracking status icon.
+   */
+  getTrackingStatusIcon(status: TrackingStatus | string | undefined): string {
+    if (!status) return TRACKING_STATUS_INFO['ON_TRACK'].icon;
+    return TRACKING_STATUS_INFO[status as TrackingStatus]?.icon || '✅';
+  }
+
+  /**
+   * Get the available tracking status options.
+   */
+  trackingStatusOptions: TrackingStatus[] = ['ON_TRACK', 'AT_RISK', 'CANCELLED'];
+
   getStatusLabel(status: ProcurementItemStatus): string {
     return PROCUREMENT_STATUS_INFO[status]?.label || status;
   }
@@ -1605,5 +1679,81 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    */
   hasLinkedSpendingItems(): boolean {
     return this.selectedItem?.linkedSpendingItemIds != null && this.selectedItem.linkedSpendingItemIds.length > 0;
+  }
+
+  // State for spending link toggle
+  isTogglingSpendingLink = false;
+  showSpendingLinkWarning = false;
+  spendingLinkWarningMessage: string | null = null;
+
+  /**
+   * Toggle the spending link for the selected procurement item.
+   * Creates a spending item if none exists, or unlinks if one exists.
+   */
+  toggleSpendingLink(forceUnlink = false): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem) {
+      return;
+    }
+
+    this.isTogglingSpendingLink = true;
+    this.clearMessages();
+
+    this.procurementService.toggleSpendingLink(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      forceUnlink
+    ).subscribe({
+      next: (response: ToggleSpendingLinkResponse) => {
+        this.isTogglingSpendingLink = false;
+        
+        if (response.hasWarning && !forceUnlink) {
+          // Show confirmation dialog
+          this.showSpendingLinkWarning = true;
+          this.spendingLinkWarningMessage = response.warningMessage;
+        } else {
+          // Update the selected item with new data
+          this.selectedItem = response.procurementItem;
+          const index = this.procurementItems.findIndex(i => i.id === response.procurementItem.id);
+          if (index !== -1) {
+            this.procurementItems[index] = response.procurementItem;
+          }
+          
+          const actionKey = response.spendingLinked 
+            ? 'PROCUREMENT.SPENDING_LINK_CREATED' 
+            : 'PROCUREMENT.SPENDING_LINK_REMOVED';
+          this.showSuccess(this.translate.instant(actionKey));
+          this.showSpendingLinkWarning = false;
+          this.spendingLinkWarningMessage = null;
+        }
+      },
+      error: (err) => {
+        this.isTogglingSpendingLink = false;
+        
+        // Check if this is a conflict (warning) response
+        if (err.status === 409 && err.error?.hasWarning) {
+          this.showSpendingLinkWarning = true;
+          this.spendingLinkWarningMessage = err.error.warningMessage;
+        } else {
+          this.showError(err.message || this.translate.instant('PROCUREMENT.SPENDING_LINK_ERROR'));
+        }
+      }
+    });
+  }
+
+  /**
+   * Confirm unlinking the spending item when there's a modification warning.
+   */
+  confirmUnlinkSpending(): void {
+    this.showSpendingLinkWarning = false;
+    this.toggleSpendingLink(true);
+  }
+
+  /**
+   * Cancel the spending link unlink operation.
+   */
+  cancelUnlinkSpending(): void {
+    this.showSpendingLinkWarning = false;
+    this.spendingLinkWarningMessage = null;
   }
 }

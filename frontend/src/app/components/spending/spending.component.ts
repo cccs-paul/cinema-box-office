@@ -25,6 +25,7 @@ import { SpendingItem, SpendingMoneyAllocation, SpendingItemStatus, SPENDING_STA
 import { Category, categoryAllowsCap, categoryAllowsOm } from '../../models/category.model';
 import { Money } from '../../models/money.model';
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
+import { CurrencyInputDirective } from '../../directives/currency-input.directive';
 
 /**
  * Spending component showing spending items for the selected RC and FY.
@@ -36,7 +37,7 @@ import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/curren
 @Component({
   selector: 'app-spending',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, CurrencyInputDirective],
   templateUrl: './spending.component.html',
   styleUrls: ['./spending.component.scss'],
 })

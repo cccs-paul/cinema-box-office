@@ -47,6 +47,7 @@ export interface ProcurementItemCreateRequest {
   procurementCompleted?: boolean;
   procurementCompletedDate?: string;
   categoryId?: number | null;
+  trackingStatus?: string;
 }
 
 /**
@@ -66,6 +67,16 @@ export interface QuoteCreateRequest {
   receivedDate?: string;
   expiryDate?: string;
   notes?: string;
+}
+
+/**
+ * Response for toggle spending link operation.
+ */
+export interface ToggleSpendingLinkResponse {
+  procurementItem: ProcurementItem;
+  spendingLinked: boolean;
+  hasWarning: boolean;
+  warningMessage: string | null;
 }
 
 /**
@@ -496,6 +507,30 @@ export class ProcurementService {
     return this.http.delete<void>(`${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}`, 
       { withCredentials: true })
       .pipe(catchError(this.handleError));
+  }
+
+  // ==========================
+  // Spending Link Methods
+  // ==========================
+
+  /**
+   * Toggle the spending link for a procurement item.
+   * Creates a spending item from the procurement item if not linked,
+   * or removes the link if already linked.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param forceUnlink Force unlink even if spending item was modified
+   * @returns Observable of the toggle response
+   */
+  toggleSpendingLink(rcId: number, fyId: number, procurementItemId: number, forceUnlink = false): Observable<ToggleSpendingLinkResponse> {
+    const body = forceUnlink ? { forceUnlink: true } : {};
+    return this.http.post<ToggleSpendingLinkResponse>(
+      `${this.baseUrl(rcId, fyId)}/${procurementItemId}/toggle-spending-link`,
+      body,
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
   }
 
   // ==========================

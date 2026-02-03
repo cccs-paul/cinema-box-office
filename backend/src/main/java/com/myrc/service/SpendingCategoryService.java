@@ -84,6 +84,7 @@ public interface SpendingCategoryService {
    * - GPUs
    * - Storage
    * - Software Licenses
+   * - Hardware Support/Licensing
    * - Small Procurement
    * - Contractors
    *

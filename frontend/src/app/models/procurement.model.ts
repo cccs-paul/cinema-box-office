@@ -55,6 +55,21 @@ export const PROCUREMENT_STATUS_INFO: Record<ProcurementItemStatus, ProcurementS
 };
 
 /**
+ * Enum for tracking status values.
+ * Used to indicate the overall health/risk of the procurement.
+ */
+export type TrackingStatus = 'ON_TRACK' | 'AT_RISK' | 'CANCELLED';
+
+/**
+ * Map of tracking status to display information.
+ */
+export const TRACKING_STATUS_INFO: Record<TrackingStatus, ProcurementStatusInfo> = {
+  ON_TRACK: { label: 'On Track', color: 'green', icon: '✅' },
+  AT_RISK: { label: 'At Risk', color: 'yellow', icon: '⚠️' },
+  CANCELLED: { label: 'Cancelled', color: 'red', icon: '❌' }
+};
+
+/**
  * Enum for quote status values.
  */
 export type QuoteStatus =
@@ -324,6 +339,9 @@ export interface ProcurementItem {
 
   /** Names of linked spending items for display */
   linkedSpendingItemNames?: string[];
+
+  /** Tracking status indicating the overall health/risk of the procurement */
+  trackingStatus?: TrackingStatus;
 }
 
 /**

@@ -27,6 +27,8 @@ import com.myrc.repository.ProcurementQuoteFileRepository;
 import com.myrc.repository.ProcurementQuoteRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
+import com.myrc.repository.SpendingCategoryRepository;
+import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.UserRepository;
 import java.util.Arrays;
 import java.util.Collections;
@@ -77,6 +79,12 @@ class ProcurementItemServiceTest {
   @Mock
   private CategoryRepository categoryRepository;
 
+  @Mock
+  private SpendingItemRepository spendingItemRepository;
+
+  @Mock
+  private SpendingCategoryRepository spendingCategoryRepository;
+
   private ProcurementItemServiceImpl service;
   private User testUser;
   private User ownerUser;
@@ -95,7 +103,9 @@ class ProcurementItemServiceTest {
         rcRepository,
         accessRepository,
         userRepository,
-        categoryRepository
+        categoryRepository,
+        spendingItemRepository,
+        spendingCategoryRepository
     );
 
     ownerUser = new User();

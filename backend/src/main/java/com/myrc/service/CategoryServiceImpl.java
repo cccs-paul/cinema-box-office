@@ -47,12 +47,13 @@ public class CategoryServiceImpl implements CategoryService {
 
   // Default categories for both funding and spending
   // Format: {name, description, fundingType}
-  // Software Licenses, Small Procurement, and Contractors are OM_ONLY by default
+  // Software Licenses, Hardware Support/Licensing, Small Procurement, and Contractors are OM_ONLY by default
   private static final String[][] DEFAULT_CATEGORIES = {
       {"Compute", "Computing infrastructure and services", "BOTH"},
       {"GPUs", "Graphics Processing Units for AI/ML and rendering", "BOTH"},
       {"Storage", "Data storage and backup services", "BOTH"},
       {"Software Licenses", "Software licensing and subscriptions", "OM_ONLY"},
+      {"Hardware Support/Licensing", "Hardware support contracts and licensing fees", "OM_ONLY"},
       {"Small Procurement", "Miscellaneous small purchases and equipment", "OM_ONLY"},
       {"Contractors", "External contractors and consulting services", "OM_ONLY"}
   };
@@ -60,6 +61,7 @@ public class CategoryServiceImpl implements CategoryService {
   // Map of category names to their default funding types for quick lookup
   private static final Map<String, FundingType> DEFAULT_FUNDING_TYPES = Map.of(
       "Software Licenses", FundingType.OM_ONLY,
+      "Hardware Support/Licensing", FundingType.OM_ONLY,
       "Small Procurement", FundingType.OM_ONLY,
       "Contractors", FundingType.OM_ONLY
   );

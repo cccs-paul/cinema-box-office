@@ -67,6 +67,16 @@ public class ProcurementItem {
         CANCELLED
     }
 
+    /**
+     * Enumeration of tracking status values.
+     * Used to indicate the overall health/risk of the procurement.
+     */
+    public enum TrackingStatus {
+        ON_TRACK,
+        AT_RISK,
+        CANCELLED
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -226,6 +236,16 @@ public class ProcurementItem {
 
     @Column(nullable = false)
     private Boolean active = true;
+
+    /**
+     * Tracking status indicating the overall health/risk of the procurement.
+     * - ON_TRACK: Procurement is proceeding normally.
+     * - AT_RISK: Procurement has issues or delays.
+     * - CANCELLED: Procurement has been cancelled.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tracking_status", length = 20)
+    private TrackingStatus trackingStatus = TrackingStatus.ON_TRACK;
 
     // Constructors
     public ProcurementItem() {
@@ -462,6 +482,24 @@ public class ProcurementItem {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    /**
+     * Get the tracking status for this procurement.
+     *
+     * @return the tracking status
+     */
+    public TrackingStatus getTrackingStatus() {
+        return trackingStatus;
+    }
+
+    /**
+     * Set the tracking status for this procurement.
+     *
+     * @param trackingStatus the tracking status
+     */
+    public void setTrackingStatus(TrackingStatus trackingStatus) {
+        this.trackingStatus = trackingStatus;
     }
 
     /**

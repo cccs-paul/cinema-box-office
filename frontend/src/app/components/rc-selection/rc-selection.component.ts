@@ -63,6 +63,7 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
   showFYRenameForm = false;
   isCreatingFY = false;
   isRenamingFY = false;
+  isTogglingFYActive = false;
   selectedFYId: number | null = null;
   renameFYNewName = '';
   renameFYNewDescription = '';
@@ -610,6 +611,40 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
    */
   isValidFYForm(): boolean {
     return !!this.newFYName.trim();
+  }
+
+  /**
+   * Toggle the active status of the selected FY.
+   * Only RC owners can toggle.
+   */
+  toggleFYActiveStatus(): void {
+    if (this.selectedRCId === null || this.selectedFYId === null || !this.selectedRCIsOwner) {
+      return;
+    }
+
+    this.isTogglingFYActive = true;
+    this.errorMessage = null;
+    this.successMessage = null;
+
+    this.fyService.toggleActiveStatus(this.selectedRCId, this.selectedFYId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedFY: FiscalYear) => {
+          // Update the FY in the list
+          const index = this.fiscalYears.findIndex(f => f.id === updatedFY.id);
+          if (index !== -1) {
+            this.fiscalYears[index] = updatedFY;
+          }
+          this.isTogglingFYActive = false;
+          const statusText = updatedFY.active ? 'activated' : 'deactivated';
+          this.successMessage = `Fiscal Year "${updatedFY.name}" ${statusText} successfully.`;
+          setTimeout(() => this.clearSuccess(), 5000);
+        },
+        error: (error: Error) => {
+          this.isTogglingFYActive = false;
+          this.errorMessage = error.message || 'Failed to toggle fiscal year active status.';
+        }
+      });
   }
 
   /**

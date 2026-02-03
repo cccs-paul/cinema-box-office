@@ -162,12 +162,11 @@
             <div class="form-group">
               <label for="newItemQuotedPrice">{{ 'procurement.quotedPrice' | translate }}</label>
               <input
-                type="number"
+                type="text"
+                currencyInput
                 id="newItemQuotedPrice"
                 [(ngModel)]="newItemQuotedPrice"
                 name="newItemQuotedPrice"
-                step="0.01"
-                min="0"
                 [placeholder]="'procurement.quotedPricePlaceholder' | translate"
               />
             </div>
@@ -196,12 +195,11 @@
             <div class="form-group">
               <label for="newItemQuotedPriceCad">{{ 'procurement.quotedPriceCad' | translate }}</label>
               <input
-                type="number"
+                type="text"
+                currencyInput
                 id="newItemQuotedPriceCad"
                 [(ngModel)]="newItemQuotedPriceCad"
                 name="newItemQuotedPriceCad"
-                step="0.01"
-                min="0"
                 [placeholder]="'procurement.cadEquivalent' | translate"
               />
             </div>
@@ -212,12 +210,11 @@
             <div class="form-group">
               <label for="newItemFinalPrice">{{ 'procurement.finalPrice' | translate }}</label>
               <input
-                type="number"
+                type="text"
+                currencyInput
                 id="newItemFinalPrice"
                 [(ngModel)]="newItemFinalPrice"
                 name="newItemFinalPrice"
-                step="0.01"
-                min="0"
                 [placeholder]="'procurement.finalPricePlaceholder' | translate"
               />
             </div>
@@ -246,12 +243,11 @@
             <div class="form-group">
               <label for="newItemFinalPriceCad">{{ 'procurement.finalPriceCad' | translate }}</label>
               <input
-                type="number"
+                type="text"
+                currencyInput
                 id="newItemFinalPriceCad"
                 [(ngModel)]="newItemFinalPriceCad"
                 name="newItemFinalPriceCad"
-                step="0.01"
-                min="0"
                 [placeholder]="'procurement.cadEquivalent' | translate"
               />
             </div>
@@ -345,8 +341,8 @@
               <span class="item-pr">{{ item.purchaseRequisition }}</span>
               <span class="item-po" *ngIf="item.purchaseOrder">/ {{ item.purchaseOrder }}</span>
               <span class="item-name">{{ item.name }}</span>
-              <span class="status-badge" [ngClass]="getStatusClass(item.currentStatus)">
-                {{ getStatusLabel(item.currentStatus) }}
+              <span class="status-badge" [ngClass]="getTrackingStatusClass(item.trackingStatus)">
+                {{ getTrackingStatusIcon(item.trackingStatus) }} {{ getTrackingStatusLabel(item.trackingStatus) }}
               </span>
               <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">📁 {{ item.categoryName }}</span>
               <span class="quotes-count">📋 {{ item.quoteCount || 0 }}</span>
@@ -375,6 +371,15 @@
               >
                 🗑️
               </button>
+              <button
+                class="btn-icon btn-spending-link"
+                [title]="(item.trackingStatus === 'CANCELLED' ? 'procurement.cannotLinkCancelled' : (hasLinkedSpendingItems() ? 'procurement.unlinkSpending' : 'procurement.linkSpending')) | translate"
+                *ngIf="canWrite && item.trackingStatus !== 'CANCELLED'"
+                [disabled]="isTogglingSpendingLink"
+                (click)="toggleSpendingLink(); $event.stopPropagation()"
+              >
+                {{ isTogglingSpendingLink ? '⏳' : (item.linkedSpendingItemIds && item.linkedSpendingItemIds.length > 0 ? '🔗' : '➕💰') }}
+              </button>
             </div>
           </div>
 
@@ -393,9 +398,20 @@
                       <span>{{ item.purchaseOrder || '-' }}</span>
                     </div>
                     <div class="info-item">
-                      <label>{{ 'common.status' | translate }}</label>
-                      <span class="status-badge" [ngClass]="getStatusClass(item.currentStatus)">
-                        {{ getStatusLabel(item.currentStatus) }}
+                      <label>{{ 'procurement.trackingStatus' | translate }}</label>
+                      <div class="tracking-status-toggle" *ngIf="canWrite">
+                        <button 
+                          *ngFor="let ts of trackingStatusOptions"
+                          class="status-toggle-btn"
+                          [class.active]="item.trackingStatus === ts || (!item.trackingStatus && ts === 'ON_TRACK')"
+                          [ngClass]="getTrackingStatusClass(ts)"
+                          (click)="updateTrackingStatus(item, ts); $event.stopPropagation()"
+                        >
+                          {{ getTrackingStatusIcon(ts) }} {{ getTrackingStatusLabel(ts) }}
+                        </button>
+                      </div>
+                      <span *ngIf="!canWrite" class="status-badge" [ngClass]="getTrackingStatusClass(item.trackingStatus)">
+                        {{ getTrackingStatusIcon(item.trackingStatus) }} {{ getTrackingStatusLabel(item.trackingStatus) }}
                       </span>
                     </div>
                     <div class="info-item" *ngIf="item.vendor">
@@ -554,10 +570,9 @@
                       <label for="editItemQuotedPrice">{{ 'procurement.quotedPrice' | translate }}</label>
                       <input
                         id="editItemQuotedPrice"
-                        type="number"
+                        type="text"
+                        currencyInput
                         [(ngModel)]="editItemQuotedPrice"
-                        step="0.01"
-                        min="0"
                         [placeholder]="'procurement.quotedPricePlaceholder' | translate"
                         [disabled]="isUpdatingItem"
                       />
@@ -588,10 +603,9 @@
                       <label for="editItemQuotedPriceCad">{{ 'procurement.quotedPriceCad' | translate }}</label>
                       <input
                         id="editItemQuotedPriceCad"
-                        type="number"
+                        type="text"
+                        currencyInput
                         [(ngModel)]="editItemQuotedPriceCad"
-                        step="0.01"
-                        min="0"
                         [placeholder]="'procurement.cadEquivalent' | translate"
                         [disabled]="isUpdatingItem"
                       />
@@ -604,10 +618,9 @@
                       <label for="editItemFinalPrice">{{ 'procurement.finalPrice' | translate }}</label>
                       <input
                         id="editItemFinalPrice"
-                        type="number"
+                        type="text"
+                        currencyInput
                         [(ngModel)]="editItemFinalPrice"
-                        step="0.01"
-                        min="0"
                         [placeholder]="'procurement.finalPricePlaceholder' | translate"
                         [disabled]="isUpdatingItem"
                       />
@@ -638,10 +651,9 @@
                       <label for="editItemFinalPriceCad">{{ 'procurement.finalPriceCad' | translate }}</label>
                       <input
                         id="editItemFinalPriceCad"
-                        type="number"
+                        type="text"
+                        currencyInput
                         [(ngModel)]="editItemFinalPriceCad"
-                        step="0.01"
-                        min="0"
                         [placeholder]="'procurement.cadEquivalent' | translate"
                         [disabled]="isUpdatingItem"
                       />
@@ -768,24 +780,22 @@
                         <div class="form-group">
                           <label for="newQuoteAmountCap">{{ 'procurement.quoteAmountCap' | translate }} ({{ newQuoteCurrency }})</label>
                           <input
-                            type="number"
+                            type="text"
+                            currencyInput
                             id="newQuoteAmountCap"
                             [(ngModel)]="newQuoteAmountCap"
                             name="newQuoteAmountCap"
-                            min="0"
-                            step="0.01"
                             [placeholder]="'procurement.quoteAmountCapPlaceholder' | translate"
                           />
                         </div>
                         <div class="form-group" *ngIf="newQuoteCurrency !== 'CAD'">
                           <label for="newQuoteAmountCapCad">{{ 'procurement.quoteAmountCapCad' | translate }}</label>
                           <input
-                            type="number"
+                            type="text"
+                            currencyInput
                             id="newQuoteAmountCapCad"
                             [(ngModel)]="newQuoteAmountCapCad"
                             name="newQuoteAmountCapCad"
-                            min="0"
-                            step="0.01"
                             [placeholder]="'procurement.quoteAmountCapCadPlaceholder' | translate"
                           />
                         </div>
@@ -795,24 +805,22 @@
                         <div class="form-group">
                           <label for="newQuoteAmountOm">{{ 'procurement.quoteAmountOm' | translate }} ({{ newQuoteCurrency }})</label>
                           <input
-                            type="number"
+                            type="text"
+                            currencyInput
                             id="newQuoteAmountOm"
                             [(ngModel)]="newQuoteAmountOm"
                             name="newQuoteAmountOm"
-                            min="0"
-                            step="0.01"
                             [placeholder]="'procurement.quoteAmountOmPlaceholder' | translate"
                           />
                         </div>
                         <div class="form-group" *ngIf="newQuoteCurrency !== 'CAD'">
                           <label for="newQuoteAmountOmCad">{{ 'procurement.quoteAmountOmCad' | translate }}</label>
                           <input
-                            type="number"
+                            type="text"
+                            currencyInput
                             id="newQuoteAmountOmCad"
                             [(ngModel)]="newQuoteAmountOmCad"
                             name="newQuoteAmountOmCad"
-                            min="0"
-                            step="0.01"
                             [placeholder]="'procurement.quoteAmountOmCadPlaceholder' | translate"
                           />
                         </div>
@@ -959,23 +967,21 @@
                             <div class="form-group">
                               <label for="editQuoteAmountCap">{{ 'procurement.quoteAmountCap' | translate }} ({{ editQuoteCurrency }})</label>
                               <input
-                                type="number"
+                                type="text"
+                                currencyInput
                                 id="editQuoteAmountCap"
                                 [(ngModel)]="editQuoteAmountCap"
                                 name="editQuoteAmountCap"
-                                min="0"
-                                step="0.01"
                               />
                             </div>
                             <div class="form-group" *ngIf="editQuoteCurrency !== 'CAD'">
                               <label for="editQuoteAmountCapCad">{{ 'procurement.quoteAmountCapCad' | translate }}</label>
                               <input
-                                type="number"
+                                type="text"
+                                currencyInput
                                 id="editQuoteAmountCapCad"
                                 [(ngModel)]="editQuoteAmountCapCad"
                                 name="editQuoteAmountCapCad"
-                                min="0"
-                                step="0.01"
                               />
                             </div>
                           </div>
@@ -984,23 +990,21 @@
                             <div class="form-group">
                               <label for="editQuoteAmountOm">{{ 'procurement.quoteAmountOm' | translate }} ({{ editQuoteCurrency }})</label>
                               <input
-                                type="number"
+                                type="text"
+                                currencyInput
                                 id="editQuoteAmountOm"
                                 [(ngModel)]="editQuoteAmountOm"
                                 name="editQuoteAmountOm"
-                                min="0"
-                                step="0.01"
                               />
                             </div>
                             <div class="form-group" *ngIf="editQuoteCurrency !== 'CAD'">
                               <label for="editQuoteAmountOmCad">{{ 'procurement.quoteAmountOmCad' | translate }}</label>
                               <input
-                                type="number"
+                                type="text"
+                                currencyInput
                                 id="editQuoteAmountOmCad"
                                 [(ngModel)]="editQuoteAmountOmCad"
                                 name="editQuoteAmountOmCad"
-                                min="0"
-                                step="0.01"
                               />
                             </div>
                           </div>
@@ -1444,6 +1448,28 @@
         <div class="text-preview" *ngIf="!isLoadingPreview && previewUrl && previewingFile.contentType.startsWith('text/')">
           <pre>{{ previewTextContent }}</pre>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spending Link Unlink Warning Modal -->
+  <div class="modal-overlay" *ngIf="showSpendingLinkWarning" (click)="cancelUnlinkSpending()">
+    <div class="modal confirm-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>⚠️ {{ 'procurement.spendingLinkWarningTitle' | translate }}</h3>
+        <button class="close-btn" (click)="cancelUnlinkSpending()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>{{ spendingLinkWarningMessage || ('procurement.spendingLinkWarningDefault' | translate) }}</p>
+        <p class="warning-note">{{ 'procurement.spendingLinkWarningNote' | translate }}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="cancelUnlinkSpending()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button class="btn-danger" (click)="confirmUnlinkSpending()">
+          {{ 'procurement.confirmUnlink' | translate }}
+        </button>
       </div>
     </div>
   </div>

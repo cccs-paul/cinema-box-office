@@ -117,6 +117,7 @@ public interface CategoryService {
    * - GPUs
    * - Storage
    * - Software Licenses
+   * - Hardware Support/Licensing
    * - Small Procurement
    * - Contractors
    *
