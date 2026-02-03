@@ -12,6 +12,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.ProcurementItemDTO;
 import com.myrc.dto.ProcurementQuoteDTO;
 import com.myrc.dto.ProcurementQuoteFileDTO;
@@ -166,7 +167,7 @@ public class ProcurementItemController {
             @ApiResponse(responseCode = "403", description = "Access denied"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public ResponseEntity<ProcurementItemDTO> createProcurementItem(
+    public ResponseEntity<?> createProcurementItem(
             @PathVariable Long rcId,
             @PathVariable Long fyId,
             @RequestBody ProcurementItemDTO request,
@@ -181,10 +182,11 @@ public class ProcurementItemController {
             return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (IllegalArgumentException e) {
             logger.warning("Failed to create procurement item: " + e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
             logger.severe("Failed to create procurement item: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("An unexpected error occurred"));
         }
     }
 
@@ -830,6 +832,57 @@ public class ProcurementItemController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         } catch (Exception e) {
             logger.severe("Failed to delete file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Replace a file.
+     *
+     * @param rcId the responsibility centre ID
+     * @param fyId the fiscal year ID
+     * @param procurementItemId the procurement item ID
+     * @param quoteId the quote ID
+     * @param fileId the file ID to replace
+     * @param file the new file
+     * @param description optional file description
+     * @param authentication the authentication principal
+     * @return the updated file DTO
+     */
+    @PutMapping("/{procurementItemId}/quotes/{quoteId}/files/{fileId}")
+    @Operation(summary = "Replace a file",
+            description = "Replaces an existing file with a new one")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "File replaced successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid file"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "File not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<ProcurementQuoteFileDTO> replaceFile(
+            @PathVariable Long rcId,
+            @PathVariable Long fyId,
+            @PathVariable Long procurementItemId,
+            @PathVariable Long quoteId,
+            @PathVariable Long fileId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "description", required = false) String description,
+            Authentication authentication) {
+        String username = getUsername(authentication);
+        logger.info("PUT replace file " + fileId + " on quote " + quoteId + " by user: " + username);
+
+        try {
+            ProcurementQuoteFileDTO replaced = procurementItemService.replaceFile(fileId, file, description, username);
+            return ResponseEntity.ok(replaced);
+        } catch (IllegalArgumentException e) {
+            logger.warning("Failed to replace file: " + e.getMessage());
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.severe("Failed to replace file: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

@@ -915,4 +915,11 @@ export class SpendingComponent implements OnInit, OnDestroy {
     this.errorMessage = null;
     this.successMessage = null;
   }
+
+  /**
+   * Navigate to the procurement page to view the linked procurement item.
+   */
+  viewLinkedProcurement(): void {
+    this.router.navigate(['/app/procurement']);
+  }
 }

@@ -65,6 +65,17 @@ public class ProcurementItemDTO {
     private List<ProcurementQuoteDTO> quotes;
     private Integer quoteCount;
     private Integer eventCount;
+    
+    /**
+     * IDs of linked spending items.
+     * A procurement item can be linked to multiple spending items.
+     */
+    private List<Long> linkedSpendingItemIds;
+    
+    /**
+     * Names of linked spending items for display purposes.
+     */
+    private List<String> linkedSpendingItemNames;
 
     // Constructors
     public ProcurementItemDTO() {
@@ -142,6 +153,22 @@ public class ProcurementItemDTO {
         dto.setProcurementCompletedDate(item.getProcurementCompletedDate());
         dto.setCategoryId(item.getCategory() != null ? item.getCategory().getId() : null);
         dto.setCategoryName(item.getCategory() != null ? item.getCategory().getName() : null);
+        
+        // Populate linked spending items
+        if (item.getSpendingItems() != null && !item.getSpendingItems().isEmpty()) {
+            dto.setLinkedSpendingItemIds(item.getSpendingItems().stream()
+                    .filter(si -> si.getActive())
+                    .map(si -> si.getId())
+                    .collect(Collectors.toList()));
+            dto.setLinkedSpendingItemNames(item.getSpendingItems().stream()
+                    .filter(si -> si.getActive())
+                    .map(si -> si.getName())
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setLinkedSpendingItemIds(new ArrayList<>());
+            dto.setLinkedSpendingItemNames(new ArrayList<>());
+        }
+        
         return dto;
     }
 
@@ -188,6 +215,22 @@ public class ProcurementItemDTO {
         dto.setActive(item.getActive());
         dto.setQuotes(new ArrayList<>());
         dto.setQuoteCount(item.getQuotes() != null ? (int) item.getQuotes().stream().filter(q -> q.getActive()).count() : 0);
+        
+        // Populate linked spending items
+        if (item.getSpendingItems() != null && !item.getSpendingItems().isEmpty()) {
+            dto.setLinkedSpendingItemIds(item.getSpendingItems().stream()
+                    .filter(si -> si.getActive())
+                    .map(si -> si.getId())
+                    .collect(Collectors.toList()));
+            dto.setLinkedSpendingItemNames(item.getSpendingItems().stream()
+                    .filter(si -> si.getActive())
+                    .map(si -> si.getName())
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setLinkedSpendingItemIds(new ArrayList<>());
+            dto.setLinkedSpendingItemNames(new ArrayList<>());
+        }
+        
         return dto;
     }
 
@@ -447,5 +490,21 @@ public class ProcurementItemDTO {
 
     public void setEventCount(Integer eventCount) {
         this.eventCount = eventCount;
+    }
+
+    public List<Long> getLinkedSpendingItemIds() {
+        return linkedSpendingItemIds;
+    }
+
+    public void setLinkedSpendingItemIds(List<Long> linkedSpendingItemIds) {
+        this.linkedSpendingItemIds = linkedSpendingItemIds;
+    }
+
+    public List<String> getLinkedSpendingItemNames() {
+        return linkedSpendingItemNames;
+    }
+
+    public void setLinkedSpendingItemNames(List<String> linkedSpendingItemNames) {
+        this.linkedSpendingItemNames = linkedSpendingItemNames;
     }
 }

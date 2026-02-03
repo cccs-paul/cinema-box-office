@@ -311,6 +311,28 @@ export class ProcurementService {
   }
 
   /**
+   * Replace an existing file.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param quoteId The quote ID
+   * @param fileId The file ID to replace
+   * @param file The new file to upload
+   * @param description Optional file description
+   * @returns Observable of the updated file metadata
+   */
+  replaceFile(rcId: number, fyId: number, procurementItemId: number, quoteId: number, fileId: number, file: File, description?: string): Observable<ProcurementQuoteFile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) {
+      formData.append('description', description);
+    }
+    return this.http.put<ProcurementQuoteFile>(`${this.baseUrl(rcId, fyId)}/${procurementItemId}/quotes/${quoteId}/files/${fileId}`, formData, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
    * Delete a file.
    *
    * @param rcId The responsibility centre ID

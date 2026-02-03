@@ -211,7 +211,7 @@ class ProcurementItemControllerTest {
       request.setName("New Item");
       request.setPurchaseRequisition("PR-002");
 
-      ResponseEntity<ProcurementItemDTO> response = 
+      ResponseEntity<?> response = 
           controller.createProcurementItem(1L, 1L, request, authentication);
 
       assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -226,7 +226,7 @@ class ProcurementItemControllerTest {
 
       ProcurementItemDTO request = new ProcurementItemDTO();
 
-      ResponseEntity<ProcurementItemDTO> response = 
+      ResponseEntity<?> response = 
           controller.createProcurementItem(1L, 1L, request, authentication);
 
       assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());

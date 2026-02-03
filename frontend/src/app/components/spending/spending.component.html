@@ -331,6 +331,20 @@
             <label>{{ 'spending.exchangeRate' | translate }}</label>
             <span>1 {{ item.currency }} = {{ item.exchangeRate }} CAD</span>
           </div>
+          <!-- Linked Procurement Item -->
+          <div class="info-item procurement-link" *ngIf="item.procurementItemId">
+            <label>{{ 'spending.linkedProcurement' | translate }}</label>
+            <span class="procurement-item-link">
+              <span class="procurement-icon">📦</span>
+              <span class="procurement-name">{{ item.procurementItemName || ('spending.procurementItem' | translate) }}</span>
+              <button 
+                class="btn-link" 
+                [title]="'spending.viewInProcurement' | translate"
+                (click)="viewLinkedProcurement()">
+                {{ 'common.view' | translate }} →
+              </button>
+            </span>
+          </div>
         </div>
         <!-- Money Allocations -->
         <div class="money-section" *ngIf="item.moneyAllocations && item.moneyAllocations.length > 0">

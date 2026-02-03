@@ -55,7 +55,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
 
     private static final Logger logger = Logger.getLogger(ProcurementItemServiceImpl.class.getName());
 
-    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final long MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
     private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
             "application/pdf",
             "image/jpeg",
@@ -207,9 +207,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         if (dto.getFiscalYearId() == null) {
             throw new IllegalArgumentException("Fiscal Year ID is required");
         }
-        if (dto.getPurchaseRequisition() == null || dto.getPurchaseRequisition().trim().isEmpty()) {
-            throw new IllegalArgumentException("Purchase Requisition (PR) is required");
-        }
+        // Note: Purchase Requisition (PR) is optional
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Name is required");
         }
@@ -786,7 +784,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             throw new IllegalArgumentException("File is empty");
         }
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("File size exceeds maximum allowed size of 10MB");
+            throw new IllegalArgumentException("File size exceeds maximum allowed size of 50MB");
         }
         String contentType = file.getContentType();
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
@@ -831,6 +829,53 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         file.setActive(false);
         fileRepository.save(file);
         logger.info("Deleted file " + fileId + " by user " + username);
+    }
+
+    @Override
+    public ProcurementQuoteFileDTO replaceFile(Long fileId, MultipartFile file, String description, String username) {
+        Optional<ProcurementQuoteFile> existingFileOpt = fileRepository.findById(fileId);
+        if (existingFileOpt.isEmpty() || !existingFileOpt.get().getActive()) {
+            throw new IllegalArgumentException("File not found");
+        }
+
+        ProcurementQuoteFile existingFile = existingFileOpt.get();
+        Long rcId = existingFile.getQuote().getProcurementItem().getFiscalYear().getResponsibilityCentre().getId();
+
+        if (!hasWriteAccessToRC(rcId, username)) {
+            throw new IllegalArgumentException("User does not have write access to this Responsibility Centre");
+        }
+
+        // Validate new file
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("File is empty");
+        }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("File size exceeds maximum allowed size of 50MB");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
+            throw new IllegalArgumentException("File type not allowed. Allowed types: PDF, images, Word, Excel, text, CSV");
+        }
+
+        try {
+            // Update file metadata
+            existingFile.setFileName(file.getOriginalFilename());
+            existingFile.setContentType(contentType);
+            existingFile.setFileSize(file.getSize());
+            existingFile.setContent(file.getBytes());
+            
+            // Update description if provided
+            if (description != null) {
+                existingFile.setDescription(description);
+            }
+
+            ProcurementQuoteFile savedFile = fileRepository.save(existingFile);
+            logger.info("Replaced file " + fileId + " by user " + username);
+
+            return ProcurementQuoteFileDTO.fromEntity(savedFile);
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Failed to read file content");
+        }
     }
 
     // ==========================

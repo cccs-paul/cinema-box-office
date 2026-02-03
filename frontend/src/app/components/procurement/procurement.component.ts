@@ -141,11 +141,34 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   newQuoteFile: File | null = null;
   newQuoteFileDescription = '';
 
+  // Edit Quote Form
+  editingQuoteId: number | null = null;
+  isUpdatingQuote = false;
+  editQuoteVendorName = '';
+  editQuoteVendorContact = '';
+  editQuoteReference = '';
+  editQuoteAmount: number | null = null;
+  editQuoteAmountCap: number | null = null;
+  editQuoteAmountOm: number | null = null;
+  editQuoteCurrency = DEFAULT_CURRENCY;
+  editQuoteExchangeRate: number | null = null;
+  editQuoteAmountCapCad: number | null = null;
+  editQuoteAmountOmCad: number | null = null;
+  editQuoteReceivedDate = '';
+  editQuoteExpiryDate = '';
+  editQuoteNotes = '';
+
   // File Upload
   showFileUpload = false;
   isUploadingFile = false;
   selectedFile: File | null = null;
   fileDescription = '';
+
+  // File Replace
+  replacingFileId: number | null = null;
+  replacementFile: File | null = null;
+  replacementFileDescription = '';
+  isReplacingFile = false;
 
   // File Preview
   previewingFile: ProcurementQuoteFile | null = null;
@@ -913,6 +936,102 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Start editing a quote.
+   */
+  startEditQuote(quote: ProcurementQuote): void {
+    this.editingQuoteId = quote.id;
+    this.editQuoteVendorName = quote.vendorName || '';
+    this.editQuoteVendorContact = quote.vendorContact || '';
+    this.editQuoteReference = quote.quoteReference || '';
+    this.editQuoteAmount = quote.amount ?? null;
+    this.editQuoteAmountCap = quote.amountCap ?? null;
+    this.editQuoteAmountOm = quote.amountOm ?? null;
+    this.editQuoteCurrency = quote.currency || DEFAULT_CURRENCY;
+    this.editQuoteExchangeRate = quote.exchangeRate ?? null;
+    this.editQuoteAmountCapCad = quote.amountCapCad ?? null;
+    this.editQuoteAmountOmCad = quote.amountOmCad ?? null;
+    this.editQuoteReceivedDate = quote.receivedDate ? quote.receivedDate.split('T')[0] : '';
+    this.editQuoteExpiryDate = quote.expiryDate ? quote.expiryDate.split('T')[0] : '';
+    this.editQuoteNotes = quote.notes || '';
+    this.showCreateQuoteForm = false;
+  }
+
+  /**
+   * Cancel editing a quote.
+   */
+  cancelEditQuote(): void {
+    this.editingQuoteId = null;
+    this.resetEditQuoteForm();
+  }
+
+  /**
+   * Reset the edit quote form fields.
+   */
+  private resetEditQuoteForm(): void {
+    this.editQuoteVendorName = '';
+    this.editQuoteVendorContact = '';
+    this.editQuoteReference = '';
+    this.editQuoteAmount = null;
+    this.editQuoteAmountCap = null;
+    this.editQuoteAmountOm = null;
+    this.editQuoteCurrency = DEFAULT_CURRENCY;
+    this.editQuoteExchangeRate = null;
+    this.editQuoteAmountCapCad = null;
+    this.editQuoteAmountOmCad = null;
+    this.editQuoteReceivedDate = '';
+    this.editQuoteExpiryDate = '';
+    this.editQuoteNotes = '';
+  }
+
+  /**
+   * Save the edited quote.
+   */
+  updateQuote(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.editingQuoteId || !this.editQuoteVendorName.trim()) {
+      return;
+    }
+
+    this.isUpdatingQuote = true;
+    this.clearMessages();
+
+    const request: QuoteCreateRequest = {
+      vendorName: this.editQuoteVendorName.trim(),
+      vendorContact: this.editQuoteVendorContact.trim() || undefined,
+      quoteReference: this.editQuoteReference.trim() || undefined,
+      amount: this.editQuoteAmount ?? undefined,
+      amountCap: this.editQuoteAmountCap ?? undefined,
+      amountOm: this.editQuoteAmountOm ?? undefined,
+      currency: this.editQuoteCurrency,
+      exchangeRate: this.editQuoteCurrency !== 'CAD' ? this.editQuoteExchangeRate ?? undefined : undefined,
+      amountCapCad: this.editQuoteCurrency !== 'CAD' ? this.editQuoteAmountCapCad ?? undefined : undefined,
+      amountOmCad: this.editQuoteCurrency !== 'CAD' ? this.editQuoteAmountOmCad ?? undefined : undefined,
+      receivedDate: this.editQuoteReceivedDate || undefined,
+      expiryDate: this.editQuoteExpiryDate || undefined,
+      notes: this.editQuoteNotes.trim() || undefined
+    };
+
+    this.procurementService.updateQuote(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      this.editingQuoteId,
+      request
+    ).subscribe({
+      next: () => {
+        this.showSuccess('Quote updated successfully');
+        this.editingQuoteId = null;
+        this.resetEditQuoteForm();
+        this.loadQuotes();
+        this.isUpdatingQuote = false;
+      },
+      error: (error) => {
+        this.showError('Failed to update quote: ' + error.message);
+        this.isUpdatingQuote = false;
+      }
+    });
+  }
+
   selectQuote(quote: ProcurementQuote): void {
     if (!this.selectedRC || !this.selectedFY || !this.selectedItem) return;
     if (!confirm(`Select the quote from "${quote.vendorName}"? This will reject other quotes.`)) return;
@@ -1037,6 +1156,69 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.showError('Failed to delete file: ' + error.message);
+      }
+    });
+  }
+
+  /**
+   * Start the file replacement process.
+   */
+  startReplaceFile(file: ProcurementQuoteFile): void {
+    this.replacingFileId = file.id;
+    this.replacementFile = null;
+    this.replacementFileDescription = file.description || '';
+  }
+
+  /**
+   * Cancel file replacement.
+   */
+  cancelReplaceFile(): void {
+    this.replacingFileId = null;
+    this.replacementFile = null;
+    this.replacementFileDescription = '';
+  }
+
+  /**
+   * Handle replacement file selection.
+   */
+  onReplacementFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.replacementFile = input.files[0];
+    }
+  }
+
+  /**
+   * Replace an existing file.
+   */
+  replaceFile(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.selectedQuote || !this.replacingFileId || !this.replacementFile) {
+      return;
+    }
+
+    this.isReplacingFile = true;
+    this.clearMessages();
+
+    this.procurementService.replaceFile(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      this.selectedQuote.id,
+      this.replacingFileId,
+      this.replacementFile,
+      this.replacementFileDescription.trim() || undefined
+    ).subscribe({
+      next: () => {
+        this.showSuccess('File replaced successfully');
+        this.replacingFileId = null;
+        this.replacementFile = null;
+        this.replacementFileDescription = '';
+        this.loadFiles();
+        this.isReplacingFile = false;
+      },
+      error: (error) => {
+        this.showError('Failed to replace file: ' + error.message);
+        this.isReplacingFile = false;
       }
     });
   }
@@ -1406,5 +1588,22 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   private clearMessages(): void {
     this.errorMessage = null;
     this.successMessage = null;
+  }
+
+  /**
+   * Navigate to the spending page to view linked spending items.
+   */
+  viewLinkedSpendingItems(): void {
+    if (!this.selectedItem || !this.selectedItem.linkedSpendingItemIds || this.selectedItem.linkedSpendingItemIds.length === 0) {
+      return;
+    }
+    this.router.navigate(['/app/spending']);
+  }
+
+  /**
+   * Check if the selected item has linked spending items.
+   */
+  hasLinkedSpendingItems(): boolean {
+    return this.selectedItem?.linkedSpendingItemIds != null && this.selectedItem.linkedSpendingItemIds.length > 0;
   }
 }

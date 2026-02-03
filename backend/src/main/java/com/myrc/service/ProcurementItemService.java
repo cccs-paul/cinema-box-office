@@ -231,6 +231,18 @@ public interface ProcurementItemService {
     ProcurementQuoteFileDTO uploadFile(Long quoteId, MultipartFile file, String description, String username);
 
     /**
+     * Replace an existing file with a new one.
+     *
+     * @param fileId the file ID to replace
+     * @param file the new file
+     * @param description optional file description (if null, keeps existing)
+     * @param username the requesting user's username
+     * @return the updated file metadata
+     * @throws IllegalArgumentException if user doesn't have write access, file not found, or file validation fails
+     */
+    ProcurementQuoteFileDTO replaceFile(Long fileId, MultipartFile file, String description, String username);
+
+    /**
      * Delete a file (soft delete).
      *
      * @param fileId the file ID

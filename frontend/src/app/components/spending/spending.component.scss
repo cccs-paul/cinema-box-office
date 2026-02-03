@@ -739,6 +739,46 @@ textarea.form-control {
       font-size: 0.85rem;
       color: var(--text-primary);
     }
+
+    &.procurement-link {
+      grid-column: 1 / -1;
+      background: rgba(59, 130, 246, 0.05);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+
+      .procurement-item-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .procurement-icon {
+        font-size: 1.25rem;
+      }
+
+      .procurement-name {
+        font-weight: 500;
+        flex: 1;
+      }
+
+      .btn-link {
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background: rgba(59, 130, 246, 0.1);
+          text-decoration: underline;
+        }
+      }
+    }
   }
 
   .money-section {

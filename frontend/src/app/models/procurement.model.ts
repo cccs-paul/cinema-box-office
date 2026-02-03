@@ -165,8 +165,23 @@ export interface ProcurementQuote {
   /** Quoted amount */
   amount: number | null;
 
+  /** Quote amount for CAP (capital) funding */
+  amountCap?: number | null;
+
+  /** Quote amount for OM (operations & maintenance) funding */
+  amountOm?: number | null;
+
   /** Currency code */
   currency: string;
+
+  /** Exchange rate to CAD (only required when currency is not CAD) */
+  exchangeRate?: number | null;
+
+  /** CAP amount converted to CAD (only required when currency is not CAD) */
+  amountCapCad?: number | null;
+
+  /** OM amount converted to CAD (only required when currency is not CAD) */
+  amountOmCad?: number | null;
 
   /** Date when quote was received */
   receivedDate?: string;
@@ -303,6 +318,12 @@ export interface ProcurementItem {
 
   /** Number of events */
   eventCount?: number;
+
+  /** IDs of linked spending items */
+  linkedSpendingItemIds?: number[];
+
+  /** Names of linked spending items for display */
+  linkedSpendingItemNames?: string[];
 }
 
 /**

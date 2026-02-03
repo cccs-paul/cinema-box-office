@@ -201,6 +201,13 @@ public class ProcurementItem {
     @OneToMany(mappedBy = "procurementItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ProcurementQuote> quotes = new ArrayList<>();
 
+    /**
+     * Spending items linked to this procurement item.
+     * A procurement item can be linked to multiple spending items.
+     */
+    @OneToMany(mappedBy = "procurementItem", fetch = FetchType.LAZY)
+    private List<SpendingItem> spendingItems = new ArrayList<>();
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -473,6 +480,24 @@ public class ProcurementItem {
      */
     public void setVersion(Long version) {
         this.version = version;
+    }
+
+    /**
+     * Gets the spending items linked to this procurement item.
+     *
+     * @return the list of linked spending items
+     */
+    public List<SpendingItem> getSpendingItems() {
+        return spendingItems;
+    }
+
+    /**
+     * Sets the spending items linked to this procurement item.
+     *
+     * @param spendingItems the list of linked spending items
+     */
+    public void setSpendingItems(List<SpendingItem> spendingItems) {
+        this.spendingItems = spendingItems;
     }
 
     @Override

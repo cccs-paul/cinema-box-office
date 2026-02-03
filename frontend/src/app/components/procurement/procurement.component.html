@@ -182,7 +182,7 @@
           </div>
           <div class="form-row" *ngIf="newItemQuotedPriceCurrency !== 'CAD'">
             <div class="form-group">
-              <label for="newItemQuotedPriceExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
+              <label for="newItemQuotedPriceExchangeRate">{{ 'procurement.quotedPriceExchangeRate' | translate }}</label>
               <input
                 type="number"
                 id="newItemQuotedPriceExchangeRate"
@@ -232,7 +232,7 @@
           </div>
           <div class="form-row" *ngIf="newItemFinalPriceCurrency !== 'CAD'">
             <div class="form-group">
-              <label for="newItemFinalPriceExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
+              <label for="newItemFinalPriceExchangeRate">{{ 'procurement.finalPriceExchangeRate' | translate }}</label>
               <input
                 type="number"
                 id="newItemFinalPriceExchangeRate"
@@ -450,6 +450,22 @@
                     <label>{{ 'common.description' | translate }}</label>
                     <p>{{ item.description }}</p>
                   </div>
+                  <!-- Linked Spending Items -->
+                  <div class="linked-spending-section" *ngIf="item.linkedSpendingItemIds && item.linkedSpendingItemIds.length > 0">
+                    <label>{{ 'procurement.linkedSpendingItems' | translate }}</label>
+                    <div class="linked-items-list">
+                      <div class="linked-item" *ngFor="let name of item.linkedSpendingItemNames; let i = index">
+                        <span class="linked-item-icon">💰</span>
+                        <span class="linked-item-name">{{ name }}</span>
+                        <button 
+                          class="btn-link" 
+                          [title]="'procurement.viewInSpending' | translate"
+                          (click)="viewLinkedSpendingItems()">
+                          {{ 'common.view' | translate }} →
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Edit Mode -->
@@ -557,7 +573,7 @@
                   </div>
                   <div class="form-row" *ngIf="editItemQuotedPriceCurrency !== 'CAD'">
                     <div class="form-group">
-                      <label for="editItemQuotedPriceExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
+                      <label for="editItemQuotedPriceExchangeRate">{{ 'procurement.quotedPriceExchangeRate' | translate }}</label>
                       <input
                         id="editItemQuotedPriceExchangeRate"
                         type="number"
@@ -607,7 +623,7 @@
                   </div>
                   <div class="form-row" *ngIf="editItemFinalPriceCurrency !== 'CAD'">
                     <div class="form-group">
-                      <label for="editItemFinalPriceExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
+                      <label for="editItemFinalPriceExchangeRate">{{ 'procurement.finalPriceExchangeRate' | translate }}</label>
                       <input
                         id="editItemFinalPriceExchangeRate"
                         type="number"
@@ -893,52 +909,213 @@
                       <span class="spinner"></span> {{ 'procurement.loadingQuotes' | translate }}
                     </div>
 
-                    <div class="quote-card" *ngFor="let quote of quotes" [class.selected]="quote.selected">
-                      <div class="quote-header">
-                        <div class="vendor-info">
-                          <span class="vendor-name">{{ quote.vendorName }}</span>
-                          <span class="quote-ref" *ngIf="quote.quoteReference">#{{ quote.quoteReference }}</span>
+                    <div class="quote-card" *ngFor="let quote of quotes" [class.selected]="quote.selected" [class.editing]="editingQuoteId === quote.id">
+                      <!-- Edit Quote Form (shown when editing this quote) -->
+                      <div class="edit-quote-form" *ngIf="editingQuoteId === quote.id">
+                        <h4>{{ 'procurement.editQuote' | translate }}</h4>
+                        <form (ngSubmit)="updateQuote()">
+                          <div class="form-row">
+                            <div class="form-group">
+                              <label for="editQuoteVendorName">{{ 'procurement.vendorName' | translate }} *</label>
+                              <input
+                                type="text"
+                                id="editQuoteVendorName"
+                                [(ngModel)]="editQuoteVendorName"
+                                name="editQuoteVendorName"
+                                required
+                              />
+                            </div>
+                            <div class="form-group">
+                              <label for="editQuoteVendorContact">{{ 'procurement.vendorContact' | translate }}</label>
+                              <input
+                                type="text"
+                                id="editQuoteVendorContact"
+                                [(ngModel)]="editQuoteVendorContact"
+                                name="editQuoteVendorContact"
+                              />
+                            </div>
+                          </div>
+                          <div class="form-row">
+                            <div class="form-group">
+                              <label for="editQuoteReference">{{ 'procurement.quoteReference' | translate }}</label>
+                              <input
+                                type="text"
+                                id="editQuoteReference"
+                                [(ngModel)]="editQuoteReference"
+                                name="editQuoteReference"
+                              />
+                            </div>
+                            <div class="form-group">
+                              <label for="editQuoteCurrency">{{ 'procurement.quoteCurrency' | translate }}</label>
+                              <select id="editQuoteCurrency" [(ngModel)]="editQuoteCurrency" name="editQuoteCurrency">
+                                <option *ngFor="let currency of currencies" [value]="currency.code">
+                                  {{ getCurrencyFlag(currency.code) }} {{ currency.code }}
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+                          <!-- CAP Amount (only if category allows CAP) -->
+                          <div class="form-row" *ngIf="selectedItemAllowsCap">
+                            <div class="form-group">
+                              <label for="editQuoteAmountCap">{{ 'procurement.quoteAmountCap' | translate }} ({{ editQuoteCurrency }})</label>
+                              <input
+                                type="number"
+                                id="editQuoteAmountCap"
+                                [(ngModel)]="editQuoteAmountCap"
+                                name="editQuoteAmountCap"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                            <div class="form-group" *ngIf="editQuoteCurrency !== 'CAD'">
+                              <label for="editQuoteAmountCapCad">{{ 'procurement.quoteAmountCapCad' | translate }}</label>
+                              <input
+                                type="number"
+                                id="editQuoteAmountCapCad"
+                                [(ngModel)]="editQuoteAmountCapCad"
+                                name="editQuoteAmountCapCad"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                          </div>
+                          <!-- OM Amount (only if category allows OM) -->
+                          <div class="form-row" *ngIf="selectedItemAllowsOm">
+                            <div class="form-group">
+                              <label for="editQuoteAmountOm">{{ 'procurement.quoteAmountOm' | translate }} ({{ editQuoteCurrency }})</label>
+                              <input
+                                type="number"
+                                id="editQuoteAmountOm"
+                                [(ngModel)]="editQuoteAmountOm"
+                                name="editQuoteAmountOm"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                            <div class="form-group" *ngIf="editQuoteCurrency !== 'CAD'">
+                              <label for="editQuoteAmountOmCad">{{ 'procurement.quoteAmountOmCad' | translate }}</label>
+                              <input
+                                type="number"
+                                id="editQuoteAmountOmCad"
+                                [(ngModel)]="editQuoteAmountOmCad"
+                                name="editQuoteAmountOmCad"
+                                min="0"
+                                step="0.01"
+                              />
+                            </div>
+                          </div>
+                          <!-- Exchange Rate (only if currency is not CAD) -->
+                          <div class="form-row" *ngIf="editQuoteCurrency !== 'CAD'">
+                            <div class="form-group">
+                              <label for="editQuoteExchangeRate">{{ 'procurement.quoteExchangeRate' | translate }}</label>
+                              <input
+                                type="number"
+                                id="editQuoteExchangeRate"
+                                [(ngModel)]="editQuoteExchangeRate"
+                                name="editQuoteExchangeRate"
+                                min="0"
+                                step="0.000001"
+                              />
+                            </div>
+                          </div>
+                          <div class="form-row">
+                            <div class="form-group">
+                              <label for="editQuoteReceivedDate">{{ 'procurement.receivedDate' | translate }}</label>
+                              <input
+                                type="date"
+                                id="editQuoteReceivedDate"
+                                [(ngModel)]="editQuoteReceivedDate"
+                                name="editQuoteReceivedDate"
+                              />
+                            </div>
+                            <div class="form-group">
+                              <label for="editQuoteExpiryDate">{{ 'procurement.expiryDate' | translate }}</label>
+                              <input
+                                type="date"
+                                id="editQuoteExpiryDate"
+                                [(ngModel)]="editQuoteExpiryDate"
+                                name="editQuoteExpiryDate"
+                              />
+                            </div>
+                          </div>
+                          <div class="form-group">
+                            <label for="editQuoteNotes">{{ 'procurement.notes' | translate }}</label>
+                            <textarea
+                              id="editQuoteNotes"
+                              [(ngModel)]="editQuoteNotes"
+                              name="editQuoteNotes"
+                              rows="2"
+                            ></textarea>
+                          </div>
+                          <div class="form-actions">
+                            <button type="button" class="btn-secondary" (click)="cancelEditQuote()">{{ 'common.cancel' | translate }}</button>
+                            <button
+                              type="submit"
+                              class="btn-primary"
+                              [disabled]="isUpdatingQuote || !editQuoteVendorName.trim()"
+                            >
+                              {{ isUpdatingQuote ? ('common.saving' | translate) : ('common.save' | translate) }}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+
+                      <!-- Quote Display (shown when not editing) -->
+                      <ng-container *ngIf="editingQuoteId !== quote.id">
+                        <div class="quote-header">
+                          <div class="vendor-info">
+                            <span class="vendor-name">{{ quote.vendorName }}</span>
+                            <span class="quote-ref" *ngIf="quote.quoteReference">#{{ quote.quoteReference }}</span>
+                          </div>
+                          <span class="status-badge" [ngClass]="getQuoteStatusClass(quote.status)">
+                            {{ getQuoteStatusLabel(quote.status) }}
+                          </span>
                         </div>
-                        <span class="status-badge" [ngClass]="getQuoteStatusClass(quote.status)">
-                          {{ getQuoteStatusLabel(quote.status) }}
-                        </span>
-                      </div>
-                      <div class="quote-body">
-                        <div class="quote-amount" *ngIf="quote.amount !== null && quote.amount !== undefined">
-                          <span class="currency-flag">{{ getCurrencyFlag(quote.currency) }}</span>
-                          {{ formatCurrency(quote.amount, quote.currency) }}
+                        <div class="quote-body">
+                          <div class="quote-amount" *ngIf="quote.amount !== null && quote.amount !== undefined">
+                            <span class="currency-flag">{{ getCurrencyFlag(quote.currency) }}</span>
+                            {{ formatCurrency(quote.amount, quote.currency) }}
+                          </div>
+                          <div class="quote-dates">
+                            <span *ngIf="quote.receivedDate">{{ 'procurement.received' | translate }}: {{ quote.receivedDate | date:'shortDate' }}</span>
+                            <span *ngIf="quote.expiryDate">{{ 'procurement.expires' | translate }}: {{ quote.expiryDate | date:'shortDate' }}</span>
+                          </div>
+                          <p class="quote-notes" *ngIf="quote.notes">{{ quote.notes }}</p>
                         </div>
-                        <div class="quote-dates">
-                          <span *ngIf="quote.receivedDate">{{ 'procurement.received' | translate }}: {{ quote.receivedDate | date:'shortDate' }}</span>
-                          <span *ngIf="quote.expiryDate">{{ 'procurement.expires' | translate }}: {{ quote.expiryDate | date:'shortDate' }}</span>
+                        <div class="quote-actions">
+                          <button class="btn-icon" [title]="'procurement.viewFiles' | translate" (click)="viewQuoteFiles(quote)">
+                            📁 {{ 'procurement.files' | translate }} ({{ quote.fileCount || 0 }})
+                          </button>
+                          <button
+                            class="btn-icon btn-edit"
+                            [title]="'common.edit' | translate"
+                            *ngIf="canWrite"
+                            (click)="startEditQuote(quote)"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            class="btn-icon btn-select"
+                            [title]="'procurement.selectQuoteComingSoon' | translate"
+                            *ngIf="canWrite && !quote.selected && quote.status !== 'REJECTED'"
+                            disabled
+                            [class.disabled]="true"
+                          >
+                            ✅ {{ 'procurement.select' | translate }}
+                          </button>
+                          <button
+                            class="btn-icon btn-danger"
+                            [title]="'common.delete' | translate"
+                            *ngIf="canWrite"
+                            (click)="deleteQuote(quote)"
+                          >
+                            🗑️
+                          </button>
                         </div>
-                        <p class="quote-notes" *ngIf="quote.notes">{{ quote.notes }}</p>
-                      </div>
-                      <div class="quote-actions">
-                        <button class="btn-icon" [title]="'procurement.viewFiles' | translate" (click)="viewQuoteFiles(quote)">
-                          📁 {{ 'procurement.files' | translate }} ({{ quote.fileCount || 0 }})
-                        </button>
-                        <button
-                          class="btn-icon btn-select"
-                          [title]="'procurement.selectQuoteComingSoon' | translate"
-                          *ngIf="canWrite && !quote.selected && quote.status !== 'REJECTED'"
-                          disabled
-                          [class.disabled]="true"
-                        >
-                          ✅ {{ 'procurement.select' | translate }}
-                        </button>
-                        <button
-                          class="btn-icon btn-danger"
-                          [title]="'common.delete' | translate"
-                          *ngIf="canWrite"
-                          (click)="deleteQuote(quote)"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                      <div class="selected-badge" *ngIf="quote.selected">
-                        ✓ {{ 'procurement.selectedQuote' | translate }}
-                      </div>
+                        <div class="selected-badge" *ngIf="quote.selected">
+                          ✓ {{ 'procurement.selectedQuote' | translate }}
+                        </div>
+                      </ng-container>
                     </div>
 
                     <div class="empty-state" *ngIf="!isLoadingQuotes && quotes.length === 0">
@@ -1156,26 +1333,76 @@
             <span class="spinner"></span> {{ 'procurement.loadingFiles' | translate }}
           </div>
 
-          <div class="file-item" *ngFor="let file of files">
-            <span class="file-icon">{{ getFileIcon(file.contentType) }}</span>
-            <div class="file-info">
-              <span class="file-name">{{ file.fileName }}</span>
-              <span class="file-meta">{{ file.fileSize | number }} {{ 'procurement.bytes' | translate }}</span>
-              <span class="file-desc" *ngIf="file.description">{{ file.description }}</span>
+          <div class="file-item" *ngFor="let file of files" [class.replacing]="replacingFileId === file.id">
+            <!-- Replace File Form (shown when replacing this file) -->
+            <div class="replace-file-form" *ngIf="replacingFileId === file.id">
+              <h5>{{ 'procurement.replaceFile' | translate }}: {{ file.fileName }}</h5>
+              <div class="form-group">
+                <label for="replacementFile">{{ 'procurement.selectNewFile' | translate }}</label>
+                <input
+                  type="file"
+                  id="replacementFile"
+                  (change)="onReplacementFileSelected($event)"
+                  accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                />
+              </div>
+              <div *ngIf="replacementFile" class="selected-file-info">
+                <span class="file-icon">📎</span>
+                <span class="file-name">{{ replacementFile.name }}</span>
+                <span class="file-size">({{ formatFileSize(replacementFile.size) }})</span>
+              </div>
+              <div class="form-group" *ngIf="replacementFile">
+                <label for="replacementFileDescription">{{ 'procurement.fileDescription' | translate }}</label>
+                <input
+                  type="text"
+                  id="replacementFileDescription"
+                  [(ngModel)]="replacementFileDescription"
+                  [placeholder]="'procurement.fileDescriptionPlaceholder' | translate"
+                />
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn-secondary" (click)="cancelReplaceFile()">{{ 'common.cancel' | translate }}</button>
+                <button
+                  type="button"
+                  class="btn-primary"
+                  [disabled]="isReplacingFile || !replacementFile"
+                  (click)="replaceFile()"
+                >
+                  {{ isReplacingFile ? ('procurement.replacing' | translate) : ('procurement.replace' | translate) }}
+                </button>
+              </div>
             </div>
-            <div class="file-actions">
-              <button class="btn-icon" [title]="'procurement.preview' | translate" (click)="previewFile(file)" *ngIf="isPreviewable(file.contentType)">👁️</button>
-              <button class="btn-icon" [title]="'procurement.openInNewTab' | translate" (click)="viewFile(file)">🔗</button>
-              <button class="btn-icon" [title]="'common.download' | translate" (click)="downloadFile(file)">⬇️</button>
-              <button
-                class="btn-icon btn-danger"
-                [title]="'common.delete' | translate"
-                *ngIf="canWrite"
-                (click)="deleteFile(file)"
-              >
-                🗑️
-              </button>
-            </div>
+
+            <!-- File Display (shown when not replacing) -->
+            <ng-container *ngIf="replacingFileId !== file.id">
+              <span class="file-icon">{{ getFileIcon(file.contentType) }}</span>
+              <div class="file-info">
+                <span class="file-name">{{ file.fileName }}</span>
+                <span class="file-meta">{{ file.fileSize | number }} {{ 'procurement.bytes' | translate }}</span>
+                <span class="file-desc" *ngIf="file.description">{{ file.description }}</span>
+              </div>
+              <div class="file-actions">
+                <button class="btn-icon" [title]="'procurement.preview' | translate" (click)="previewFile(file)" *ngIf="isPreviewable(file.contentType)">👁️</button>
+                <button class="btn-icon" [title]="'procurement.openInNewTab' | translate" (click)="viewFile(file)">🔗</button>
+                <button class="btn-icon" [title]="'common.download' | translate" (click)="downloadFile(file)">⬇️</button>
+                <button
+                  class="btn-icon btn-replace"
+                  [title]="'procurement.replaceFile' | translate"
+                  *ngIf="canWrite"
+                  (click)="startReplaceFile(file)"
+                >
+                  🔄
+                </button>
+                <button
+                  class="btn-icon btn-danger"
+                  [title]="'common.delete' | translate"
+                  *ngIf="canWrite"
+                  (click)="deleteFile(file)"
+                >
+                  🗑️
+                </button>
+              </div>
+            </ng-container>
           </div>
 
           <div class="empty-state" *ngIf="!isLoadingFiles && files.length === 0">
