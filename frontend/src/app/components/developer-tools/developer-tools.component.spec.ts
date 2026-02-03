@@ -58,6 +58,14 @@ describe('DeveloperToolsComponent', () => {
     
     const dbReq = httpMock.expectOne('/api/health/db');
     dbReq.flush({ status: 'UP', message: 'Database is healthy' });
+
+    // Also flush the login-methods request that's made by the component
+    const loginMethodsReq = httpMock.match('/api/auth/login-methods');
+    loginMethodsReq.forEach(req => req.flush({ 
+      localEnabled: true,
+      ldapEnabled: false,
+      oauth2Enabled: false 
+    }));
   }
 
   describe('Component Initialization', () => {
@@ -87,6 +95,11 @@ describe('DeveloperToolsComponent', () => {
       
       const dbReq = httpMock.expectOne('/api/health/db');
       dbReq.flush({ status: 'UP', message: 'Database is healthy' });
+
+      // Flush the login-methods request
+      httpMock.match('/api/auth/login-methods').forEach(req => req.flush({ 
+        localEnabled: true, ldapEnabled: false, oauth2Enabled: false 
+      }));
       
       expect(component.isApiHealthy).toBeTrue();
       expect(component.apiStatus).toBe('API is healthy');
@@ -101,6 +114,11 @@ describe('DeveloperToolsComponent', () => {
       const dbReq = httpMock.expectOne('/api/health/db');
       expect(dbReq.request.method).toBe('GET');
       dbReq.flush({ status: 'UP', message: 'Database is healthy' });
+
+      // Flush the login-methods request
+      httpMock.match('/api/auth/login-methods').forEach(req => req.flush({ 
+        localEnabled: true, ldapEnabled: false, oauth2Enabled: false 
+      }));
       
       expect(component.isDatabaseHealthy).toBeTrue();
       expect(component.databaseStatus).toBe('Database is healthy');
@@ -117,6 +135,11 @@ describe('DeveloperToolsComponent', () => {
       
       const dbReq = httpMock.expectOne('/api/health/db');
       dbReq.flush({ status: 'UP', message: 'Database is healthy' });
+
+      // Flush the login-methods request
+      httpMock.match('/api/auth/login-methods').forEach(req => req.flush({ 
+        localEnabled: true, ldapEnabled: false, oauth2Enabled: false 
+      }));
       
       expect(component.isApiHealthy).toBeFalse();
       expect(component.apiStatus).toBe('API is not available');
@@ -132,6 +155,11 @@ describe('DeveloperToolsComponent', () => {
       
       const dbReq = httpMock.expectOne('/api/health/db');
       dbReq.error(new ErrorEvent('Network error'));
+
+      // Flush the login-methods request
+      httpMock.match('/api/auth/login-methods').forEach(req => req.flush({ 
+        localEnabled: true, ldapEnabled: false, oauth2Enabled: false 
+      }));
       
       expect(component.isDatabaseHealthy).toBeFalse();
       expect(component.databaseStatus).toBe('Database is not available');
@@ -146,6 +174,11 @@ describe('DeveloperToolsComponent', () => {
       
       const dbReq = httpMock.expectOne('/api/health/db');
       dbReq.flush({ status: 'UP', message: 'Database is healthy' });
+
+      // Flush the login-methods request
+      httpMock.match('/api/auth/login-methods').forEach(req => req.flush({ 
+        localEnabled: true, ldapEnabled: false, oauth2Enabled: false 
+      }));
       
       expect(component.isApiHealthy).toBeFalse();
       expect(component.apiStatus).toBe('API is down');
@@ -159,6 +192,11 @@ describe('DeveloperToolsComponent', () => {
       
       const dbReq = httpMock.expectOne('/api/health/db');
       dbReq.flush({ status: 'DOWN', message: 'Database connection failed' });
+
+      // Flush the login-methods request
+      httpMock.match('/api/auth/login-methods').forEach(req => req.flush({ 
+        localEnabled: true, ldapEnabled: false, oauth2Enabled: false 
+      }));
       
       expect(component.isDatabaseHealthy).toBeFalse();
       expect(component.databaseStatus).toBe('Database connection failed');

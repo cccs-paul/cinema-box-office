@@ -88,11 +88,41 @@ public class ProcurementQuote {
     private BigDecimal amount;
 
     /**
+     * Quote amount for CAP (capital) funding in the specified currency.
+     */
+    @Column(name = "amount_cap", precision = 15, scale = 2)
+    private BigDecimal amountCap;
+
+    /**
+     * Quote amount for OM (operations & maintenance) funding in the specified currency.
+     */
+    @Column(name = "amount_om", precision = 15, scale = 2)
+    private BigDecimal amountOm;
+
+    /**
      * The currency for this quote. Defaults to CAD.
      */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 3)
     private Currency currency = Currency.CAD;
+
+    /**
+     * Exchange rate to CAD (only required when currency is not CAD).
+     */
+    @Column(name = "exchange_rate", precision = 10, scale = 6)
+    private BigDecimal exchangeRate;
+
+    /**
+     * CAP amount converted to CAD (only required when currency is not CAD).
+     */
+    @Column(name = "amount_cap_cad", precision = 15, scale = 2)
+    private BigDecimal amountCapCad;
+
+    /**
+     * OM amount converted to CAD (only required when currency is not CAD).
+     */
+    @Column(name = "amount_om_cad", precision = 15, scale = 2)
+    private BigDecimal amountOmCad;
 
     /**
      * Date when the quote was received.
@@ -205,12 +235,52 @@ public class ProcurementQuote {
         this.amount = amount;
     }
 
+    public BigDecimal getAmountCap() {
+        return amountCap;
+    }
+
+    public void setAmountCap(BigDecimal amountCap) {
+        this.amountCap = amountCap;
+    }
+
+    public BigDecimal getAmountOm() {
+        return amountOm;
+    }
+
+    public void setAmountOm(BigDecimal amountOm) {
+        this.amountOm = amountOm;
+    }
+
     public Currency getCurrency() {
         return currency;
     }
 
     public void setCurrency(Currency currency) {
         this.currency = currency;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public void setExchangeRate(BigDecimal exchangeRate) {
+        this.exchangeRate = exchangeRate;
+    }
+
+    public BigDecimal getAmountCapCad() {
+        return amountCapCad;
+    }
+
+    public void setAmountCapCad(BigDecimal amountCapCad) {
+        this.amountCapCad = amountCapCad;
+    }
+
+    public BigDecimal getAmountOmCad() {
+        return amountOmCad;
+    }
+
+    public void setAmountOmCad(BigDecimal amountOmCad) {
+        this.amountOmCad = amountOmCad;
     }
 
     public LocalDate getReceivedDate() {

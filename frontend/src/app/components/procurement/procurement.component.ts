@@ -108,7 +108,10 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   newItemDescription = '';
   newItemCurrency = DEFAULT_CURRENCY;
   newItemExchangeRate: number | null = null;
-  newItemPreferredVendor = '';
+  newItemVendor = '';
+  newItemFinalPrice: number | null = null;
+  newItemFinalPriceCurrency = DEFAULT_CURRENCY;
+  newItemFinalPriceCad: number | null = null;
   newItemContractNumber = '';
   newItemContractStartDate = '';
   newItemContractEndDate = '';
@@ -123,7 +126,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   newQuoteVendorContact = '';
   newQuoteReference = '';
   newQuoteAmount: number | null = null;
+  newQuoteAmountCap: number | null = null;
+  newQuoteAmountOm: number | null = null;
   newQuoteCurrency = DEFAULT_CURRENCY;
+  newQuoteExchangeRate: number | null = null;
+  newQuoteAmountCapCad: number | null = null;
+  newQuoteAmountOmCad: number | null = null;
   newQuoteReceivedDate = '';
   newQuoteExpiryDate = '';
   newQuoteNotes = '';
@@ -155,7 +163,10 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   editItemDescription = '';
   editItemCurrency = DEFAULT_CURRENCY;
   editItemExchangeRate: number | null = null;
-  editItemPreferredVendor = '';
+  editItemVendor = '';
+  editItemFinalPrice: number | null = null;
+  editItemFinalPriceCurrency = DEFAULT_CURRENCY;
+  editItemFinalPriceCad: number | null = null;
   editItemContractNumber = '';
   editItemContractStartDate = '';
   editItemContractEndDate = '';
@@ -329,7 +340,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           purchaseOrder: item.purchaseOrder,
           name: item.name,
           description: item.description,
-          preferredVendor: item.preferredVendor,
+          vendor: item.vendor,
           contractNumber: item.contractNumber,
           categoryName: item.categoryName,
           status: PROCUREMENT_STATUS_INFO[item.status]?.label || item.status
@@ -418,6 +429,28 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     return this.selectedRC.isOwner || this.selectedRC.accessLevel === 'READ_WRITE';
   }
 
+  /**
+   * Check if the selected item's category allows CAP amounts.
+   */
+  get selectedItemAllowsCap(): boolean {
+    if (!this.selectedItem || !this.selectedItem.categoryId) {
+      return true; // Default to allowing CAP if no category
+    }
+    const category = this.categories.find(c => c.id === this.selectedItem!.categoryId);
+    return category ? category.allowsCap : true;
+  }
+
+  /**
+   * Check if the selected item's category allows OM amounts.
+   */
+  get selectedItemAllowsOm(): boolean {
+    if (!this.selectedItem || !this.selectedItem.categoryId) {
+      return true; // Default to allowing OM if no category
+    }
+    const category = this.categories.find(c => c.id === this.selectedItem!.categoryId);
+    return category ? category.allowsOm : true;
+  }
+
   // ==========================
   // Procurement Item Methods
   // ==========================
@@ -457,7 +490,10 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newItemDescription = '';
     this.newItemCurrency = DEFAULT_CURRENCY;
     this.newItemExchangeRate = null;
-    this.newItemPreferredVendor = '';
+    this.newItemVendor = '';
+    this.newItemFinalPrice = null;
+    this.newItemFinalPriceCurrency = DEFAULT_CURRENCY;
+    this.newItemFinalPriceCad = null;
     this.newItemContractNumber = '';
     this.newItemContractStartDate = '';
     this.newItemContractEndDate = '';
@@ -467,7 +503,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   createProcurementItem(): void {
-    if (!this.selectedRC || !this.selectedFY || !this.newItemPR.trim() || !this.newItemName.trim()) {
+    if (!this.selectedRC || !this.selectedFY || !this.newItemName.trim()) {
       return;
     }
 
@@ -475,13 +511,16 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.clearMessages();
 
     const request: ProcurementItemCreateRequest = {
-      purchaseRequisition: this.newItemPR.trim(),
+      purchaseRequisition: this.newItemPR.trim() || undefined,
       purchaseOrder: this.newItemPO.trim() || undefined,
       name: this.newItemName.trim(),
       description: this.newItemDescription.trim() || undefined,
       currency: this.newItemCurrency,
       exchangeRate: this.newItemCurrency !== 'CAD' ? this.newItemExchangeRate : undefined,
-      preferredVendor: this.newItemPreferredVendor.trim() || undefined,
+      vendor: this.newItemVendor.trim() || undefined,
+      finalPrice: this.newItemFinalPrice,
+      finalPriceCurrency: this.newItemFinalPriceCurrency,
+      finalPriceCad: this.newItemFinalPriceCurrency !== 'CAD' ? this.newItemFinalPriceCad : undefined,
       contractNumber: this.newItemContractNumber.trim() || undefined,
       contractStartDate: this.newItemContractStartDate || undefined,
       contractEndDate: this.newItemContractEndDate || undefined,
@@ -533,13 +572,16 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    */
   startEditProcurementItem(item: ProcurementItem): void {
     this.editingItemId = item.id;
-    this.editItemPR = item.purchaseRequisition;
+    this.editItemPR = item.purchaseRequisition || '';
     this.editItemPO = item.purchaseOrder || '';
     this.editItemName = item.name;
     this.editItemDescription = item.description || '';
     this.editItemCurrency = item.currency || DEFAULT_CURRENCY;
     this.editItemExchangeRate = item.exchangeRate || null;
-    this.editItemPreferredVendor = item.preferredVendor || '';
+    this.editItemVendor = item.vendor || '';
+    this.editItemFinalPrice = item.finalPrice || null;
+    this.editItemFinalPriceCurrency = item.finalPriceCurrency || DEFAULT_CURRENCY;
+    this.editItemFinalPriceCad = item.finalPriceCad || null;
     this.editItemContractNumber = item.contractNumber || '';
     this.editItemContractStartDate = item.contractStartDate ? item.contractStartDate.split('T')[0] : '';
     this.editItemContractEndDate = item.contractEndDate ? item.contractEndDate.split('T')[0] : '';
@@ -570,7 +612,10 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemDescription = '';
     this.editItemCurrency = DEFAULT_CURRENCY;
     this.editItemExchangeRate = null;
-    this.editItemPreferredVendor = '';
+    this.editItemVendor = '';
+    this.editItemFinalPrice = null;
+    this.editItemFinalPriceCurrency = DEFAULT_CURRENCY;
+    this.editItemFinalPriceCad = null;
     this.editItemContractNumber = '';
     this.editItemContractStartDate = '';
     this.editItemContractEndDate = '';
@@ -588,11 +633,6 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.editItemPR?.trim()) {
-      this.showError('Purchase Requisition (PR) is required.');
-      return;
-    }
-
     if (!this.editItemName?.trim()) {
       this.showError('Item name is required.');
       return;
@@ -601,13 +641,16 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.isUpdatingItem = true;
 
     const updateRequest: Partial<ProcurementItemCreateRequest> = {
-      purchaseRequisition: this.editItemPR.trim(),
+      purchaseRequisition: this.editItemPR?.trim() || undefined,
       purchaseOrder: this.editItemPO?.trim() || undefined,
       name: this.editItemName.trim(),
       description: this.editItemDescription?.trim() || undefined,
       currency: this.editItemCurrency,
       exchangeRate: this.editItemCurrency !== 'CAD' ? this.editItemExchangeRate : undefined,
-      preferredVendor: this.editItemPreferredVendor?.trim() || undefined,
+      vendor: this.editItemVendor?.trim() || undefined,
+      finalPrice: this.editItemFinalPrice,
+      finalPriceCurrency: this.editItemFinalPriceCurrency,
+      finalPriceCad: this.editItemFinalPriceCurrency !== 'CAD' ? this.editItemFinalPriceCad : undefined,
       contractNumber: this.editItemContractNumber?.trim() || undefined,
       contractStartDate: this.editItemContractStartDate || undefined,
       contractEndDate: this.editItemContractEndDate || undefined,
@@ -722,7 +765,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newQuoteVendorContact = '';
     this.newQuoteReference = '';
     this.newQuoteAmount = null;
+    this.newQuoteAmountCap = null;
+    this.newQuoteAmountOm = null;
     this.newQuoteCurrency = DEFAULT_CURRENCY;
+    this.newQuoteExchangeRate = null;
+    this.newQuoteAmountCapCad = null;
+    this.newQuoteAmountOmCad = null;
     this.newQuoteReceivedDate = '';
     this.newQuoteExpiryDate = '';
     this.newQuoteNotes = '';
@@ -772,7 +820,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       vendorContact: this.newQuoteVendorContact.trim() || undefined,
       quoteReference: this.newQuoteReference.trim() || undefined,
       amount: this.newQuoteAmount ?? undefined,
+      amountCap: this.newQuoteAmountCap ?? undefined,
+      amountOm: this.newQuoteAmountOm ?? undefined,
       currency: this.newQuoteCurrency,
+      exchangeRate: this.newQuoteCurrency !== 'CAD' ? this.newQuoteExchangeRate ?? undefined : undefined,
+      amountCapCad: this.newQuoteCurrency !== 'CAD' ? this.newQuoteAmountCapCad ?? undefined : undefined,
+      amountOmCad: this.newQuoteCurrency !== 'CAD' ? this.newQuoteAmountOmCad ?? undefined : undefined,
       receivedDate: this.newQuoteReceivedDate || undefined,
       expiryDate: this.newQuoteExpiryDate || undefined,
       notes: this.newQuoteNotes.trim() || undefined
@@ -1271,6 +1324,14 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     return `event-${EVENT_TYPE_INFO[eventType]?.color || 'gray'}`;
   }
 
+  /**
+   * Get the most recent tracking event (first in the sorted list).
+   * Returns null if there are no events.
+   */
+  get mostRecentEvent(): ProcurementEvent | null {
+    return this.events.length > 0 ? this.events[0] : null;
+  }
+
   // ==========================
   // Helper Methods
   // ==========================
@@ -1281,6 +1342,22 @@ export class ProcurementComponent implements OnInit, OnDestroy {
 
   getStatusClass(status: ProcurementItemStatus): string {
     return `status-${PROCUREMENT_STATUS_INFO[status]?.color || 'gray'}`;
+  }
+
+  /**
+   * Get the status label from a string status (for event newStatus).
+   */
+  getEventStatusLabel(status: string | undefined): string {
+    if (!status) return '';
+    return PROCUREMENT_STATUS_INFO[status as ProcurementItemStatus]?.label || status;
+  }
+
+  /**
+   * Get the status class from a string status (for event newStatus).
+   */
+  getEventStatusClass(status: string | undefined): string {
+    if (!status) return '';
+    return `status-${PROCUREMENT_STATUS_INFO[status as ProcurementItemStatus]?.color || 'gray'}`;
   }
 
   getQuoteStatusLabel(status: QuoteStatus): string {

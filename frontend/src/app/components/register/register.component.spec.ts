@@ -219,7 +219,7 @@ describe('RegisterComponent', () => {
       expect(component.registerForm.get('username')?.valid).toBeTrue();
     });
 
-    it('should mark form as invalid when email is empty', () => {
+    it('should mark form as valid when email is empty (email is optional)', () => {
       component.registerForm.patchValue({
         username: 'testuser',
         email: '',
@@ -227,7 +227,8 @@ describe('RegisterComponent', () => {
         confirmPassword: 'Password123'
       });
       
-      expect(component.registerForm.valid).toBeFalse();
+      // Email is optional, so form should be valid without it
+      expect(component.registerForm.valid).toBeTrue();
     });
 
     it('should mark form as invalid when email format is invalid', () => {

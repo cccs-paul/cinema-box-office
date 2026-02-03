@@ -47,9 +47,7 @@ import jakarta.persistence.Version;
  * @since 2026-01-28
  */
 @Entity
-@Table(name = "procurement_items", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"purchase_requisition", "fiscal_year_id"}, name = "uk_pi_pr_fy")
-})
+@Table(name = "procurement_items")
 public class ProcurementItem {
 
     /**
@@ -82,7 +80,7 @@ public class ProcurementItem {
     /**
      * Purchase Requisition number (PR).
      */
-    @Column(name = "purchase_requisition", nullable = false, length = 100)
+    @Column(name = "purchase_requisition", length = 100)
     private String purchaseRequisition;
 
     /**
@@ -117,11 +115,31 @@ public class ProcurementItem {
     private java.math.BigDecimal exchangeRate;
 
     /**
-     * Preferred vendor name for this procurement.
+     * Vendor name for this procurement.
      * Typically set after a quote is selected.
      */
     @Column(name = "preferred_vendor", length = 200)
-    private String preferredVendor;
+    private String vendor;
+
+    /**
+     * Final price for this procurement in the specified currency.
+     */
+    @Column(name = "final_price", precision = 15, scale = 2)
+    private java.math.BigDecimal finalPrice;
+
+    /**
+     * Currency code for the final price. Defaults to CAD.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "final_price_currency", length = 3)
+    private Currency finalPriceCurrency = Currency.CAD;
+
+    /**
+     * Final price converted to CAD.
+     * Required when finalPriceCurrency is not CAD.
+     */
+    @Column(name = "final_price_cad", precision = 15, scale = 2)
+    private java.math.BigDecimal finalPriceCad;
 
     /**
      * Contract number associated with this procurement.
@@ -273,14 +291,38 @@ public class ProcurementItem {
         this.exchangeRate = exchangeRate;
     }
 
-    public String getPreferredVendor() {
-        return preferredVendor;
+    public String getVendor() {
+        return vendor;
     }
 
-    public void setPreferredVendor(String preferredVendor) {
-        this.preferredVendor = preferredVendor;
+    public void setVendor(String vendor) {
+        this.vendor = vendor;
     }
 
+
+    public java.math.BigDecimal getFinalPrice() {
+        return finalPrice;
+    }
+
+    public void setFinalPrice(java.math.BigDecimal finalPrice) {
+        this.finalPrice = finalPrice;
+    }
+
+    public Currency getFinalPriceCurrency() {
+        return finalPriceCurrency;
+    }
+
+    public void setFinalPriceCurrency(Currency finalPriceCurrency) {
+        this.finalPriceCurrency = finalPriceCurrency != null ? finalPriceCurrency : Currency.CAD;
+    }
+
+    public java.math.BigDecimal getFinalPriceCad() {
+        return finalPriceCad;
+    }
+
+    public void setFinalPriceCad(java.math.BigDecimal finalPriceCad) {
+        this.finalPriceCad = finalPriceCad;
+    }
     public String getContractNumber() {
         return contractNumber;
     }

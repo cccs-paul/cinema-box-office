@@ -94,7 +94,10 @@ describe('ProcurementComponent', () => {
       status: 'NOT_STARTED',
       currency: 'CAD',
       exchangeRate: undefined,
-      preferredVendor: 'NVIDIA',
+      vendor: 'NVIDIA',
+      finalPrice: 50000,
+      finalPriceCurrency: 'CAD',
+      finalPriceCad: undefined,
       contractNumber: 'CN-001',
       contractStartDate: '2026-01-01',
       contractEndDate: '2026-12-31',
@@ -119,7 +122,10 @@ describe('ProcurementComponent', () => {
       status: 'QUOTE',
       currency: 'USD',
       exchangeRate: 1.35,
-      preferredVendor: 'Dell',
+      vendor: 'Dell',
+      finalPrice: 75000,
+      finalPriceCurrency: 'USD',
+      finalPriceCad: 101250,
       contractNumber: undefined,
       contractStartDate: undefined,
       contractEndDate: undefined,
@@ -371,14 +377,18 @@ describe('ProcurementComponent', () => {
   });
 
   describe('createProcurementItem', () => {
-    it('should not create item without PR', () => {
+    it('should create item without PR (PR is optional)', fakeAsync(() => {
+      procurementService.createProcurementItem.and.returnValue(of(mockProcurementItems[0]));
+      
       component.newItemPR = '';
       component.newItemName = 'Test';
+      component.newItemCurrency = 'CAD';
       
       component.createProcurementItem();
+      tick();
 
-      expect(procurementService.createProcurementItem).not.toHaveBeenCalled();
-    });
+      expect(procurementService.createProcurementItem).toHaveBeenCalled();
+    }));
 
     it('should not create item without name', () => {
       component.newItemPR = 'PR-001';

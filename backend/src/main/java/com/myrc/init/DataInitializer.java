@@ -669,8 +669,8 @@ public class DataInitializer implements ApplicationRunner {
                 // Link to procurement item
                 spendingItem.setProcurementItem(procItem);
                 
-                // Set vendor from preferred vendor or selected quote
-                String vendor = procItem.getPreferredVendor();
+                // Set vendor from procurement item vendor field or selected quote
+                String vendor = procItem.getVendor();
                 if (vendor == null || vendor.isEmpty()) {
                     // Try to get vendor from selected quote
                     ProcurementQuote selectedQuote = procurementQuoteRepository

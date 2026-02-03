@@ -201,7 +201,7 @@ export interface ProcurementItem {
   id: number;
 
   /** Purchase Requisition number */
-  purchaseRequisition: string;
+  purchaseRequisition?: string;
 
   /** Purchase Order number */
   purchaseOrder?: string;
@@ -221,8 +221,17 @@ export interface ProcurementItem {
   /** Exchange rate to CAD */
   exchangeRate?: number;
 
-  /** Preferred vendor name */
-  preferredVendor?: string;
+  /** Vendor name */
+  vendor?: string;
+
+  /** Final price in the specified currency */
+  finalPrice?: number;
+
+  /** Currency code for the final price (defaults to CAD) */
+  finalPriceCurrency?: string;
+
+  /** Final price converted to CAD (required when finalPriceCurrency is not CAD) */
+  finalPriceCad?: number;
 
   /** Contract number */
   contractNumber?: string;

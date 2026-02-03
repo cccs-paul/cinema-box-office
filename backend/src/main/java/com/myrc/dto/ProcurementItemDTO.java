@@ -37,7 +37,10 @@ public class ProcurementItemDTO {
     private String status;
     private String currency;
     private java.math.BigDecimal exchangeRate;
-    private String preferredVendor;
+    private String vendor;
+    private java.math.BigDecimal finalPrice;
+    private String finalPriceCurrency;
+    private java.math.BigDecimal finalPriceCad;
     private String contractNumber;
     private LocalDate contractStartDate;
     private LocalDate contractEndDate;
@@ -119,7 +122,10 @@ public class ProcurementItemDTO {
         );
         dto.setCurrency(item.getCurrency() != null ? item.getCurrency().name() : "CAD");
         dto.setExchangeRate(item.getExchangeRate());
-        dto.setPreferredVendor(item.getPreferredVendor());
+        dto.setVendor(item.getVendor());
+        dto.setFinalPrice(item.getFinalPrice());
+        dto.setFinalPriceCurrency(item.getFinalPriceCurrency() != null ? item.getFinalPriceCurrency().name() : "CAD");
+        dto.setFinalPriceCad(item.getFinalPriceCad());
         dto.setContractNumber(item.getContractNumber());
         dto.setContractStartDate(item.getContractStartDate());
         dto.setContractEndDate(item.getContractEndDate());
@@ -157,7 +163,10 @@ public class ProcurementItemDTO {
         dto.setCategoryName(item.getCategory() != null ? item.getCategory().getName() : null);
         dto.setCurrency(item.getCurrency() != null ? item.getCurrency().name() : "CAD");
         dto.setExchangeRate(item.getExchangeRate());
-        dto.setPreferredVendor(item.getPreferredVendor());
+        dto.setVendor(item.getVendor());
+        dto.setFinalPrice(item.getFinalPrice());
+        dto.setFinalPriceCurrency(item.getFinalPriceCurrency() != null ? item.getFinalPriceCurrency().name() : "CAD");
+        dto.setFinalPriceCad(item.getFinalPriceCad());
         dto.setContractNumber(item.getContractNumber());
         dto.setContractStartDate(item.getContractStartDate());
         dto.setContractEndDate(item.getContractEndDate());
@@ -236,12 +245,36 @@ public class ProcurementItemDTO {
         this.exchangeRate = exchangeRate;
     }
 
-    public String getPreferredVendor() {
-        return preferredVendor;
+    public String getVendor() {
+        return vendor;
     }
 
-    public void setPreferredVendor(String preferredVendor) {
-        this.preferredVendor = preferredVendor;
+    public void setVendor(String vendor) {
+        this.vendor = vendor;
+    }
+
+    public java.math.BigDecimal getFinalPrice() {
+        return finalPrice;
+    }
+
+    public void setFinalPrice(java.math.BigDecimal finalPrice) {
+        this.finalPrice = finalPrice;
+    }
+
+    public String getFinalPriceCurrency() {
+        return finalPriceCurrency;
+    }
+
+    public void setFinalPriceCurrency(String finalPriceCurrency) {
+        this.finalPriceCurrency = finalPriceCurrency != null ? finalPriceCurrency : "CAD";
+    }
+
+    public java.math.BigDecimal getFinalPriceCad() {
+        return finalPriceCad;
+    }
+
+    public void setFinalPriceCad(java.math.BigDecimal finalPriceCad) {
+        this.finalPriceCad = finalPriceCad;
     }
 
     public String getContractNumber() {

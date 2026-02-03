@@ -210,8 +210,10 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             throw new IllegalArgumentException("User does not have write access to this Responsibility Centre");
         }
 
-        // Check for duplicate PR
-        if (procurementItemRepository.existsByPurchaseRequisitionAndFiscalYearAndActiveTrue(dto.getPurchaseRequisition().trim(), fy)) {
+        // Check for duplicate PR (only if PR is provided)
+        String prValue = dto.getPurchaseRequisition() != null ? dto.getPurchaseRequisition().trim() : null;
+        if (prValue != null && !prValue.isEmpty() && 
+            procurementItemRepository.existsByPurchaseRequisitionAndFiscalYearAndActiveTrue(prValue, fy)) {
             throw new IllegalArgumentException("A procurement item with this PR already exists for this fiscal year");
         }
 
@@ -227,7 +229,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
 
         // Create procurement item
         ProcurementItem item = new ProcurementItem();
-        item.setPurchaseRequisition(dto.getPurchaseRequisition().trim());
+        item.setPurchaseRequisition(prValue != null && !prValue.isEmpty() ? prValue : null);
         item.setPurchaseOrder(dto.getPurchaseOrder() != null ? dto.getPurchaseOrder().trim() : null);
         item.setName(dto.getName().trim());
         item.setDescription(dto.getDescription());
@@ -246,13 +248,26 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         }
         item.setExchangeRate(dto.getExchangeRate());
         
-        // Set new procurement fields
-        item.setPreferredVendor(dto.getPreferredVendor());
+        // Set vendor and contract fields
+        item.setVendor(dto.getVendor());
         item.setContractNumber(dto.getContractNumber());
         item.setContractStartDate(dto.getContractStartDate());
         item.setContractEndDate(dto.getContractEndDate());
         item.setProcurementCompleted(dto.getProcurementCompleted() != null ? dto.getProcurementCompleted() : false);
         item.setProcurementCompletedDate(dto.getProcurementCompletedDate());
+
+        // Set final price fields
+        item.setFinalPrice(dto.getFinalPrice());
+        if (dto.getFinalPriceCurrency() != null && !dto.getFinalPriceCurrency().trim().isEmpty()) {
+            try {
+                item.setFinalPriceCurrency(com.myrc.model.Currency.valueOf(dto.getFinalPriceCurrency().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                item.setFinalPriceCurrency(com.myrc.model.Currency.CAD);
+            }
+        } else {
+            item.setFinalPriceCurrency(com.myrc.model.Currency.CAD);
+        }
+        item.setFinalPriceCad(dto.getFinalPriceCad());
         
         // Set category if provided
         if (dto.getCategoryId() != null) {
@@ -263,7 +278,8 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         item.setActive(true);
 
         ProcurementItem saved = procurementItemRepository.save(item);
-        logger.info("Created procurement item '" + dto.getName() + "' (PR: " + dto.getPurchaseRequisition() + ") for FY: " + fy.getName() + " by user " + username);
+        String prLog = prValue != null && !prValue.isEmpty() ? " (PR: " + prValue + ")" : "";
+        logger.info("Created procurement item '" + dto.getName() + "'" + prLog + " for FY: " + fy.getName() + " by user " + username);
 
         return ProcurementItemDTO.fromEntityWithoutQuotes(saved);
     }
@@ -326,8 +342,8 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         }
         
         // Update new procurement fields
-        if (dto.getPreferredVendor() != null) {
-            item.setPreferredVendor(dto.getPreferredVendor().trim().isEmpty() ? null : dto.getPreferredVendor().trim());
+        if (dto.getVendor() != null) {
+            item.setVendor(dto.getVendor().trim().isEmpty() ? null : dto.getVendor().trim());
         }
         if (dto.getContractNumber() != null) {
             item.setContractNumber(dto.getContractNumber().trim().isEmpty() ? null : dto.getContractNumber().trim());
@@ -343,6 +359,21 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         }
         if (dto.getProcurementCompletedDate() != null) {
             item.setProcurementCompletedDate(dto.getProcurementCompletedDate());
+        }
+
+        // Update final price fields
+        if (dto.getFinalPrice() != null) {
+            item.setFinalPrice(dto.getFinalPrice());
+        }
+        if (dto.getFinalPriceCurrency() != null && !dto.getFinalPriceCurrency().trim().isEmpty()) {
+            try {
+                item.setFinalPriceCurrency(com.myrc.model.Currency.valueOf(dto.getFinalPriceCurrency().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // Keep existing currency if invalid value provided
+            }
+        }
+        if (dto.getFinalPriceCad() != null) {
+            item.setFinalPriceCad(dto.getFinalPriceCad());
         }
         
         // Update category (null removes the category)
@@ -526,7 +557,12 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         quote.setVendorContact(dto.getVendorContact());
         quote.setQuoteReference(dto.getQuoteReference());
         quote.setAmount(dto.getAmount());
+        quote.setAmountCap(dto.getAmountCap());
+        quote.setAmountOm(dto.getAmountOm());
         quote.setCurrency(quoteCurrency);
+        quote.setExchangeRate(dto.getExchangeRate());
+        quote.setAmountCapCad(dto.getAmountCapCad());
+        quote.setAmountOmCad(dto.getAmountOmCad());
         quote.setReceivedDate(dto.getReceivedDate());
         quote.setExpiryDate(dto.getExpiryDate());
         quote.setNotes(dto.getNotes());
@@ -568,6 +604,12 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         if (dto.getAmount() != null) {
             quote.setAmount(dto.getAmount());
         }
+        // Update CAP/OM amounts (allow null to clear values)
+        quote.setAmountCap(dto.getAmountCap());
+        quote.setAmountOm(dto.getAmountOm());
+        quote.setExchangeRate(dto.getExchangeRate());
+        quote.setAmountCapCad(dto.getAmountCapCad());
+        quote.setAmountOmCad(dto.getAmountOmCad());
         if (dto.getCurrency() != null && !dto.getCurrency().trim().isEmpty()) {
             Currency quoteCurrency = Currency.fromCode(dto.getCurrency());
             if (quoteCurrency == null) {

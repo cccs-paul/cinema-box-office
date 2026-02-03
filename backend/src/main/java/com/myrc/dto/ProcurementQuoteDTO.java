@@ -35,7 +35,12 @@ public class ProcurementQuoteDTO {
     private String vendorContact;
     private String quoteReference;
     private BigDecimal amount;
+    private BigDecimal amountCap;
+    private BigDecimal amountOm;
     private String currency;
+    private BigDecimal exchangeRate;
+    private BigDecimal amountCapCad;
+    private BigDecimal amountOmCad;
     private LocalDate receivedDate;
     private LocalDate expiryDate;
     private String notes;
@@ -55,7 +60,9 @@ public class ProcurementQuoteDTO {
     }
 
     public ProcurementQuoteDTO(Long id, String vendorName, String vendorContact, String quoteReference,
-                               BigDecimal amount, String currency, LocalDate receivedDate, LocalDate expiryDate,
+                               BigDecimal amount, BigDecimal amountCap, BigDecimal amountOm, String currency,
+                               BigDecimal exchangeRate, BigDecimal amountCapCad, BigDecimal amountOmCad,
+                               LocalDate receivedDate, LocalDate expiryDate,
                                String notes, String status, Boolean selected, Long procurementItemId,
                                String procurementItemName, LocalDateTime createdAt, LocalDateTime updatedAt,
                                Boolean active, List<ProcurementQuoteFileDTO> files) {
@@ -64,7 +71,12 @@ public class ProcurementQuoteDTO {
         this.vendorContact = vendorContact;
         this.quoteReference = quoteReference;
         this.amount = amount;
+        this.amountCap = amountCap;
+        this.amountOm = amountOm;
         this.currency = currency;
+        this.exchangeRate = exchangeRate;
+        this.amountCapCad = amountCapCad;
+        this.amountOmCad = amountOmCad;
         this.receivedDate = receivedDate;
         this.expiryDate = expiryDate;
         this.notes = notes;
@@ -102,7 +114,12 @@ public class ProcurementQuoteDTO {
                 quote.getVendorContact(),
                 quote.getQuoteReference(),
                 quote.getAmount(),
+                quote.getAmountCap(),
+                quote.getAmountOm(),
                 quote.getCurrency() != null ? quote.getCurrency().name() : null,
+                quote.getExchangeRate(),
+                quote.getAmountCapCad(),
+                quote.getAmountOmCad(),
                 quote.getReceivedDate(),
                 quote.getExpiryDate(),
                 quote.getNotes(),
@@ -133,7 +150,12 @@ public class ProcurementQuoteDTO {
         dto.setVendorContact(quote.getVendorContact());
         dto.setQuoteReference(quote.getQuoteReference());
         dto.setAmount(quote.getAmount());
+        dto.setAmountCap(quote.getAmountCap());
+        dto.setAmountOm(quote.getAmountOm());
         dto.setCurrency(quote.getCurrency() != null ? quote.getCurrency().name() : null);
+        dto.setExchangeRate(quote.getExchangeRate());
+        dto.setAmountCapCad(quote.getAmountCapCad());
+        dto.setAmountOmCad(quote.getAmountOmCad());
         dto.setReceivedDate(quote.getReceivedDate());
         dto.setExpiryDate(quote.getExpiryDate());
         dto.setNotes(quote.getNotes());
@@ -190,12 +212,52 @@ public class ProcurementQuoteDTO {
         this.amount = amount;
     }
 
+    public BigDecimal getAmountCap() {
+        return amountCap;
+    }
+
+    public void setAmountCap(BigDecimal amountCap) {
+        this.amountCap = amountCap;
+    }
+
+    public BigDecimal getAmountOm() {
+        return amountOm;
+    }
+
+    public void setAmountOm(BigDecimal amountOm) {
+        this.amountOm = amountOm;
+    }
+
     public String getCurrency() {
         return currency;
     }
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public void setExchangeRate(BigDecimal exchangeRate) {
+        this.exchangeRate = exchangeRate;
+    }
+
+    public BigDecimal getAmountCapCad() {
+        return amountCapCad;
+    }
+
+    public void setAmountCapCad(BigDecimal amountCapCad) {
+        this.amountCapCad = amountCapCad;
+    }
+
+    public BigDecimal getAmountOmCad() {
+        return amountOmCad;
+    }
+
+    public void setAmountOmCad(BigDecimal amountOmCad) {
+        this.amountOmCad = amountOmCad;
     }
 
     public LocalDate getReceivedDate() {

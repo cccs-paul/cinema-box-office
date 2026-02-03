@@ -26,14 +26,17 @@ import {
  * Request body for creating a procurement item.
  */
 export interface ProcurementItemCreateRequest {
-  purchaseRequisition: string;
+  purchaseRequisition?: string;
   purchaseOrder?: string;
   name: string;
   description?: string;
   status?: ProcurementItemStatus;
   currency?: string;
   exchangeRate?: number | null;
-  preferredVendor?: string;
+  vendor?: string;
+  finalPrice?: number | null;
+  finalPriceCurrency?: string;
+  finalPriceCad?: number | null;
   contractNumber?: string;
   contractStartDate?: string;
   contractEndDate?: string;
@@ -50,7 +53,12 @@ export interface QuoteCreateRequest {
   vendorContact?: string;
   quoteReference?: string;
   amount?: number;
+  amountCap?: number | null;
+  amountOm?: number | null;
   currency?: string;
+  exchangeRate?: number | null;
+  amountCapCad?: number | null;
+  amountOmCad?: number | null;
   receivedDate?: string;
   expiryDate?: string;
   notes?: string;
