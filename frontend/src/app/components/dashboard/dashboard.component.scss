@@ -803,6 +803,10 @@
     @media (max-width: 480px) {
       grid-template-columns: 1fr;
     }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
   }
 
   .form-actions {

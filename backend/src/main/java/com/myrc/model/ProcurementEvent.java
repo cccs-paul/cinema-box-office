@@ -85,7 +85,33 @@ public class ProcurementEvent {
         /** Invoice for last delivery period of services signed for Section 34 */
         MONTHLY_INVOICE_SIGNED,
         /** Procurement process completed and existing contract amended */
-        CONTRACT_AMENDED
+        CONTRACT_AMENDED,
+
+        // Legacy event types - kept for backward compatibility with existing data
+        /** @deprecated Legacy: Item was created */
+        @Deprecated CREATED,
+        /** @deprecated Legacy: Status changed */
+        @Deprecated STATUS_CHANGE,
+        /** @deprecated Legacy: Note was added */
+        @Deprecated NOTE_ADDED,
+        /** @deprecated Legacy: Quote received */
+        @Deprecated QUOTE_RECEIVED,
+        /** @deprecated Legacy: Quote selected */
+        @Deprecated QUOTE_SELECTED,
+        /** @deprecated Legacy: Quote rejected */
+        @Deprecated QUOTE_REJECTED,
+        /** @deprecated Legacy: Purchase order issued */
+        @Deprecated PO_ISSUED,
+        /** @deprecated Legacy: Item delivered */
+        @Deprecated DELIVERED,
+        /** @deprecated Legacy: Item invoiced */
+        @Deprecated INVOICED,
+        /** @deprecated Legacy: Payment made */
+        @Deprecated PAYMENT_MADE,
+        /** @deprecated Legacy: Process completed */
+        @Deprecated COMPLETED,
+        /** @deprecated Legacy: Other event */
+        @Deprecated OTHER
     }
 
     @Id

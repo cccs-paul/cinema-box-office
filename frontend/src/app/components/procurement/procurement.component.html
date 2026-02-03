@@ -415,19 +415,19 @@
                     <div class="info-item" *ngIf="item.quotedPrice">
                       <label>{{ 'procurement.quotedPrice' | translate }}</label>
                       <span class="quoted-price">
-                        {{ item.quotedPrice | number:'1.2-2' }} {{ item.quotedPriceCurrency || 'CAD' }}
+                        {{ item.quotedPrice | number:'1.2-2' }} {{ getCurrencyFlag(item.quotedPriceCurrency || 'CAD') }} {{ item.quotedPriceCurrency || 'CAD' }}
                       </span>
                       <span class="quoted-price-cad" *ngIf="item.quotedPriceCurrency !== 'CAD' && item.quotedPriceCad">
-                        ({{ item.quotedPriceCad | number:'1.2-2' }} CAD)
+                        ({{ item.quotedPriceCad | number:'1.2-2' }} {{ getCurrencyFlag('CAD') }} CAD)
                       </span>
                     </div>
                     <div class="info-item" *ngIf="item.finalPrice">
                       <label>{{ 'procurement.finalPrice' | translate }}</label>
                       <span class="final-price">
-                        {{ item.finalPrice | number:'1.2-2' }} {{ item.finalPriceCurrency || 'CAD' }}
+                        {{ item.finalPrice | number:'1.2-2' }} {{ getCurrencyFlag(item.finalPriceCurrency || 'CAD') }} {{ item.finalPriceCurrency || 'CAD' }}
                       </span>
                       <span class="final-price-cad" *ngIf="item.finalPriceCurrency !== 'CAD' && item.finalPriceCad">
-                        ({{ item.finalPriceCad | number:'1.2-2' }} CAD)
+                        ({{ item.finalPriceCad | number:'1.2-2' }} {{ getCurrencyFlag('CAD') }} CAD)
                       </span>
                     </div>
                     <div class="info-item" *ngIf="item.contractNumber">

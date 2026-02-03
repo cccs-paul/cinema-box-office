@@ -25,6 +25,7 @@ import { FundingItem, FundingItemCreateRequest, FundingItemUpdateRequest, getSou
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 import { Money } from '../../models/money.model';
 import { Category, categoryAllowsCap, categoryAllowsOm } from '../../models/category.model';
+import { CurrencyInputDirective } from '../../directives/currency-input.directive';
 
 /**
  * Dashboard component showing funding items for the selected RC and FY.
@@ -36,7 +37,7 @@ import { Category, categoryAllowsCap, categoryAllowsOm } from '../../models/cate
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, CurrencyInputDirective],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
@@ -875,12 +876,37 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const allowsOm = this.selectedCategoryAllowsOm();
     
     return this.newItemMoneyAllocations.some(allocation => {
-      const capValue = Number(allocation.capAmount) || 0;
-      const omValue = Number(allocation.omAmount) || 0;
+      const capValue = this.parseMoneyValue(allocation.capAmount);
+      const omValue = this.parseMoneyValue(allocation.omAmount);
       const hasValidCap = allowsCap && capValue > 0;
       const hasValidOm = allowsOm && omValue > 0;
       return hasValidCap || hasValidOm;
     });
+  }
+
+  /**
+   * Parse a monetary value string that may contain commas, currency symbols, or spaces.
+   * @param value The value to parse (may be string or number)
+   * @returns The numeric value, or 0 if invalid
+   */
+  parseMoneyValue(value: string | number | null | undefined): number {
+    if (value === null || value === undefined) {
+      return 0;
+    }
+    
+    // If already a number, return it
+    if (typeof value === 'number') {
+      return isNaN(value) ? 0 : value;
+    }
+    
+    // Clean the string value
+    const cleanedValue = String(value)
+      .replace(/[$€£¥₹]/g, '')  // Remove common currency symbols
+      .replace(/\s/g, '')        // Remove spaces
+      .replace(/,/g, '');        // Remove commas (thousand separators)
+    
+    const numericValue = parseFloat(cleanedValue);
+    return isNaN(numericValue) ? 0 : numericValue;
   }
 
   /**

@@ -150,12 +150,11 @@
                   <label [for]="'cap-' + i">{{ allocation.moneyCode }} (CAP)</label>
                   <input
                     [id]="'cap-' + i"
-                    type="number"
+                    type="text"
+                    currencyInput
                     [(ngModel)]="allocation.capAmount"
                     placeholder="0.00"
                     [disabled]="isCreating"
-                    step="0.01"
-                    min="0"
                     class="money-input"
                   />
                 </div>
@@ -163,12 +162,11 @@
                   <label [for]="'om-' + i">{{ allocation.moneyCode }} (O&M)</label>
                   <input
                     [id]="'om-' + i"
-                    type="number"
+                    type="text"
+                    currencyInput
                     [(ngModel)]="allocation.omAmount"
                     placeholder="0.00"
                     [disabled]="isCreating"
-                    step="0.01"
-                    min="0"
                     class="money-input"
                   />
                 </div>
@@ -403,12 +401,11 @@
                     <label [for]="'edit-cap-' + i">{{ allocation.moneyCode }} (CAP)</label>
                     <input
                       [id]="'edit-cap-' + i"
-                      type="number"
+                      type="text"
+                      currencyInput
                       [(ngModel)]="allocation.capAmount"
                       placeholder="0.00"
                       [disabled]="isUpdating"
-                      step="0.01"
-                      min="0"
                       class="money-input"
                     />
                   </div>
@@ -416,12 +413,11 @@
                     <label [for]="'edit-om-' + i">{{ allocation.moneyCode }} (O&M)</label>
                     <input
                       [id]="'edit-om-' + i"
-                      type="number"
+                      type="text"
+                      currencyInput
                       [(ngModel)]="allocation.omAmount"
                       placeholder="0.00"
                       [disabled]="isUpdating"
-                      step="0.01"
-                      min="0"
                       class="money-input"
                     />
                   </div>

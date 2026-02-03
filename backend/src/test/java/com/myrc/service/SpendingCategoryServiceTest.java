@@ -429,8 +429,8 @@ class SpendingCategoryServiceTest {
 
       categoryService.ensureDefaultCategoriesExist(1L, "testuser");
 
-      // Should save 6 default categories
-      verify(categoryRepository, times(6)).save(any(SpendingCategory.class));
+      // Should save 7 default categories (Compute, GPUs, Storage, Software Licenses, Hardware Support/Licensing, Small Procurement, Contractors)
+      verify(categoryRepository, times(7)).save(any(SpendingCategory.class));
     }
 
     @Test
@@ -464,7 +464,8 @@ class SpendingCategoryServiceTest {
 
       categoryService.initializeDefaultCategories(1L);
 
-      verify(categoryRepository, times(6)).save(any(SpendingCategory.class));
+      // Should save 7 default categories (Compute, GPUs, Storage, Software Licenses, Hardware Support/Licensing, Small Procurement, Contractors)
+      verify(categoryRepository, times(7)).save(any(SpendingCategory.class));
     }
 
     @Test

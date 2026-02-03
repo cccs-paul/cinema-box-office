@@ -217,6 +217,50 @@ describe('DashboardComponent', () => {
       ];
       expect(component.hasValidMoneyAllocation()).toBeFalse();
     });
+
+    it('should return true when amount is a comma-formatted string', () => {
+      component.newItemMoneyAllocations = [
+        { moneyId: 1, moneyCode: 'AB', moneyName: 'A-Base', capAmount: '2,198,957.89' as any, omAmount: 0 }
+      ];
+      expect(component.hasValidMoneyAllocation()).toBeTrue();
+    });
+
+    it('should return true when amount includes currency symbol', () => {
+      component.newItemMoneyAllocations = [
+        { moneyId: 1, moneyCode: 'AB', moneyName: 'A-Base', capAmount: '$1,500.00' as any, omAmount: 0 }
+      ];
+      expect(component.hasValidMoneyAllocation()).toBeTrue();
+    });
+  });
+
+  describe('parseMoneyValue', () => {
+    it('should parse plain numeric values', () => {
+      expect(component.parseMoneyValue(5000)).toBe(5000);
+    });
+
+    it('should parse comma-formatted strings', () => {
+      expect(component.parseMoneyValue('2,198,957.89')).toBe(2198957.89);
+    });
+
+    it('should parse strings with currency symbols', () => {
+      expect(component.parseMoneyValue('$1,500.00')).toBe(1500);
+    });
+
+    it('should return 0 for null values', () => {
+      expect(component.parseMoneyValue(null)).toBe(0);
+    });
+
+    it('should return 0 for undefined values', () => {
+      expect(component.parseMoneyValue(undefined)).toBe(0);
+    });
+
+    it('should return 0 for NaN values', () => {
+      expect(component.parseMoneyValue(NaN)).toBe(0);
+    });
+
+    it('should return 0 for invalid strings', () => {
+      expect(component.parseMoneyValue('invalid')).toBe(0);
+    });
   });
 
   describe('initializeMoneyAllocations', () => {
