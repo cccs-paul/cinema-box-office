@@ -91,9 +91,7 @@ describe('ProcurementComponent', () => {
       purchaseOrder: 'PO-2026-001',
       name: 'GPU Purchase',
       description: 'NVIDIA A100 GPUs',
-      status: 'NOT_STARTED',
-      currency: 'CAD',
-      exchangeRate: undefined,
+      currentStatus: 'DRAFT',
       vendor: 'NVIDIA',
       finalPrice: 50000,
       finalPriceCurrency: 'CAD',
@@ -119,12 +117,11 @@ describe('ProcurementComponent', () => {
       purchaseOrder: undefined,
       name: 'Server Purchase',
       description: 'Dell PowerEdge Servers',
-      status: 'QUOTE',
-      currency: 'USD',
-      exchangeRate: 1.35,
+      currentStatus: 'PENDING_QUOTES',
       vendor: 'Dell',
       finalPrice: 75000,
       finalPriceCurrency: 'USD',
+      finalPriceExchangeRate: 1.35,
       finalPriceCad: 101250,
       contractNumber: undefined,
       contractStartDate: undefined,
@@ -382,7 +379,7 @@ describe('ProcurementComponent', () => {
       
       component.newItemPR = '';
       component.newItemName = 'Test';
-      component.newItemCurrency = 'CAD';
+      component.newItemFinalPriceCurrency = 'CAD';
       
       component.createProcurementItem();
       tick();
@@ -405,7 +402,7 @@ describe('ProcurementComponent', () => {
       component.newItemPR = 'PR-003';
       component.newItemName = 'New Item';
       component.newItemDescription = 'Description';
-      component.newItemCurrency = 'CAD';
+      component.newItemFinalPriceCurrency = 'CAD';
       
       component.createProcurementItem();
       tick();
@@ -462,25 +459,25 @@ describe('ProcurementComponent', () => {
 
   describe('Status Options', () => {
     it('should have all status options defined', () => {
-      expect(component.statusOptions).toContain('NOT_STARTED');
-      expect(component.statusOptions).toContain('QUOTE');
-      expect(component.statusOptions).toContain('CONTRACT_AWARDED');
+      expect(component.statusOptions).toContain('DRAFT');
+      expect(component.statusOptions).toContain('PENDING_QUOTES');
+      expect(component.statusOptions).toContain('APPROVED');
       expect(component.statusOptions).toContain('CANCELLED');
     });
   });
 
   describe('Currency Handling', () => {
-    it('should set default currency to CAD', () => {
+    it('should set default final price currency to CAD', () => {
       component.showCreateItem();
       
-      expect(component.newItemCurrency).toBe('CAD');
+      expect(component.newItemFinalPriceCurrency).toBe('CAD');
     });
 
-    it('should handle exchange rate for non-CAD currencies', () => {
-      component.newItemCurrency = 'USD';
-      component.newItemExchangeRate = 1.35;
+    it('should handle exchange rate for non-CAD final price currencies', () => {
+      component.newItemFinalPriceCurrency = 'USD';
+      component.newItemFinalPriceExchangeRate = 1.35;
       
-      expect(component.newItemExchangeRate).toBe(1.35);
+      expect(component.newItemFinalPriceExchangeRate).toBe(1.35);
     });
   });
 

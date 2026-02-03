@@ -21,6 +21,7 @@ import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.User;
 import com.myrc.repository.CategoryRepository;
 import com.myrc.repository.FiscalYearRepository;
+import com.myrc.repository.ProcurementEventRepository;
 import com.myrc.repository.ProcurementItemRepository;
 import com.myrc.repository.ProcurementQuoteFileRepository;
 import com.myrc.repository.ProcurementQuoteRepository;
@@ -59,6 +60,9 @@ class ProcurementItemServiceTest {
   private ProcurementQuoteFileRepository fileRepository;
 
   @Mock
+  private ProcurementEventRepository eventRepository;
+
+  @Mock
   private FiscalYearRepository fiscalYearRepository;
 
   @Mock
@@ -86,6 +90,7 @@ class ProcurementItemServiceTest {
         procurementItemRepository,
         quoteRepository,
         fileRepository,
+        eventRepository,
         fiscalYearRepository,
         rcRepository,
         accessRepository,
@@ -119,7 +124,6 @@ class ProcurementItemServiceTest {
     testProcurementItem.setName("Test Item");
     testProcurementItem.setDescription("Test Description");
     testProcurementItem.setFiscalYear(testFiscalYear);
-    testProcurementItem.setStatus(ProcurementItem.Status.NOT_STARTED);
     testProcurementItem.setActive(true);
   }
 

@@ -116,7 +116,7 @@
     "demoUsername": "Demo: admin",
     "demoPassword": "Demo: Admin@123",
     "demoCredentials": "Demo Credentials",
-    "copyright": "© 2026 myRC. All rights reserved.",
+    "copyright": "\u00a9 2026 myRC. All rights reserved.",
     "api": "API",
     "database": "Database",
     "apiDocs": "API Documentation",
@@ -372,7 +372,26 @@
     "clickUploadFile": "Click \"Upload File\" to add one.",
     "loadingPreview": "Loading preview...",
     "pdfPreview": "PDF Preview",
-    "imagePreview": "Image Preview"
+    "imagePreview": "Image Preview",
+    "finalPrice": "Final Price",
+    "finalPricePlaceholder": "Enter final negotiated price",
+    "finalPriceCurrency": "Final Price Currency",
+    "finalPriceCad": "Final Price (CAD)",
+    "finalPriceCadPlaceholder": "CAD equivalent (auto-calculated)",
+    "cadEquivalent": "CAD equivalent",
+    "finalPriceExchangeRate": "Exchange Rate",
+    "finalPriceExchangeRatePlaceholder": "e.g., 1.35",
+    "quotedPrice": "Quoted/Estimated Price",
+    "quotedPricePlaceholder": "Enter quoted or estimated price",
+    "quotedPriceCurrency": "Quoted Price Currency",
+    "quotedPriceCad": "Quoted Price (CAD)",
+    "quotedPriceCadPlaceholder": "CAD equivalent (auto-calculated)",
+    "quotedPriceExchangeRate": "Quoted Price Exchange Rate",
+    "quotedPriceExchangeRatePlaceholder": "e.g., 1.35",
+    "createSpendingItem": "Create Spending Item",
+    "createSpendingItemHint": "Automatically create a linked spending item for this procurement",
+    "linkedSpendingItem": "Linked Spending Item",
+    "viewSpendingItem": "View Spending Item"
   },
   "spending": {
     "title": "Spending",
@@ -647,7 +666,7 @@
     "frontend": "Frontend",
     "backend": "Backend",
     "license": "License",
-    "copyright": "© 2026 myRC. All rights reserved."
+    "copyright": "\u00a9 2026 myRC. All rights reserved."
   },
   "permissions": {
     "title": "Manage Permissions",

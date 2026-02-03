@@ -573,9 +573,14 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     
     for (const item of items) {
       // Use PROCUREMENT_STATUS_INFO for user-friendly labels
-      const statusInfo = PROCUREMENT_STATUS_INFO[item.status as ProcurementItemStatus];
-      const label = statusInfo?.label || item.status;
-      statusMap.set(label, (statusMap.get(label) || 0) + 1);
+      const currentStatus = item.currentStatus;
+      if (currentStatus) {
+        const statusInfo = PROCUREMENT_STATUS_INFO[currentStatus];
+        const label = statusInfo?.label || currentStatus;
+        statusMap.set(label, (statusMap.get(label) || 0) + 1);
+      } else {
+        statusMap.set('Unknown', (statusMap.get('Unknown') || 0) + 1);
+      }
     }
     
     return {

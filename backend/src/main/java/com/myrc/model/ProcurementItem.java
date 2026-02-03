@@ -5,7 +5,7 @@
  *
  * Author: myRC Team
  * Date: 2026-01-28
- * Version: 1.0.0
+ * Version: 1.1.0
  *
  * Description:
  * Entity representing a Procurement Item associated with a Fiscal Year.
@@ -34,16 +34,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 
 /**
  * Entity representing a Procurement Item associated with a Fiscal Year.
  * Procurement items track purchase requisitions and purchase orders,
  * along with associated quotes and documentation.
+ * 
+ * Note: Status is tracked via ProcurementEvent records - use getMostRecentStatus()
+ * to get the current status from the most recent tracking event.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-28
  */
 @Entity
@@ -52,25 +54,17 @@ public class ProcurementItem {
 
     /**
      * Enumeration of procurement item status values.
+     * Status is stored in ProcurementEvent.newStatus for tracking history.
      */
     public enum Status {
-        NOT_STARTED,
-        QUOTE,
-        SAM_ACKNOWLEDGEMENT_REQUESTED,
-        SAM_ACKNOWLEDGEMENT_RECEIVED,
-        PACKAGE_SENT_TO_PROCUREMENT,
-        ACKNOWLEDGED_BY_PROCUREMENT,
-        PAUSED,
-        CANCELLED,
-        CONTRACT_AWARDED,
-        GOODS_RECEIVED,
-        FULL_INVOICE_RECEIVED,
-        PARTIAL_INVOICE_RECEIVED,
-        MONTHLY_INVOICE_RECEIVED,
-        FULL_INVOICE_SIGNED,
-        PARTIAL_INVOICE_SIGNED,
-        MONTHLY_INVOICE_SIGNED,
-        CONTRACT_AMENDED
+        DRAFT,
+        PENDING_QUOTES,
+        QUOTES_RECEIVED,
+        UNDER_REVIEW,
+        APPROVED,
+        PO_ISSUED,
+        COMPLETED,
+        CANCELLED
     }
 
     @Id
@@ -79,6 +73,7 @@ public class ProcurementItem {
 
     /**
      * Purchase Requisition number (PR).
+     * Optional - procurement items may not have a PR number.
      */
     @Column(name = "purchase_requisition", length = 100)
     private String purchaseRequisition;
@@ -96,50 +91,12 @@ public class ProcurementItem {
     @Column(length = 2000)
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
-    private Status status = Status.NOT_STARTED;
-
-    /**
-     * The currency for this procurement item. Defaults to CAD.
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 3)
-    private Currency currency = Currency.CAD;
-
-    /**
-     * The exchange rate to convert to CAD. Required when currency is not CAD.
-     * A value of 1.0 means 1 unit of the currency equals 1 CAD.
-     */
-    @Column(name = "exchange_rate", precision = 10, scale = 6)
-    private java.math.BigDecimal exchangeRate;
-
     /**
      * Vendor name for this procurement.
      * Typically set after a quote is selected.
      */
     @Column(name = "preferred_vendor", length = 200)
     private String vendor;
-
-    /**
-     * Final price for this procurement in the specified currency.
-     */
-    @Column(name = "final_price", precision = 15, scale = 2)
-    private java.math.BigDecimal finalPrice;
-
-    /**
-     * Currency code for the final price. Defaults to CAD.
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "final_price_currency", length = 3)
-    private Currency finalPriceCurrency = Currency.CAD;
-
-    /**
-     * Final price converted to CAD.
-     * Required when finalPriceCurrency is not CAD.
-     */
-    @Column(name = "final_price_cad", precision = 15, scale = 2)
-    private java.math.BigDecimal finalPriceCad;
 
     /**
      * Contract number associated with this procurement.
@@ -158,6 +115,60 @@ public class ProcurementItem {
      */
     @Column(name = "contract_end_date")
     private LocalDate contractEndDate;
+
+    /**
+     * Final price for this procurement in the specified currency.
+     */
+    @Column(name = "final_price", precision = 15, scale = 2)
+    private java.math.BigDecimal finalPrice;
+
+    /**
+     * Currency code for the final price. Defaults to CAD.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "final_price_currency", length = 3)
+    private Currency finalPriceCurrency = Currency.CAD;
+
+    /**
+     * Exchange rate to convert final price to CAD.
+     * Required when finalPriceCurrency is not CAD.
+     */
+    @Column(name = "final_price_exchange_rate", precision = 10, scale = 6)
+    private java.math.BigDecimal finalPriceExchangeRate;
+
+    /**
+     * Final price converted to CAD.
+     * Required when finalPriceCurrency is not CAD.
+     */
+    @Column(name = "final_price_cad", precision = 15, scale = 2)
+    private java.math.BigDecimal finalPriceCad;
+
+    /**
+     * Quoted or estimated price for this procurement in the specified currency.
+     */
+    @Column(name = "quoted_price", precision = 15, scale = 2)
+    private java.math.BigDecimal quotedPrice;
+
+    /**
+     * Currency code for the quoted price. Defaults to CAD.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "quoted_price_currency", length = 3)
+    private Currency quotedPriceCurrency = Currency.CAD;
+
+    /**
+     * Exchange rate to convert quoted price to CAD.
+     * Required when quotedPriceCurrency is not CAD.
+     */
+    @Column(name = "quoted_price_exchange_rate", precision = 10, scale = 6)
+    private java.math.BigDecimal quotedPriceExchangeRate;
+
+    /**
+     * Quoted price converted to CAD.
+     * Required when quotedPriceCurrency is not CAD.
+     */
+    @Column(name = "quoted_price_cad", precision = 15, scale = 2)
+    private java.math.BigDecimal quotedPriceCad;
 
     /**
      * Whether the procurement has been completed.
@@ -214,16 +225,15 @@ public class ProcurementItem {
     }
 
     public ProcurementItem(String purchaseRequisition, String name, String description,
-                           Status status, FiscalYear fiscalYear) {
+                           FiscalYear fiscalYear) {
         this.purchaseRequisition = purchaseRequisition;
         this.name = name;
         this.description = description;
-        this.status = status != null ? status : Status.NOT_STARTED;
         this.fiscalYear = fiscalYear;
     }
 
     public ProcurementItem(String purchaseRequisition, String name, FiscalYear fiscalYear) {
-        this(purchaseRequisition, name, null, Status.NOT_STARTED, fiscalYear);
+        this(purchaseRequisition, name, null, fiscalYear);
     }
 
     // Getters and Setters
@@ -267,30 +277,6 @@ public class ProcurementItem {
         this.description = description;
     }
 
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public Currency getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(Currency currency) {
-        this.currency = currency != null ? currency : Currency.CAD;
-    }
-
-    public java.math.BigDecimal getExchangeRate() {
-        return exchangeRate;
-    }
-
-    public void setExchangeRate(java.math.BigDecimal exchangeRate) {
-        this.exchangeRate = exchangeRate;
-    }
-
     public String getVendor() {
         return vendor;
     }
@@ -298,7 +284,6 @@ public class ProcurementItem {
     public void setVendor(String vendor) {
         this.vendor = vendor;
     }
-
 
     public java.math.BigDecimal getFinalPrice() {
         return finalPrice;
@@ -316,6 +301,14 @@ public class ProcurementItem {
         this.finalPriceCurrency = finalPriceCurrency != null ? finalPriceCurrency : Currency.CAD;
     }
 
+    public java.math.BigDecimal getFinalPriceExchangeRate() {
+        return finalPriceExchangeRate;
+    }
+
+    public void setFinalPriceExchangeRate(java.math.BigDecimal finalPriceExchangeRate) {
+        this.finalPriceExchangeRate = finalPriceExchangeRate;
+    }
+
     public java.math.BigDecimal getFinalPriceCad() {
         return finalPriceCad;
     }
@@ -323,6 +316,39 @@ public class ProcurementItem {
     public void setFinalPriceCad(java.math.BigDecimal finalPriceCad) {
         this.finalPriceCad = finalPriceCad;
     }
+
+    public java.math.BigDecimal getQuotedPrice() {
+        return quotedPrice;
+    }
+
+    public void setQuotedPrice(java.math.BigDecimal quotedPrice) {
+        this.quotedPrice = quotedPrice;
+    }
+
+    public Currency getQuotedPriceCurrency() {
+        return quotedPriceCurrency;
+    }
+
+    public void setQuotedPriceCurrency(Currency quotedPriceCurrency) {
+        this.quotedPriceCurrency = quotedPriceCurrency != null ? quotedPriceCurrency : Currency.CAD;
+    }
+
+    public java.math.BigDecimal getQuotedPriceExchangeRate() {
+        return quotedPriceExchangeRate;
+    }
+
+    public void setQuotedPriceExchangeRate(java.math.BigDecimal quotedPriceExchangeRate) {
+        this.quotedPriceExchangeRate = quotedPriceExchangeRate;
+    }
+
+    public java.math.BigDecimal getQuotedPriceCad() {
+        return quotedPriceCad;
+    }
+
+    public void setQuotedPriceCad(java.math.BigDecimal quotedPriceCad) {
+        this.quotedPriceCad = quotedPriceCad;
+    }
+
     public String getContractNumber() {
         return contractNumber;
     }
@@ -469,8 +495,8 @@ public class ProcurementItem {
                 ", purchaseRequisition='" + purchaseRequisition + '\'' +
                 ", purchaseOrder='" + purchaseOrder + '\'' +
                 ", name='" + name + '\'' +
-                ", status=" + status +
-                ", currency=" + currency +
+                ", vendor='" + vendor + '\'' +
+                ", finalPriceCurrency=" + finalPriceCurrency +
                 '}';
     }
 }

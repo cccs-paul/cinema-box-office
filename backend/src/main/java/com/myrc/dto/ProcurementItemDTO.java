@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * Data Transfer Object for Procurement Item.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-28
  */
 public class ProcurementItemDTO {
@@ -34,13 +34,20 @@ public class ProcurementItemDTO {
     private String purchaseOrder;
     private String name;
     private String description;
-    private String status;
-    private String currency;
-    private java.math.BigDecimal exchangeRate;
+    /**
+     * Current status derived from the most recent procurement event.
+     * This is populated by the service layer from ProcurementEvent.newStatus.
+     */
+    private String currentStatus;
     private String vendor;
     private java.math.BigDecimal finalPrice;
     private String finalPriceCurrency;
+    private java.math.BigDecimal finalPriceExchangeRate;
     private java.math.BigDecimal finalPriceCad;
+    private java.math.BigDecimal quotedPrice;
+    private String quotedPriceCurrency;
+    private java.math.BigDecimal quotedPriceExchangeRate;
+    private java.math.BigDecimal quotedPriceCad;
     private String contractNumber;
     private LocalDate contractStartDate;
     private LocalDate contractEndDate;
@@ -57,6 +64,7 @@ public class ProcurementItemDTO {
     private Boolean active;
     private List<ProcurementQuoteDTO> quotes;
     private Integer quoteCount;
+    private Integer eventCount;
 
     // Constructors
     public ProcurementItemDTO() {
@@ -64,7 +72,7 @@ public class ProcurementItemDTO {
     }
 
     public ProcurementItemDTO(Long id, String purchaseRequisition, String purchaseOrder, String name,
-                              String description, String status, Long fiscalYearId, String fiscalYearName,
+                              String description, Long fiscalYearId, String fiscalYearName,
                               Long responsibilityCentreId, String responsibilityCentreName,
                               LocalDateTime createdAt, LocalDateTime updatedAt, Boolean active,
                               List<ProcurementQuoteDTO> quotes) {
@@ -73,7 +81,6 @@ public class ProcurementItemDTO {
         this.purchaseOrder = purchaseOrder;
         this.name = name;
         this.description = description;
-        this.status = status;
         this.fiscalYearId = fiscalYearId;
         this.fiscalYearName = fiscalYearName;
         this.responsibilityCentreId = responsibilityCentreId;
@@ -108,7 +115,6 @@ public class ProcurementItemDTO {
                 item.getPurchaseOrder(),
                 item.getName(),
                 item.getDescription(),
-                item.getStatus() != null ? item.getStatus().name() : null,
                 item.getFiscalYear() != null ? item.getFiscalYear().getId() : null,
                 item.getFiscalYear() != null ? item.getFiscalYear().getName() : null,
                 item.getFiscalYear() != null && item.getFiscalYear().getResponsibilityCentre() != null
@@ -120,12 +126,15 @@ public class ProcurementItemDTO {
                 item.getActive(),
                 quoteDTOs
         );
-        dto.setCurrency(item.getCurrency() != null ? item.getCurrency().name() : "CAD");
-        dto.setExchangeRate(item.getExchangeRate());
         dto.setVendor(item.getVendor());
         dto.setFinalPrice(item.getFinalPrice());
         dto.setFinalPriceCurrency(item.getFinalPriceCurrency() != null ? item.getFinalPriceCurrency().name() : "CAD");
+        dto.setFinalPriceExchangeRate(item.getFinalPriceExchangeRate());
         dto.setFinalPriceCad(item.getFinalPriceCad());
+        dto.setQuotedPrice(item.getQuotedPrice());
+        dto.setQuotedPriceCurrency(item.getQuotedPriceCurrency() != null ? item.getQuotedPriceCurrency().name() : "CAD");
+        dto.setQuotedPriceExchangeRate(item.getQuotedPriceExchangeRate());
+        dto.setQuotedPriceCad(item.getQuotedPriceCad());
         dto.setContractNumber(item.getContractNumber());
         dto.setContractStartDate(item.getContractStartDate());
         dto.setContractEndDate(item.getContractEndDate());
@@ -152,7 +161,6 @@ public class ProcurementItemDTO {
         dto.setPurchaseOrder(item.getPurchaseOrder());
         dto.setName(item.getName());
         dto.setDescription(item.getDescription());
-        dto.setStatus(item.getStatus() != null ? item.getStatus().name() : null);
         dto.setFiscalYearId(item.getFiscalYear() != null ? item.getFiscalYear().getId() : null);
         dto.setFiscalYearName(item.getFiscalYear() != null ? item.getFiscalYear().getName() : null);
         dto.setResponsibilityCentreId(item.getFiscalYear() != null && item.getFiscalYear().getResponsibilityCentre() != null
@@ -161,12 +169,15 @@ public class ProcurementItemDTO {
                 ? item.getFiscalYear().getResponsibilityCentre().getName() : null);
         dto.setCategoryId(item.getCategory() != null ? item.getCategory().getId() : null);
         dto.setCategoryName(item.getCategory() != null ? item.getCategory().getName() : null);
-        dto.setCurrency(item.getCurrency() != null ? item.getCurrency().name() : "CAD");
-        dto.setExchangeRate(item.getExchangeRate());
         dto.setVendor(item.getVendor());
         dto.setFinalPrice(item.getFinalPrice());
         dto.setFinalPriceCurrency(item.getFinalPriceCurrency() != null ? item.getFinalPriceCurrency().name() : "CAD");
+        dto.setFinalPriceExchangeRate(item.getFinalPriceExchangeRate());
         dto.setFinalPriceCad(item.getFinalPriceCad());
+        dto.setQuotedPrice(item.getQuotedPrice());
+        dto.setQuotedPriceCurrency(item.getQuotedPriceCurrency() != null ? item.getQuotedPriceCurrency().name() : "CAD");
+        dto.setQuotedPriceExchangeRate(item.getQuotedPriceExchangeRate());
+        dto.setQuotedPriceCad(item.getQuotedPriceCad());
         dto.setContractNumber(item.getContractNumber());
         dto.setContractStartDate(item.getContractStartDate());
         dto.setContractEndDate(item.getContractEndDate());
@@ -221,28 +232,12 @@ public class ProcurementItemDTO {
         this.description = description;
     }
 
-    public String getStatus() {
-        return status;
+    public String getCurrentStatus() {
+        return currentStatus;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency != null ? currency : "CAD";
-    }
-
-    public java.math.BigDecimal getExchangeRate() {
-        return exchangeRate;
-    }
-
-    public void setExchangeRate(java.math.BigDecimal exchangeRate) {
-        this.exchangeRate = exchangeRate;
+    public void setCurrentStatus(String currentStatus) {
+        this.currentStatus = currentStatus;
     }
 
     public String getVendor() {
@@ -269,12 +264,52 @@ public class ProcurementItemDTO {
         this.finalPriceCurrency = finalPriceCurrency != null ? finalPriceCurrency : "CAD";
     }
 
+    public java.math.BigDecimal getFinalPriceExchangeRate() {
+        return finalPriceExchangeRate;
+    }
+
+    public void setFinalPriceExchangeRate(java.math.BigDecimal finalPriceExchangeRate) {
+        this.finalPriceExchangeRate = finalPriceExchangeRate;
+    }
+
     public java.math.BigDecimal getFinalPriceCad() {
         return finalPriceCad;
     }
 
     public void setFinalPriceCad(java.math.BigDecimal finalPriceCad) {
         this.finalPriceCad = finalPriceCad;
+    }
+
+    public java.math.BigDecimal getQuotedPrice() {
+        return quotedPrice;
+    }
+
+    public void setQuotedPrice(java.math.BigDecimal quotedPrice) {
+        this.quotedPrice = quotedPrice;
+    }
+
+    public String getQuotedPriceCurrency() {
+        return quotedPriceCurrency;
+    }
+
+    public void setQuotedPriceCurrency(String quotedPriceCurrency) {
+        this.quotedPriceCurrency = quotedPriceCurrency != null ? quotedPriceCurrency : "CAD";
+    }
+
+    public java.math.BigDecimal getQuotedPriceExchangeRate() {
+        return quotedPriceExchangeRate;
+    }
+
+    public void setQuotedPriceExchangeRate(java.math.BigDecimal quotedPriceExchangeRate) {
+        this.quotedPriceExchangeRate = quotedPriceExchangeRate;
+    }
+
+    public java.math.BigDecimal getQuotedPriceCad() {
+        return quotedPriceCad;
+    }
+
+    public void setQuotedPriceCad(java.math.BigDecimal quotedPriceCad) {
+        this.quotedPriceCad = quotedPriceCad;
     }
 
     public String getContractNumber() {
@@ -404,5 +439,13 @@ public class ProcurementItemDTO {
 
     public void setQuoteCount(Integer quoteCount) {
         this.quoteCount = quoteCount;
+    }
+
+    public Integer getEventCount() {
+        return eventCount;
+    }
+
+    public void setEventCount(Integer eventCount) {
+        this.eventCount = eventCount;
     }
 }

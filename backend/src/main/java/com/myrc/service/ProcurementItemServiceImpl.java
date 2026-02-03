@@ -26,6 +26,7 @@ import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.User;
 import com.myrc.repository.CategoryRepository;
 import com.myrc.repository.FiscalYearRepository;
+import com.myrc.repository.ProcurementEventRepository;
 import com.myrc.repository.ProcurementItemRepository;
 import com.myrc.repository.ProcurementQuoteFileRepository;
 import com.myrc.repository.ProcurementQuoteRepository;
@@ -71,6 +72,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
     private final ProcurementItemRepository procurementItemRepository;
     private final ProcurementQuoteRepository quoteRepository;
     private final ProcurementQuoteFileRepository fileRepository;
+    private final ProcurementEventRepository procurementEventRepository;
     private final FiscalYearRepository fiscalYearRepository;
     private final ResponsibilityCentreRepository rcRepository;
     private final RCAccessRepository accessRepository;
@@ -80,6 +82,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
     public ProcurementItemServiceImpl(ProcurementItemRepository procurementItemRepository,
                                        ProcurementQuoteRepository quoteRepository,
                                        ProcurementQuoteFileRepository fileRepository,
+                                       ProcurementEventRepository procurementEventRepository,
                                        FiscalYearRepository fiscalYearRepository,
                                        ResponsibilityCentreRepository rcRepository,
                                        RCAccessRepository accessRepository,
@@ -88,6 +91,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         this.procurementItemRepository = procurementItemRepository;
         this.quoteRepository = quoteRepository;
         this.fileRepository = fileRepository;
+        this.procurementEventRepository = procurementEventRepository;
         this.fiscalYearRepository = fiscalYearRepository;
         this.rcRepository = rcRepository;
         this.accessRepository = accessRepository;
@@ -135,6 +139,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             throw new IllegalArgumentException("User does not have access to this Responsibility Centre");
         }
 
+        // Validate status value
         ProcurementItem.Status itemStatus;
         try {
             itemStatus = ProcurementItem.Status.valueOf(status.toUpperCase());
@@ -142,9 +147,21 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             throw new IllegalArgumentException("Invalid status: " + status);
         }
 
-        List<ProcurementItem> items = procurementItemRepository.findByFiscalYearIdAndStatusAndActiveTrueOrderByPurchaseRequisitionAsc(fiscalYearId, itemStatus);
+        // Since status is now tracked via events, we need to filter in memory
+        // Get all items and filter by their current status (from events)
+        List<ProcurementItem> items = procurementItemRepository.findByFiscalYearIdAndActiveTrueOrderByPurchaseRequisitionAsc(fiscalYearId);
         return items.stream()
-                .map(ProcurementItemDTO::fromEntityWithoutQuotes)
+                .filter(item -> {
+                    String currentStatus = procurementEventRepository.findCurrentStatusByProcurementItemId(item.getId())
+                            .orElse("DRAFT");
+                    return currentStatus.equalsIgnoreCase(status);
+                })
+                .map(item -> {
+                    ProcurementItemDTO dto = ProcurementItemDTO.fromEntityWithoutQuotes(item);
+                    dto.setCurrentStatus(procurementEventRepository.findCurrentStatusByProcurementItemId(item.getId())
+                            .orElse("DRAFT"));
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -217,36 +234,13 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             throw new IllegalArgumentException("A procurement item with this PR already exists for this fiscal year");
         }
 
-        // Parse status
-        ProcurementItem.Status itemStatus = ProcurementItem.Status.NOT_STARTED;
-        if (dto.getStatus() != null && !dto.getStatus().trim().isEmpty()) {
-            try {
-                itemStatus = ProcurementItem.Status.valueOf(dto.getStatus().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Invalid status: " + dto.getStatus());
-            }
-        }
-
         // Create procurement item
         ProcurementItem item = new ProcurementItem();
         item.setPurchaseRequisition(prValue != null && !prValue.isEmpty() ? prValue : null);
         item.setPurchaseOrder(dto.getPurchaseOrder() != null ? dto.getPurchaseOrder().trim() : null);
         item.setName(dto.getName().trim());
         item.setDescription(dto.getDescription());
-        item.setStatus(itemStatus);
         item.setFiscalYear(fy);
-
-        // Set currency (defaults to CAD if not provided)
-        if (dto.getCurrency() != null && !dto.getCurrency().trim().isEmpty()) {
-            try {
-                item.setCurrency(com.myrc.model.Currency.valueOf(dto.getCurrency().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                item.setCurrency(com.myrc.model.Currency.CAD);
-            }
-        } else {
-            item.setCurrency(com.myrc.model.Currency.CAD);
-        }
-        item.setExchangeRate(dto.getExchangeRate());
         
         // Set vendor and contract fields
         item.setVendor(dto.getVendor());
@@ -267,7 +261,22 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         } else {
             item.setFinalPriceCurrency(com.myrc.model.Currency.CAD);
         }
+        item.setFinalPriceExchangeRate(dto.getFinalPriceExchangeRate());
         item.setFinalPriceCad(dto.getFinalPriceCad());
+
+        // Set quoted price fields
+        item.setQuotedPrice(dto.getQuotedPrice());
+        if (dto.getQuotedPriceCurrency() != null && !dto.getQuotedPriceCurrency().trim().isEmpty()) {
+            try {
+                item.setQuotedPriceCurrency(com.myrc.model.Currency.valueOf(dto.getQuotedPriceCurrency().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                item.setQuotedPriceCurrency(com.myrc.model.Currency.CAD);
+            }
+        } else {
+            item.setQuotedPriceCurrency(com.myrc.model.Currency.CAD);
+        }
+        item.setQuotedPriceExchangeRate(dto.getQuotedPriceExchangeRate());
+        item.setQuotedPriceCad(dto.getQuotedPriceCad());
         
         // Set category if provided
         if (dto.getCategoryId() != null) {
@@ -320,26 +329,6 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         if (dto.getDescription() != null) {
             item.setDescription(dto.getDescription());
         }
-
-        if (dto.getStatus() != null && !dto.getStatus().trim().isEmpty()) {
-            try {
-                item.setStatus(ProcurementItem.Status.valueOf(dto.getStatus().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Invalid status: " + dto.getStatus());
-            }
-        }
-
-        // Update currency if provided
-        if (dto.getCurrency() != null && !dto.getCurrency().trim().isEmpty()) {
-            try {
-                item.setCurrency(com.myrc.model.Currency.valueOf(dto.getCurrency().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                // Keep existing currency if invalid value provided
-            }
-        }
-        if (dto.getExchangeRate() != null) {
-            item.setExchangeRate(dto.getExchangeRate());
-        }
         
         // Update new procurement fields
         if (dto.getVendor() != null) {
@@ -372,8 +361,29 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
                 // Keep existing currency if invalid value provided
             }
         }
+        if (dto.getFinalPriceExchangeRate() != null) {
+            item.setFinalPriceExchangeRate(dto.getFinalPriceExchangeRate());
+        }
         if (dto.getFinalPriceCad() != null) {
             item.setFinalPriceCad(dto.getFinalPriceCad());
+        }
+
+        // Update quoted price fields
+        if (dto.getQuotedPrice() != null) {
+            item.setQuotedPrice(dto.getQuotedPrice());
+        }
+        if (dto.getQuotedPriceCurrency() != null && !dto.getQuotedPriceCurrency().trim().isEmpty()) {
+            try {
+                item.setQuotedPriceCurrency(com.myrc.model.Currency.valueOf(dto.getQuotedPriceCurrency().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // Keep existing currency if invalid value provided
+            }
+        }
+        if (dto.getQuotedPriceExchangeRate() != null) {
+            item.setQuotedPriceExchangeRate(dto.getQuotedPriceExchangeRate());
+        }
+        if (dto.getQuotedPriceCad() != null) {
+            item.setQuotedPriceCad(dto.getQuotedPriceCad());
         }
         
         // Update category (null removes the category)
@@ -416,6 +426,9 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
 
     @Override
     public ProcurementItemDTO updateProcurementItemStatus(Long procurementItemId, String status, String username) {
+        // Status is now tracked via procurement events, not stored on the item itself.
+        // This method is kept for backward compatibility but clients should use the
+        // procurement event API to create a STATUS_CHANGE event instead.
         Optional<ProcurementItem> itemOpt = procurementItemRepository.findById(procurementItemId);
         if (itemOpt.isEmpty() || !itemOpt.get().getActive()) {
             throw new IllegalArgumentException("Procurement item not found");
@@ -428,18 +441,18 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             throw new IllegalArgumentException("User does not have write access to this Responsibility Centre");
         }
 
-        ProcurementItem.Status newStatus;
+        // Validate the status value
         try {
-            newStatus = ProcurementItem.Status.valueOf(status.toUpperCase());
+            ProcurementItem.Status.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status: " + status);
         }
 
-        item.setStatus(newStatus);
-        ProcurementItem saved = procurementItemRepository.save(item);
-        logger.info("Updated status of procurement item " + procurementItemId + " to " + status + " by user " + username);
+        // Return the item without status change - clients should create a status change event
+        logger.info("Status update requested for procurement item " + procurementItemId + " to " + status + " by user " + username + 
+                   ". Status is now tracked via events. Please use the event API to create a STATUS_CHANGE event.");
 
-        return ProcurementItemDTO.fromEntityWithoutQuotes(saved);
+        return ProcurementItemDTO.fromEntityWithoutQuotes(item);
     }
 
     @Override

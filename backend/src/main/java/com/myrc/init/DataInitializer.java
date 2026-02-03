@@ -601,9 +601,11 @@ public class DataInitializer implements ApplicationRunner {
         // Note: Final spending amounts may differ from quotes due to negotiations, partial deliveries, etc.
         for (ProcurementItem procItem : procurementItems) {
             // Only create spending items for procurement items that have progressed sufficiently
-            if (procItem.getStatus() == ProcurementItem.Status.NOT_STARTED ||
-                procItem.getStatus() == ProcurementItem.Status.QUOTE ||
-                procItem.getStatus() == ProcurementItem.Status.CANCELLED) {
+            // Get current status from events
+            ProcurementItem.Status currentStatus = getCurrentStatusFromEvents(procItem);
+            if (currentStatus == ProcurementItem.Status.DRAFT ||
+                currentStatus == ProcurementItem.Status.PENDING_QUOTES ||
+                currentStatus == ProcurementItem.Status.CANCELLED) {
                 continue;
             }
             
@@ -620,24 +622,18 @@ public class DataInitializer implements ApplicationRunner {
                 continue; // Skip if no valid amount
             }
             
-            // Determine status based on procurement status
+            // Determine status based on procurement status (from events)
             SpendingItem.Status spendingStatus;
-            switch (procItem.getStatus()) {
-                case FULL_INVOICE_SIGNED:
-                case PARTIAL_INVOICE_SIGNED:
-                case MONTHLY_INVOICE_SIGNED:
+            switch (currentStatus) {
+                case COMPLETED:
                     spendingStatus = SpendingItem.Status.PAID;
                     break;
-                case ACKNOWLEDGED_BY_PROCUREMENT:
-                case CONTRACT_AWARDED:
-                case GOODS_RECEIVED:
-                case FULL_INVOICE_RECEIVED:
-                case PARTIAL_INVOICE_RECEIVED:
-                case MONTHLY_INVOICE_RECEIVED:
-                case CONTRACT_AMENDED:
+                case PO_ISSUED:
+                case APPROVED:
                     spendingStatus = SpendingItem.Status.COMMITTED;
                     break;
-                case PACKAGE_SENT_TO_PROCUREMENT:
+                case UNDER_REVIEW:
+                case QUOTES_RECEIVED:
                     spendingStatus = SpendingItem.Status.APPROVED;
                     break;
                 default:
@@ -885,53 +881,54 @@ public class DataInitializer implements ApplicationRunner {
      */
     private void initializeDemoProcurementItems(FiscalYear demoFY) {
         // Demo Procurement Items with sample data
-        // {pr, po, name, description, status, currency, exchangeRate}
+        // {pr, po, name, description, targetStatus, finalPriceCurrency, finalPriceExchangeRate}
+        // Status values: DRAFT, PENDING_QUOTES, QUOTES_RECEIVED, UNDER_REVIEW, APPROVED, PO_ISSUED, COMPLETED, CANCELLED
         Object[][] demoItems = {
             {"PR-2025-001", "PO-2025-001", "Dell PowerEdge Servers", 
              "3x Dell PowerEdge R750 rack servers for data center expansion",
-             ProcurementItem.Status.GOODS_RECEIVED, Currency.CAD, null},
+             ProcurementItem.Status.COMPLETED, Currency.CAD, null},
             {"PR-2025-002", "PO-2025-002", "NVIDIA A100 GPUs", 
              "4x NVIDIA A100 80GB GPUs for machine learning workloads",
-             ProcurementItem.Status.ACKNOWLEDGED_BY_PROCUREMENT, Currency.USD, new BigDecimal("1.360000")},
+             ProcurementItem.Status.APPROVED, Currency.USD, new BigDecimal("1.360000")},
             {"PR-2025-003", null, "Cisco Network Switches", 
              "Cisco Catalyst 9300 switches for network infrastructure upgrade",
-             ProcurementItem.Status.PACKAGE_SENT_TO_PROCUREMENT, Currency.CAD, null},
+             ProcurementItem.Status.UNDER_REVIEW, Currency.CAD, null},
             {"PR-2025-004", null, "NetApp Storage Array", 
              "NetApp AFF A400 storage system with 50TB capacity for data center",
-             ProcurementItem.Status.SAM_ACKNOWLEDGEMENT_RECEIVED, Currency.CAD, null},
+             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null},
             {"PR-2025-005", null, "HP LaserJet Printers", 
              "5x HP LaserJet Enterprise printers for office deployment",
-             ProcurementItem.Status.QUOTE, Currency.CAD, null},
+             ProcurementItem.Status.PENDING_QUOTES, Currency.CAD, null},
             {"PR-2025-006", null, "IBM Cloud Credits", 
              "Annual IBM Cloud compute and storage credits",
-             ProcurementItem.Status.SAM_ACKNOWLEDGEMENT_RECEIVED, Currency.USD, new BigDecimal("1.360000")},
+             ProcurementItem.Status.QUOTES_RECEIVED, Currency.USD, new BigDecimal("1.360000")},
             {"PR-2025-007", "PO-2025-003", "Lenovo ThinkPads", 
              "25x Lenovo ThinkPad X1 Carbon laptops for staff refresh",
-             ProcurementItem.Status.FULL_INVOICE_SIGNED, Currency.CAD, null},
+             ProcurementItem.Status.COMPLETED, Currency.CAD, null},
             {"PR-2025-008", null, "Autodesk Licenses", 
              "50x Autodesk AutoCAD licenses - 3-year subscription",
-             ProcurementItem.Status.NOT_STARTED, Currency.USD, new BigDecimal("1.360000")},
+             ProcurementItem.Status.DRAFT, Currency.USD, new BigDecimal("1.360000")},
             {"PR-2025-009", null, "Laboratory Equipment", 
              "Oscilloscopes and signal generators for research laboratory",
-             ProcurementItem.Status.QUOTE, Currency.EUR, new BigDecimal("1.470000")},
+             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000")},
             {"PR-2025-010", "PO-2025-004", "AWS Reserved Instances", 
              "3-year reserved capacity for EC2 and RDS instances",
-             ProcurementItem.Status.ACKNOWLEDGED_BY_PROCUREMENT, Currency.USD, new BigDecimal("1.360000")},
+             ProcurementItem.Status.APPROVED, Currency.USD, new BigDecimal("1.360000")},
             {"PR-2025-011", null, "Office Furniture", 
              "Standing desks and ergonomic chairs for new office space",
-             ProcurementItem.Status.PACKAGE_SENT_TO_PROCUREMENT, Currency.CAD, null},
+             ProcurementItem.Status.UNDER_REVIEW, Currency.CAD, null},
             {"PR-2025-012", null, "Security Assessment Services", 
              "Annual penetration testing and security audit services",
-             ProcurementItem.Status.SAM_ACKNOWLEDGEMENT_RECEIVED, Currency.CAD, null},
+             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null},
             {"PR-2025-013", null, "UK Training Program", 
              "Staff training program with UK-based vendor",
-             ProcurementItem.Status.NOT_STARTED, Currency.GBP, new BigDecimal("1.680000")},
+             ProcurementItem.Status.DRAFT, Currency.GBP, new BigDecimal("1.680000")},
             {"PR-2025-014", null, "Video Conferencing System", 
              "Cisco Webex Board 85 for main conference room",
-             ProcurementItem.Status.SAM_ACKNOWLEDGEMENT_RECEIVED, Currency.CAD, null},
+             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null},
             {"PR-2025-015", null, "European Instrumentation", 
              "Specialized instrumentation from European manufacturer",
-             ProcurementItem.Status.QUOTE, Currency.EUR, new BigDecimal("1.470000")}
+             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000")}
         };
 
         for (Object[] item : demoItems) {
@@ -939,9 +936,9 @@ public class DataInitializer implements ApplicationRunner {
             String po = (String) item[1];
             String name = (String) item[2];
             String description = (String) item[3];
-            ProcurementItem.Status status = (ProcurementItem.Status) item[4];
-            Currency currency = (Currency) item[5];
-            BigDecimal exchangeRate = (BigDecimal) item[6];
+            ProcurementItem.Status targetStatus = (ProcurementItem.Status) item[4];
+            Currency finalPriceCurrency = (Currency) item[5];
+            BigDecimal finalPriceExchangeRate = (BigDecimal) item[6];
 
             // Check if procurement item already exists
             if (procurementItemRepository.existsByPurchaseRequisitionAndFiscalYearAndActiveTrue(pr, demoFY)) {
@@ -950,22 +947,22 @@ public class DataInitializer implements ApplicationRunner {
             }
 
             try {
-                ProcurementItem procurementItem = new ProcurementItem(pr, name, description, status, demoFY);
+                ProcurementItem procurementItem = new ProcurementItem(pr, name, description, demoFY);
                 procurementItem.setPurchaseOrder(po);
-                procurementItem.setCurrency(currency);
-                procurementItem.setExchangeRate(exchangeRate);
+                procurementItem.setFinalPriceCurrency(finalPriceCurrency);
+                procurementItem.setFinalPriceExchangeRate(finalPriceExchangeRate);
                 ProcurementItem savedItem = procurementItemRepository.save(procurementItem);
 
-                // Add demo quotes for certain procurement items
-                addDemoQuotes(savedItem);
+                // Add demo quotes for certain procurement items (status determines if quotes should be added)
+                addDemoQuotes(savedItem, targetStatus);
 
-                // Add demo events for procurement items
-                addDemoProcurementEvents(savedItem);
+                // Add demo events for procurement items to establish status history
+                addDemoProcurementEvents(savedItem, targetStatus);
 
-                String currencyInfo = currency != Currency.CAD ? 
-                    " (" + currency + " @ " + exchangeRate + ")" : "";
+                String currencyInfo = finalPriceCurrency != Currency.CAD ? 
+                    " (" + finalPriceCurrency + " @ " + finalPriceExchangeRate + ")" : "";
                 logger.info("Created demo procurement item: " + pr + " - " + name + 
-                           " [" + status + "]" + currencyInfo);
+                           " [" + targetStatus + "]" + currencyInfo);
             } catch (Exception e) {
                 logger.warning(() -> "Failed to create demo procurement item '" + pr + "': " + e.getMessage());
             }
@@ -975,21 +972,20 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     /**
-     * Add demo quotes to a procurement item based on its status.
+     * Add demo quotes to a procurement item based on its target status.
      *
      * @param procurementItem the procurement item to add quotes to
+     * @param targetStatus the target status (determines if quotes should be added)
      */
-    private void addDemoQuotes(ProcurementItem procurementItem) {
-        // Only add quotes to items that would have quotes (SAM_ACKNOWLEDGEMENT_RECEIVED and beyond)
-        ProcurementItem.Status status = procurementItem.getStatus();
-        if (status == ProcurementItem.Status.NOT_STARTED || status == ProcurementItem.Status.QUOTE ||
-            status == ProcurementItem.Status.SAM_ACKNOWLEDGEMENT_REQUESTED) {
+    private void addDemoQuotes(ProcurementItem procurementItem, ProcurementItem.Status targetStatus) {
+        // Only add quotes to items that would have quotes (QUOTES_RECEIVED and beyond)
+        if (targetStatus == ProcurementItem.Status.DRAFT || targetStatus == ProcurementItem.Status.PENDING_QUOTES) {
             return;
         }
 
         // Demo quotes data based on the procurement item
         String pr = procurementItem.getPurchaseRequisition();
-        Currency currency = procurementItem.getCurrency();
+        Currency currency = procurementItem.getFinalPriceCurrency();
 
         // Generate different quotes based on the PR
         Object[][] quotes;
@@ -1216,13 +1212,13 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     /**
-     * Add demo procurement events to a procurement item based on its status.
+     * Add demo procurement events to a procurement item based on its target status.
      * Creates a realistic history of events that would lead to the current status.
      *
      * @param procurementItem the procurement item to add events to
+     * @param targetStatus the target status to create events for
      */
-    private void addDemoProcurementEvents(ProcurementItem procurementItem) {
-        ProcurementItem.Status status = procurementItem.getStatus();
+    private void addDemoProcurementEvents(ProcurementItem procurementItem, ProcurementItem.Status targetStatus) {
         String pr = procurementItem.getPurchaseRequisition();
         LocalDate baseDate = LocalDate.of(2025, 8, 1);
 
@@ -1237,70 +1233,61 @@ public class DataInitializer implements ApplicationRunner {
             createdEvent.setCreatedBy("admin");
             procurementEventRepository.save(createdEvent);
 
-            // Add status-appropriate events
-            switch (status) {
-                case FULL_INVOICE_SIGNED:
-                case PARTIAL_INVOICE_SIGNED:
-                case MONTHLY_INVOICE_SIGNED:
+            // Add status-appropriate events based on new enum values
+            switch (targetStatus) {
+                case COMPLETED:
                     // Full lifecycle events
-                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(1), "Obtained quote from vendor");
-                    addStatusChangeEvent(procurementItem, "QUOTE", "SAM_ACKNOWLEDGEMENT_REQUESTED", baseDate.plusDays(5), "Requested SAM acknowledgement");
-                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_REQUESTED", "SAM_ACKNOWLEDGEMENT_RECEIVED", baseDate.plusDays(10), "SAM acknowledgement received");
-                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_RECEIVED", "PACKAGE_SENT_TO_PROCUREMENT", baseDate.plusDays(15), "Documentation package sent");
-                    addStatusChangeEvent(procurementItem, "PACKAGE_SENT_TO_PROCUREMENT", "ACKNOWLEDGED_BY_PROCUREMENT", baseDate.plusDays(20), "Procurement acknowledged, PO issued");
-                    addStatusChangeEvent(procurementItem, "ACKNOWLEDGED_BY_PROCUREMENT", "CONTRACT_AWARDED", baseDate.plusDays(30), "Contract awarded");
-                    addStatusChangeEvent(procurementItem, "CONTRACT_AWARDED", "GOODS_RECEIVED", baseDate.plusDays(45), "Goods received");
-                    addStatusChangeEvent(procurementItem, "GOODS_RECEIVED", "FULL_INVOICE_RECEIVED", baseDate.plusDays(50), "Invoice received");
-                    addStatusChangeEvent(procurementItem, "FULL_INVOICE_RECEIVED", "FULL_INVOICE_SIGNED", baseDate.plusDays(55), "Invoice signed for Section 34");
-                    addNoteEvent(procurementItem, baseDate.plusDays(56), "Submitted to Accounts Payable");
+                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(1), "Requested quotes from vendors");
+                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "QUOTES_RECEIVED", baseDate.plusDays(10), "Quotes received from vendors");
+                    addStatusChangeEvent(procurementItem, "QUOTES_RECEIVED", "UNDER_REVIEW", baseDate.plusDays(15), "Reviewing quotes");
+                    addStatusChangeEvent(procurementItem, "UNDER_REVIEW", "APPROVED", baseDate.plusDays(20), "Quote approved");
+                    addStatusChangeEvent(procurementItem, "APPROVED", "PO_ISSUED", baseDate.plusDays(25), "PO issued to vendor");
+                    addStatusChangeEvent(procurementItem, "PO_ISSUED", "COMPLETED", baseDate.plusDays(45), "Goods/services received and paid");
+                    addNoteEvent(procurementItem, baseDate.plusDays(46), "Procurement completed successfully");
                     break;
 
-                case ACKNOWLEDGED_BY_PROCUREMENT:
-                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(5), "Quote obtained");
-                    addStatusChangeEvent(procurementItem, "QUOTE", "SAM_ACKNOWLEDGEMENT_REQUESTED", baseDate.plusDays(10), "SAM review requested");
-                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_REQUESTED", "SAM_ACKNOWLEDGEMENT_RECEIVED", baseDate.plusDays(18), "SAM approved");
-                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_RECEIVED", "PACKAGE_SENT_TO_PROCUREMENT", baseDate.plusDays(25), "Procurement package submitted");
-                    addStatusChangeEvent(procurementItem, "PACKAGE_SENT_TO_PROCUREMENT", "ACKNOWLEDGED_BY_PROCUREMENT", baseDate.plusDays(35), "PO issued by procurement");
-                    addNoteEvent(procurementItem, baseDate.plusDays(40), "Expected delivery in 4 weeks");
+                case PO_ISSUED:
+                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(3), "Quote requested");
+                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "QUOTES_RECEIVED", baseDate.plusDays(12), "Quotes received");
+                    addStatusChangeEvent(procurementItem, "QUOTES_RECEIVED", "UNDER_REVIEW", baseDate.plusDays(18), "Under review");
+                    addStatusChangeEvent(procurementItem, "UNDER_REVIEW", "APPROVED", baseDate.plusDays(25), "Approved");
+                    addStatusChangeEvent(procurementItem, "APPROVED", "PO_ISSUED", baseDate.plusDays(30), "PO issued");
+                    addNoteEvent(procurementItem, baseDate.plusDays(35), "Awaiting delivery");
                     break;
 
-                case PACKAGE_SENT_TO_PROCUREMENT:
-                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(7), "Requested quote from vendor");
-                    addStatusChangeEvent(procurementItem, "QUOTE", "SAM_ACKNOWLEDGEMENT_REQUESTED", baseDate.plusDays(14), "SAM acknowledgement requested");
-                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_REQUESTED", "SAM_ACKNOWLEDGEMENT_RECEIVED", baseDate.plusDays(21), "SAM acknowledgement received");
-                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_RECEIVED", "PACKAGE_SENT_TO_PROCUREMENT", baseDate.plusDays(28), "Package sent to procurement");
+                case APPROVED:
+                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(5), "Quote obtained");
+                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "QUOTES_RECEIVED", baseDate.plusDays(15), "Quotes received");
+                    addStatusChangeEvent(procurementItem, "QUOTES_RECEIVED", "UNDER_REVIEW", baseDate.plusDays(22), "Under review");
+                    addStatusChangeEvent(procurementItem, "UNDER_REVIEW", "APPROVED", baseDate.plusDays(30), "Approved, preparing PO");
+                    addNoteEvent(procurementItem, baseDate.plusDays(35), "PO being prepared");
                     break;
 
-                case SAM_ACKNOWLEDGEMENT_RECEIVED:
-                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(10), "Quote requests sent");
-                    addStatusChangeEvent(procurementItem, "QUOTE", "SAM_ACKNOWLEDGEMENT_REQUESTED", baseDate.plusDays(20), "SAM review requested");
-                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_REQUESTED", "SAM_ACKNOWLEDGEMENT_RECEIVED", baseDate.plusDays(30), "SAM acknowledgement received");
-                    addNoteEvent(procurementItem, baseDate.plusDays(35), "Preparing procurement package");
+                case UNDER_REVIEW:
+                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(7), "Requested quote from vendor");
+                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "QUOTES_RECEIVED", baseDate.plusDays(14), "Quotes received");
+                    addStatusChangeEvent(procurementItem, "QUOTES_RECEIVED", "UNDER_REVIEW", baseDate.plusDays(21), "Under review");
+                    addNoteEvent(procurementItem, baseDate.plusDays(25), "Awaiting approval");
                     break;
 
-                case GOODS_RECEIVED:
-                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(3), "Quote obtained");
-                    addStatusChangeEvent(procurementItem, "QUOTE", "SAM_ACKNOWLEDGEMENT_REQUESTED", baseDate.plusDays(7), "SAM requested");
-                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_REQUESTED", "SAM_ACKNOWLEDGEMENT_RECEIVED", baseDate.plusDays(12), "SAM received");
-                    addStatusChangeEvent(procurementItem, "SAM_ACKNOWLEDGEMENT_RECEIVED", "PACKAGE_SENT_TO_PROCUREMENT", baseDate.plusDays(18), "Package sent");
-                    addStatusChangeEvent(procurementItem, "PACKAGE_SENT_TO_PROCUREMENT", "ACKNOWLEDGED_BY_PROCUREMENT", baseDate.plusDays(25), "PO issued");
-                    addStatusChangeEvent(procurementItem, "ACKNOWLEDGED_BY_PROCUREMENT", "CONTRACT_AWARDED", baseDate.plusDays(30), "Contract awarded");
-                    addStatusChangeEvent(procurementItem, "CONTRACT_AWARDED", "GOODS_RECEIVED", baseDate.plusDays(50), "Goods received at receiving building");
-                    addNoteEvent(procurementItem, baseDate.plusDays(52), "Awaiting invoice from vendor");
+                case QUOTES_RECEIVED:
+                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(10), "Quote requests sent");
+                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "QUOTES_RECEIVED", baseDate.plusDays(20), "Quotes received from vendors");
+                    addNoteEvent(procurementItem, baseDate.plusDays(25), "Reviewing quotes");
                     break;
 
-                case QUOTE:
-                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(3), "Quote obtained from vendor");
-                    addNoteEvent(procurementItem, baseDate.plusDays(10), "Preparing SAM request");
+                case PENDING_QUOTES:
+                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(3), "Quote requested from vendor");
+                    addNoteEvent(procurementItem, baseDate.plusDays(10), "Awaiting vendor response");
                     break;
 
-                case NOT_STARTED:
+                case DRAFT:
                     addNoteEvent(procurementItem, baseDate.plusDays(2), "Requirements being finalized");
                     break;
 
                 case CANCELLED:
-                    addStatusChangeEvent(procurementItem, "NOT_STARTED", "QUOTE", baseDate.plusDays(5), "Started procurement process");
-                    addStatusChangeEvent(procurementItem, "QUOTE", "CANCELLED", baseDate.plusDays(15), "Procurement cancelled due to budget constraints");
+                    addStatusChangeEvent(procurementItem, "DRAFT", "PENDING_QUOTES", baseDate.plusDays(5), "Started procurement process");
+                    addStatusChangeEvent(procurementItem, "PENDING_QUOTES", "CANCELLED", baseDate.plusDays(15), "Procurement cancelled due to budget constraints");
                     break;
 
                 default:
@@ -1313,6 +1300,25 @@ public class DataInitializer implements ApplicationRunner {
         } catch (Exception e) {
             logger.warning(() -> "Failed to create demo events for " + pr + ": " + e.getMessage());
         }
+    }
+
+    /**
+     * Get the current status of a procurement item from its events.
+     * Returns the newStatus from the most recent status change event, or DRAFT if none found.
+     *
+     * @param procItem the procurement item
+     * @return the current status derived from events
+     */
+    private ProcurementItem.Status getCurrentStatusFromEvents(ProcurementItem procItem) {
+        return procurementEventRepository.findCurrentStatusByProcurementItemId(procItem.getId())
+            .map(statusStr -> {
+                try {
+                    return ProcurementItem.Status.valueOf(statusStr);
+                } catch (IllegalArgumentException e) {
+                    return ProcurementItem.Status.DRAFT;
+                }
+            })
+            .orElse(ProcurementItem.Status.DRAFT);
     }
 
     /**

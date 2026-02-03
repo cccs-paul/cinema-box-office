@@ -5,7 +5,7 @@
  *
  * Author: myRC Team
  * Date: 2026-01-29
- * Version: 1.0.0
+ * Version: 1.1.0
  *
  * Description:
  * Data Transfer Object for Procurement Event.
@@ -14,6 +14,9 @@ package com.myrc.dto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.myrc.model.ProcurementEvent;
 
@@ -21,7 +24,7 @@ import com.myrc.model.ProcurementEvent;
  * Data Transfer Object for Procurement Event.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-29
  */
 public class ProcurementEventDTO {
@@ -38,9 +41,13 @@ public class ProcurementEventDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean active;
+    private List<ProcurementEventFileDTO> files;
+    private Integer fileCount;
 
     // Constructors
     public ProcurementEventDTO() {
+        this.files = new ArrayList<>();
+        this.fileCount = 0;
     }
 
     public ProcurementEventDTO(Long id, Long procurementItemId, String eventType, 
@@ -50,6 +57,8 @@ public class ProcurementEventDTO {
         this.eventType = eventType;
         this.eventDate = eventDate;
         this.comment = comment;
+        this.files = new ArrayList<>();
+        this.fileCount = 0;
     }
 
     /**
@@ -75,6 +84,16 @@ public class ProcurementEventDTO {
         dto.setCreatedAt(entity.getCreatedAt());
         dto.setUpdatedAt(entity.getUpdatedAt());
         dto.setActive(entity.getActive());
+        if (entity.getFiles() != null) {
+            dto.setFiles(entity.getFiles().stream()
+                    .filter(f -> f.getActive())
+                    .map(ProcurementEventFileDTO::fromEntity)
+                    .collect(Collectors.toList()));
+            dto.setFileCount((int) entity.getFiles().stream().filter(f -> f.getActive()).count());
+        } else {
+            dto.setFiles(new ArrayList<>());
+            dto.setFileCount(0);
+        }
         return dto;
     }
 
@@ -173,6 +192,23 @@ public class ProcurementEventDTO {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public List<ProcurementEventFileDTO> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<ProcurementEventFileDTO> files) {
+        this.files = files != null ? files : new ArrayList<>();
+        this.fileCount = this.files.size();
+    }
+
+    public Integer getFileCount() {
+        return fileCount;
+    }
+
+    public void setFileCount(Integer fileCount) {
+        this.fileCount = fileCount;
     }
 
     @Override

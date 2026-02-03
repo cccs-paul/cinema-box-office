@@ -30,9 +30,9 @@ describe('ProcurementService', () => {
     purchaseOrder: 'PO-001',
     name: 'Test Procurement Item',
     description: 'Test Description',
-    status: 'NOT_STARTED',
+    currentStatus: 'DRAFT',
     fiscalYearId: 1,
-    currency: 'CAD',
+    finalPriceCurrency: 'CAD',
     quotes: [],
   };
 
@@ -165,7 +165,6 @@ describe('ProcurementService', () => {
         purchaseRequisition: 'PR-002',
         name: 'New Procurement Item',
         description: 'New Description',
-        status: 'NOT_STARTED',
       };
 
       service.createProcurementItem(1, 1, createRequest).subscribe((item) => {
@@ -290,7 +289,7 @@ describe('ProcurementService', () => {
 
   describe('updateProcurementItemStatus', () => {
     it('should update item status', () => {
-      service.updateProcurementItemStatus(1, 1, 1, 'QUOTE').subscribe((item) => {
+      service.updateProcurementItemStatus(1, 1, 1, 'PENDING_QUOTES').subscribe((item) => {
         expect(item).toBeTruthy();
       });
 
@@ -298,7 +297,7 @@ describe('ProcurementService', () => {
         '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/status'
       );
       expect(req.request.method).toBe('PUT');
-      expect(req.request.body).toEqual({ status: 'QUOTE' });
+      expect(req.request.body).toEqual({ status: 'PENDING_QUOTES' });
       req.flush(mockProcurementItem);
     });
 

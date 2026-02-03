@@ -63,7 +63,7 @@ class ProcurementItemControllerTest {
     testItem.setDescription("Test Description");
     testItem.setPurchaseRequisition("PR-001");
     testItem.setFiscalYearId(1L);
-    testItem.setStatus("DRAFT");
+    testItem.setCurrentStatus("DRAFT");
 
     testQuote = new ProcurementQuoteDTO();
     testQuote.setId(1L);

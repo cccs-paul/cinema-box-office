@@ -19,24 +19,28 @@ import {
   QuoteStatus,
   ProcurementEvent,
   ProcurementEventRequest,
-  ProcurementEventType
+  ProcurementEventType,
+  ProcurementEventFile
 } from '../models/procurement.model';
 
 /**
  * Request body for creating a procurement item.
+ * Note: Status is now tracked via procurement events, not stored on the item.
  */
 export interface ProcurementItemCreateRequest {
   purchaseRequisition?: string;
   purchaseOrder?: string;
   name: string;
   description?: string;
-  status?: ProcurementItemStatus;
-  currency?: string;
-  exchangeRate?: number | null;
   vendor?: string;
   finalPrice?: number | null;
   finalPriceCurrency?: string;
+  finalPriceExchangeRate?: number | null;
   finalPriceCad?: number | null;
+  quotedPrice?: number | null;
+  quotedPriceCurrency?: string;
+  quotedPriceExchangeRate?: number | null;
+  quotedPriceCad?: number | null;
   contractNumber?: string;
   contractStartDate?: string;
   contractEndDate?: string;

@@ -15,19 +15,24 @@ package com.myrc.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
@@ -36,7 +41,7 @@ import jakarta.persistence.Version;
  * Events track the history and progress of procurement items through their lifecycle.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 1.1.0
  * @since 2026-01-29
  */
 @Entity
@@ -141,6 +146,13 @@ public class ProcurementEvent {
 
     @Column(nullable = false)
     private Boolean active = true;
+
+    /**
+     * Files attached to this procurement event.
+     * Each event can have 0..n files.
+     */
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ProcurementEventFile> files = new ArrayList<>();
 
     // Constructors
     public ProcurementEvent() {
@@ -267,6 +279,34 @@ public class ProcurementEvent {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public List<ProcurementEventFile> getFiles() {
+        return files;
+    }
+
+    public void setFiles(List<ProcurementEventFile> files) {
+        this.files = files;
+    }
+
+    /**
+     * Add a file to this event.
+     *
+     * @param file the file to add
+     */
+    public void addFile(ProcurementEventFile file) {
+        files.add(file);
+        file.setEvent(this);
+    }
+
+    /**
+     * Remove a file from this event.
+     *
+     * @param file the file to remove
+     */
+    public void removeFile(ProcurementEventFile file) {
+        files.remove(file);
+        file.setEvent(null);
     }
 
     /**

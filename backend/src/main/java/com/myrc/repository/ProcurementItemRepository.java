@@ -50,16 +50,6 @@ public interface ProcurementItemRepository extends JpaRepository<ProcurementItem
     List<ProcurementItem> findByFiscalYearIdAndActiveTrueOrderByNameAsc(Long fiscalYearId);
 
     /**
-     * Find procurement items by status for a fiscal year.
-     *
-     * @param fiscalYearId the fiscal year ID
-     * @param status the status to filter by
-     * @return list of procurement items
-     */
-    List<ProcurementItem> findByFiscalYearIdAndStatusAndActiveTrueOrderByPurchaseRequisitionAsc(
-            Long fiscalYearId, ProcurementItem.Status status);
-
-    /**
      * Find a procurement item by PR and fiscal year.
      *
      * @param purchaseRequisition the PR number
@@ -105,16 +95,6 @@ public interface ProcurementItemRepository extends JpaRepository<ProcurementItem
      */
     @Query("SELECT COUNT(p) FROM ProcurementItem p WHERE p.fiscalYear.id = :fiscalYearId AND p.active = true")
     long countByFiscalYearId(@Param("fiscalYearId") Long fiscalYearId);
-
-    /**
-     * Count procurement items by status for a fiscal year.
-     *
-     * @param fiscalYearId the fiscal year ID
-     * @param status the status to count
-     * @return count of procurement items
-     */
-    @Query("SELECT COUNT(p) FROM ProcurementItem p WHERE p.fiscalYear.id = :fiscalYearId AND p.status = :status AND p.active = true")
-    long countByFiscalYearIdAndStatus(@Param("fiscalYearId") Long fiscalYearId, @Param("status") ProcurementItem.Status status);
 
     /**
      * Search procurement items by name or PR/PO containing the search term.

@@ -132,28 +132,6 @@
               rows="3"
             ></textarea>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="newItemCurrency">{{ 'common.currency' | translate }}</label>
-              <select id="newItemCurrency" [(ngModel)]="newItemCurrency" name="newItemCurrency">
-                <option *ngFor="let currency of currencies" [value]="currency.code">
-                  {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
-                </option>
-              </select>
-            </div>
-            <div class="form-group" *ngIf="newItemCurrency !== 'CAD'">
-              <label for="newItemExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
-              <input
-                type="number"
-                id="newItemExchangeRate"
-                [(ngModel)]="newItemExchangeRate"
-                name="newItemExchangeRate"
-                step="0.0001"
-                min="0"
-                [placeholder]="'procurement.exchangeRatePlaceholder' | translate"
-              />
-            </div>
-          </div>
           
           <!-- Vendor & Contract Fields -->
           <div class="form-row">
@@ -175,6 +153,56 @@
                 [(ngModel)]="newItemContractNumber"
                 name="newItemContractNumber"
                 [placeholder]="'procurement.contractPlaceholder' | translate"
+              />
+            </div>
+          </div>
+
+          <!-- Quoted/Estimated Price Fields -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="newItemQuotedPrice">{{ 'procurement.quotedPrice' | translate }}</label>
+              <input
+                type="number"
+                id="newItemQuotedPrice"
+                [(ngModel)]="newItemQuotedPrice"
+                name="newItemQuotedPrice"
+                step="0.01"
+                min="0"
+                [placeholder]="'procurement.quotedPricePlaceholder' | translate"
+              />
+            </div>
+            <div class="form-group">
+              <label for="newItemQuotedPriceCurrency">{{ 'procurement.quotedPriceCurrency' | translate }}</label>
+              <select id="newItemQuotedPriceCurrency" [(ngModel)]="newItemQuotedPriceCurrency" name="newItemQuotedPriceCurrency">
+                <option *ngFor="let currency of currencies" [value]="currency.code">
+                  {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row" *ngIf="newItemQuotedPriceCurrency !== 'CAD'">
+            <div class="form-group">
+              <label for="newItemQuotedPriceExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
+              <input
+                type="number"
+                id="newItemQuotedPriceExchangeRate"
+                [(ngModel)]="newItemQuotedPriceExchangeRate"
+                name="newItemQuotedPriceExchangeRate"
+                step="0.0001"
+                min="0"
+                [placeholder]="'procurement.exchangeRatePlaceholder' | translate"
+              />
+            </div>
+            <div class="form-group">
+              <label for="newItemQuotedPriceCad">{{ 'procurement.quotedPriceCad' | translate }}</label>
+              <input
+                type="number"
+                id="newItemQuotedPriceCad"
+                [(ngModel)]="newItemQuotedPriceCad"
+                name="newItemQuotedPriceCad"
+                step="0.01"
+                min="0"
+                [placeholder]="'procurement.cadEquivalent' | translate"
               />
             </div>
           </div>
@@ -201,8 +229,22 @@
                 </option>
               </select>
             </div>
-            <div class="form-group" *ngIf="newItemFinalPriceCurrency !== 'CAD'">
-              <label for="newItemFinalPriceCad">{{ 'procurement.finalPriceCad' | translate }} *</label>
+          </div>
+          <div class="form-row" *ngIf="newItemFinalPriceCurrency !== 'CAD'">
+            <div class="form-group">
+              <label for="newItemFinalPriceExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
+              <input
+                type="number"
+                id="newItemFinalPriceExchangeRate"
+                [(ngModel)]="newItemFinalPriceExchangeRate"
+                name="newItemFinalPriceExchangeRate"
+                step="0.0001"
+                min="0"
+                [placeholder]="'procurement.exchangeRatePlaceholder' | translate"
+              />
+            </div>
+            <div class="form-group">
+              <label for="newItemFinalPriceCad">{{ 'procurement.finalPriceCad' | translate }}</label>
               <input
                 type="number"
                 id="newItemFinalPriceCad"
@@ -210,8 +252,7 @@
                 name="newItemFinalPriceCad"
                 step="0.01"
                 min="0"
-                required
-                [placeholder]="'procurement.finalPriceCadPlaceholder' | translate"
+                [placeholder]="'procurement.cadEquivalent' | translate"
               />
             </div>
           </div>
@@ -304,8 +345,8 @@
               <span class="item-pr">{{ item.purchaseRequisition }}</span>
               <span class="item-po" *ngIf="item.purchaseOrder">/ {{ item.purchaseOrder }}</span>
               <span class="item-name">{{ item.name }}</span>
-              <span class="status-badge" [ngClass]="getStatusClass(item.status)">
-                {{ getStatusLabel(item.status) }}
+              <span class="status-badge" [ngClass]="getStatusClass(item.currentStatus)">
+                {{ getStatusLabel(item.currentStatus) }}
               </span>
               <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">📁 {{ item.categoryName }}</span>
               <span class="quotes-count">📋 {{ item.quoteCount || 0 }}</span>
@@ -352,23 +393,23 @@
                       <span>{{ item.purchaseOrder || '-' }}</span>
                     </div>
                     <div class="info-item">
-                      <label>{{ 'common.currency' | translate }}</label>
-                      <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
-                        {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
-                      </span>
-                      <span class="exchange-rate" *ngIf="item.currency !== 'CAD' && item.exchangeRate">
-                        (1 {{ item.currency }} = {{ item.exchangeRate }} CAD)
-                      </span>
-                    </div>
-                    <div class="info-item">
                       <label>{{ 'common.status' | translate }}</label>
-                      <span class="status-badge" [ngClass]="getStatusClass(item.status)">
-                        {{ getStatusLabel(item.status) }}
+                      <span class="status-badge" [ngClass]="getStatusClass(item.currentStatus)">
+                        {{ getStatusLabel(item.currentStatus) }}
                       </span>
                     </div>
                     <div class="info-item" *ngIf="item.vendor">
                       <label>{{ 'procurement.vendor' | translate }}</label>
                       <span>{{ item.vendor }}</span>
+                    </div>
+                    <div class="info-item" *ngIf="item.quotedPrice">
+                      <label>{{ 'procurement.quotedPrice' | translate }}</label>
+                      <span class="quoted-price">
+                        {{ item.quotedPrice | number:'1.2-2' }} {{ item.quotedPriceCurrency || 'CAD' }}
+                      </span>
+                      <span class="quoted-price-cad" *ngIf="item.quotedPriceCurrency !== 'CAD' && item.quotedPriceCad">
+                        ({{ item.quotedPriceCad | number:'1.2-2' }} CAD)
+                      </span>
                     </div>
                     <div class="info-item" *ngIf="item.finalPrice">
                       <label>{{ 'procurement.finalPrice' | translate }}</label>
@@ -457,14 +498,6 @@
                         </option>
                       </select>
                     </div>
-                    <div class="form-group">
-                      <label for="editItemStatus">{{ 'common.status' | translate }} <span class="required">*</span></label>
-                      <select id="editItemStatus" [(ngModel)]="editItemStatus" [disabled]="isUpdatingItem" required>
-                        <option *ngFor="let status of procurementStatuses" [value]="status">
-                          {{ getStatusLabel(status) }}
-                        </option>
-                      </select>
-                    </div>
                   </div>
                   <div class="form-group">
                     <label for="editItemDescription">{{ 'common.description' | translate }}</label>
@@ -475,27 +508,6 @@
                       [disabled]="isUpdatingItem"
                       rows="3"
                     ></textarea>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label for="editItemCurrency">{{ 'common.currency' | translate }}</label>
-                      <select id="editItemCurrency" [(ngModel)]="editItemCurrency" [disabled]="isUpdatingItem">
-                        <option *ngFor="let currency of currencies" [value]="currency.code">
-                          {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
-                        </option>
-                      </select>
-                    </div>
-                    <div class="form-group" *ngIf="editItemCurrency !== 'CAD'">
-                      <label for="editItemExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
-                      <input
-                        id="editItemExchangeRate"
-                        type="number"
-                        [(ngModel)]="editItemExchangeRate"
-                        step="0.0001"
-                        min="0"
-                        [disabled]="isUpdatingItem"
-                      />
-                    </div>
                   </div>
                   <div class="form-row">
                     <div class="form-group">
@@ -515,6 +527,56 @@
                         type="text"
                         [(ngModel)]="editItemContractNumber"
                         [placeholder]="'procurement.contractPlaceholder' | translate"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Quoted/Estimated Price Fields -->
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="editItemQuotedPrice">{{ 'procurement.quotedPrice' | translate }}</label>
+                      <input
+                        id="editItemQuotedPrice"
+                        type="number"
+                        [(ngModel)]="editItemQuotedPrice"
+                        step="0.01"
+                        min="0"
+                        [placeholder]="'procurement.quotedPricePlaceholder' | translate"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="editItemQuotedPriceCurrency">{{ 'procurement.quotedPriceCurrency' | translate }}</label>
+                      <select id="editItemQuotedPriceCurrency" [(ngModel)]="editItemQuotedPriceCurrency" [disabled]="isUpdatingItem">
+                        <option *ngFor="let currency of currencies" [value]="currency.code">
+                          {{ getCurrencyFlag(currency.code) }} {{ currency.code }} - {{ currency.name }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-row" *ngIf="editItemQuotedPriceCurrency !== 'CAD'">
+                    <div class="form-group">
+                      <label for="editItemQuotedPriceExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
+                      <input
+                        id="editItemQuotedPriceExchangeRate"
+                        type="number"
+                        [(ngModel)]="editItemQuotedPriceExchangeRate"
+                        step="0.0001"
+                        min="0"
+                        [placeholder]="'procurement.exchangeRatePlaceholder' | translate"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="editItemQuotedPriceCad">{{ 'procurement.quotedPriceCad' | translate }}</label>
+                      <input
+                        id="editItemQuotedPriceCad"
+                        type="number"
+                        [(ngModel)]="editItemQuotedPriceCad"
+                        step="0.01"
+                        min="0"
+                        [placeholder]="'procurement.cadEquivalent' | translate"
                         [disabled]="isUpdatingItem"
                       />
                     </div>
@@ -542,16 +604,29 @@
                         </option>
                       </select>
                     </div>
-                    <div class="form-group" *ngIf="editItemFinalPriceCurrency !== 'CAD'">
-                      <label for="editItemFinalPriceCad">{{ 'procurement.finalPriceCad' | translate }} *</label>
+                  </div>
+                  <div class="form-row" *ngIf="editItemFinalPriceCurrency !== 'CAD'">
+                    <div class="form-group">
+                      <label for="editItemFinalPriceExchangeRate">{{ 'procurement.exchangeRateToCad' | translate }}</label>
+                      <input
+                        id="editItemFinalPriceExchangeRate"
+                        type="number"
+                        [(ngModel)]="editItemFinalPriceExchangeRate"
+                        step="0.0001"
+                        min="0"
+                        [placeholder]="'procurement.exchangeRatePlaceholder' | translate"
+                        [disabled]="isUpdatingItem"
+                      />
+                    </div>
+                    <div class="form-group">
+                      <label for="editItemFinalPriceCad">{{ 'procurement.finalPriceCad' | translate }}</label>
                       <input
                         id="editItemFinalPriceCad"
                         type="number"
                         [(ngModel)]="editItemFinalPriceCad"
                         step="0.01"
                         min="0"
-                        required
-                        [placeholder]="'procurement.finalPriceCadPlaceholder' | translate"
+                        [placeholder]="'procurement.cadEquivalent' | translate"
                         [disabled]="isUpdatingItem"
                       />
                     </div>

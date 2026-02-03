@@ -238,15 +238,15 @@ export class SummaryComponent implements OnInit, OnDestroy {
       ? (this.totalSpending / this.totalFunding) * 100 
       : 0;
 
-    // Calculate procurement stats using new status values
+    // Calculate procurement stats using currentStatus from events
     this.procurementCompleted = this.procurementItems.filter(
-      p => ['FULL_INVOICE_SIGNED', 'PARTIAL_INVOICE_SIGNED', 'MONTHLY_INVOICE_SIGNED'].includes(p.status)
+      p => ['COMPLETED'].includes(p.currentStatus || '')
     ).length;
     this.procurementPending = this.procurementItems.filter(
-      p => ['NOT_STARTED', 'QUOTE', 'SAM_ACKNOWLEDGEMENT_REQUESTED', 'SAM_ACKNOWLEDGEMENT_RECEIVED'].includes(p.status)
+      p => ['DRAFT', 'PENDING_QUOTES', 'QUOTES_RECEIVED'].includes(p.currentStatus || '')
     ).length;
     this.procurementInProgress = this.procurementItems.filter(
-      p => ['PACKAGE_SENT_TO_PROCUREMENT', 'ACKNOWLEDGED_BY_PROCUREMENT', 'CONTRACT_AWARDED', 'GOODS_RECEIVED', 'FULL_INVOICE_RECEIVED', 'PARTIAL_INVOICE_RECEIVED', 'MONTHLY_INVOICE_RECEIVED', 'CONTRACT_AMENDED'].includes(p.status)
+      p => ['UNDER_REVIEW', 'APPROVED', 'PO_ISSUED'].includes(p.currentStatus || '')
     ).length;
   }
 

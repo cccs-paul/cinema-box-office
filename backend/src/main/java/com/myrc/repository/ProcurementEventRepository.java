@@ -127,4 +127,28 @@ public interface ProcurementEventRepository extends JpaRepository<ProcurementEve
     @Query("SELECT e FROM ProcurementEvent e WHERE e.createdBy = :createdBy AND e.active = true " +
            "ORDER BY e.eventDate DESC, e.createdAt DESC")
     List<ProcurementEvent> findByCreatedBy(@Param("createdBy") String createdBy);
+
+    /**
+     * Find the most recent status change event for a procurement item.
+     * Returns the event with the latest newStatus value.
+     *
+     * @param procurementItemId the procurement item ID
+     * @return the most recent status change event if any
+     */
+    @Query("SELECT e FROM ProcurementEvent e WHERE e.procurementItem.id = :procurementItemId " +
+           "AND e.newStatus IS NOT NULL AND e.active = true " +
+           "ORDER BY e.eventDate DESC, e.createdAt DESC LIMIT 1")
+    Optional<ProcurementEvent> findMostRecentStatusChangeByProcurementItemId(
+            @Param("procurementItemId") Long procurementItemId);
+
+    /**
+     * Find the most recent status for a procurement item as a string.
+     *
+     * @param procurementItemId the procurement item ID
+     * @return the current status string, or null if no status events exist
+     */
+    @Query("SELECT e.newStatus FROM ProcurementEvent e WHERE e.procurementItem.id = :procurementItemId " +
+           "AND e.newStatus IS NOT NULL AND e.active = true " +
+           "ORDER BY e.eventDate DESC, e.createdAt DESC LIMIT 1")
+    Optional<String> findCurrentStatusByProcurementItemId(@Param("procurementItemId") Long procurementItemId);
 }

@@ -106,12 +106,15 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   newItemPO = '';
   newItemName = '';
   newItemDescription = '';
-  newItemCurrency = DEFAULT_CURRENCY;
-  newItemExchangeRate: number | null = null;
   newItemVendor = '';
   newItemFinalPrice: number | null = null;
   newItemFinalPriceCurrency = DEFAULT_CURRENCY;
+  newItemFinalPriceExchangeRate: number | null = null;
   newItemFinalPriceCad: number | null = null;
+  newItemQuotedPrice: number | null = null;
+  newItemQuotedPriceCurrency = DEFAULT_CURRENCY;
+  newItemQuotedPriceExchangeRate: number | null = null;
+  newItemQuotedPriceCad: number | null = null;
   newItemContractNumber = '';
   newItemContractStartDate = '';
   newItemContractEndDate = '';
@@ -161,36 +164,32 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   editItemPO = '';
   editItemName = '';
   editItemDescription = '';
-  editItemCurrency = DEFAULT_CURRENCY;
-  editItemExchangeRate: number | null = null;
   editItemVendor = '';
   editItemFinalPrice: number | null = null;
   editItemFinalPriceCurrency = DEFAULT_CURRENCY;
+  editItemFinalPriceExchangeRate: number | null = null;
   editItemFinalPriceCad: number | null = null;
+  editItemQuotedPrice: number | null = null;
+  editItemQuotedPriceCurrency = DEFAULT_CURRENCY;
+  editItemQuotedPriceExchangeRate: number | null = null;
+  editItemQuotedPriceCad: number | null = null;
   editItemContractNumber = '';
   editItemContractStartDate = '';
   editItemContractEndDate = '';
   editItemProcurementCompleted = false;
   editItemProcurementCompletedDate = '';
   editItemCategoryId: number | null = null;
-  editItemStatus: ProcurementItemStatus = 'NOT_STARTED';
 
-  // Status options
+  // Status options - these are the new status values tracked via procurement events
   statusOptions: ProcurementItemStatus[] = [
-    'NOT_STARTED', 'QUOTE', 'SAM_ACKNOWLEDGEMENT_REQUESTED', 'SAM_ACKNOWLEDGEMENT_RECEIVED',
-    'PACKAGE_SENT_TO_PROCUREMENT', 'ACKNOWLEDGED_BY_PROCUREMENT', 'PAUSED', 'CANCELLED',
-    'CONTRACT_AWARDED', 'GOODS_RECEIVED', 'FULL_INVOICE_RECEIVED', 'PARTIAL_INVOICE_RECEIVED',
-    'MONTHLY_INVOICE_RECEIVED', 'FULL_INVOICE_SIGNED', 'PARTIAL_INVOICE_SIGNED',
-    'MONTHLY_INVOICE_SIGNED', 'CONTRACT_AMENDED'
+    'DRAFT', 'PENDING_QUOTES', 'QUOTES_RECEIVED', 'UNDER_REVIEW',
+    'APPROVED', 'PO_ISSUED', 'COMPLETED', 'CANCELLED'
   ];
 
   // Procurement statuses for dropdown
   procurementStatuses: ProcurementItemStatus[] = [
-    'NOT_STARTED', 'QUOTE', 'SAM_ACKNOWLEDGEMENT_REQUESTED', 'SAM_ACKNOWLEDGEMENT_RECEIVED',
-    'PACKAGE_SENT_TO_PROCUREMENT', 'ACKNOWLEDGED_BY_PROCUREMENT', 'PAUSED', 'CANCELLED',
-    'CONTRACT_AWARDED', 'GOODS_RECEIVED', 'FULL_INVOICE_RECEIVED', 'PARTIAL_INVOICE_RECEIVED',
-    'MONTHLY_INVOICE_RECEIVED', 'FULL_INVOICE_SIGNED', 'PARTIAL_INVOICE_SIGNED',
-    'MONTHLY_INVOICE_SIGNED', 'CONTRACT_AMENDED'
+    'DRAFT', 'PENDING_QUOTES', 'QUOTES_RECEIVED', 'UNDER_REVIEW',
+    'APPROVED', 'PO_ISSUED', 'COMPLETED', 'CANCELLED'
   ];
 
   private destroy$ = new Subject<void>();
@@ -343,7 +342,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           vendor: item.vendor,
           contractNumber: item.contractNumber,
           categoryName: item.categoryName,
-          status: PROCUREMENT_STATUS_INFO[item.status]?.label || item.status
+          status: item.currentStatus ? (PROCUREMENT_STATUS_INFO[item.currentStatus]?.label || item.currentStatus) : ''
         })
       );
     }
@@ -488,12 +487,15 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newItemPO = '';
     this.newItemName = '';
     this.newItemDescription = '';
-    this.newItemCurrency = DEFAULT_CURRENCY;
-    this.newItemExchangeRate = null;
     this.newItemVendor = '';
     this.newItemFinalPrice = null;
     this.newItemFinalPriceCurrency = DEFAULT_CURRENCY;
+    this.newItemFinalPriceExchangeRate = null;
     this.newItemFinalPriceCad = null;
+    this.newItemQuotedPrice = null;
+    this.newItemQuotedPriceCurrency = DEFAULT_CURRENCY;
+    this.newItemQuotedPriceExchangeRate = null;
+    this.newItemQuotedPriceCad = null;
     this.newItemContractNumber = '';
     this.newItemContractStartDate = '';
     this.newItemContractEndDate = '';
@@ -515,12 +517,15 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       purchaseOrder: this.newItemPO.trim() || undefined,
       name: this.newItemName.trim(),
       description: this.newItemDescription.trim() || undefined,
-      currency: this.newItemCurrency,
-      exchangeRate: this.newItemCurrency !== 'CAD' ? this.newItemExchangeRate : undefined,
       vendor: this.newItemVendor.trim() || undefined,
       finalPrice: this.newItemFinalPrice,
       finalPriceCurrency: this.newItemFinalPriceCurrency,
+      finalPriceExchangeRate: this.newItemFinalPriceCurrency !== 'CAD' ? this.newItemFinalPriceExchangeRate : undefined,
       finalPriceCad: this.newItemFinalPriceCurrency !== 'CAD' ? this.newItemFinalPriceCad : undefined,
+      quotedPrice: this.newItemQuotedPrice,
+      quotedPriceCurrency: this.newItemQuotedPriceCurrency,
+      quotedPriceExchangeRate: this.newItemQuotedPriceCurrency !== 'CAD' ? this.newItemQuotedPriceExchangeRate : undefined,
+      quotedPriceCad: this.newItemQuotedPriceCurrency !== 'CAD' ? this.newItemQuotedPriceCad : undefined,
       contractNumber: this.newItemContractNumber.trim() || undefined,
       contractStartDate: this.newItemContractStartDate || undefined,
       contractEndDate: this.newItemContractEndDate || undefined,
@@ -576,19 +581,21 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemPO = item.purchaseOrder || '';
     this.editItemName = item.name;
     this.editItemDescription = item.description || '';
-    this.editItemCurrency = item.currency || DEFAULT_CURRENCY;
-    this.editItemExchangeRate = item.exchangeRate || null;
     this.editItemVendor = item.vendor || '';
     this.editItemFinalPrice = item.finalPrice || null;
     this.editItemFinalPriceCurrency = item.finalPriceCurrency || DEFAULT_CURRENCY;
+    this.editItemFinalPriceExchangeRate = item.finalPriceExchangeRate || null;
     this.editItemFinalPriceCad = item.finalPriceCad || null;
+    this.editItemQuotedPrice = item.quotedPrice || null;
+    this.editItemQuotedPriceCurrency = item.quotedPriceCurrency || DEFAULT_CURRENCY;
+    this.editItemQuotedPriceExchangeRate = item.quotedPriceExchangeRate || null;
+    this.editItemQuotedPriceCad = item.quotedPriceCad || null;
     this.editItemContractNumber = item.contractNumber || '';
     this.editItemContractStartDate = item.contractStartDate ? item.contractStartDate.split('T')[0] : '';
     this.editItemContractEndDate = item.contractEndDate ? item.contractEndDate.split('T')[0] : '';
     this.editItemProcurementCompleted = item.procurementCompleted || false;
     this.editItemProcurementCompletedDate = item.procurementCompletedDate ? item.procurementCompletedDate.split('T')[0] : '';
     this.editItemCategoryId = item.categoryId || null;
-    this.editItemStatus = item.status;
     
     // Expand the item to show the edit form
     this.selectedItem = item;
@@ -610,19 +617,21 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemPO = '';
     this.editItemName = '';
     this.editItemDescription = '';
-    this.editItemCurrency = DEFAULT_CURRENCY;
-    this.editItemExchangeRate = null;
     this.editItemVendor = '';
     this.editItemFinalPrice = null;
     this.editItemFinalPriceCurrency = DEFAULT_CURRENCY;
+    this.editItemFinalPriceExchangeRate = null;
     this.editItemFinalPriceCad = null;
+    this.editItemQuotedPrice = null;
+    this.editItemQuotedPriceCurrency = DEFAULT_CURRENCY;
+    this.editItemQuotedPriceExchangeRate = null;
+    this.editItemQuotedPriceCad = null;
     this.editItemContractNumber = '';
     this.editItemContractStartDate = '';
     this.editItemContractEndDate = '';
     this.editItemProcurementCompleted = false;
     this.editItemProcurementCompletedDate = '';
     this.editItemCategoryId = null;
-    this.editItemStatus = 'NOT_STARTED';
   }
 
   /**
@@ -645,12 +654,15 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       purchaseOrder: this.editItemPO?.trim() || undefined,
       name: this.editItemName.trim(),
       description: this.editItemDescription?.trim() || undefined,
-      currency: this.editItemCurrency,
-      exchangeRate: this.editItemCurrency !== 'CAD' ? this.editItemExchangeRate : undefined,
       vendor: this.editItemVendor?.trim() || undefined,
       finalPrice: this.editItemFinalPrice,
       finalPriceCurrency: this.editItemFinalPriceCurrency,
+      finalPriceExchangeRate: this.editItemFinalPriceCurrency !== 'CAD' ? this.editItemFinalPriceExchangeRate : undefined,
       finalPriceCad: this.editItemFinalPriceCurrency !== 'CAD' ? this.editItemFinalPriceCad : undefined,
+      quotedPrice: this.editItemQuotedPrice,
+      quotedPriceCurrency: this.editItemQuotedPriceCurrency,
+      quotedPriceExchangeRate: this.editItemQuotedPriceCurrency !== 'CAD' ? this.editItemQuotedPriceExchangeRate : undefined,
+      quotedPriceCad: this.editItemQuotedPriceCurrency !== 'CAD' ? this.editItemQuotedPriceCad : undefined,
       contractNumber: this.editItemContractNumber?.trim() || undefined,
       contractStartDate: this.editItemContractStartDate || undefined,
       contractEndDate: this.editItemContractEndDate || undefined,
@@ -658,8 +670,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       procurementCompletedDate: this.editItemProcurementCompleted && this.editItemProcurementCompletedDate 
         ? this.editItemProcurementCompletedDate 
         : undefined,
-      categoryId: this.editItemCategoryId || undefined,
-      status: this.editItemStatus
+      categoryId: this.editItemCategoryId || undefined
     };
 
     this.procurementService.updateProcurementItem(this.selectedRC.id, this.selectedFY.id, this.editingItemId, updateRequest)
