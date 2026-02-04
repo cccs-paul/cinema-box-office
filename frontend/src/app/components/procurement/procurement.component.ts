@@ -37,6 +37,7 @@ import {
   ProcurementEvent,
   ProcurementEventType,
   ProcurementEventRequest,
+  ProcurementEventFile,
   EVENT_TYPE_INFO
 } from '../../models/procurement.model';
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
@@ -104,9 +105,22 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     'MONTHLY_INVOICE_SIGNED', 'CONTRACT_AMENDED'
   ];
 
+  // Event Files
+  eventFiles: { [eventId: number]: ProcurementEventFile[] } = {};
+  isLoadingEventFiles: { [eventId: number]: boolean } = {};
+  expandedEventFiles: { [eventId: number]: boolean } = {};
+  selectedEventForUpload: ProcurementEvent | null = null;
+  showEventFileUploadForm = false;
+  eventFileDescription = '';
+  selectedEventFile: File | null = null;
+  isUploadingEventFile = false;
+  editingEventFile: ProcurementEventFile | null = null;
+  editingEventFileDescription = '';
+
   // Currencies
   currencies: Currency[] = [];
   isLoadingCurrencies = false;
+
 
   // Create Procurement Form
   showCreateItemForm = false;
@@ -1633,6 +1647,258 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    */
   get mostRecentEvent(): ProcurementEvent | null {
     return this.events.length > 0 ? this.events[0] : null;
+  }
+
+  // ==========================
+  // Event File Methods
+  // ==========================
+
+  /**
+   * Toggle expanded file list for an event.
+   */
+  toggleEventFiles(event: ProcurementEvent): void {
+    const eventId = event.id;
+    this.expandedEventFiles[eventId] = !this.expandedEventFiles[eventId];
+
+    if (this.expandedEventFiles[eventId] && !this.eventFiles[eventId]) {
+      this.loadEventFiles(event);
+    }
+  }
+
+  /**
+   * Load files for a specific event.
+   */
+  loadEventFiles(event: ProcurementEvent): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem) return;
+
+    const eventId = event.id;
+    this.isLoadingEventFiles[eventId] = true;
+
+    this.procurementService.getEventFiles(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      eventId
+    ).subscribe({
+      next: (files) => {
+        this.eventFiles[eventId] = files;
+        this.isLoadingEventFiles[eventId] = false;
+      },
+      error: (error) => {
+        this.showError('Failed to load files: ' + error.message);
+        this.isLoadingEventFiles[eventId] = false;
+      }
+    });
+  }
+
+  /**
+   * Show file upload form for an event.
+   */
+  showEventFileUpload(event: ProcurementEvent): void {
+    this.selectedEventForUpload = event;
+    this.showEventFileUploadForm = true;
+    this.eventFileDescription = '';
+    this.selectedEventFile = null;
+  }
+
+  /**
+   * Hide file upload form.
+   */
+  cancelEventFileUpload(): void {
+    this.selectedEventForUpload = null;
+    this.showEventFileUploadForm = false;
+    this.eventFileDescription = '';
+    this.selectedEventFile = null;
+  }
+
+  /**
+   * Handle event file selection.
+   */
+  onEventFileSelected(inputEvent: Event): void {
+    const input = inputEvent.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedEventFile = input.files[0];
+    }
+  }
+
+  /**
+   * Upload file to an event.
+   */
+  uploadEventFile(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.selectedEventForUpload || !this.selectedEventFile) {
+      return;
+    }
+
+    this.isUploadingEventFile = true;
+
+    this.procurementService.uploadEventFile(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      this.selectedEventForUpload.id,
+      this.selectedEventFile,
+      this.eventFileDescription || undefined
+    ).subscribe({
+      next: (file) => {
+        this.showSuccess('File uploaded successfully');
+        // Refresh file list
+        const eventId = this.selectedEventForUpload!.id;
+        if (!this.eventFiles[eventId]) {
+          this.eventFiles[eventId] = [];
+        }
+        this.eventFiles[eventId].push(file);
+        this.expandedEventFiles[eventId] = true;
+
+        // Update event's file count
+        const eventIndex = this.events.findIndex(e => e.id === eventId);
+        if (eventIndex !== -1) {
+          this.events[eventIndex].fileCount = (this.events[eventIndex].fileCount || 0) + 1;
+        }
+
+        this.cancelEventFileUpload();
+        this.isUploadingEventFile = false;
+      },
+      error: (error) => {
+        this.showError('Failed to upload file: ' + error.message);
+        this.isUploadingEventFile = false;
+      }
+    });
+  }
+
+  /**
+   * Download an event file.
+   */
+  downloadEventFile(event: ProcurementEvent, file: ProcurementEventFile): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem) return;
+
+    this.procurementService.downloadEventFile(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      event.id,
+      file.id
+    ).subscribe({
+      next: (blob) => {
+        // Create a download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        this.showError('Failed to download file: ' + error.message);
+      }
+    });
+  }
+
+  /**
+   * View/open an event file in a new tab.
+   */
+  viewEventFile(event: ProcurementEvent, file: ProcurementEventFile): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem) return;
+
+    this.procurementService.downloadEventFile(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      event.id,
+      file.id
+    ).subscribe({
+      next: (blob) => {
+        // Open in new tab
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        // Note: the URL will be revoked when the tab is closed
+      },
+      error: (error) => {
+        this.showError('Failed to open file: ' + error.message);
+      }
+    });
+  }
+
+  /**
+   * Show edit form for file description.
+   */
+  editEventFileDescription(file: ProcurementEventFile): void {
+    this.editingEventFile = file;
+    this.editingEventFileDescription = file.description || '';
+  }
+
+  /**
+   * Cancel editing file description.
+   */
+  cancelEditEventFileDescription(): void {
+    this.editingEventFile = null;
+    this.editingEventFileDescription = '';
+  }
+
+  /**
+   * Save updated file description.
+   */
+  saveEventFileDescription(event: ProcurementEvent): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.editingEventFile) return;
+
+    this.procurementService.updateEventFileDescription(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      event.id,
+      this.editingEventFile.id,
+      this.editingEventFileDescription
+    ).subscribe({
+      next: (updatedFile) => {
+        this.showSuccess('File description updated');
+        // Update local file list
+        const eventId = event.id;
+        if (this.eventFiles[eventId]) {
+          const fileIndex = this.eventFiles[eventId].findIndex(f => f.id === updatedFile.id);
+          if (fileIndex !== -1) {
+            this.eventFiles[eventId][fileIndex] = updatedFile;
+          }
+        }
+        this.cancelEditEventFileDescription();
+      },
+      error: (error) => {
+        this.showError('Failed to update file: ' + error.message);
+      }
+    });
+  }
+
+  /**
+   * Delete an event file.
+   */
+  deleteEventFile(event: ProcurementEvent, file: ProcurementEventFile): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem) return;
+    if (!confirm(`Are you sure you want to delete "${file.fileName}"?`)) return;
+
+    this.procurementService.deleteEventFile(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      event.id,
+      file.id
+    ).subscribe({
+      next: () => {
+        this.showSuccess('File deleted successfully');
+        // Remove from local list
+        const eventId = event.id;
+        if (this.eventFiles[eventId]) {
+          this.eventFiles[eventId] = this.eventFiles[eventId].filter(f => f.id !== file.id);
+        }
+        // Update event's file count
+        const eventIndex = this.events.findIndex(e => e.id === eventId);
+        if (eventIndex !== -1 && this.events[eventIndex].fileCount) {
+          this.events[eventIndex].fileCount = Math.max(0, (this.events[eventIndex].fileCount || 1) - 1);
+        }
+      },
+      error: (error) => {
+        this.showError('Failed to delete file: ' + error.message);
+      }
+    });
   }
 
   // ==========================

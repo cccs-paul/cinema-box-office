@@ -1224,6 +1224,98 @@
                             <span class="created-by" *ngIf="event.createdBy">{{ 'procurement.by' | translate }}: {{ event.createdBy }}</span>
                             <span class="created-at" *ngIf="event.createdAt">{{ event.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
                           </div>
+
+                          <!-- Event Files Section -->
+                          <div class="event-files-section">
+                            <div class="event-files-header">
+                              <button class="btn-link files-toggle" (click)="toggleEventFiles(event)">
+                                <span class="toggle-icon">{{ expandedEventFiles[event.id] ? '▼' : '▶' }}</span>
+                                📎 {{ 'procurement.files' | translate }} 
+                                <span class="file-count" *ngIf="event.fileCount || eventFiles[event.id]?.length">
+                                  ({{ eventFiles[event.id]?.length || event.fileCount || 0 }})
+                                </span>
+                              </button>
+                              <button class="btn-small btn-secondary" *ngIf="canWrite" (click)="showEventFileUpload(event)" 
+                                      [title]="'procurement.uploadFile' | translate">
+                                📤 {{ 'procurement.uploadFile' | translate }}
+                              </button>
+                            </div>
+
+                            <!-- File Upload Form (inline) -->
+                            <div class="event-file-upload-form" *ngIf="showEventFileUploadForm && selectedEventForUpload?.id === event.id">
+                              <div class="form-group">
+                                <label>{{ 'procurement.selectFile' | translate }}</label>
+                                <input type="file" (change)="onEventFileSelected($event)" 
+                                       [disabled]="isUploadingEventFile" />
+                              </div>
+                              <div class="form-group">
+                                <label>{{ 'procurement.fileDescription' | translate }}</label>
+                                <input type="text" [(ngModel)]="eventFileDescription" 
+                                       [placeholder]="'procurement.optionalDescription' | translate"
+                                       [disabled]="isUploadingEventFile" />
+                              </div>
+                              <div class="form-actions">
+                                <button class="btn-secondary btn-small" (click)="cancelEventFileUpload()" 
+                                        [disabled]="isUploadingEventFile">
+                                  {{ 'common.cancel' | translate }}
+                                </button>
+                                <button class="btn-primary btn-small" (click)="uploadEventFile()" 
+                                        [disabled]="!selectedEventFile || isUploadingEventFile">
+                                  {{ isUploadingEventFile ? ('procurement.uploading' | translate) : ('procurement.upload' | translate) }}
+                                </button>
+                              </div>
+                            </div>
+
+                            <!-- Files List -->
+                            <div class="event-files-list" *ngIf="expandedEventFiles[event.id]">
+                              <div class="loading" *ngIf="isLoadingEventFiles[event.id]">
+                                <span class="spinner small"></span> {{ 'procurement.loadingFiles' | translate }}
+                              </div>
+
+                              <div class="file-item" *ngFor="let file of eventFiles[event.id]">
+                                <!-- Edit Description Mode -->
+                                <ng-container *ngIf="editingEventFile?.id === file.id; else fileDisplay">
+                                  <div class="file-edit-form">
+                                    <span class="file-icon">{{ getFileIcon(file.contentType) }}</span>
+                                    <span class="file-name">{{ file.fileName }}</span>
+                                    <input type="text" [(ngModel)]="editingEventFileDescription" 
+                                           class="description-input"
+                                           [placeholder]="'procurement.fileDescription' | translate" />
+                                    <div class="file-edit-actions">
+                                      <button class="btn-icon" [title]="'common.save' | translate" 
+                                              (click)="saveEventFileDescription(event)">✔️</button>
+                                      <button class="btn-icon" [title]="'common.cancel' | translate" 
+                                              (click)="cancelEditEventFileDescription()">❌</button>
+                                    </div>
+                                  </div>
+                                </ng-container>
+
+                                <!-- Normal File Display -->
+                                <ng-template #fileDisplay>
+                                  <span class="file-icon">{{ getFileIcon(file.contentType) }}</span>
+                                  <div class="file-info">
+                                    <span class="file-name">{{ file.fileName }}</span>
+                                    <span class="file-size">({{ file.formattedFileSize }})</span>
+                                    <span class="file-description" *ngIf="file.description">- {{ file.description }}</span>
+                                  </div>
+                                  <div class="file-actions">
+                                    <button class="btn-icon" [title]="'common.view' | translate" 
+                                            (click)="viewEventFile(event, file)">👁️</button>
+                                    <button class="btn-icon" [title]="'common.download' | translate" 
+                                            (click)="downloadEventFile(event, file)">⬇️</button>
+                                    <button class="btn-icon" *ngIf="canWrite" [title]="'common.edit' | translate" 
+                                            (click)="editEventFileDescription(file)">✏️</button>
+                                    <button class="btn-icon btn-danger" *ngIf="canWrite" [title]="'common.delete' | translate" 
+                                            (click)="deleteEventFile(event, file)">🗑️</button>
+                                  </div>
+                                </ng-template>
+                              </div>
+
+                              <div class="no-files" *ngIf="!isLoadingEventFiles[event.id] && (!eventFiles[event.id] || eventFiles[event.id].length === 0)">
+                                {{ 'procurement.noFilesAttached' | translate }}
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         <div class="event-actions" *ngIf="canWrite">
                           <button class="btn-icon" [title]="'common.edit' | translate" (click)="editEvent(event)">✏️</button>

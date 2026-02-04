@@ -13,16 +13,20 @@
 package com.myrc.service;
 
 import com.myrc.dto.ProcurementEventDTO;
+import com.myrc.dto.ProcurementEventFileDTO;
 import com.myrc.model.ProcurementEvent;
+import com.myrc.model.ProcurementEventFile;
 import com.myrc.model.ProcurementItem;
 import com.myrc.model.RCAccess;
 import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.User;
+import com.myrc.repository.ProcurementEventFileRepository;
 import com.myrc.repository.ProcurementEventRepository;
 import com.myrc.repository.ProcurementItemRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.UserRepository;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +34,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * Implementation of ProcurementEventService.
@@ -44,18 +49,24 @@ public class ProcurementEventServiceImpl implements ProcurementEventService {
 
     private static final Logger logger = Logger.getLogger(ProcurementEventServiceImpl.class.getName());
 
+    /** Maximum file size: 50 MB */
+    private static final long MAX_FILE_SIZE = 50 * 1024 * 1024;
+
     private final ProcurementEventRepository eventRepository;
+    private final ProcurementEventFileRepository eventFileRepository;
     private final ProcurementItemRepository procurementItemRepository;
     private final ResponsibilityCentreRepository rcRepository;
     private final RCAccessRepository accessRepository;
     private final UserRepository userRepository;
 
     public ProcurementEventServiceImpl(ProcurementEventRepository eventRepository,
+                                        ProcurementEventFileRepository eventFileRepository,
                                         ProcurementItemRepository procurementItemRepository,
                                         ResponsibilityCentreRepository rcRepository,
                                         RCAccessRepository accessRepository,
                                         UserRepository userRepository) {
         this.eventRepository = eventRepository;
+        this.eventFileRepository = eventFileRepository;
         this.procurementItemRepository = procurementItemRepository;
         this.rcRepository = rcRepository;
         this.accessRepository = accessRepository;
@@ -351,5 +362,141 @@ public class ProcurementEventServiceImpl implements ProcurementEventService {
 
         Optional<ProcurementEvent> eventOpt = eventRepository.findMostRecentByProcurementItemId(procurementItemId);
         return eventOpt.map(ProcurementEventDTO::fromEntity).orElse(null);
+    }
+
+    // ==========================
+    // Event File Operations
+    // ==========================
+
+    @Override
+    public ProcurementEventFileDTO uploadEventFile(Long eventId, MultipartFile file, String description, String username) {
+        // Validate file
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File is required");
+        }
+
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("File size exceeds maximum limit of 50 MB");
+        }
+
+        // Get event and verify access
+        Optional<ProcurementEvent> eventOpt = eventRepository.findByIdAndActiveTrue(eventId);
+        if (eventOpt.isEmpty()) {
+            throw new IllegalArgumentException("Event not found");
+        }
+
+        ProcurementEvent event = eventOpt.get();
+        Long procurementItemId = event.getProcurementItem().getId();
+
+        // Verify write access
+        getProcurementItemWithAccess(procurementItemId, username, true);
+
+        try {
+            // Create file entity
+            ProcurementEventFile eventFile = new ProcurementEventFile(
+                    file.getOriginalFilename(),
+                    file.getContentType() != null ? file.getContentType() : "application/octet-stream",
+                    file.getSize(),
+                    file.getBytes(),
+                    event
+            );
+            eventFile.setDescription(description);
+
+            // Save and return
+            ProcurementEventFile saved = eventFileRepository.save(eventFile);
+            logger.info("Uploaded file '" + file.getOriginalFilename() + "' to event " + eventId + " by user " + username);
+
+            return ProcurementEventFileDTO.fromEntity(saved);
+        } catch (IOException e) {
+            logger.severe("Failed to read file content: " + e.getMessage());
+            throw new IllegalStateException("Failed to process uploaded file", e);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProcurementEventFileDTO> getEventFiles(Long eventId, String username) {
+        // Get event and verify access
+        Optional<ProcurementEvent> eventOpt = eventRepository.findByIdAndActiveTrue(eventId);
+        if (eventOpt.isEmpty()) {
+            throw new IllegalArgumentException("Event not found");
+        }
+
+        ProcurementEvent event = eventOpt.get();
+        Long procurementItemId = event.getProcurementItem().getId();
+
+        // Verify read access
+        getProcurementItemWithAccess(procurementItemId, username, false);
+
+        List<ProcurementEventFile> files = eventFileRepository.findByEventIdAndActiveTrue(eventId);
+        return files.stream()
+                .map(ProcurementEventFileDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProcurementEventFile getEventFile(Long fileId, String username) {
+        Optional<ProcurementEventFile> fileOpt = eventFileRepository.findById(fileId);
+        if (fileOpt.isEmpty() || !Boolean.TRUE.equals(fileOpt.get().getActive())) {
+            throw new IllegalArgumentException("File not found");
+        }
+
+        ProcurementEventFile file = fileOpt.get();
+        ProcurementEvent event = file.getEvent();
+        Long procurementItemId = event.getProcurementItem().getId();
+
+        // Verify read access
+        getProcurementItemWithAccess(procurementItemId, username, false);
+
+        return file;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProcurementEventFileDTO getEventFileMetadata(Long fileId, String username) {
+        ProcurementEventFile file = getEventFile(fileId, username);
+        return ProcurementEventFileDTO.fromEntity(file);
+    }
+
+    @Override
+    public ProcurementEventFileDTO updateEventFileDescription(Long fileId, String description, String username) {
+        Optional<ProcurementEventFile> fileOpt = eventFileRepository.findById(fileId);
+        if (fileOpt.isEmpty() || !Boolean.TRUE.equals(fileOpt.get().getActive())) {
+            throw new IllegalArgumentException("File not found");
+        }
+
+        ProcurementEventFile file = fileOpt.get();
+        ProcurementEvent event = file.getEvent();
+        Long procurementItemId = event.getProcurementItem().getId();
+
+        // Verify write access
+        getProcurementItemWithAccess(procurementItemId, username, true);
+
+        file.setDescription(description);
+        ProcurementEventFile saved = eventFileRepository.save(file);
+        logger.info("Updated description of file " + fileId + " by user " + username);
+
+        return ProcurementEventFileDTO.fromEntity(saved);
+    }
+
+    @Override
+    public void deleteEventFile(Long fileId, String username) {
+        Optional<ProcurementEventFile> fileOpt = eventFileRepository.findById(fileId);
+        if (fileOpt.isEmpty() || !Boolean.TRUE.equals(fileOpt.get().getActive())) {
+            throw new IllegalArgumentException("File not found");
+        }
+
+        ProcurementEventFile file = fileOpt.get();
+        ProcurementEvent event = file.getEvent();
+        Long procurementItemId = event.getProcurementItem().getId();
+
+        // Verify write access
+        getProcurementItemWithAccess(procurementItemId, username, true);
+
+        // Soft delete
+        file.setActive(false);
+        eventFileRepository.save(file);
+        logger.info("Deleted file " + fileId + " by user " + username);
     }
 }

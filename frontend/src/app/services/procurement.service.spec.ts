@@ -18,6 +18,7 @@ import {
   ProcurementQuote,
   ProcurementQuoteFile,
   ProcurementItemStatus,
+  ProcurementEventFile,
 } from '../models/procurement.model';
 
 describe('ProcurementService', () => {
@@ -418,6 +419,299 @@ describe('ProcurementService', () => {
         '/api/responsibility-centres/1/fiscal-years/1/procurement-items'
       );
       req.error(new ProgressEvent('network error'));
+    });
+  });
+
+  describe('Event File Operations', () => {
+    const mockEventFile: ProcurementEventFile = {
+      id: 1,
+      fileName: 'test-document.pdf',
+      contentType: 'application/pdf',
+      fileSize: 1048576,
+      formattedFileSize: '1.00 MB',
+      description: 'Test file description',
+      eventId: 1,
+      createdAt: '2026-01-15T10:30:00Z',
+      updatedAt: '2026-01-15T10:30:00Z'
+    };
+
+    describe('uploadEventFile', () => {
+      it('should upload file to event', () => {
+        const file = new File(['test content'], 'test-file.pdf', { type: 'application/pdf' });
+        const description = 'Test upload description';
+
+        service.uploadEventFile(1, 1, 1, 1, file, description).subscribe((result) => {
+          expect(result.id).toBe(1);
+          expect(result.fileName).toBe('test-document.pdf');
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files'
+        );
+        expect(req.request.method).toBe('POST');
+        expect(req.request.body instanceof FormData).toBe(true);
+        req.flush(mockEventFile);
+      });
+
+      it('should upload file without description', () => {
+        const file = new File(['test content'], 'test-file.pdf', { type: 'application/pdf' });
+
+        service.uploadEventFile(1, 1, 1, 1, file).subscribe((result) => {
+          expect(result.id).toBe(1);
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files'
+        );
+        expect(req.request.method).toBe('POST');
+        req.flush(mockEventFile);
+      });
+
+      it('should handle 413 error for file too large', () => {
+        const file = new File(['large content'], 'large-file.pdf', { type: 'application/pdf' });
+
+        service.uploadEventFile(1, 1, 1, 1, file).subscribe({
+          error: (error) => {
+            expect(error).toBeTruthy();
+          },
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files'
+        );
+        req.flush(
+          { message: 'File too large' },
+          { status: 413, statusText: 'Payload Too Large' }
+        );
+      });
+
+      it('should handle 404 error when event not found', () => {
+        const file = new File(['test content'], 'test-file.pdf', { type: 'application/pdf' });
+
+        service.uploadEventFile(1, 1, 1, 999, file).subscribe({
+          error: (error) => {
+            expect(error).toBeTruthy();
+          },
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/999/files'
+        );
+        req.flush(
+          { message: 'Event not found' },
+          { status: 404, statusText: 'Not Found' }
+        );
+      });
+    });
+
+    describe('getEventFiles', () => {
+      it('should return files for event', () => {
+        const mockFiles: ProcurementEventFile[] = [mockEventFile];
+
+        service.getEventFiles(1, 1, 1, 1).subscribe((files) => {
+          expect(files.length).toBe(1);
+          expect(files[0].fileName).toBe('test-document.pdf');
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files'
+        );
+        expect(req.request.method).toBe('GET');
+        req.flush(mockFiles);
+      });
+
+      it('should return empty array when no files', () => {
+        service.getEventFiles(1, 1, 1, 1).subscribe((files) => {
+          expect(files.length).toBe(0);
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files'
+        );
+        req.flush([]);
+      });
+
+      it('should handle 404 error when event not found', () => {
+        service.getEventFiles(1, 1, 1, 999).subscribe({
+          error: (error) => {
+            expect(error).toBeTruthy();
+          },
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/999/files'
+        );
+        req.flush(
+          { message: 'Event not found' },
+          { status: 404, statusText: 'Not Found' }
+        );
+      });
+    });
+
+    describe('downloadEventFile', () => {
+      it('should download file as blob', () => {
+        const mockBlob = new Blob(['test content'], { type: 'application/pdf' });
+
+        service.downloadEventFile(1, 1, 1, 1, 1).subscribe((blob) => {
+          expect(blob.size).toBeGreaterThan(0);
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files/1'
+        );
+        expect(req.request.method).toBe('GET');
+        expect(req.request.responseType).toBe('blob');
+        req.flush(mockBlob);
+      });
+
+      it('should handle 404 error when file not found', () => {
+        service.downloadEventFile(1, 1, 1, 1, 999).subscribe({
+          error: (error) => {
+            expect(error).toBeTruthy();
+          },
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files/999'
+        );
+        // For blob response type, use error() instead of flush() for error responses
+        req.error(new ProgressEvent('error'), { status: 404, statusText: 'Not Found' });
+      });
+    });
+
+    describe('getEventFileDownloadUrl', () => {
+      it('should return correct download URL', () => {
+        const url = service.getEventFileDownloadUrl(1, 2, 3, 4, 5);
+        expect(url).toBe('/api/responsibility-centres/1/fiscal-years/2/procurement-items/3/events/4/files/5');
+      });
+    });
+
+    describe('getEventFileMetadata', () => {
+      it('should return file metadata', () => {
+        service.getEventFileMetadata(1, 1, 1, 1, 1).subscribe((file) => {
+          expect(file.id).toBe(1);
+          expect(file.fileName).toBe('test-document.pdf');
+          expect(file.contentType).toBe('application/pdf');
+          expect(file.fileSize).toBe(1048576);
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files/1/metadata'
+        );
+        expect(req.request.method).toBe('GET');
+        req.flush(mockEventFile);
+      });
+
+      it('should handle 404 error when file not found', () => {
+        service.getEventFileMetadata(1, 1, 1, 1, 999).subscribe({
+          error: (error) => {
+            expect(error).toBeTruthy();
+          },
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files/999/metadata'
+        );
+        req.flush(
+          { message: 'File not found' },
+          { status: 404, statusText: 'Not Found' }
+        );
+      });
+    });
+
+    describe('updateEventFileDescription', () => {
+      it('should update file description', () => {
+        const newDescription = 'Updated description';
+
+        service.updateEventFileDescription(1, 1, 1, 1, 1, newDescription).subscribe((file) => {
+          expect(file.id).toBe(1);
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files/1'
+        );
+        expect(req.request.method).toBe('PUT');
+        expect(req.request.body).toEqual({ description: newDescription });
+        req.flush({ ...mockEventFile, description: newDescription });
+      });
+
+      it('should handle 404 error when file not found', () => {
+        service.updateEventFileDescription(1, 1, 1, 1, 999, 'New desc').subscribe({
+          error: (error) => {
+            expect(error).toBeTruthy();
+          },
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files/999'
+        );
+        req.flush(
+          { message: 'File not found' },
+          { status: 404, statusText: 'Not Found' }
+        );
+      });
+
+      it('should handle 403 error when access denied', () => {
+        service.updateEventFileDescription(1, 1, 1, 1, 1, 'New desc').subscribe({
+          error: (error) => {
+            expect(error).toBeTruthy();
+          },
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files/1'
+        );
+        req.flush(
+          { message: 'Access denied' },
+          { status: 403, statusText: 'Forbidden' }
+        );
+      });
+    });
+
+    describe('deleteEventFile', () => {
+      it('should delete file', () => {
+        service.deleteEventFile(1, 1, 1, 1, 1).subscribe(() => {
+          // Success - void response
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files/1'
+        );
+        expect(req.request.method).toBe('DELETE');
+        req.flush(null);
+      });
+
+      it('should handle 404 error when file not found', () => {
+        service.deleteEventFile(1, 1, 1, 1, 999).subscribe({
+          error: (error) => {
+            expect(error).toBeTruthy();
+          },
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files/999'
+        );
+        req.flush(
+          { message: 'File not found' },
+          { status: 404, statusText: 'Not Found' }
+        );
+      });
+
+      it('should handle 403 error when access denied', () => {
+        service.deleteEventFile(1, 1, 1, 1, 1).subscribe({
+          error: (error) => {
+            expect(error).toBeTruthy();
+          },
+        });
+
+        const req = httpMock.expectOne(
+          '/api/responsibility-centres/1/fiscal-years/1/procurement-items/1/events/1/files/1'
+        );
+        req.flush(
+          { message: 'Access denied' },
+          { status: 403, statusText: 'Forbidden' }
+        );
+      });
     });
   });
 });

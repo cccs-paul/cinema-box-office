@@ -510,6 +510,136 @@ export class ProcurementService {
   }
 
   // ==========================
+  // Event File Operations
+  // ==========================
+
+  /**
+   * Upload a file to an event.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @param file The file to upload
+   * @param description Optional file description
+   * @returns Observable of the created file metadata
+   */
+  uploadEventFile(rcId: number, fyId: number, procurementItemId: number, eventId: number,
+                  file: File, description?: string): Observable<ProcurementEventFile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) {
+      formData.append('description', description);
+    }
+    return this.http.post<ProcurementEventFile>(
+      `${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}/files`,
+      formData,
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Get all files for an event.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @returns Observable of file metadata array
+   */
+  getEventFiles(rcId: number, fyId: number, procurementItemId: number, eventId: number): Observable<ProcurementEventFile[]> {
+    return this.http.get<ProcurementEventFile[]>(
+      `${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}/files`,
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Get event file metadata.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @param fileId The file ID
+   * @returns Observable of file metadata
+   */
+  getEventFileMetadata(rcId: number, fyId: number, procurementItemId: number, eventId: number, fileId: number): Observable<ProcurementEventFile> {
+    return this.http.get<ProcurementEventFile>(
+      `${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}/files/${fileId}/metadata`,
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Download an event file.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @param fileId The file ID
+   * @returns Observable of the file blob
+   */
+  downloadEventFile(rcId: number, fyId: number, procurementItemId: number, eventId: number, fileId: number): Observable<Blob> {
+    return this.http.get(
+      `${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}/files/${fileId}`,
+      { withCredentials: true, responseType: 'blob' }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Get the download URL for an event file.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @param fileId The file ID
+   * @returns The download URL
+   */
+  getEventFileDownloadUrl(rcId: number, fyId: number, procurementItemId: number, eventId: number, fileId: number): string {
+    return `${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}/files/${fileId}`;
+  }
+
+  /**
+   * Update an event file's description.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @param fileId The file ID
+   * @param description The new description
+   * @returns Observable of the updated file metadata
+   */
+  updateEventFileDescription(rcId: number, fyId: number, procurementItemId: number, eventId: number,
+                              fileId: number, description: string): Observable<ProcurementEventFile> {
+    return this.http.put<ProcurementEventFile>(
+      `${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}/files/${fileId}`,
+      { description },
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Delete an event file.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @param fileId The file ID
+   * @returns Observable of void
+   */
+  deleteEventFile(rcId: number, fyId: number, procurementItemId: number, eventId: number, fileId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}/files/${fileId}`,
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
+  // ==========================
   // Spending Link Methods
   // ==========================
 

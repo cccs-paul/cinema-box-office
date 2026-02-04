@@ -15,7 +15,11 @@ package com.myrc.service;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.myrc.dto.ProcurementEventDTO;
+import com.myrc.dto.ProcurementEventFileDTO;
+import com.myrc.model.ProcurementEventFile;
 
 /**
  * Service interface for Procurement Event management operations.
@@ -111,4 +115,64 @@ public interface ProcurementEventService {
      * @return the most recent event, or null if none
      */
     ProcurementEventDTO getMostRecentEvent(Long procurementItemId, String username);
+
+    // ==========================
+    // Event File Operations
+    // ==========================
+
+    /**
+     * Upload a file to an event.
+     *
+     * @param eventId the event ID
+     * @param file the file to upload
+     * @param description optional description for the file
+     * @param username the uploading user's username
+     * @return the created file DTO
+     */
+    ProcurementEventFileDTO uploadEventFile(Long eventId, MultipartFile file, String description, String username);
+
+    /**
+     * Get all active files for an event.
+     *
+     * @param eventId the event ID
+     * @param username the requesting user's username
+     * @return list of file DTOs
+     */
+    List<ProcurementEventFileDTO> getEventFiles(Long eventId, String username);
+
+    /**
+     * Get a specific file by ID (includes content for download).
+     *
+     * @param fileId the file ID
+     * @param username the requesting user's username
+     * @return the file entity with content
+     */
+    ProcurementEventFile getEventFile(Long fileId, String username);
+
+    /**
+     * Get a specific file's metadata (without content).
+     *
+     * @param fileId the file ID
+     * @param username the requesting user's username
+     * @return the file DTO
+     */
+    ProcurementEventFileDTO getEventFileMetadata(Long fileId, String username);
+
+    /**
+     * Update a file's description.
+     *
+     * @param fileId the file ID
+     * @param description the new description
+     * @param username the updating user's username
+     * @return the updated file DTO
+     */
+    ProcurementEventFileDTO updateEventFileDescription(Long fileId, String description, String username);
+
+    /**
+     * Delete (soft delete) a file.
+     *
+     * @param fileId the file ID
+     * @param username the deleting user's username
+     */
+    void deleteEventFile(Long fileId, String username);
 }

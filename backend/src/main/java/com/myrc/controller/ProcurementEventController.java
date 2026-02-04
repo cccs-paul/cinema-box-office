@@ -14,6 +14,8 @@ package com.myrc.controller;
 
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.ProcurementEventDTO;
+import com.myrc.dto.ProcurementEventFileDTO;
+import com.myrc.model.ProcurementEventFile;
 import com.myrc.service.ProcurementEventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -22,11 +24,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.logging.Logger;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * REST Controller for Procurement Event management.
@@ -362,6 +369,302 @@ public class ProcurementEventController {
         } catch (Exception e) {
             logger.severe("Error deleting event: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // ==========================
+    // Event File Endpoints
+    // ==========================
+
+    /**
+     * Upload a file to an event.
+     *
+     * @param rcId the responsibility centre ID
+     * @param fyId the fiscal year ID
+     * @param procurementItemId the procurement item ID
+     * @param eventId the event ID
+     * @param file the file to upload
+     * @param description optional file description
+     * @param authentication the authentication principal
+     * @return the created file metadata
+     */
+    @PostMapping("/{eventId}/files")
+    @Operation(summary = "Upload a file to an event",
+            description = "Uploads a file and attaches it to a procurement event.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "File uploaded successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request or file too large"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "Event not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> uploadFile(
+            @PathVariable Long rcId,
+            @PathVariable Long fyId,
+            @PathVariable Long procurementItemId,
+            @PathVariable Long eventId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "description", required = false) String description,
+            Authentication authentication) {
+        String username = getUsername(authentication);
+        logger.info("POST /events/" + eventId + "/files - Uploading file for user: " + username);
+
+        try {
+            ProcurementEventFileDTO uploaded = eventService.uploadEventFile(eventId, file, description, username);
+            return ResponseEntity.status(HttpStatus.CREATED).body(uploaded);
+        } catch (IllegalArgumentException e) {
+            logger.warning("Bad request uploading file: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (IllegalStateException e) {
+            logger.severe("Error processing file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("Failed to process file"));
+        } catch (Exception e) {
+            logger.severe("Error uploading file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
+    /**
+     * Get all files for an event.
+     *
+     * @param rcId the responsibility centre ID
+     * @param fyId the fiscal year ID
+     * @param procurementItemId the procurement item ID
+     * @param eventId the event ID
+     * @param authentication the authentication principal
+     * @return list of file metadata
+     */
+    @GetMapping("/{eventId}/files")
+    @Operation(summary = "Get all files for an event",
+            description = "Retrieves metadata for all files attached to a procurement event.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Files retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "Event not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> getEventFiles(
+            @PathVariable Long rcId,
+            @PathVariable Long fyId,
+            @PathVariable Long procurementItemId,
+            @PathVariable Long eventId,
+            Authentication authentication) {
+        String username = getUsername(authentication);
+        logger.info("GET /events/" + eventId + "/files for user: " + username);
+
+        try {
+            List<ProcurementEventFileDTO> files = eventService.getEventFiles(eventId, username);
+            return ResponseEntity.ok(files);
+        } catch (IllegalArgumentException e) {
+            logger.warning("Event not found: " + e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.severe("Error fetching files: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
+    /**
+     * Download a specific file.
+     *
+     * @param rcId the responsibility centre ID
+     * @param fyId the fiscal year ID
+     * @param procurementItemId the procurement item ID
+     * @param eventId the event ID
+     * @param fileId the file ID
+     * @param authentication the authentication principal
+     * @return the file content
+     */
+    @GetMapping("/{eventId}/files/{fileId}")
+    @Operation(summary = "Download a file",
+            description = "Downloads a specific file attached to a procurement event.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "File downloaded successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "File not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> downloadFile(
+            @PathVariable Long rcId,
+            @PathVariable Long fyId,
+            @PathVariable Long procurementItemId,
+            @PathVariable Long eventId,
+            @PathVariable Long fileId,
+            Authentication authentication) {
+        String username = getUsername(authentication);
+        logger.info("GET /events/" + eventId + "/files/" + fileId + " - Downloading file for user: " + username);
+
+        try {
+            ProcurementEventFile file = eventService.getEventFile(fileId, username);
+
+            ByteArrayResource resource = new ByteArrayResource(file.getContent());
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFileName() + "\"");
+            headers.add(HttpHeaders.CACHE_CONTROL, "no-cache, no-store, must-revalidate");
+            headers.add(HttpHeaders.PRAGMA, "no-cache");
+            headers.add(HttpHeaders.EXPIRES, "0");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(file.getFileSize())
+                    .contentType(MediaType.parseMediaType(file.getContentType()))
+                    .body(resource);
+        } catch (IllegalArgumentException e) {
+            logger.warning("File not found: " + e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.severe("Error downloading file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
+    /**
+     * Get file metadata without downloading.
+     *
+     * @param rcId the responsibility centre ID
+     * @param fyId the fiscal year ID
+     * @param procurementItemId the procurement item ID
+     * @param eventId the event ID
+     * @param fileId the file ID
+     * @param authentication the authentication principal
+     * @return the file metadata
+     */
+    @GetMapping("/{eventId}/files/{fileId}/metadata")
+    @Operation(summary = "Get file metadata",
+            description = "Retrieves metadata for a specific file without downloading the content.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Metadata retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "File not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> getFileMetadata(
+            @PathVariable Long rcId,
+            @PathVariable Long fyId,
+            @PathVariable Long procurementItemId,
+            @PathVariable Long eventId,
+            @PathVariable Long fileId,
+            Authentication authentication) {
+        String username = getUsername(authentication);
+
+        try {
+            ProcurementEventFileDTO metadata = eventService.getEventFileMetadata(fileId, username);
+            return ResponseEntity.ok(metadata);
+        } catch (IllegalArgumentException e) {
+            logger.warning("File not found: " + e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.severe("Error fetching file metadata: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
+    /**
+     * Update a file's description.
+     *
+     * @param rcId the responsibility centre ID
+     * @param fyId the fiscal year ID
+     * @param procurementItemId the procurement item ID
+     * @param eventId the event ID
+     * @param fileId the file ID
+     * @param request the update request containing the new description
+     * @param authentication the authentication principal
+     * @return the updated file metadata
+     */
+    @PutMapping("/{eventId}/files/{fileId}")
+    @Operation(summary = "Update file description",
+            description = "Updates the description of a specific file.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "File updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "File not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<?> updateFileDescription(
+            @PathVariable Long rcId,
+            @PathVariable Long fyId,
+            @PathVariable Long procurementItemId,
+            @PathVariable Long eventId,
+            @PathVariable Long fileId,
+            @RequestBody FileDescriptionUpdateRequest request,
+            Authentication authentication) {
+        String username = getUsername(authentication);
+        logger.info("PUT /events/" + eventId + "/files/" + fileId + " for user: " + username);
+
+        try {
+            ProcurementEventFileDTO updated = eventService.updateEventFileDescription(fileId, request.getDescription(), username);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            logger.warning("Bad request updating file: " + e.getMessage());
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            logger.severe("Error updating file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+        }
+    }
+
+    /**
+     * Delete a file.
+     *
+     * @param rcId the responsibility centre ID
+     * @param fyId the fiscal year ID
+     * @param procurementItemId the procurement item ID
+     * @param eventId the event ID
+     * @param fileId the file ID
+     * @param authentication the authentication principal
+     * @return 204 No Content on success
+     */
+    @DeleteMapping("/{eventId}/files/{fileId}")
+    @Operation(summary = "Delete a file",
+            description = "Deletes a specific file (soft delete).")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "File deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "File not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<Void> deleteFile(
+            @PathVariable Long rcId,
+            @PathVariable Long fyId,
+            @PathVariable Long procurementItemId,
+            @PathVariable Long eventId,
+            @PathVariable Long fileId,
+            Authentication authentication) {
+        String username = getUsername(authentication);
+        logger.info("DELETE /events/" + eventId + "/files/" + fileId + " for user: " + username);
+
+        try {
+            eventService.deleteEventFile(fileId, username);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            logger.warning("File not found: " + e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            logger.severe("Error deleting file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Request body for updating a file's description.
+     */
+    public static class FileDescriptionUpdateRequest {
+        private String description;
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
         }
     }
 }

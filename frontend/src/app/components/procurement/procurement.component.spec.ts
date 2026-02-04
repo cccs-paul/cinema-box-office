@@ -22,7 +22,7 @@ import { CurrencyService } from '../../services/currency.service';
 import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { CategoryService } from '../../services/category.service';
 import { User } from '../../models/user.model';
-import { ProcurementItem } from '../../models/procurement.model';
+import { ProcurementItem, ProcurementEvent, ProcurementEventFile, ProcurementEventType } from '../../models/procurement.model';
 import { Category } from '../../models/category.model';
 
 describe('ProcurementComponent', () => {
@@ -167,7 +167,13 @@ describe('ProcurementComponent', () => {
       'getEvents',
       'createEvent',
       'updateEvent',
-      'deleteEvent'
+      'deleteEvent',
+      'getEventFiles',
+      'uploadEventFile',
+      'deleteEventFile',
+      'updateEventFileDescription',
+      'downloadEventFile',
+      'getEventFileDownloadUrl'
     ]);
     const currencySpy = jasmine.createSpyObj('CurrencyService', ['getCurrencies']);
     const fuzzySpy = jasmine.createSpyObj('FuzzySearchService', ['filter']);
@@ -640,6 +646,399 @@ describe('ProcurementComponent', () => {
       
       expect(component['destroy$'].next).toHaveBeenCalled();
       expect(component['destroy$'].complete).toHaveBeenCalled();
+    });
+  });
+
+  describe('Event File Operations', () => {
+    const mockEvent: ProcurementEvent = {
+      id: 1,
+      procurementItemId: 1,
+      eventType: 'NOTE_ADDED' as ProcurementEventType,
+      eventDate: '2026-01-15',
+      comment: 'Test event',
+      fileCount: 2
+    };
+
+    const mockEventFiles: ProcurementEventFile[] = [
+      {
+        id: 1,
+        fileName: 'test-document.pdf',
+        contentType: 'application/pdf',
+        fileSize: 1048576,
+        formattedFileSize: '1.00 MB',
+        description: 'Test file',
+        eventId: 1
+      },
+      {
+        id: 2,
+        fileName: 'spreadsheet.xlsx',
+        contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        fileSize: 512000,
+        formattedFileSize: '500.00 KB',
+        description: '',
+        eventId: 1
+      }
+    ];
+
+    beforeEach(() => {
+      procurementService.getEventFiles.and.returnValue(of(mockEventFiles));
+      procurementService.uploadEventFile.and.returnValue(of(mockEventFiles[0]));
+      procurementService.deleteEventFile.and.returnValue(of(void 0));
+      procurementService.updateEventFileDescription.and.returnValue(of({
+        ...mockEventFiles[0],
+        description: 'Updated description'
+      }));
+      procurementService.downloadEventFile.and.returnValue(of(new Blob(['test'], { type: 'application/pdf' })));
+      procurementService.getEventFileDownloadUrl.and.returnValue('/api/files/1');
+      
+      // Set component state for event file tests
+      component.selectedRC = {
+        id: 1,
+        name: 'Test RC',
+        description: '',
+        active: true,
+        isOwner: true,
+        accessLevel: 'READ_WRITE'
+      } as any;
+      component.selectedFY = {
+        id: 1,
+        name: 'FY 2025-2026',
+        description: '',
+        active: true,
+        responsibilityCentreId: 1,
+        showSearchBox: true,
+        showCategoryFilter: true,
+        groupByCategory: false,
+        onTargetMin: -2,
+        onTargetMax: 2
+      } as any;
+      component.procurementItems = mockProcurementItems;
+      // Set selectedItem which is needed by the file methods
+      component.selectedItem = mockProcurementItems[0];
+    });
+
+    describe('toggleEventFiles', () => {
+      it('should expand files section when not expanded', fakeAsync(() => {
+        component.expandedEventFiles = {};
+        
+        component.toggleEventFiles(mockEvent);
+        tick();
+        
+        expect(component.expandedEventFiles[mockEvent.id]).toBe(true);
+        expect(procurementService.getEventFiles).toHaveBeenCalledWith(1, 1, 1, mockEvent.id);
+        expect(component.eventFiles[mockEvent.id]).toEqual(mockEventFiles);
+      }));
+
+      it('should collapse files section when already expanded', () => {
+        component.expandedEventFiles = { [mockEvent.id]: true };
+        component.eventFiles = { [mockEvent.id]: mockEventFiles };
+        
+        component.toggleEventFiles(mockEvent);
+        
+        expect(component.expandedEventFiles[mockEvent.id]).toBe(false);
+        expect(procurementService.getEventFiles).not.toHaveBeenCalled();
+      });
+
+      it('should load files after expanding', fakeAsync(() => {
+        component.expandedEventFiles = {};
+        component.isLoadingEventFiles = {};
+        
+        component.toggleEventFiles(mockEvent);
+        tick();
+        
+        // After tick, files should be loaded and loading state should be false
+        expect(component.isLoadingEventFiles[mockEvent.id]).toBe(false);
+        expect(component.eventFiles[mockEvent.id]).toEqual(mockEventFiles);
+      }));
+
+      it('should handle error when loading files fails', fakeAsync(() => {
+        procurementService.getEventFiles.and.returnValue(
+          throwError(() => new Error('Failed to load'))
+        );
+        component.expandedEventFiles = {};
+        
+        component.toggleEventFiles(mockEvent);
+        tick();
+        
+        expect(component.isLoadingEventFiles[mockEvent.id]).toBe(false);
+        expect(component.eventFiles[mockEvent.id]).toBeUndefined();
+      }));
+    });
+
+    describe('loadEventFiles', () => {
+      it('should load files for specific event', fakeAsync(() => {
+        component.loadEventFiles(mockEvent);
+        tick();
+        
+        expect(procurementService.getEventFiles).toHaveBeenCalledWith(1, 1, 1, mockEvent.id);
+        expect(component.eventFiles[mockEvent.id]).toEqual(mockEventFiles);
+      }));
+    });
+
+    describe('showEventFileUpload', () => {
+      it('should show upload form for event', () => {
+        component.showEventFileUpload(mockEvent);
+        
+        expect(component.selectedEventForUpload).toBe(mockEvent);
+        expect(component.showEventFileUploadForm).toBe(true);
+        expect(component.selectedEventFile).toBeNull();
+        expect(component.eventFileDescription).toBe('');
+      });
+    });
+
+    describe('cancelEventFileUpload', () => {
+      it('should hide upload form and reset state', () => {
+        component.selectedEventForUpload = mockEvent;
+        component.showEventFileUploadForm = true;
+        component.selectedEventFile = new File(['test'], 'test.pdf');
+        component.eventFileDescription = 'Some description';
+        
+        component.cancelEventFileUpload();
+        
+        expect(component.showEventFileUploadForm).toBe(false);
+        expect(component.selectedEventForUpload).toBeNull();
+        expect(component.selectedEventFile).toBeNull();
+        expect(component.eventFileDescription).toBe('');
+      });
+    });
+
+    describe('onEventFileSelected', () => {
+      it('should set selected file from input event', () => {
+        const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
+        const event = { target: { files: [file] } } as unknown as Event;
+        
+        component.onEventFileSelected(event);
+        
+        expect(component.selectedEventFile).toEqual(file);
+      });
+
+      it('should handle null files', () => {
+        const event = { target: { files: null } } as unknown as Event;
+        
+        component.onEventFileSelected(event);
+        
+        expect(component.selectedEventFile).toBeNull();
+      });
+
+      it('should handle empty files array', () => {
+        const event = { target: { files: [] } } as unknown as Event;
+        
+        component.onEventFileSelected(event);
+        
+        expect(component.selectedEventFile).toBeNull();
+      });
+    });
+
+    describe('uploadEventFile', () => {
+      it('should upload file to event', fakeAsync(() => {
+        const testFile = new File(['test'], 'test.pdf', { type: 'application/pdf' });
+        component.selectedEventForUpload = mockEvent;
+        component.selectedEventFile = testFile;
+        component.eventFileDescription = 'Test description';
+        component.expandedEventFiles = { [mockEvent.id]: true };
+        component.eventFiles = { [mockEvent.id]: [] };
+        
+        component.uploadEventFile();
+        tick();
+        
+        expect(procurementService.uploadEventFile).toHaveBeenCalledWith(
+          1, 1, 1, mockEvent.id,
+          testFile,
+          'Test description'
+        );
+        expect(component.showEventFileUploadForm).toBe(false);
+        expect(component.eventFiles[mockEvent.id]).toEqual([mockEventFiles[0]]);
+      }));
+
+      it('should not upload if no file selected', () => {
+        component.selectedEventForUpload = mockEvent;
+        component.selectedEventFile = null;
+        
+        component.uploadEventFile();
+        
+        expect(procurementService.uploadEventFile).not.toHaveBeenCalled();
+      });
+
+      it('should not upload if no event selected', () => {
+        component.selectedEventForUpload = null;
+        component.selectedEventFile = new File(['test'], 'test.pdf');
+        
+        component.uploadEventFile();
+        
+        expect(procurementService.uploadEventFile).not.toHaveBeenCalled();
+      });
+
+      it('should clear uploading state after successful upload', fakeAsync(() => {
+        component.selectedEventForUpload = mockEvent;
+        component.selectedEventFile = new File(['test'], 'test.pdf');
+        component.eventFiles = { [mockEvent.id]: [] };
+        
+        component.uploadEventFile();
+        tick();
+        
+        expect(component.isUploadingEventFile).toBe(false);
+      }));
+
+      it('should handle upload error', fakeAsync(() => {
+        procurementService.uploadEventFile.and.returnValue(
+          throwError(() => new Error('Upload failed'))
+        );
+        component.selectedEventForUpload = mockEvent;
+        component.selectedEventFile = new File(['test'], 'test.pdf');
+        
+        component.uploadEventFile();
+        tick();
+        
+        expect(component.isUploadingEventFile).toBe(false);
+        // On error, the form should remain visible
+      }));
+    });
+
+    describe('deleteEventFile', () => {
+      it('should delete file after confirmation', fakeAsync(() => {
+        spyOn(window, 'confirm').and.returnValue(true);
+        component.eventFiles = { [mockEvent.id]: [...mockEventFiles] };
+        
+        component.deleteEventFile(mockEvent, mockEventFiles[0]);
+        tick();
+        
+        expect(procurementService.deleteEventFile).toHaveBeenCalledWith(
+          1, 1, mockEvent.procurementItemId, mockEvent.id, mockEventFiles[0].id
+        );
+        expect(component.eventFiles[mockEvent.id].length).toBe(1);
+      }));
+
+      it('should not delete file if confirmation cancelled', () => {
+        spyOn(window, 'confirm').and.returnValue(false);
+        component.eventFiles = { [mockEvent.id]: mockEventFiles };
+        
+        component.deleteEventFile(mockEvent, mockEventFiles[0]);
+        
+        expect(procurementService.deleteEventFile).not.toHaveBeenCalled();
+      });
+
+      it('should handle delete error', fakeAsync(() => {
+        spyOn(window, 'confirm').and.returnValue(true);
+        procurementService.deleteEventFile.and.returnValue(
+          throwError(() => new Error('Delete failed'))
+        );
+        component.eventFiles = { [mockEvent.id]: mockEventFiles };
+        
+        component.deleteEventFile(mockEvent, mockEventFiles[0]);
+        tick();
+        
+        // Files should remain unchanged on error
+        expect(component.eventFiles[mockEvent.id].length).toBe(2);
+      }));
+    });
+
+    describe('editEventFileDescription', () => {
+      it('should enter edit mode for file', () => {
+        component.editEventFileDescription(mockEventFiles[0]);
+        
+        expect(component.editingEventFile).toEqual(mockEventFiles[0]);
+        expect(component.editingEventFileDescription).toBe(mockEventFiles[0].description ?? '');
+      });
+
+      it('should handle file with no description', () => {
+        const fileWithoutDesc = { ...mockEventFiles[1], description: undefined };
+        
+        component.editEventFileDescription(fileWithoutDesc);
+        
+        expect(component.editingEventFileDescription).toBe('');
+      });
+    });
+
+    describe('cancelEditEventFileDescription', () => {
+      it('should exit edit mode and clear state', () => {
+        component.editingEventFile = mockEventFiles[0];
+        component.editingEventFileDescription = 'Some text';
+        
+        component.cancelEditEventFileDescription();
+        
+        expect(component.editingEventFile).toBeNull();
+        expect(component.editingEventFileDescription).toBe('');
+      });
+    });
+
+    describe('saveEventFileDescription', () => {
+      it('should save updated description', fakeAsync(() => {
+        component.editingEventFile = mockEventFiles[0];
+        component.editingEventFileDescription = 'Updated description';
+        component.eventFiles = { [mockEvent.id]: [...mockEventFiles] };
+        
+        component.saveEventFileDescription(mockEvent);
+        tick();
+        
+        expect(procurementService.updateEventFileDescription).toHaveBeenCalledWith(
+          1, 1, mockEvent.procurementItemId, mockEvent.id,
+          mockEventFiles[0].id, 'Updated description'
+        );
+        expect(component.editingEventFile).toBeNull();
+        expect(component.eventFiles[mockEvent.id][0].description).toBe('Updated description');
+      }));
+
+      it('should not save if no file being edited', () => {
+        component.editingEventFile = null;
+        
+        component.saveEventFileDescription(mockEvent);
+        
+        expect(procurementService.updateEventFileDescription).not.toHaveBeenCalled();
+      });
+
+      it('should handle save error', fakeAsync(() => {
+        procurementService.updateEventFileDescription.and.returnValue(
+          throwError(() => new Error('Save failed'))
+        );
+        component.editingEventFile = mockEventFiles[0];
+        component.editingEventFileDescription = 'New description';
+        component.eventFiles = { [mockEvent.id]: mockEventFiles };
+        
+        component.saveEventFileDescription(mockEvent);
+        tick();
+        
+        // Edit mode should remain active on error
+        expect(component.editingEventFile).toBeTruthy();
+      }));
+    });
+
+    describe('getFileIcon', () => {
+      it('should return correct icon for PDF', () => {
+        expect(component.getFileIcon('application/pdf')).toBe('📄');
+      });
+
+      it('should return correct icon for images', () => {
+        expect(component.getFileIcon('image/png')).toBe('🖼️');
+        expect(component.getFileIcon('image/jpeg')).toBe('🖼️');
+      });
+
+      it('should return correct icon for spreadsheets', () => {
+        expect(component.getFileIcon('application/vnd.ms-excel')).toBe('📊');
+        expect(component.getFileIcon('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')).toBe('📊');
+      });
+
+      it('should return correct icon for documents', () => {
+        expect(component.getFileIcon('application/msword')).toBe('📝');
+        expect(component.getFileIcon('application/vnd.openxmlformats-officedocument.wordprocessingml.document')).toBe('📝');
+      });
+
+      it('should return default icon for unknown types', () => {
+        // Default icon is the paperclip emoji
+        const paperclipIcon = '📎';
+        expect(component.getFileIcon('application/octet-stream')).toBe(paperclipIcon);
+        expect(component.getFileIcon('unknown/type')).toBe(paperclipIcon);
+      });
+    });
+
+    describe('downloadEventFile', () => {
+      it('should call download service for file', fakeAsync(() => {
+        component.downloadEventFile(mockEvent, mockEventFiles[0]);
+        tick();
+        
+        expect(procurementService.downloadEventFile).toHaveBeenCalledWith(
+          1, 1, mockEvent.procurementItemId, mockEvent.id, mockEventFiles[0].id
+        );
+      }));
     });
   });
 });

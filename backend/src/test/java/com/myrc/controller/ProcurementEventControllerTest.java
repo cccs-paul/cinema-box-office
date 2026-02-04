@@ -14,6 +14,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.myrc.dto.ProcurementEventDTO;
+import com.myrc.dto.ProcurementEventFileDTO;
+import com.myrc.model.ProcurementEvent;
+import com.myrc.model.ProcurementEventFile;
 import com.myrc.service.ProcurementEventService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,8 +30,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -48,6 +53,8 @@ class ProcurementEventControllerTest {
     private Authentication authentication;
     private ProcurementEventController controller;
     private ProcurementEventDTO testEventDTO;
+    private ProcurementEventFileDTO testFileDTO;
+    private ProcurementEventFile testEventFile;
 
     @BeforeEach
     void setUp() {
@@ -64,6 +71,25 @@ class ProcurementEventControllerTest {
         testEventDTO.setCreatedBy("testuser");
         testEventDTO.setCreatedAt(LocalDateTime.now());
         testEventDTO.setActive(true);
+
+        testFileDTO = new ProcurementEventFileDTO();
+        testFileDTO.setId(1L);
+        testFileDTO.setFileName("test-document.pdf");
+        testFileDTO.setContentType("application/pdf");
+        testFileDTO.setFileSize(1024L);
+        testFileDTO.setFormattedFileSize("1.0 KB");
+        testFileDTO.setDescription("Test file");
+        testFileDTO.setEventId(1L);
+        testFileDTO.setActive(true);
+
+        testEventFile = new ProcurementEventFile();
+        testEventFile.setId(1L);
+        testEventFile.setFileName("test-document.pdf");
+        testEventFile.setContentType("application/pdf");
+        testEventFile.setFileSize(1024L);
+        testEventFile.setContent("test content".getBytes());
+        testEventFile.setDescription("Test file");
+        testEventFile.setActive(true);
     }
 
     private Authentication createAuthentication(String username) {
@@ -340,6 +366,204 @@ class ProcurementEventControllerTest {
 
             ResponseEntity<Void> response =
                 controller.deleteEvent(1L, 1L, 1L, 999L, authentication);
+
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        }
+    }
+
+    // ==========================
+    // Event File Tests
+    // ==========================
+
+    @Nested
+    @DisplayName("uploadFile Tests")
+    class UploadFileTests {
+
+        @Test
+        @DisplayName("Should upload file successfully")
+        void shouldUploadFileSuccessfully() {
+            MockMultipartFile mockFile = new MockMultipartFile(
+                "file", "test.pdf", "application/pdf", "content".getBytes());
+
+            when(eventService.uploadEventFile(eq(1L), any(), eq("Test description"), eq("testuser")))
+                .thenReturn(testFileDTO);
+
+            ResponseEntity<?> response = controller.uploadFile(
+                1L, 1L, 1L, 1L, mockFile, "Test description", authentication);
+
+            assertEquals(HttpStatus.CREATED, response.getStatusCode());
+            assertNotNull(response.getBody());
+        }
+
+        @Test
+        @DisplayName("Should return bad request when upload fails")
+        void shouldReturnBadRequestWhenUploadFails() {
+            MockMultipartFile mockFile = new MockMultipartFile(
+                "file", "test.pdf", "application/pdf", "content".getBytes());
+
+            when(eventService.uploadEventFile(any(), any(), any(), any()))
+                .thenThrow(new IllegalArgumentException("File too large"));
+
+            ResponseEntity<?> response = controller.uploadFile(
+                1L, 1L, 1L, 1L, mockFile, null, authentication);
+
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("getEventFiles Tests")
+    class GetEventFilesTests {
+
+        @Test
+        @DisplayName("Should return list of files")
+        void shouldReturnListOfFiles() {
+            when(eventService.getEventFiles(1L, "testuser"))
+                .thenReturn(List.of(testFileDTO));
+
+            ResponseEntity<?> response = controller.getEventFiles(
+                1L, 1L, 1L, 1L, authentication);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertTrue(response.getBody() instanceof List);
+        }
+
+        @Test
+        @DisplayName("Should return not found when event does not exist")
+        void shouldReturnNotFoundWhenEventDoesNotExist() {
+            when(eventService.getEventFiles(999L, "testuser"))
+                .thenThrow(new IllegalArgumentException("Event not found"));
+
+            ResponseEntity<?> response = controller.getEventFiles(
+                1L, 1L, 1L, 999L, authentication);
+
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("downloadFile Tests")
+    class DownloadFileTests {
+
+        @Test
+        @DisplayName("Should download file successfully")
+        void shouldDownloadFileSuccessfully() {
+            when(eventService.getEventFile(1L, "testuser"))
+                .thenReturn(testEventFile);
+
+            ResponseEntity<?> response = controller.downloadFile(
+                1L, 1L, 1L, 1L, 1L, authentication);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+            assertTrue(response.getBody() instanceof Resource);
+        }
+
+        @Test
+        @DisplayName("Should return not found when file does not exist")
+        void shouldReturnNotFoundWhenFileDoesNotExist() {
+            when(eventService.getEventFile(999L, "testuser"))
+                .thenThrow(new IllegalArgumentException("File not found"));
+
+            ResponseEntity<?> response = controller.downloadFile(
+                1L, 1L, 1L, 1L, 999L, authentication);
+
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("getFileMetadata Tests")
+    class GetFileMetadataTests {
+
+        @Test
+        @DisplayName("Should return file metadata")
+        void shouldReturnFileMetadata() {
+            when(eventService.getEventFileMetadata(1L, "testuser"))
+                .thenReturn(testFileDTO);
+
+            ResponseEntity<?> response = controller.getFileMetadata(
+                1L, 1L, 1L, 1L, 1L, authentication);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+        }
+
+        @Test
+        @DisplayName("Should return not found when file does not exist")
+        void shouldReturnNotFoundWhenFileDoesNotExist() {
+            when(eventService.getEventFileMetadata(999L, "testuser"))
+                .thenThrow(new IllegalArgumentException("File not found"));
+
+            ResponseEntity<?> response = controller.getFileMetadata(
+                1L, 1L, 1L, 1L, 999L, authentication);
+
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("updateFileDescription Tests")
+    class UpdateFileDescriptionTests {
+
+        @Test
+        @DisplayName("Should update file description successfully")
+        void shouldUpdateFileDescriptionSuccessfully() {
+            when(eventService.updateEventFileDescription(1L, "New description", "testuser"))
+                .thenReturn(testFileDTO);
+
+            ProcurementEventController.FileDescriptionUpdateRequest request = 
+                new ProcurementEventController.FileDescriptionUpdateRequest();
+            request.setDescription("New description");
+
+            ResponseEntity<?> response = controller.updateFileDescription(
+                1L, 1L, 1L, 1L, 1L, request, authentication);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+        }
+
+        @Test
+        @DisplayName("Should return bad request when update fails")
+        void shouldReturnBadRequestWhenUpdateFails() {
+            when(eventService.updateEventFileDescription(any(), any(), any()))
+                .thenThrow(new IllegalArgumentException("File not found"));
+
+            ProcurementEventController.FileDescriptionUpdateRequest request = 
+                new ProcurementEventController.FileDescriptionUpdateRequest();
+            request.setDescription("desc");
+
+            ResponseEntity<?> response = controller.updateFileDescription(
+                1L, 1L, 1L, 1L, 999L, request, authentication);
+
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteFile Tests")
+    class DeleteFileTests {
+
+        @Test
+        @DisplayName("Should delete file successfully")
+        void shouldDeleteFileSuccessfully() {
+            doNothing().when(eventService).deleteEventFile(1L, "testuser");
+
+            ResponseEntity<Void> response = controller.deleteFile(
+                1L, 1L, 1L, 1L, 1L, authentication);
+
+            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        }
+
+        @Test
+        @DisplayName("Should return not found when file does not exist")
+        void shouldReturnNotFoundWhenFileDoesNotExist() {
+            doThrow(new IllegalArgumentException("File not found"))
+                .when(eventService).deleteEventFile(999L, "testuser");
+
+            ResponseEntity<Void> response = controller.deleteFile(
+                1L, 1L, 1L, 1L, 999L, authentication);
 
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         }

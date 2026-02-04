@@ -14,6 +14,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.myrc.dto.ProcurementEventDTO;
+import com.myrc.dto.ProcurementEventFileDTO;
 import com.myrc.model.*;
 import com.myrc.repository.*;
 import java.time.LocalDate;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 
 /**
  * Unit tests for ProcurementEventServiceImpl.
@@ -42,6 +44,9 @@ class ProcurementEventServiceTest {
 
     @Mock
     private ProcurementEventRepository eventRepository;
+
+    @Mock
+    private ProcurementEventFileRepository eventFileRepository;
 
     @Mock
     private ProcurementItemRepository procurementItemRepository;
@@ -63,6 +68,7 @@ class ProcurementEventServiceTest {
     private FiscalYear testFY;
     private ProcurementItem testProcurementItem;
     private ProcurementEvent testEvent;
+    private ProcurementEventFile testEventFile;
     private RCAccess testAccess;
 
     @BeforeEach
@@ -70,6 +76,7 @@ class ProcurementEventServiceTest {
         // Create the service with all required dependencies
         eventService = new ProcurementEventServiceImpl(
             eventRepository,
+            eventFileRepository,
             procurementItemRepository,
             rcRepository,
             accessRepository,
@@ -118,6 +125,17 @@ class ProcurementEventServiceTest {
         testEvent.setCreatedBy("testuser");
         testEvent.setCreatedAt(LocalDateTime.now());
         testEvent.setActive(true);
+
+        // Set up test event file
+        testEventFile = new ProcurementEventFile();
+        testEventFile.setId(1L);
+        testEventFile.setFileName("test-document.pdf");
+        testEventFile.setContentType("application/pdf");
+        testEventFile.setFileSize(1024L);
+        testEventFile.setContent("test content".getBytes());
+        testEventFile.setDescription("Test file description");
+        testEventFile.setEvent(testEvent);
+        testEventFile.setActive(true);
 
         // Set up test access
         testAccess = new RCAccess();
@@ -436,6 +454,256 @@ class ProcurementEventServiceTest {
             // When/Then
             assertThrows(IllegalArgumentException.class,
                 () -> eventService.getEventsByDateRange(1L, startDate, endDate, "testuser"));
+        }
+    }
+
+    // ==========================
+    // Event File Tests
+    // ==========================
+
+    @Nested
+    @DisplayName("uploadEventFile")
+    class UploadEventFileTests {
+
+        @Test
+        @DisplayName("Should upload file successfully")
+        void shouldUploadFileSuccessfully() {
+            // Given
+            MockMultipartFile mockFile = new MockMultipartFile(
+                "file", "test-document.pdf", "application/pdf", "test content".getBytes());
+
+            when(eventRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(testEvent));
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+            when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
+            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+            when(eventFileRepository.save(any(ProcurementEventFile.class))).thenAnswer(invocation -> {
+                ProcurementEventFile file = invocation.getArgument(0);
+                file.setId(1L);
+                return file;
+            });
+
+            // When
+            ProcurementEventFileDTO result = eventService.uploadEventFile(1L, mockFile, "Test description", "testuser");
+
+            // Then
+            assertNotNull(result);
+            assertEquals("test-document.pdf", result.getFileName());
+            assertEquals("application/pdf", result.getContentType());
+            assertEquals("Test description", result.getDescription());
+            verify(eventFileRepository).save(any(ProcurementEventFile.class));
+        }
+
+        @Test
+        @DisplayName("Should throw exception for empty file")
+        void shouldThrowExceptionForEmptyFile() {
+            // Given
+            MockMultipartFile emptyFile = new MockMultipartFile(
+                "file", "empty.pdf", "application/pdf", new byte[0]);
+
+            // When/Then
+            assertThrows(IllegalArgumentException.class,
+                () -> eventService.uploadEventFile(1L, emptyFile, null, "testuser"));
+        }
+
+        @Test
+        @DisplayName("Should throw exception for null file")
+        void shouldThrowExceptionForNullFile() {
+            // When/Then
+            assertThrows(IllegalArgumentException.class,
+                () -> eventService.uploadEventFile(1L, null, null, "testuser"));
+        }
+
+        @Test
+        @DisplayName("Should throw exception when event not found")
+        void shouldThrowExceptionWhenEventNotFound() {
+            // Given
+            MockMultipartFile mockFile = new MockMultipartFile(
+                "file", "test.pdf", "application/pdf", "content".getBytes());
+            when(eventRepository.findByIdAndActiveTrue(999L)).thenReturn(Optional.empty());
+
+            // When/Then
+            assertThrows(IllegalArgumentException.class,
+                () -> eventService.uploadEventFile(999L, mockFile, null, "testuser"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getEventFiles")
+    class GetEventFilesTests {
+
+        @Test
+        @DisplayName("Should return files for event")
+        void shouldReturnFilesForEvent() {
+            // Given
+            when(eventRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(testEvent));
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+            when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
+            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+            when(eventFileRepository.findByEventIdAndActiveTrue(1L)).thenReturn(List.of(testEventFile));
+
+            // When
+            List<ProcurementEventFileDTO> result = eventService.getEventFiles(1L, "testuser");
+
+            // Then
+            assertNotNull(result);
+            assertEquals(1, result.size());
+            assertEquals("test-document.pdf", result.get(0).getFileName());
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no files")
+        void shouldReturnEmptyListWhenNoFiles() {
+            // Given
+            when(eventRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(testEvent));
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+            when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
+            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+            when(eventFileRepository.findByEventIdAndActiveTrue(1L)).thenReturn(List.of());
+
+            // When
+            List<ProcurementEventFileDTO> result = eventService.getEventFiles(1L, "testuser");
+
+            // Then
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when event not found")
+        void shouldThrowExceptionWhenEventNotFound() {
+            // Given
+            when(eventRepository.findByIdAndActiveTrue(999L)).thenReturn(Optional.empty());
+
+            // When/Then
+            assertThrows(IllegalArgumentException.class,
+                () -> eventService.getEventFiles(999L, "testuser"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getEventFile")
+    class GetEventFileTests {
+
+        @Test
+        @DisplayName("Should return file with content")
+        void shouldReturnFileWithContent() {
+            // Given
+            when(eventFileRepository.findById(1L)).thenReturn(Optional.of(testEventFile));
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+            when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
+            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+
+            // When
+            ProcurementEventFile result = eventService.getEventFile(1L, "testuser");
+
+            // Then
+            assertNotNull(result);
+            assertEquals("test-document.pdf", result.getFileName());
+            assertNotNull(result.getContent());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when file not found")
+        void shouldThrowExceptionWhenFileNotFound() {
+            // Given
+            when(eventFileRepository.findById(999L)).thenReturn(Optional.empty());
+
+            // When/Then
+            assertThrows(IllegalArgumentException.class,
+                () -> eventService.getEventFile(999L, "testuser"));
+        }
+
+        @Test
+        @DisplayName("Should throw exception when file is inactive")
+        void shouldThrowExceptionWhenFileInactive() {
+            // Given
+            testEventFile.setActive(false);
+            when(eventFileRepository.findById(1L)).thenReturn(Optional.of(testEventFile));
+
+            // When/Then
+            assertThrows(IllegalArgumentException.class,
+                () -> eventService.getEventFile(1L, "testuser"));
+        }
+    }
+
+    @Nested
+    @DisplayName("updateEventFileDescription")
+    class UpdateEventFileDescriptionTests {
+
+        @Test
+        @DisplayName("Should update file description")
+        void shouldUpdateFileDescription() {
+            // Given
+            when(eventFileRepository.findById(1L)).thenReturn(Optional.of(testEventFile));
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+            when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
+            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+            when(eventFileRepository.save(any(ProcurementEventFile.class))).thenReturn(testEventFile);
+
+            // When
+            ProcurementEventFileDTO result = eventService.updateEventFileDescription(1L, "New description", "testuser");
+
+            // Then
+            assertNotNull(result);
+            verify(eventFileRepository).save(any(ProcurementEventFile.class));
+        }
+
+        @Test
+        @DisplayName("Should throw exception when file not found")
+        void shouldThrowExceptionWhenFileNotFound() {
+            // Given
+            when(eventFileRepository.findById(999L)).thenReturn(Optional.empty());
+
+            // When/Then
+            assertThrows(IllegalArgumentException.class,
+                () -> eventService.updateEventFileDescription(999L, "desc", "testuser"));
+        }
+    }
+
+    @Nested
+    @DisplayName("deleteEventFile")
+    class DeleteEventFileTests {
+
+        @Test
+        @DisplayName("Should soft delete file")
+        void shouldSoftDeleteFile() {
+            // Given
+            when(eventFileRepository.findById(1L)).thenReturn(Optional.of(testEventFile));
+            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+            when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
+            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+            when(eventFileRepository.save(any(ProcurementEventFile.class))).thenReturn(testEventFile);
+
+            // When
+            eventService.deleteEventFile(1L, "testuser");
+
+            // Then
+            ArgumentCaptor<ProcurementEventFile> captor = ArgumentCaptor.forClass(ProcurementEventFile.class);
+            verify(eventFileRepository).save(captor.capture());
+            assertFalse(captor.getValue().getActive());
+        }
+
+        @Test
+        @DisplayName("Should throw exception when file not found")
+        void shouldThrowExceptionWhenFileNotFound() {
+            // Given
+            when(eventFileRepository.findById(999L)).thenReturn(Optional.empty());
+
+            // When/Then
+            assertThrows(IllegalArgumentException.class,
+                () -> eventService.deleteEventFile(999L, "testuser"));
+        }
+
+        @Test
+        @DisplayName("Should throw exception when file already deleted")
+        void shouldThrowExceptionWhenFileAlreadyDeleted() {
+            // Given
+            testEventFile.setActive(false);
+            when(eventFileRepository.findById(1L)).thenReturn(Optional.of(testEventFile));
+
+            // When/Then
+            assertThrows(IllegalArgumentException.class,
+                () -> eventService.deleteEventFile(1L, "testuser"));
         }
     }
 }
