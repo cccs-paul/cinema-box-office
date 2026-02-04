@@ -377,16 +377,14 @@
               >
                 🗑️
               </button>
-              <button
-                class="btn-icon btn-spending-link"
-                [title]="(editingItemId !== item.id ? 'procurement.editModeRequiredForLink' : (item.trackingStatus === 'CANCELLED' ? 'procurement.cannotLinkCancelled' : (hasLinkedSpendingItems() ? 'procurement.unlinkSpending' : 'procurement.linkSpending'))) | translate"
-                *ngIf="canWrite && item.trackingStatus !== 'CANCELLED'"
-                [disabled]="isTogglingSpendingLink || editingItemId !== item.id"
-                [class.disabled]="editingItemId !== item.id"
-                (click)="toggleSpendingLink(); $event.stopPropagation()"
+              <!-- Linked spending indicator (only shown when linked, not a button) -->
+              <span 
+                class="linked-indicator"
+                [title]="'procurement.linkedToSpending' | translate"
+                *ngIf="item.linkedSpendingItemIds && item.linkedSpendingItemIds.length > 0"
               >
-                {{ isTogglingSpendingLink ? '⏳' : (item.linkedSpendingItemIds && item.linkedSpendingItemIds.length > 0 ? '🔗' : '➕💰') }}
-              </button>
+                🔗
+              </span>
             </div>
           </div>
 
@@ -473,7 +471,19 @@
 
                 <!-- Edit Mode -->
                 <div class="edit-form" *ngIf="editingItemId === item.id">
-                  <h4>{{ 'procurement.editTitle' | translate }}</h4>
+                  <div class="edit-form-header">
+                    <h4>{{ 'procurement.editTitle' | translate }}</h4>
+                    <!-- Link to Spending button - shown only in edit mode -->
+                    <button
+                      class="btn btn-spending-link"
+                      [title]="(item.trackingStatus === 'CANCELLED' ? 'procurement.cannotLinkCancelled' : (hasLinkedSpendingItems() ? 'procurement.unlinkSpending' : 'procurement.linkSpending')) | translate"
+                      *ngIf="canWrite && item.trackingStatus !== 'CANCELLED'"
+                      [disabled]="isTogglingSpendingLink"
+                      (click)="toggleSpendingLink(); $event.stopPropagation()"
+                    >
+                      {{ isTogglingSpendingLink ? '⏳' : (item.linkedSpendingItemIds && item.linkedSpendingItemIds.length > 0 ? '🔗 ' + ('procurement.unlinkSpending' | translate) : '➕💰 ' + ('procurement.linkSpending' | translate)) }}
+                    </button>
+                  </div>
                   
                   <!-- Tracking Status Toggle -->
                   <div class="form-group">

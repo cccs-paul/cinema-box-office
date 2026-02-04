@@ -310,8 +310,41 @@ class ProcurementItemServiceTest {
       setupOwnerAccess();
       when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
       when(procurementItemRepository.save(any(ProcurementItem.class))).thenReturn(testProcurementItem);
+      when(eventRepository.findByProcurementItemIdAndActiveTrue(1L)).thenReturn(Collections.emptyList());
 
       assertDoesNotThrow(() -> service.deleteProcurementItem(1L, "owner"));
+      verify(procurementItemRepository).save(any(ProcurementItem.class));
+    }
+
+    @Test
+    @DisplayName("Should cascade soft delete to events and spending items")
+    void shouldCascadeDeleteToEventsAndSpendingItems() {
+      setupOwnerAccess();
+      
+      // Setup linked spending items
+      com.myrc.model.SpendingItem spendingItem = new com.myrc.model.SpendingItem();
+      spendingItem.setId(1L);
+      spendingItem.setActive(true);
+      testProcurementItem.setSpendingItems(Arrays.asList(spendingItem));
+      
+      // Setup events
+      com.myrc.model.ProcurementEvent event = new com.myrc.model.ProcurementEvent();
+      event.setId(1L);
+      event.setActive(true);
+      
+      when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
+      when(procurementItemRepository.save(any(ProcurementItem.class))).thenReturn(testProcurementItem);
+      when(eventRepository.findByProcurementItemIdAndActiveTrue(1L)).thenReturn(Arrays.asList(event));
+
+      assertDoesNotThrow(() -> service.deleteProcurementItem(1L, "owner"));
+      
+      // Verify event was soft deleted
+      verify(eventRepository).save(any(com.myrc.model.ProcurementEvent.class));
+      
+      // Verify spending item was soft deleted
+      verify(spendingItemRepository).save(any(com.myrc.model.SpendingItem.class));
+      
+      // Verify procurement item was soft deleted
       verify(procurementItemRepository).save(any(ProcurementItem.class));
     }
 

@@ -48,7 +48,9 @@ describe('RCSelectionComponent', () => {
     fyServiceMock = jasmine.createSpyObj('FiscalYearService', [
       'getFiscalYearsByRC',
       'createFiscalYear',
-      'updateFiscalYear'
+      'updateFiscalYear',
+      'deleteFiscalYear',
+      'toggleActiveStatus'
     ]);
 
     // Create AuthService mock with BehaviorSubject for currentUser$
@@ -581,6 +583,7 @@ describe('RCSelectionComponent', () => {
       component.showDeleteConfirm = true;
       component.showFYCreateForm = true;
       component.showFYRenameForm = true;
+      component.showFYDeleteConfirm = true;
 
       component.closeAllForms();
 
@@ -590,6 +593,70 @@ describe('RCSelectionComponent', () => {
       expect(component.showDeleteConfirm).toBeFalse();
       expect(component.showFYCreateForm).toBeFalse();
       expect(component.showFYRenameForm).toBeFalse();
+      expect(component.showFYDeleteConfirm).toBeFalse();
+    });
+  });
+
+  describe('Delete Fiscal Year', () => {
+    beforeEach(fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+      component.responsibilityCentres = createMockRCs();
+      component.fiscalYears = createMockFiscalYears();
+      component.selectedRCId = 1;
+      component.selectedFYId = 1;
+    }));
+
+    it('should show delete FY confirmation dialog', () => {
+      component.confirmDeleteFY();
+      expect(component.showFYDeleteConfirm).toBeTrue();
+    });
+
+    it('should not show delete FY dialog if no FY selected', () => {
+      component.selectedFYId = null;
+      component.confirmDeleteFY();
+      expect(component.showFYDeleteConfirm).toBeFalse();
+    });
+
+    it('should not show delete FY dialog if not owner', () => {
+      component.selectedRCId = 2; // Not owner
+      component.confirmDeleteFY();
+      expect(component.showFYDeleteConfirm).toBeFalse();
+    });
+
+    it('should cancel delete FY operation', () => {
+      component.showFYDeleteConfirm = true;
+      component.cancelDeleteFY();
+      expect(component.showFYDeleteConfirm).toBeFalse();
+    });
+
+    it('should delete FY successfully', fakeAsync(() => {
+      fyServiceMock.deleteFiscalYear.and.returnValue(of(void 0));
+      
+      component.deleteFY();
+      tick();
+
+      expect(fyServiceMock.deleteFiscalYear).toHaveBeenCalledWith(1, 1);
+      expect(component.fiscalYears.length).toBe(1);
+      expect(component.selectedFYId).toBeNull();
+      expect(component.showFYDeleteConfirm).toBeFalse();
+      expect(component.successMessage).toContain('deleted');
+    }));
+
+    it('should handle delete FY error', fakeAsync(() => {
+      fyServiceMock.deleteFiscalYear.and.returnValue(throwError(() => new Error('Delete failed')));
+      
+      component.deleteFY();
+      tick();
+
+      expect(component.errorMessage).toContain('failed');
+      expect(component.isDeletingFY).toBeFalse();
+    }));
+
+    it('should close FY delete confirm when closing FY forms', () => {
+      component.showFYDeleteConfirm = true;
+      component.closeFYForms();
+      expect(component.showFYDeleteConfirm).toBeFalse();
     });
   });
 });

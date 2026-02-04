@@ -61,8 +61,10 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
   newFYDescription = '';
   showFYCreateForm = false;
   showFYRenameForm = false;
+  showFYDeleteConfirm = false;
   isCreatingFY = false;
   isRenamingFY = false;
+  isDeletingFY = false;
   isTogglingFYActive = false;
   selectedFYId: number | null = null;
   renameFYNewName = '';
@@ -514,6 +516,7 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
   closeFYForms(): void {
     this.showFYCreateForm = false;
     this.showFYRenameForm = false;
+    this.showFYDeleteConfirm = false;
   }
 
   /**
@@ -643,6 +646,58 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
         error: (error: Error) => {
           this.isTogglingFYActive = false;
           this.errorMessage = error.message || 'Failed to toggle fiscal year active status.';
+        }
+      });
+  }
+
+  /**
+   * Show the delete FY confirmation dialog.
+   */
+  confirmDeleteFY(): void {
+    if (this.selectedFYId === null || !this.selectedRCIsOwner) {
+      return;
+    }
+    this.closeFYForms();
+    this.showFYDeleteConfirm = true;
+  }
+
+  /**
+   * Cancel the delete FY operation.
+   */
+  cancelDeleteFY(): void {
+    this.showFYDeleteConfirm = false;
+  }
+
+  /**
+   * Delete the selected fiscal year.
+   * Only RC owners can delete.
+   */
+  deleteFY(): void {
+    if (this.selectedRCId === null || this.selectedFYId === null || !this.selectedRCIsOwner) {
+      return;
+    }
+
+    this.isDeletingFY = true;
+    this.errorMessage = null;
+    this.successMessage = null;
+
+    const fyName = this.selectedFY?.name || 'Fiscal Year';
+
+    this.fyService.deleteFiscalYear(this.selectedRCId, this.selectedFYId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          // Remove the FY from the list
+          this.fiscalYears = this.fiscalYears.filter(f => f.id !== this.selectedFYId);
+          this.selectedFYId = null;
+          this.isDeletingFY = false;
+          this.showFYDeleteConfirm = false;
+          this.successMessage = `Fiscal Year "${fyName}" deleted successfully.`;
+          setTimeout(() => this.clearSuccess(), 5000);
+        },
+        error: (error: Error) => {
+          this.isDeletingFY = false;
+          this.errorMessage = error.message || 'Failed to delete fiscal year. Please try again.';
         }
       });
   }

@@ -209,22 +209,35 @@
         <h2>📅 {{ 'fiscalYear.title' | translate }}</h2>
       </div>
 
-      <!-- FY Action Buttons -->
-      <div class="fy-action-buttons" *ngIf="!showFYCreateForm && !showFYRenameForm && selectedRCCanWrite">
-        <button class="btn btn-action" (click)="toggleFYCreateForm()" [title]="'fiscalYear.create' | translate">
+      <!-- FY Action Buttons - visible for all users, but disabled for read-only -->
+      <div class="fy-action-buttons" *ngIf="!showFYCreateForm && !showFYRenameForm && !showFYDeleteConfirm">
+        <button class="btn btn-action btn-sm" 
+                (click)="toggleFYCreateForm()" 
+                [disabled]="!selectedRCCanWrite"
+                [title]="'fiscalYear.create' | translate">
           <span class="action-icon">➕</span>
           <span class="action-label">{{ 'rcSelection.addFiscalYear' | translate }}</span>
         </button>
-        <button class="btn btn-action" (click)="toggleFYRenameForm()" [disabled]="selectedFYId === null" [title]="'fiscalYear.rename' | translate">
+        <button class="btn btn-action btn-sm" 
+                (click)="toggleFYRenameForm()" 
+                [disabled]="selectedFYId === null || !selectedRCCanWrite" 
+                [title]="'fiscalYear.rename' | translate">
           <span class="action-icon">✏️</span>
           <span class="action-label">{{ 'fiscalYear.rename' | translate }}</span>
         </button>
-        <button class="btn btn-action" 
+        <button class="btn btn-action btn-sm" 
                 (click)="toggleFYActiveStatus()" 
-                [disabled]="selectedFYId === null || !selectedRCIsOwner || isTogglingFYActive"
+                [disabled]="selectedFYId === null || !selectedRCIsOwner || isTogglingFYActive || !selectedRCCanWrite"
                 [title]="selectedFY?.active ? ('fiscalYear.deactivate' | translate) : ('fiscalYear.activate' | translate)">
           <span class="action-icon">{{ selectedFY?.active ? '🔒' : '🔓' }}</span>
           <span class="action-label">{{ selectedFY?.active ? ('fiscalYear.deactivate' | translate) : ('fiscalYear.activate' | translate) }}</span>
+        </button>
+        <button class="btn btn-action btn-sm btn-danger" 
+                (click)="confirmDeleteFY()" 
+                [disabled]="selectedFYId === null || !selectedRCIsOwner || !selectedRCCanWrite"
+                [title]="'fiscalYear.delete' | translate">
+          <span class="action-icon">🗑️</span>
+          <span class="action-label">{{ 'fiscalYear.delete' | translate }}</span>
         </button>
       </div>
 
@@ -292,6 +305,23 @@
               {{ isRenamingFY ? ('fiscalYear.renaming' | translate) : ('fiscalYear.rename' | translate) }}
             </button>
             <button class="btn btn-secondary" (click)="closeFYForms()" [disabled]="isRenamingFY">
+              {{ 'common.cancel' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete FY Confirmation Dialog -->
+      <div class="delete-fy-confirm" *ngIf="showFYDeleteConfirm">
+        <div class="form-container">
+          <h3>🗑️ {{ 'fiscalYear.deleteConfirmTitle' | translate }}</h3>
+          <p>{{ 'fiscalYear.deleteConfirmMessage' | translate }}</p>
+          <p class="warning-text"><strong>{{ selectedFY?.name }}</strong></p>
+          <div class="form-actions">
+            <button class="btn btn-danger" (click)="deleteFY()" [disabled]="isDeletingFY">
+              {{ isDeletingFY ? ('fiscalYear.deleting' | translate) : ('common.delete' | translate) }}
+            </button>
+            <button class="btn btn-secondary" (click)="cancelDeleteFY()" [disabled]="isDeletingFY">
               {{ 'common.cancel' | translate }}
             </button>
           </div>

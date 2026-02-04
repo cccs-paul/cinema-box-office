@@ -18,6 +18,7 @@ import com.myrc.dto.ProcurementQuoteFileDTO;
 import com.myrc.model.Category;
 import com.myrc.model.Currency;
 import com.myrc.model.FiscalYear;
+import com.myrc.model.ProcurementEvent;
 import com.myrc.model.ProcurementItem;
 import com.myrc.model.ProcurementQuote;
 import com.myrc.model.ProcurementQuoteFile;
@@ -446,7 +447,32 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             throw new IllegalArgumentException("User does not have write access to this Responsibility Centre");
         }
 
-        // Soft delete
+        // Soft delete all quotes (cascading will handle quote files via orphanRemoval)
+        for (ProcurementQuote quote : item.getQuotes()) {
+            quote.setActive(false);
+        }
+        logger.info("Soft deleted " + item.getQuotes().size() + " quotes for procurement item " + procurementItemId);
+
+        // Soft delete all tracking events
+        List<ProcurementEvent> events = procurementEventRepository.findByProcurementItemIdAndActiveTrue(procurementItemId);
+        for (ProcurementEvent event : events) {
+            event.setActive(false);
+            procurementEventRepository.save(event);
+        }
+        logger.info("Soft deleted " + events.size() + " events for procurement item " + procurementItemId);
+
+        // Soft delete all linked spending items
+        List<SpendingItem> linkedSpendingItems = item.getSpendingItems();
+        for (SpendingItem spendingItem : linkedSpendingItems) {
+            if (spendingItem.getActive()) {
+                spendingItem.setActive(false);
+                spendingItemRepository.save(spendingItem);
+                logger.info("Soft deleted linked spending item " + spendingItem.getId() + " for procurement item " + procurementItemId);
+            }
+        }
+        logger.info("Soft deleted " + linkedSpendingItems.size() + " linked spending items for procurement item " + procurementItemId);
+
+        // Soft delete the procurement item itself
         item.setActive(false);
         procurementItemRepository.save(item);
         logger.info("Deleted procurement item " + procurementItemId + " by user " + username);
