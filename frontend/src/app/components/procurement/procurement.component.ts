@@ -72,6 +72,9 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   isLoadingCategories = false;
   selectedCategoryId: number | null = null;
 
+  // Tracking Status Filter
+  selectedTrackingStatus: TrackingStatus | null = null;
+
   // Selected Item for detail view
   selectedItem: ProcurementItem | null = null;
   quotes: ProcurementQuote[] = [];
@@ -408,6 +411,11 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     if (this.selectedCategoryId !== null) {
       items = items.filter(item => item.categoryId === this.selectedCategoryId);
     }
+
+    // Apply tracking status filter
+    if (this.selectedTrackingStatus !== null) {
+      items = items.filter(item => item.trackingStatus === this.selectedTrackingStatus);
+    }
     
     return items;
   }
@@ -462,10 +470,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Clear the search filter.
+   * Clear the search filter and all active filters.
    */
   clearSearch(): void {
     this.searchTerm = '';
+    this.selectedCategoryId = null;
+    this.selectedTrackingStatus = null;
   }
 
   /**
@@ -521,6 +531,19 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       this.selectedCategoryId = null;
     } else {
       this.selectedCategoryId = categoryId;
+    }
+  }
+
+  /**
+   * Filter procurement items by tracking status.
+   * Clicking the same status again will remove the filter (toggle behavior).
+   */
+  filterByTrackingStatus(status: TrackingStatus | null): void {
+    // Toggle off if clicking the same status
+    if (this.selectedTrackingStatus === status) {
+      this.selectedTrackingStatus = null;
+    } else {
+      this.selectedTrackingStatus = status;
     }
   }
 
@@ -1642,7 +1665,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   /**
    * Get the available tracking status options.
    */
-  trackingStatusOptions: TrackingStatus[] = ['ON_TRACK', 'AT_RISK', 'CANCELLED'];
+  trackingStatusOptions: TrackingStatus[] = ['ON_TRACK', 'AT_RISK', 'COMPLETED', 'CANCELLED'];
 
   getStatusLabel(status: ProcurementItemStatus): string {
     return PROCUREMENT_STATUS_INFO[status]?.label || status;

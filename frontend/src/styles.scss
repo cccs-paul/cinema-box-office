@@ -115,3 +115,30 @@ button {
     background: #555;
   }
 }
+
+/* Date input styling - show yyyy-mm-dd format hint when empty */
+input[type="date"] {
+  &::-webkit-datetime-edit-text {
+    padding: 0 0.25rem;
+  }
+
+  &::-webkit-datetime-edit-year-field,
+  &::-webkit-datetime-edit-month-field,
+  &::-webkit-datetime-edit-day-field {
+    padding: 0.125rem;
+  }
+
+  /* Style for empty date inputs to show proper format hint */
+  &:invalid::-webkit-datetime-edit {
+    color: var(--text-tertiary);
+  }
+
+  &:not(:focus):not([value=""])::-webkit-datetime-edit {
+    color: var(--text-primary);
+  }
+}
+
+/* Firefox date input */
+input[type="date"]::-moz-focus-inner {
+  border: 0;
+}

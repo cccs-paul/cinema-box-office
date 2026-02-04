@@ -240,6 +240,50 @@
   flex: 1;
 }
 
+/* Tracking Status Filter */
+.tracking-status-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex: 1;
+  margin-top: 0.5rem;
+
+  .filter-btn {
+    .status-icon {
+      font-size: 0.9rem;
+    }
+
+    &.status-green {
+      &:not(.active) {
+        border-color: var(--status-green);
+        color: var(--status-green);
+      }
+    }
+
+    &.status-yellow {
+      &:not(.active) {
+        border-color: var(--status-yellow);
+        color: var(--status-yellow);
+      }
+    }
+
+    &.status-red {
+      &:not(.active) {
+        border-color: var(--status-red);
+        color: var(--status-red);
+      }
+    }
+
+    &.status-blue {
+      &:not(.active) {
+        border-color: var(--status-blue);
+        color: var(--status-blue);
+      }
+    }
+  }
+}
+
 .filter-label {
   color: var(--text-secondary);
   font-weight: 500;

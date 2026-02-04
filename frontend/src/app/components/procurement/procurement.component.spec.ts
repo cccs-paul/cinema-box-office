@@ -91,6 +91,7 @@ describe('ProcurementComponent', () => {
       name: 'GPU Purchase',
       description: 'NVIDIA A100 GPUs',
       currentStatus: 'DRAFT',
+      trackingStatus: 'ON_TRACK',
       vendor: 'NVIDIA',
       finalPrice: 50000,
       finalPriceCurrency: 'CAD',
@@ -117,6 +118,7 @@ describe('ProcurementComponent', () => {
       name: 'Server Purchase',
       description: 'Dell PowerEdge Servers',
       currentStatus: 'PENDING_QUOTES',
+      trackingStatus: 'AT_RISK',
       vendor: 'Dell',
       finalPrice: 75000,
       finalPriceCurrency: 'USD',
@@ -340,12 +342,55 @@ describe('ProcurementComponent', () => {
     });
   });
 
+  describe('filterByTrackingStatus', () => {
+    it('should set selected tracking status', () => {
+      component.filterByTrackingStatus('ON_TRACK');
+
+      expect(component.selectedTrackingStatus).toBe('ON_TRACK');
+    });
+
+    it('should clear tracking status filter when null', () => {
+      component.selectedTrackingStatus = 'AT_RISK';
+      component.filterByTrackingStatus(null);
+
+      expect(component.selectedTrackingStatus).toBeNull();
+    });
+
+    it('should toggle off when clicking the same status', () => {
+      component.selectedTrackingStatus = 'ON_TRACK';
+      component.filterByTrackingStatus('ON_TRACK');
+
+      expect(component.selectedTrackingStatus).toBeNull();
+    });
+
+    it('should switch to new status when clicking different status', () => {
+      component.selectedTrackingStatus = 'ON_TRACK';
+      component.filterByTrackingStatus('AT_RISK');
+
+      expect(component.selectedTrackingStatus).toBe('AT_RISK');
+    });
+  });
+
   describe('clearSearch', () => {
     it('should clear search term', () => {
       component.searchTerm = 'test search';
       component.clearSearch();
 
       expect(component.searchTerm).toBe('');
+    });
+
+    it('should clear category filter', () => {
+      component.selectedCategoryId = 2;
+      component.clearSearch();
+
+      expect(component.selectedCategoryId).toBeNull();
+    });
+
+    it('should clear tracking status filter', () => {
+      component.selectedTrackingStatus = 'ON_TRACK';
+      component.clearSearch();
+
+      expect(component.selectedTrackingStatus).toBeNull();
     });
   });
 
@@ -440,6 +485,7 @@ describe('ProcurementComponent', () => {
     it('should return all items when no filters', () => {
       component.searchTerm = '';
       component.selectedCategoryId = null;
+      component.selectedTrackingStatus = null;
       
       const filtered = component.filteredProcurementItems;
       
@@ -449,6 +495,7 @@ describe('ProcurementComponent', () => {
     it('should filter by category', () => {
       component.searchTerm = '';
       component.selectedCategoryId = 2; // Software category
+      component.selectedTrackingStatus = null;
       
       const filtered = component.filteredProcurementItems;
       
@@ -458,12 +505,57 @@ describe('ProcurementComponent', () => {
 
     it('should use fuzzy search when search term provided', () => {
       component.searchTerm = 'GPU';
+      component.selectedTrackingStatus = null;
       fuzzySearchService.filter.and.returnValue([mockProcurementItems[0]]);
       
       const filtered = component.filteredProcurementItems;
       
       expect(fuzzySearchService.filter).toHaveBeenCalled();
       expect(filtered.length).toBe(1);
+    });
+
+    it('should filter by tracking status ON_TRACK', () => {
+      component.searchTerm = '';
+      component.selectedCategoryId = null;
+      component.selectedTrackingStatus = 'ON_TRACK';
+      
+      const filtered = component.filteredProcurementItems;
+      
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].trackingStatus).toBe('ON_TRACK');
+    });
+
+    it('should filter by tracking status AT_RISK', () => {
+      component.searchTerm = '';
+      component.selectedCategoryId = null;
+      component.selectedTrackingStatus = 'AT_RISK';
+      
+      const filtered = component.filteredProcurementItems;
+      
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].trackingStatus).toBe('AT_RISK');
+    });
+
+    it('should combine category and tracking status filters', () => {
+      component.searchTerm = '';
+      component.selectedCategoryId = 1; // Hardware
+      component.selectedTrackingStatus = 'ON_TRACK';
+      
+      const filtered = component.filteredProcurementItems;
+      
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].trackingStatus).toBe('ON_TRACK');
+      expect(filtered[0].categoryId).toBe(1);
+    });
+
+    it('should return empty when tracking status has no matches', () => {
+      component.searchTerm = '';
+      component.selectedCategoryId = null;
+      component.selectedTrackingStatus = 'CANCELLED';
+      
+      const filtered = component.filteredProcurementItems;
+      
+      expect(filtered.length).toBe(0);
     });
   });
 

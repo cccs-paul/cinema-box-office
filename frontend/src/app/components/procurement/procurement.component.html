@@ -71,6 +71,26 @@
               {{ category.name }}
             </button>
           </div>
+
+          <!-- Tracking Status Filter -->
+          <div class="tracking-status-filter">
+            <span class="filter-label">{{ 'procurement.trackingStatus' | translate }}:</span>
+            <button 
+              class="filter-btn"
+              [class.active]="selectedTrackingStatus === null"
+              (click)="filterByTrackingStatus(null)">
+              {{ 'common.all' | translate }}
+            </button>
+            <button 
+              *ngFor="let status of trackingStatusOptions"
+              class="filter-btn"
+              [class.active]="selectedTrackingStatus === status"
+              [ngClass]="getTrackingStatusClass(status)"
+              (click)="filterByTrackingStatus(status)">
+              <span class="status-icon">{{ getTrackingStatusIcon(status) }}</span>
+              {{ getTrackingStatusLabel(status) }}
+            </button>
+          </div>
         </div>
       </div>
 
