@@ -272,10 +272,18 @@
     <div class="item-summary" (click)="toggleItemDetails(item)">
       <div class="item-info">
         <span class="item-name">{{ item.name }}</span>
-        <span class="procurement-badge" *ngIf="item.procurementItemId" [title]="'spending.linkedProcurement' | translate">📦</span>
+        <span class="procurement-indicator" *ngIf="item.procurementItemId" [title]="('spending.linkedTo' | translate) + ': ' + (item.procurementItemName || ('spending.procurementItem' | translate))">📦</span>
         <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">{{ item.categoryName }}</span>
-        <span class="status-badge" [ngClass]="getStatusClass(item.status)">
-          {{ getStatusLabel(item.status) }}
+        <!-- Tracking Status Badge - Shows procurement tracking for linked items, spending event for standalone -->
+        <span class="tracking-badge" *ngIf="item.procurementItemId && item.procurementMostRecentEventType" 
+              [ngClass]="getTrackingStatusClass(item.procurementMostRecentEventType)"
+              [title]="('spending.procurementTracking' | translate) + ': ' + getEventTypeLabel(item.procurementMostRecentEventType)">
+          {{ getEventTypeIcon(item.procurementMostRecentEventType) }} {{ getEventTypeLabel(item.procurementMostRecentEventType) }}
+        </span>
+        <span class="tracking-badge" *ngIf="!item.procurementItemId && item.mostRecentEventType"
+              [ngClass]="getSpendingEventStatusClass(item.mostRecentEventType)"
+              [title]="('spending.tracking' | translate) + ': ' + getSpendingEventLabel(item.mostRecentEventType)">
+          {{ getSpendingEventIcon(item.mostRecentEventType) }} {{ getSpendingEventLabel(item.mostRecentEventType) }}
         </span>
         <span class="currency-badge" [class.foreign-currency]="item.currency !== 'CAD'">
           {{ getCurrencyFlag(item.currency) }} {{ item.currency }}
@@ -397,6 +405,71 @@
                 </ng-container>
               </span>
             </div>
+          </div>
+        </div>
+        
+        <!-- Tracking Events Section for non-procurement-linked items -->
+        <div class="tracking-section" *ngIf="!item.procurementItemId">
+          <div class="section-header">
+            <label>📋 {{ 'spending.trackingEvents' | translate }} ({{ getEventCount(item) }})</label>
+            <button 
+              class="btn-primary btn-sm" 
+              *ngIf="canWrite"
+              (click)="openAddEventModal(item)">
+              ➕ {{ 'spending.addEvent' | translate }}
+            </button>
+          </div>
+          <div class="events-list" *ngIf="selectedItemEvents.length > 0 && selectedEventItemId === item.id">
+            <div class="event-item" *ngFor="let event of selectedItemEvents">
+              <div class="event-header">
+                <span class="event-type-badge" [ngClass]="getSpendingEventStatusClass(event.eventType)">
+                  {{ getSpendingEventIcon(event.eventType) }} {{ getSpendingEventLabel(event.eventType) }}
+                </span>
+                <span class="event-date">{{ event.eventDate | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="event-comment" *ngIf="event.comment">{{ event.comment }}</div>
+              <div class="event-meta">
+                <span class="created-by" *ngIf="event.createdBy">{{ event.createdBy }}</span>
+              </div>
+              <div class="event-actions" *ngIf="canWrite">
+                <button class="btn-icon btn-edit" (click)="editEvent(event)" [title]="'common.edit' | translate">✏️</button>
+                <button class="btn-icon btn-delete" (click)="deleteEvent(event)" [title]="'common.delete' | translate">🗑️</button>
+              </div>
+            </div>
+          </div>
+          <div class="events-collapsed" *ngIf="(selectedItemEvents.length === 0 || selectedEventItemId !== item.id) && item.mostRecentEventType">
+            <div class="recent-event-info">
+              <span class="event-type-badge" [ngClass]="getSpendingEventStatusClass(item.mostRecentEventType)">
+                {{ getSpendingEventIcon(item.mostRecentEventType) }} {{ getSpendingEventLabel(item.mostRecentEventType) }}
+              </span>
+              <span class="event-date" *ngIf="item.mostRecentEventDate">{{ item.mostRecentEventDate | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <button class="btn-link" (click)="loadEventsForItem(item)">{{ 'common.showAll' | translate }}</button>
+          </div>
+          <div class="empty-state" *ngIf="!item.mostRecentEventType && (selectedItemEvents.length === 0 || selectedEventItemId !== item.id)">
+            <p>{{ 'spending.noEvents' | translate }}</p>
+            <p class="hint" *ngIf="canWrite">{{ 'spending.noEventsHint' | translate }}</p>
+          </div>
+        </div>
+        
+        <!-- Procurement Tracking Reference for linked items -->
+        <div class="procurement-tracking-section" *ngIf="item.procurementItemId">
+          <div class="section-header">
+            <label>📦 {{ 'spending.procurementTracking' | translate }}</label>
+          </div>
+          <div class="procurement-tracking-info">
+            <div class="recent-event-info" *ngIf="item.procurementMostRecentEventType">
+              <span class="event-type-badge" [ngClass]="getTrackingStatusClass(item.procurementMostRecentEventType)">
+                {{ getEventTypeIcon(item.procurementMostRecentEventType) }} {{ getEventTypeLabel(item.procurementMostRecentEventType) }}
+              </span>
+              <span class="event-date" *ngIf="item.procurementMostRecentEventDate">{{ item.procurementMostRecentEventDate | date:'dd/MM/yyyy' }}</span>
+            </div>
+            <button 
+              class="btn-link" 
+              (click)="viewLinkedProcurement()"
+              [title]="'spending.viewProcurementTracking' | translate">
+              {{ 'spending.viewProcurementTracking' | translate }} →
+            </button>
           </div>
         </div>
       </div>

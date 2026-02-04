@@ -772,53 +772,17 @@
                           </select>
                         </div>
                       </div>
-                      <!-- CAP Amount (only if category allows CAP) -->
-                      <div class="form-row" *ngIf="selectedItemAllowsCap">
+                      <!-- Quote Amount -->
+                      <div class="form-row">
                         <div class="form-group">
-                          <label for="newQuoteAmountCap">{{ 'procurement.quoteAmountCap' | translate }} ({{ newQuoteCurrency }})</label>
+                          <label for="newQuoteAmount">{{ 'procurement.quoteAmount' | translate }} ({{ newQuoteCurrency }})</label>
                           <input
                             type="text"
                             currencyInput
-                            id="newQuoteAmountCap"
-                            [(ngModel)]="newQuoteAmountCap"
-                            name="newQuoteAmountCap"
-                            [placeholder]="'procurement.quoteAmountCapPlaceholder' | translate"
-                          />
-                        </div>
-                        <div class="form-group" *ngIf="newQuoteCurrency !== 'CAD'">
-                          <label for="newQuoteAmountCapCad">{{ 'procurement.quoteAmountCapCad' | translate }}</label>
-                          <input
-                            type="text"
-                            currencyInput
-                            id="newQuoteAmountCapCad"
-                            [(ngModel)]="newQuoteAmountCapCad"
-                            name="newQuoteAmountCapCad"
-                            [placeholder]="'procurement.quoteAmountCapCadPlaceholder' | translate"
-                          />
-                        </div>
-                      </div>
-                      <!-- OM Amount (only if category allows OM) -->
-                      <div class="form-row" *ngIf="selectedItemAllowsOm">
-                        <div class="form-group">
-                          <label for="newQuoteAmountOm">{{ 'procurement.quoteAmountOm' | translate }} ({{ newQuoteCurrency }})</label>
-                          <input
-                            type="text"
-                            currencyInput
-                            id="newQuoteAmountOm"
-                            [(ngModel)]="newQuoteAmountOm"
-                            name="newQuoteAmountOm"
-                            [placeholder]="'procurement.quoteAmountOmPlaceholder' | translate"
-                          />
-                        </div>
-                        <div class="form-group" *ngIf="newQuoteCurrency !== 'CAD'">
-                          <label for="newQuoteAmountOmCad">{{ 'procurement.quoteAmountOmCad' | translate }}</label>
-                          <input
-                            type="text"
-                            currencyInput
-                            id="newQuoteAmountOmCad"
-                            [(ngModel)]="newQuoteAmountOmCad"
-                            name="newQuoteAmountOmCad"
-                            [placeholder]="'procurement.quoteAmountOmCadPlaceholder' | translate"
+                            id="newQuoteAmount"
+                            [(ngModel)]="newQuoteAmount"
+                            name="newQuoteAmount"
+                            [placeholder]="'procurement.quoteAmountPlaceholder' | translate"
                           />
                         </div>
                       </div>
@@ -961,49 +925,16 @@
                               </select>
                             </div>
                           </div>
-                          <!-- CAP Amount (only if category allows CAP) -->
-                          <div class="form-row" *ngIf="selectedItemAllowsCap">
+                          <!-- Quote Amount -->
+                          <div class="form-row">
                             <div class="form-group">
-                              <label for="editQuoteAmountCap">{{ 'procurement.quoteAmountCap' | translate }} ({{ editQuoteCurrency }})</label>
+                              <label for="editQuoteAmount">{{ 'procurement.quoteAmount' | translate }} ({{ editQuoteCurrency }})</label>
                               <input
                                 type="text"
                                 currencyInput
-                                id="editQuoteAmountCap"
-                                [(ngModel)]="editQuoteAmountCap"
-                                name="editQuoteAmountCap"
-                              />
-                            </div>
-                            <div class="form-group" *ngIf="editQuoteCurrency !== 'CAD'">
-                              <label for="editQuoteAmountCapCad">{{ 'procurement.quoteAmountCapCad' | translate }}</label>
-                              <input
-                                type="text"
-                                currencyInput
-                                id="editQuoteAmountCapCad"
-                                [(ngModel)]="editQuoteAmountCapCad"
-                                name="editQuoteAmountCapCad"
-                              />
-                            </div>
-                          </div>
-                          <!-- OM Amount (only if category allows OM) -->
-                          <div class="form-row" *ngIf="selectedItemAllowsOm">
-                            <div class="form-group">
-                              <label for="editQuoteAmountOm">{{ 'procurement.quoteAmountOm' | translate }} ({{ editQuoteCurrency }})</label>
-                              <input
-                                type="text"
-                                currencyInput
-                                id="editQuoteAmountOm"
-                                [(ngModel)]="editQuoteAmountOm"
-                                name="editQuoteAmountOm"
-                              />
-                            </div>
-                            <div class="form-group" *ngIf="editQuoteCurrency !== 'CAD'">
-                              <label for="editQuoteAmountOmCad">{{ 'procurement.quoteAmountOmCad' | translate }}</label>
-                              <input
-                                type="text"
-                                currencyInput
-                                id="editQuoteAmountOmCad"
-                                [(ngModel)]="editQuoteAmountOmCad"
-                                name="editQuoteAmountOmCad"
+                                id="editQuoteAmount"
+                                [(ngModel)]="editQuoteAmount"
+                                name="editQuoteAmount"
                               />
                             </div>
                           </div>
@@ -1207,19 +1138,23 @@
                         </div>
                         <!-- File Attachment (optional) - only for new events, not editing -->
                         <div class="form-group" *ngIf="!editingEvent">
-                          <label>{{ 'procurement.attachFile' | translate }}</label>
+                          <label>{{ 'procurement.attachFiles' | translate }}</label>
                           <div class="file-upload-section">
                             <input 
                               type="file" 
                               (change)="onNewEventFileSelected($event)"
                               accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv"
                               [disabled]="isCreatingEvent"
+                              multiple
                             />
-                            <div class="selected-file" *ngIf="newEventFile">
-                              <span class="file-name">📎 {{ newEventFile.name }}</span>
-                              <button type="button" class="btn-icon btn-small" (click)="clearNewEventFile()" [title]="'common.remove' | translate">✕</button>
+                            <div class="selected-files-list" *ngIf="newEventFiles.length > 0">
+                              <div class="selected-file" *ngFor="let file of newEventFiles; let i = index">
+                                <span class="file-name">📎 {{ file.name }}</span>
+                                <span class="file-size">({{ formatFileSize(file.size) }})</span>
+                                <button type="button" class="btn-icon btn-small" (click)="removeNewEventFile(i)" [title]="'common.remove' | translate">✕</button>
+                              </div>
                             </div>
-                            <div class="form-group" *ngIf="newEventFile">
+                            <div class="form-group" *ngIf="newEventFiles.length > 0">
                               <label for="newEventFileDescription">{{ 'procurement.fileDescription' | translate }}</label>
                               <input 
                                 type="text" 
@@ -1288,10 +1223,19 @@
                             <!-- File Upload Form (inline) -->
                             <div class="event-file-upload-form" *ngIf="showEventFileUploadForm && selectedEventForUpload?.id === event.id">
                               <div class="form-group">
-                                <label>{{ 'procurement.selectFile' | translate }}</label>
+                                <label>{{ 'procurement.selectFiles' | translate }}</label>
                                 <input type="file" (change)="onEventFileSelected($event)" 
                                        accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv"
-                                       [disabled]="isUploadingEventFile" />
+                                       [disabled]="isUploadingEventFile"
+                                       multiple />
+                              </div>
+                              <!-- Selected files preview -->
+                              <div class="selected-files-list" *ngIf="selectedEventFiles.length > 0">
+                                <div class="selected-file" *ngFor="let file of selectedEventFiles; let i = index">
+                                  <span class="file-name">📎 {{ file.name }}</span>
+                                  <span class="file-size">({{ formatFileSize(file.size) }})</span>
+                                  <button type="button" class="btn-icon btn-small" (click)="removeSelectedEventFile(i)" [title]="'common.remove' | translate">✕</button>
+                                </div>
                               </div>
                               <div class="form-group">
                                 <label>{{ 'procurement.fileDescription' | translate }}</label>
@@ -1305,7 +1249,7 @@
                                   {{ 'common.cancel' | translate }}
                                 </button>
                                 <button class="btn-primary btn-small" (click)="uploadEventFile()" 
-                                        [disabled]="!selectedEventFile || isUploadingEventFile">
+                                        [disabled]="selectedEventFiles.length === 0 || isUploadingEventFile">
                                   {{ isUploadingEventFile ? ('procurement.uploading' | translate) : ('procurement.upload' | translate) }}
                                 </button>
                               </div>
@@ -1418,13 +1362,23 @@
 
           <div class="upload-form" *ngIf="showFileUpload">
             <div class="form-group">
-              <label for="fileInput">{{ 'procurement.selectFile' | translate }}</label>
+              <label for="fileInput">{{ 'procurement.selectFiles' | translate }}</label>
               <input
                 type="file"
                 id="fileInput"
                 (change)="onFileSelected($event)"
                 accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                multiple
               />
+            </div>
+            <!-- Selected files preview -->
+            <div class="selected-files-list" *ngIf="selectedFiles.length > 0">
+              <div class="selected-file-item" *ngFor="let file of selectedFiles; let i = index">
+                <span class="file-icon">📎</span>
+                <span class="file-name">{{ file.name }}</span>
+                <span class="file-size">({{ formatFileSize(file.size) }})</span>
+                <button type="button" class="btn-icon btn-small" (click)="removeSelectedFile(i)" [title]="'common.remove' | translate">✕</button>
+              </div>
             </div>
             <div class="form-group">
               <label for="fileDescription">{{ 'procurement.descriptionOptional' | translate }}</label>
@@ -1440,7 +1394,7 @@
               <button
                 type="button"
                 class="btn-primary"
-                [disabled]="isUploadingFile || !selectedFile"
+                [disabled]="isUploadingFile || selectedFiles.length === 0"
                 (click)="uploadFile()"
               >
                 {{ isUploadingFile ? ('common.uploading' | translate) : ('common.upload' | translate) }}

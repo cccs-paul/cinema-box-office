@@ -187,7 +187,7 @@
     <div class="bottom-line" [ngClass]="getStatusClass(spendingPercentTotal)">
       <div class="bottom-line-icon">{{ getHealthIndicator() }}</div>
       <div class="bottom-line-content">
-        <span class="bottom-line-label">{{ 'summary.bottomLine' | translate }}:</span>
+        <span class="bottom-line-label">{{ 'summary.bottomLine' | translate }}</span>
         <span class="bottom-line-value">
           {{ 'summary.spendingAt' | translate }} <strong>{{ spendingPercentTotal | number:'1.1-1' }}%</strong> {{ 'summary.ofFunding' | translate }}
         </span>

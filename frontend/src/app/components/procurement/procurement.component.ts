@@ -112,13 +112,13 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   selectedEventForUpload: ProcurementEvent | null = null;
   showEventFileUploadForm = false;
   eventFileDescription = '';
-  selectedEventFile: File | null = null;
+  selectedEventFiles: File[] = [];
   isUploadingEventFile = false;
   editingEventFile: ProcurementEventFile | null = null;
   editingEventFileDescription = '';
   
   // File upload during event creation
-  newEventFile: File | null = null;
+  newEventFiles: File[] = [];
   newEventFileDescription = '';
 
   // Currencies
@@ -188,7 +188,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   // File Upload
   showFileUpload = false;
   isUploadingFile = false;
-  selectedFile: File | null = null;
+  selectedFiles: File[] = [];
   fileDescription = '';
 
   // File Replace
@@ -1257,52 +1257,71 @@ export class ProcurementComponent implements OnInit, OnDestroy {
 
   showFileUploadForm(): void {
     this.showFileUpload = true;
-    this.selectedFile = null;
+    this.selectedFiles = [];
     this.fileDescription = '';
   }
 
   cancelFileUpload(): void {
     this.showFileUpload = false;
-    this.selectedFile = null;
+    this.selectedFiles = [];
     this.fileDescription = '';
   }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      this.selectedFile = input.files[0];
+      this.selectedFiles = Array.from(input.files);
     }
   }
 
+  /**
+   * Remove a file from the selection before upload.
+   */
+  removeSelectedFile(index: number): void {
+    this.selectedFiles = this.selectedFiles.filter((_, i) => i !== index);
+  }
+
   uploadFile(): void {
-    if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.selectedQuote || !this.selectedFile) {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.selectedQuote || this.selectedFiles.length === 0) {
       return;
     }
 
     this.isUploadingFile = true;
     this.clearMessages();
 
-    this.procurementService.uploadFile(
-      this.selectedRC.id,
-      this.selectedFY.id,
-      this.selectedItem.id,
-      this.selectedQuote.id,
-      this.selectedFile,
-      this.fileDescription.trim() || undefined
-    ).subscribe({
-      next: () => {
-        this.showSuccess('File uploaded successfully');
+    // Upload all selected files sequentially
+    const uploadNextFile = (index: number): void => {
+      if (index >= this.selectedFiles.length) {
+        // All files uploaded
+        this.showSuccess(`${this.selectedFiles.length} file(s) uploaded successfully`);
         this.showFileUpload = false;
-        this.selectedFile = null;
+        this.selectedFiles = [];
         this.fileDescription = '';
         this.loadFiles();
         this.isUploadingFile = false;
-      },
-      error: (error) => {
-        this.showError('Failed to upload file: ' + error.message);
-        this.isUploadingFile = false;
+        return;
       }
-    });
+
+      const file = this.selectedFiles[index];
+      this.procurementService.uploadFile(
+        this.selectedRC!.id,
+        this.selectedFY!.id,
+        this.selectedItem!.id,
+        this.selectedQuote!.id,
+        file,
+        this.fileDescription.trim() || undefined
+      ).subscribe({
+        next: () => {
+          uploadNextFile(index + 1);
+        },
+        error: (error) => {
+          this.showError(`Failed to upload file "${file.name}": ${error.message}`);
+          this.isUploadingFile = false;
+        }
+      });
+    };
+
+    uploadNextFile(0);
   }
 
   deleteFile(file: ProcurementQuoteFile): void {
@@ -1541,7 +1560,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newEventType = 'NOT_STARTED';
     this.newEventDate = new Date().toISOString().split('T')[0];
     this.newEventComment = '';
-    this.newEventFile = null;
+    this.newEventFiles = [];
     this.newEventFileDescription = '';
   }
 
@@ -1551,15 +1570,22 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   onNewEventFileSelected(inputEvent: Event): void {
     const input = inputEvent.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      this.newEventFile = input.files[0];
+      this.newEventFiles = Array.from(input.files);
     }
+  }
+
+  /**
+   * Remove a file from the new event file selection.
+   */
+  removeNewEventFile(index: number): void {
+    this.newEventFiles = this.newEventFiles.filter((_, i) => i !== index);
   }
 
   /**
    * Remove the selected file from new event form.
    */
   clearNewEventFile(): void {
-    this.newEventFile = null;
+    this.newEventFiles = [];
     this.newEventFileDescription = '';
   }
 
@@ -1589,32 +1615,43 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       request
     ).subscribe({
       next: (createdEvent) => {
-        // If a file was selected, upload it
-        if (this.newEventFile && createdEvent.id) {
-          this.procurementService.uploadEventFile(
-            this.selectedRC!.id,
-            this.selectedFY!.id,
-            this.selectedItem!.id,
-            createdEvent.id,
-            this.newEventFile,
-            this.newEventFileDescription || undefined
-          ).subscribe({
-            next: () => {
-              this.showSuccess('Event created with file successfully');
+        // If files were selected, upload them sequentially
+        if (this.newEventFiles.length > 0 && createdEvent.id) {
+          const uploadNextFile = (index: number): void => {
+            if (index >= this.newEventFiles.length) {
+              // All files uploaded
+              this.showSuccess(`Event created with ${this.newEventFiles.length} file(s) successfully`);
               this.showCreateEventForm = false;
               this.resetEventForm();
               this.loadEvents();
               this.isCreatingEvent = false;
-            },
-            error: (fileError) => {
-              // Event was created but file upload failed
-              this.showError('Event created but file upload failed: ' + fileError.message);
-              this.showCreateEventForm = false;
-              this.resetEventForm();
-              this.loadEvents();
-              this.isCreatingEvent = false;
+              return;
             }
-          });
+
+            const file = this.newEventFiles[index];
+            this.procurementService.uploadEventFile(
+              this.selectedRC!.id,
+              this.selectedFY!.id,
+              this.selectedItem!.id,
+              createdEvent.id,
+              file,
+              this.newEventFileDescription || undefined
+            ).subscribe({
+              next: () => {
+                uploadNextFile(index + 1);
+              },
+              error: (fileError) => {
+                // Event was created but file upload failed
+                this.showError(`Event created but file "${file.name}" upload failed: ${fileError.message}`);
+                this.showCreateEventForm = false;
+                this.resetEventForm();
+                this.loadEvents();
+                this.isCreatingEvent = false;
+              }
+            });
+          };
+
+          uploadNextFile(0);
         } else {
           this.showSuccess('Event created successfully');
           this.showCreateEventForm = false;
@@ -1795,7 +1832,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.selectedEventForUpload = event;
     this.showEventFileUploadForm = true;
     this.eventFileDescription = '';
-    this.selectedEventFile = null;
+    this.selectedEventFiles = [];
   }
 
   /**
@@ -1805,7 +1842,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.selectedEventForUpload = null;
     this.showEventFileUploadForm = false;
     this.eventFileDescription = '';
-    this.selectedEventFile = null;
+    this.selectedEventFiles = [];
   }
 
   /**
@@ -1814,52 +1851,71 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   onEventFileSelected(inputEvent: Event): void {
     const input = inputEvent.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      this.selectedEventFile = input.files[0];
+      this.selectedEventFiles = Array.from(input.files);
     }
+  }
+
+  /**
+   * Remove a file from the event file selection.
+   */
+  removeSelectedEventFile(index: number): void {
+    this.selectedEventFiles = this.selectedEventFiles.filter((_, i) => i !== index);
   }
 
   /**
    * Upload file to an event.
    */
   uploadEventFile(): void {
-    if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.selectedEventForUpload || !this.selectedEventFile) {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem || !this.selectedEventForUpload || this.selectedEventFiles.length === 0) {
       return;
     }
 
     this.isUploadingEventFile = true;
+    const eventId = this.selectedEventForUpload!.id;
 
-    this.procurementService.uploadEventFile(
-      this.selectedRC.id,
-      this.selectedFY.id,
-      this.selectedItem.id,
-      this.selectedEventForUpload.id,
-      this.selectedEventFile,
-      this.eventFileDescription || undefined
-    ).subscribe({
-      next: (file) => {
-        this.showSuccess('File uploaded successfully');
-        // Refresh file list
-        const eventId = this.selectedEventForUpload!.id;
-        if (!this.eventFiles[eventId]) {
-          this.eventFiles[eventId] = [];
-        }
-        this.eventFiles[eventId].push(file);
+    // Upload files sequentially
+    const uploadNextFile = (index: number): void => {
+      if (index >= this.selectedEventFiles.length) {
+        // All files uploaded
+        this.showSuccess(`${this.selectedEventFiles.length} file(s) uploaded successfully`);
         this.expandedEventFiles[eventId] = true;
-
-        // Update event's file count
-        const eventIndex = this.events.findIndex(e => e.id === eventId);
-        if (eventIndex !== -1) {
-          this.events[eventIndex].fileCount = (this.events[eventIndex].fileCount || 0) + 1;
-        }
-
         this.cancelEventFileUpload();
         this.isUploadingEventFile = false;
-      },
-      error: (error) => {
-        this.showError('Failed to upload file: ' + error.message);
-        this.isUploadingEventFile = false;
+        return;
       }
-    });
+
+      const file = this.selectedEventFiles[index];
+      this.procurementService.uploadEventFile(
+        this.selectedRC!.id,
+        this.selectedFY!.id,
+        this.selectedItem!.id,
+        eventId,
+        file,
+        this.eventFileDescription || undefined
+      ).subscribe({
+        next: (uploadedFile) => {
+          // Add file to the list
+          if (!this.eventFiles[eventId]) {
+            this.eventFiles[eventId] = [];
+          }
+          this.eventFiles[eventId].push(uploadedFile);
+
+          // Update event's file count
+          const eventIndex = this.events.findIndex(e => e.id === eventId);
+          if (eventIndex !== -1) {
+            this.events[eventIndex].fileCount = (this.events[eventIndex].fileCount || 0) + 1;
+          }
+
+          uploadNextFile(index + 1);
+        },
+        error: (error) => {
+          this.showError(`Failed to upload file "${file.name}": ${error.message}`);
+          this.isUploadingEventFile = false;
+        }
+      });
+    };
+
+    uploadNextFile(0);
   }
 
   /**

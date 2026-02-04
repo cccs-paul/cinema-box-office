@@ -51,6 +51,14 @@ public class SpendingItemDTO {
   private String procurementPriceCurrency;
   private BigDecimal procurementFinalPriceCad;
   private BigDecimal procurementQuotedPriceCad;
+  // Tracking event info (for non-procurement-linked items)
+  private Integer eventCount;
+  private String mostRecentEventType;
+  private String mostRecentEventDate;
+  // Procurement tracking info (for procurement-linked items)
+  private String procurementTrackingStatus;
+  private String procurementMostRecentEventType;
+  private String procurementMostRecentEventDate;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
@@ -322,6 +330,56 @@ public class SpendingItemDTO {
 
   public void setProcurementQuotedPriceCad(BigDecimal procurementQuotedPriceCad) {
     this.procurementQuotedPriceCad = procurementQuotedPriceCad;
+  }
+
+  // Event tracking getters/setters (for non-procurement-linked items)
+  public Integer getEventCount() {
+    return eventCount;
+  }
+
+  public void setEventCount(Integer eventCount) {
+    this.eventCount = eventCount;
+  }
+
+  public String getMostRecentEventType() {
+    return mostRecentEventType;
+  }
+
+  public void setMostRecentEventType(String mostRecentEventType) {
+    this.mostRecentEventType = mostRecentEventType;
+  }
+
+  public String getMostRecentEventDate() {
+    return mostRecentEventDate;
+  }
+
+  public void setMostRecentEventDate(String mostRecentEventDate) {
+    this.mostRecentEventDate = mostRecentEventDate;
+  }
+
+  // Procurement tracking getters/setters (for procurement-linked items)
+  public String getProcurementTrackingStatus() {
+    return procurementTrackingStatus;
+  }
+
+  public void setProcurementTrackingStatus(String procurementTrackingStatus) {
+    this.procurementTrackingStatus = procurementTrackingStatus;
+  }
+
+  public String getProcurementMostRecentEventType() {
+    return procurementMostRecentEventType;
+  }
+
+  public void setProcurementMostRecentEventType(String procurementMostRecentEventType) {
+    this.procurementMostRecentEventType = procurementMostRecentEventType;
+  }
+
+  public String getProcurementMostRecentEventDate() {
+    return procurementMostRecentEventDate;
+  }
+
+  public void setProcurementMostRecentEventDate(String procurementMostRecentEventDate) {
+    this.procurementMostRecentEventDate = procurementMostRecentEventDate;
   }
 
   public LocalDateTime getCreatedAt() {

@@ -317,8 +317,19 @@ export class SummaryComponent implements OnInit, OnDestroy {
   /**
    * Get status color class based on funding vs spending percentage difference.
    * Uses the On Target thresholds from FY settings.
+   * Also handles cases where funding is zero but spending exists.
    */
   getStatusClass(percentage: number): string {
+    // Special case: if no funding but there is spending, we're over budget
+    if (this.totalFunding === 0 && this.totalSpending > 0) {
+      return 'status-danger';
+    }
+    
+    // Special case: if no funding and no spending, show as on target
+    if (this.totalFunding === 0 && this.totalSpending === 0) {
+      return 'status-good';
+    }
+
     const difference = 100 - percentage; // How much is remaining (positive = under budget)
     const onTargetMin = this.selectedFY?.onTargetMin ?? -2;
     const onTargetMax = this.selectedFY?.onTargetMax ?? 2;
@@ -341,8 +352,19 @@ export class SummaryComponent implements OnInit, OnDestroy {
   /**
    * Get On Target indicator based on funding vs spending difference.
    * Uses the On Target thresholds from FY settings.
+   * Also handles cases where funding is zero but spending exists.
    */
   getOnTargetIndicator(): string {
+    // Special case: if no funding but there is spending, we're over budget
+    if (this.totalFunding === 0 && this.totalSpending > 0) {
+      return '🔴'; // Over budget
+    }
+    
+    // Special case: if no funding and no spending, show as on target
+    if (this.totalFunding === 0 && this.totalSpending === 0) {
+      return '🟢'; // On target (nothing to track)
+    }
+
     const difference = 100 - this.spendingPercentTotal; // Positive = under budget, negative = over budget
     const onTargetMin = this.selectedFY?.onTargetMin ?? -2;
     const onTargetMax = this.selectedFY?.onTargetMax ?? 2;
@@ -366,8 +388,19 @@ export class SummaryComponent implements OnInit, OnDestroy {
   /**
    * Get On Target status text description.
    * Uses the On Target thresholds from FY settings.
+   * Also handles cases where funding is zero but spending exists.
    */
   getOnTargetText(): string {
+    // Special case: if no funding but there is spending, we're over budget
+    if (this.totalFunding === 0 && this.totalSpending > 0) {
+      return 'Over Budget';
+    }
+    
+    // Special case: if no funding and no spending, show as on target
+    if (this.totalFunding === 0 && this.totalSpending === 0) {
+      return 'On Target';
+    }
+
     const difference = 100 - this.spendingPercentTotal; // Positive = under budget, negative = over budget
     const onTargetMin = this.selectedFY?.onTargetMin ?? -2;
     const onTargetMax = this.selectedFY?.onTargetMax ?? 2;

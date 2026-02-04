@@ -15,6 +15,7 @@ import { takeUntil } from 'rxjs/operators';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { SpendingItemService, SpendingItemCreateRequest, SpendingItemUpdateRequest } from '../../services/spending-item.service';
+import { SpendingEventService } from '../../services/spending-event.service';
 import { CategoryService } from '../../services/category.service';
 import { MoneyService } from '../../services/money.service';
 import { CurrencyService } from '../../services/currency.service';
@@ -22,10 +23,12 @@ import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { SpendingItem, SpendingMoneyAllocation, SpendingItemStatus, SPENDING_STATUS_INFO } from '../../models/spending-item.model';
+import { SpendingEvent, SpendingEventType, SPENDING_EVENT_TYPE_INFO, SpendingEventRequest } from '../../models/spending-event.model';
 import { Category, categoryAllowsCap, categoryAllowsOm } from '../../models/category.model';
 import { Money } from '../../models/money.model';
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 import { CurrencyInputDirective } from '../../directives/currency-input.directive';
+import { EVENT_TYPE_INFO, ProcurementEventType } from '../../models/procurement.model';
 
 /**
  * Spending component showing spending items for the selected RC and FY.
@@ -116,6 +119,34 @@ export class SpendingComponent implements OnInit, OnDestroy {
   // Category grouping interface
   groupedItems: { categoryName: string; categoryId: number | null; items: SpendingItem[] }[] = [];
 
+  // Spending Events
+  selectedItemEvents: SpendingEvent[] = [];
+  selectedEventItemId: number | null = null;
+  isLoadingEvents = false;
+  
+  // Add Event Modal
+  showAddEventModal = false;
+  addEventItemId: number | null = null;
+  newEventType: SpendingEventType = 'PENDING';
+  newEventDate = '';
+  newEventComment = '';
+  isCreatingEvent = false;
+  
+  // Edit Event
+  editingEventId: number | null = null;
+  editEventType: SpendingEventType = 'PENDING';
+  editEventDate = '';
+  editEventComment = '';
+  isUpdatingEvent = false;
+
+  // Event type options
+  eventTypeOptions: SpendingEventType[] = [
+    'PENDING', 'ECO_REQUESTED', 'ECO_RECEIVED', 
+    'EXTERNAL_APPROVAL_REQUESTED', 'EXTERNAL_APPROVAL_RECEIVED',
+    'SECTION_32_PROVIDED', 'RECEIVED_GOODS_SERVICES', 'SECTION_34_PROVIDED',
+    'CREDIT_CARD_CLEARED', 'CANCELLED', 'ON_HOLD'
+  ];
+
   // For navigation with query params (expand specific item)
   private pendingExpandItemId: number | null = null;
 
@@ -128,6 +159,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
     private spendingItemService: SpendingItemService,
+    private spendingEventService: SpendingEventService,
     private categoryService: CategoryService,
     private moneyService: MoneyService,
     private currencyService: CurrencyService,
@@ -1007,5 +1039,214 @@ export class SpendingComponent implements OnInit, OnDestroy {
     } else {
       this.router.navigate(['/app/procurement']);
     }
+  }
+
+  // ========================================
+  // Spending Event Methods
+  // ========================================
+
+  /**
+   * Get the event count for a spending item.
+   */
+  getEventCount(item: SpendingItem): number {
+    return item.eventCount || 0;
+  }
+
+  /**
+   * Load events for a spending item.
+   */
+  loadEventsForItem(item: SpendingItem): void {
+    if (!this.selectedRC || !this.selectedFY) return;
+    
+    this.selectedEventItemId = item.id;
+    this.isLoadingEvents = true;
+    
+    this.spendingEventService.getEvents(
+      this.selectedRC.id, this.selectedFY.id, item.id
+    ).subscribe({
+      next: (events) => {
+        this.selectedItemEvents = events;
+        this.isLoadingEvents = false;
+      },
+      error: (error) => {
+        this.showError('Failed to load events: ' + error.message);
+        this.isLoadingEvents = false;
+      }
+    });
+  }
+
+  /**
+   * Open the add event modal for an item.
+   */
+  openAddEventModal(item: SpendingItem): void {
+    this.addEventItemId = item.id;
+    this.newEventType = 'PENDING';
+    this.newEventDate = new Date().toISOString().split('T')[0];
+    this.newEventComment = '';
+    this.showAddEventModal = true;
+  }
+
+  /**
+   * Close the add event modal.
+   */
+  closeAddEventModal(): void {
+    this.showAddEventModal = false;
+    this.addEventItemId = null;
+  }
+
+  /**
+   * Create a new spending event.
+   */
+  createSpendingEvent(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.addEventItemId) return;
+    
+    this.isCreatingEvent = true;
+    
+    const request: SpendingEventRequest = {
+      eventType: this.newEventType,
+      eventDate: this.newEventDate,
+      comment: this.newEventComment.trim() || undefined
+    };
+    
+    this.spendingEventService.createEvent(
+      this.selectedRC.id, this.selectedFY.id, this.addEventItemId, request
+    ).subscribe({
+      next: () => {
+        this.showSuccess('Event created successfully');
+        this.closeAddEventModal();
+        this.loadSpendingItems(); // Refresh to get updated event info
+        if (this.selectedEventItemId) {
+          this.loadEventsForItem(this.spendingItems.find(i => i.id === this.selectedEventItemId)!);
+        }
+        this.isCreatingEvent = false;
+      },
+      error: (error) => {
+        this.showError('Failed to create event: ' + error.message);
+        this.isCreatingEvent = false;
+      }
+    });
+  }
+
+  /**
+   * Start editing an event.
+   */
+  editEvent(event: SpendingEvent): void {
+    this.editingEventId = event.id;
+    this.editEventType = event.eventType;
+    this.editEventDate = event.eventDate?.split('T')[0] || '';
+    this.editEventComment = event.comment || '';
+  }
+
+  /**
+   * Cancel editing an event.
+   */
+  cancelEditEvent(): void {
+    this.editingEventId = null;
+  }
+
+  /**
+   * Update an existing event.
+   */
+  updateSpendingEvent(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.editingEventId || !this.selectedEventItemId) return;
+    
+    this.isUpdatingEvent = true;
+    
+    const request: SpendingEventRequest = {
+      eventType: this.editEventType,
+      eventDate: this.editEventDate,
+      comment: this.editEventComment.trim() || undefined
+    };
+    
+    this.spendingEventService.updateEvent(
+      this.selectedRC.id, this.selectedFY.id, this.selectedEventItemId, this.editingEventId, request
+    ).subscribe({
+      next: () => {
+        this.showSuccess('Event updated successfully');
+        this.editingEventId = null;
+        this.loadSpendingItems();
+        this.loadEventsForItem(this.spendingItems.find(i => i.id === this.selectedEventItemId)!);
+        this.isUpdatingEvent = false;
+      },
+      error: (error) => {
+        this.showError('Failed to update event: ' + error.message);
+        this.isUpdatingEvent = false;
+      }
+    });
+  }
+
+  /**
+   * Delete an event.
+   */
+  deleteEvent(event: SpendingEvent): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedEventItemId) return;
+    
+    const confirmed = confirm(this.translate.instant('common.deleteConfirm'));
+    if (!confirmed) return;
+    
+    this.spendingEventService.deleteEvent(
+      this.selectedRC.id, this.selectedFY.id, this.selectedEventItemId, event.id
+    ).subscribe({
+      next: () => {
+        this.showSuccess('Event deleted successfully');
+        this.loadSpendingItems();
+        this.loadEventsForItem(this.spendingItems.find(i => i.id === this.selectedEventItemId)!);
+      },
+      error: (error) => {
+        this.showError('Failed to delete event: ' + error.message);
+      }
+    });
+  }
+
+  // ========================================
+  // Event Type Display Helpers
+  // ========================================
+
+  /**
+   * Get label for a spending event type.
+   */
+  getSpendingEventLabel(eventType: string): string {
+    const info = SPENDING_EVENT_TYPE_INFO[eventType as SpendingEventType];
+    return info?.label || eventType;
+  }
+
+  /**
+   * Get icon for a spending event type.
+   */
+  getSpendingEventIcon(eventType: string): string {
+    const info = SPENDING_EVENT_TYPE_INFO[eventType as SpendingEventType];
+    return info?.icon || '📌';
+  }
+
+  /**
+   * Get CSS class for a spending event status.
+   */
+  getSpendingEventStatusClass(eventType: string): string {
+    const info = SPENDING_EVENT_TYPE_INFO[eventType as SpendingEventType];
+    return info ? `status-${info.color}` : 'status-gray';
+  }
+
+  /**
+   * Get label for a procurement event type.
+   */
+  getEventTypeLabel(eventType: string): string {
+    const info = EVENT_TYPE_INFO[eventType as ProcurementEventType];
+    return info?.label || eventType;
+  }
+
+  /**
+   * Get icon for a procurement event type.
+   */
+  getEventTypeIcon(eventType: string): string {
+    const info = EVENT_TYPE_INFO[eventType as ProcurementEventType];
+    return info?.icon || '📌';
+  }
+
+  /**
+   * Get CSS class for a procurement tracking status.
+   */
+  getTrackingStatusClass(eventType: string): string {
+    const info = EVENT_TYPE_INFO[eventType as ProcurementEventType];
+    return info ? `status-${info.color}` : 'status-gray';
   }
 }

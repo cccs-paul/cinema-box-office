@@ -134,6 +134,13 @@ public class SpendingItem {
   @OneToMany(mappedBy = "spendingItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
   private List<SpendingMoneyAllocation> moneyAllocations = new ArrayList<>();
 
+  /**
+   * Tracking events for this spending item.
+   * Only used when the item is NOT linked to a procurement item.
+   */
+  @OneToMany(mappedBy = "spendingItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<SpendingEvent> events = new ArrayList<>();
+
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
   private LocalDateTime createdAt;
@@ -302,6 +309,34 @@ public class SpendingItem {
   public void removeMoneyAllocation(SpendingMoneyAllocation allocation) {
     moneyAllocations.remove(allocation);
     allocation.setSpendingItem(null);
+  }
+
+  public List<SpendingEvent> getEvents() {
+    return events;
+  }
+
+  public void setEvents(List<SpendingEvent> events) {
+    this.events = events;
+  }
+
+  /**
+   * Add a tracking event to this spending item.
+   *
+   * @param event the event to add
+   */
+  public void addEvent(SpendingEvent event) {
+    events.add(event);
+    event.setSpendingItem(this);
+  }
+
+  /**
+   * Remove a tracking event from this spending item.
+   *
+   * @param event the event to remove
+   */
+  public void removeEvent(SpendingEvent event) {
+    events.remove(event);
+    event.setSpendingItem(null);
   }
 
   public LocalDateTime getCreatedAt() {

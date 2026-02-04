@@ -121,6 +121,24 @@ export interface SpendingItem {
   /** Quoted price in CAD (converted) */
   procurementQuotedPriceCad?: number | null;
 
+  /** Count of tracking events for this item (for non-procurement items) */
+  eventCount?: number;
+
+  /** Most recent event type for this item (for non-procurement items) */
+  mostRecentEventType?: string;
+
+  /** Most recent event date for this item (for non-procurement items) */
+  mostRecentEventDate?: string;
+
+  /** Tracking status from linked procurement item (for procurement-linked items) */
+  procurementTrackingStatus?: string;
+
+  /** Most recent event type from linked procurement item */
+  procurementMostRecentEventType?: string;
+
+  /** Most recent event date from linked procurement item */
+  procurementMostRecentEventDate?: string;
+
   /** Whether the spending item is active */
   active: boolean;
 
