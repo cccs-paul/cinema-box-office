@@ -404,6 +404,48 @@
       <!-- Edit Mode -->
       <div class="edit-form" *ngIf="editingItemId === item.id">
         <h4>{{ 'spending.editItem' | translate }}</h4>
+        
+        <!-- Linked Procurement Info (Read-only) -->
+        <div class="edit-procurement-link-box" *ngIf="item.procurementItemId">
+          <div class="procurement-link-header">
+            <span class="procurement-icon">📦</span>
+            <label>{{ 'spending.linkedProcurement' | translate }}</label>
+          </div>
+          <div class="procurement-link-content">
+            <div class="procurement-item-link">
+              <span class="procurement-name">{{ item.procurementItemName || ('spending.procurementItem' | translate) }}</span>
+              <button 
+                class="btn-link" 
+                type="button"
+                [title]="'spending.viewInProcurement' | translate"
+                (click)="viewLinkedProcurement()">
+                {{ 'common.view' | translate }} →
+              </button>
+            </div>
+            <!-- Procurement Price Display -->
+            <div class="procurement-price-info" *ngIf="item.procurementFinalPrice != null || item.procurementQuotedPrice != null">
+              <div class="price-row" *ngIf="item.procurementFinalPrice != null">
+                <span class="price-label">{{ 'procurement.finalPrice' | translate }}:</span>
+                <span class="price-value">
+                  {{ formatCurrency(item.procurementFinalPrice, item.procurementPriceCurrency || 'CAD') }}
+                  <span class="price-cad" *ngIf="item.procurementPriceCurrency !== 'CAD' && item.procurementFinalPriceCad != null">
+                    ({{ formatCurrency(item.procurementFinalPriceCad, 'CAD') }})
+                  </span>
+                </span>
+              </div>
+              <div class="price-row" *ngIf="item.procurementFinalPrice == null && item.procurementQuotedPrice != null">
+                <span class="price-label">{{ 'procurement.quotedPrice' | translate }}:</span>
+                <span class="price-value">
+                  {{ formatCurrency(item.procurementQuotedPrice, item.procurementPriceCurrency || 'CAD') }}
+                  <span class="price-cad" *ngIf="item.procurementPriceCurrency !== 'CAD' && item.procurementQuotedPriceCad != null">
+                    ({{ formatCurrency(item.procurementQuotedPriceCad, 'CAD') }})
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
         <div class="form-row">
           <div class="form-group">
             <label for="editItemName">{{ 'common.name' | translate }} <span class="required">*</span></label>

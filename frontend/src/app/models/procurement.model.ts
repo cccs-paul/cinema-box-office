@@ -226,6 +226,12 @@ export interface ProcurementQuote {
   /** Last update timestamp */
   updatedAt?: string;
 
+  /** Username of the user who created this quote */
+  createdBy?: string;
+
+  /** Username of the user who last modified this quote */
+  modifiedBy?: string;
+
   /** Attached files */
   files?: ProcurementQuoteFile[];
 

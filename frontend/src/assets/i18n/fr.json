@@ -376,6 +376,7 @@
     "bytes": "octets",
     "preview": "Aperçu",
     "openInNewTab": "Ouvrir dans un nouvel onglet",
+    "noFilesAttached": "Aucun fichier attaché.",
     "noFilesUploaded": "Aucun fichier téléversé.",
     "clickUploadFile": "Cliquez sur « Téléverser un fichier » pour en ajouter un.",
     "loadingPreview": "Chargement de l'aperçu...",

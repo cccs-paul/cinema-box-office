@@ -226,18 +226,18 @@
           <span class="action-label">{{ 'fiscalYear.rename' | translate }}</span>
         </button>
         <button class="btn btn-action btn-sm" 
-                (click)="toggleFYActiveStatus()" 
-                [disabled]="selectedFYId === null || !selectedRCIsOwner || isTogglingFYActive || !selectedRCCanWrite"
-                [title]="selectedFY?.active ? ('fiscalYear.deactivate' | translate) : ('fiscalYear.activate' | translate)">
-          <span class="action-icon">{{ selectedFY?.active ? '🔒' : '🔓' }}</span>
-          <span class="action-label">{{ selectedFY?.active ? ('fiscalYear.deactivate' | translate) : ('fiscalYear.activate' | translate) }}</span>
-        </button>
-        <button class="btn btn-action btn-sm btn-danger" 
                 (click)="confirmDeleteFY()" 
                 [disabled]="selectedFYId === null || !selectedRCIsOwner || !selectedRCCanWrite"
                 [title]="'fiscalYear.delete' | translate">
           <span class="action-icon">🗑️</span>
           <span class="action-label">{{ 'fiscalYear.delete' | translate }}</span>
+        </button>
+        <button class="btn btn-action btn-sm" 
+                (click)="toggleFYActiveStatus()" 
+                [disabled]="selectedFYId === null || !selectedRCIsOwner || isTogglingFYActive || !selectedRCCanWrite"
+                [title]="selectedFY?.active ? ('fiscalYear.deactivate' | translate) : ('fiscalYear.activate' | translate)">
+          <span class="action-icon">{{ selectedFY?.active ? '🔒' : '🔓' }}</span>
+          <span class="action-label">{{ selectedFY?.active ? ('fiscalYear.deactivate' | translate) : ('fiscalYear.activate' | translate) }}</span>
         </button>
       </div>
 

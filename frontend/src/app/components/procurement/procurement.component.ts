@@ -116,6 +116,10 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   isUploadingEventFile = false;
   editingEventFile: ProcurementEventFile | null = null;
   editingEventFileDescription = '';
+  
+  // File upload during event creation
+  newEventFile: File | null = null;
+  newEventFileDescription = '';
 
   // Currencies
   currencies: Currency[] = [];
@@ -206,6 +210,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   // Edit Procurement Item Form
   editingItemId: number | null = null;
   isUpdatingItem = false;
+  originalEditItem: ProcurementItem | null = null; // Track original values for dirty checking
   editItemPR = '';
   editItemPO = '';
   editItemName = '';
@@ -672,6 +677,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    */
   startEditProcurementItem(item: ProcurementItem): void {
     this.editingItemId = item.id;
+    this.originalEditItem = item; // Store original for dirty checking
     this.editItemPR = item.purchaseRequisition || '';
     this.editItemPO = item.purchaseOrder || '';
     this.editItemName = item.name;
@@ -699,6 +705,48 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Check if the edit form has unsaved changes.
+   */
+  isEditFormDirty(): boolean {
+    if (!this.originalEditItem) return false;
+    
+    const item = this.originalEditItem;
+    const origPR = item.purchaseRequisition || '';
+    const origPO = item.purchaseOrder || '';
+    const origName = item.name || '';
+    const origDesc = item.description || '';
+    const origVendor = item.vendor || '';
+    const origFinalPrice = item.finalPrice !== undefined && item.finalPrice !== null ? item.finalPrice : null;
+    const origFinalPriceCurrency = item.finalPriceCurrency || DEFAULT_CURRENCY;
+    const origQuotedPrice = item.quotedPrice !== undefined && item.quotedPrice !== null ? item.quotedPrice : null;
+    const origQuotedPriceCurrency = item.quotedPriceCurrency || DEFAULT_CURRENCY;
+    const origContractNumber = item.contractNumber || '';
+    const origContractStartDate = item.contractStartDate ? item.contractStartDate.split('T')[0] : '';
+    const origContractEndDate = item.contractEndDate ? item.contractEndDate.split('T')[0] : '';
+    const origProcurementCompleted = item.procurementCompleted || false;
+    const origProcurementCompletedDate = item.procurementCompletedDate ? item.procurementCompletedDate.split('T')[0] : '';
+    const origCategoryId = item.categoryId !== undefined && item.categoryId !== null ? item.categoryId : null;
+    const origTrackingStatus = (item.trackingStatus as TrackingStatus) || 'ON_TRACK';
+
+    return this.editItemPR !== origPR ||
+           this.editItemPO !== origPO ||
+           this.editItemName !== origName ||
+           this.editItemDescription !== origDesc ||
+           this.editItemVendor !== origVendor ||
+           this.editItemFinalPrice !== origFinalPrice ||
+           this.editItemFinalPriceCurrency !== origFinalPriceCurrency ||
+           this.editItemQuotedPrice !== origQuotedPrice ||
+           this.editItemQuotedPriceCurrency !== origQuotedPriceCurrency ||
+           this.editItemContractNumber !== origContractNumber ||
+           this.editItemContractStartDate !== origContractStartDate ||
+           this.editItemContractEndDate !== origContractEndDate ||
+           this.editItemProcurementCompleted !== origProcurementCompleted ||
+           this.editItemProcurementCompletedDate !== origProcurementCompletedDate ||
+           this.editItemCategoryId !== origCategoryId ||
+           this.editItemTrackingStatus !== origTrackingStatus;
+  }
+
+  /**
    * Cancel editing a procurement item.
    */
   cancelEditProcurementItem(): void {
@@ -710,6 +758,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    * Reset the edit item form.
    */
   private resetEditItemForm(): void {
+    this.originalEditItem = null;
     this.editItemPR = '';
     this.editItemPO = '';
     this.editItemName = '';
@@ -1492,6 +1541,26 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newEventType = 'NOT_STARTED';
     this.newEventDate = new Date().toISOString().split('T')[0];
     this.newEventComment = '';
+    this.newEventFile = null;
+    this.newEventFileDescription = '';
+  }
+
+  /**
+   * Handle file selection for new event creation.
+   */
+  onNewEventFileSelected(inputEvent: Event): void {
+    const input = inputEvent.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.newEventFile = input.files[0];
+    }
+  }
+
+  /**
+   * Remove the selected file from new event form.
+   */
+  clearNewEventFile(): void {
+    this.newEventFile = null;
+    this.newEventFileDescription = '';
   }
 
   /**
@@ -1519,12 +1588,40 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       this.selectedItem.id,
       request
     ).subscribe({
-      next: () => {
-        this.showSuccess('Event created successfully');
-        this.showCreateEventForm = false;
-        this.resetEventForm();
-        this.loadEvents();
-        this.isCreatingEvent = false;
+      next: (createdEvent) => {
+        // If a file was selected, upload it
+        if (this.newEventFile && createdEvent.id) {
+          this.procurementService.uploadEventFile(
+            this.selectedRC!.id,
+            this.selectedFY!.id,
+            this.selectedItem!.id,
+            createdEvent.id,
+            this.newEventFile,
+            this.newEventFileDescription || undefined
+          ).subscribe({
+            next: () => {
+              this.showSuccess('Event created with file successfully');
+              this.showCreateEventForm = false;
+              this.resetEventForm();
+              this.loadEvents();
+              this.isCreatingEvent = false;
+            },
+            error: (fileError) => {
+              // Event was created but file upload failed
+              this.showError('Event created but file upload failed: ' + fileError.message);
+              this.showCreateEventForm = false;
+              this.resetEventForm();
+              this.loadEvents();
+              this.isCreatingEvent = false;
+            }
+          });
+        } else {
+          this.showSuccess('Event created successfully');
+          this.showCreateEventForm = false;
+          this.resetEventForm();
+          this.loadEvents();
+          this.isCreatingEvent = false;
+        }
       },
       error: (error) => {
         this.showError('Failed to create event: ' + error.message);
@@ -2059,6 +2156,14 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           this.showSuccess(this.translate.instant(actionKey));
           this.showSpendingLinkWarning = false;
           this.spendingLinkWarningMessage = null;
+          
+          // If a spending item was created, navigate to the Spending page
+          if (response.spendingLinked && response.procurementItem.linkedSpendingItemIds && response.procurementItem.linkedSpendingItemIds.length > 0) {
+            const spendingItemId = response.procurementItem.linkedSpendingItemIds[0];
+            this.router.navigate(['/app/spending'], {
+              queryParams: { expandItem: spendingItemId }
+            });
+          }
         }
       },
       error: (err) => {

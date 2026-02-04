@@ -637,6 +637,8 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         quote.setSelected(false);
         quote.setProcurementItem(item);
         quote.setActive(true);
+        quote.setCreatedBy(username);
+        quote.setModifiedBy(username);
 
         ProcurementQuote saved = quoteRepository.save(quote);
         logger.info("Created quote from '" + dto.getVendorName() + "' for procurement item " + procurementItemId + " by user " + username);
@@ -700,6 +702,8 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
                 throw new IllegalArgumentException("Invalid status: " + dto.getStatus());
             }
         }
+
+        quote.setModifiedBy(username);
 
         ProcurementQuote saved = quoteRepository.save(quote);
         logger.info("Updated quote " + quoteId + " by user " + username);

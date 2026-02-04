@@ -182,6 +182,18 @@ public class ProcurementQuote {
     @Column(nullable = false)
     private Boolean active = true;
 
+    /**
+     * Username of the user who created this quote.
+     */
+    @Column(length = 100)
+    private String createdBy;
+
+    /**
+     * Username of the user who last modified this quote.
+     */
+    @Column(length = 100)
+    private String modifiedBy;
+
     // Constructors
     public ProcurementQuote() {
     }
@@ -381,6 +393,22 @@ public class ProcurementQuote {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getModifiedBy() {
+        return modifiedBy;
+    }
+
+    public void setModifiedBy(String modifiedBy) {
+        this.modifiedBy = modifiedBy;
     }
 
     /**

@@ -51,6 +51,8 @@ public class ProcurementQuoteDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean active;
+    private String createdBy;
+    private String modifiedBy;
     private List<ProcurementQuoteFileDTO> files;
     private Integer fileCount;
 
@@ -108,7 +110,7 @@ public class ProcurementQuoteDTO {
                     .map(ProcurementQuoteFileDTO::fromEntity)
                     .collect(Collectors.toList());
         }
-        return new ProcurementQuoteDTO(
+        ProcurementQuoteDTO dto = new ProcurementQuoteDTO(
                 quote.getId(),
                 quote.getVendorName(),
                 quote.getVendorContact(),
@@ -132,6 +134,9 @@ public class ProcurementQuoteDTO {
                 quote.getActive(),
                 fileDTOs
         );
+        dto.setCreatedBy(quote.getCreatedBy());
+        dto.setModifiedBy(quote.getModifiedBy());
+        return dto;
     }
 
     /**
@@ -166,6 +171,8 @@ public class ProcurementQuoteDTO {
         dto.setCreatedAt(quote.getCreatedAt());
         dto.setUpdatedAt(quote.getUpdatedAt());
         dto.setActive(quote.getActive());
+        dto.setCreatedBy(quote.getCreatedBy());
+        dto.setModifiedBy(quote.getModifiedBy());
         dto.setFiles(new ArrayList<>());
         dto.setFileCount(quote.getFiles() != null ? (int) quote.getFiles().stream().filter(f -> f.getActive()).count() : 0);
         return dto;
@@ -338,6 +345,22 @@ public class ProcurementQuoteDTO {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public String getModifiedBy() {
+        return modifiedBy;
+    }
+
+    public void setModifiedBy(String modifiedBy) {
+        this.modifiedBy = modifiedBy;
     }
 
     public List<ProcurementQuoteFileDTO> getFiles() {

@@ -376,6 +376,7 @@
     "bytes": "bytes",
     "preview": "Preview",
     "openInNewTab": "Open in New Tab",
+    "noFilesAttached": "No files attached.",
     "noFilesUploaded": "No files uploaded.",
     "clickUploadFile": "Click \"Upload File\" to add one.",
     "loadingPreview": "Loading preview...",

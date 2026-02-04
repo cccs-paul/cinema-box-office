@@ -711,7 +711,7 @@
                       type="button"
                       class="btn-primary" 
                       (click)="updateProcurementItem()"
-                      [disabled]="isUpdatingItem || !editItemPR.trim() || !editItemName.trim()"
+                      [disabled]="isUpdatingItem || !editItemName.trim() || !isEditFormDirty()"
                     >
                       <span *ngIf="isUpdatingItem">{{ 'procurement.updating' | translate }}</span>
                       <span *ngIf="!isUpdatingItem">{{ 'procurement.updateItem' | translate }}</span>
@@ -1083,6 +1083,13 @@
                             <span *ngIf="quote.expiryDate">{{ 'procurement.expires' | translate }}: {{ quote.expiryDate | date:'dd/MM/yyyy' }}</span>
                           </div>
                           <p class="quote-notes" *ngIf="quote.notes">{{ quote.notes }}</p>
+                          <!-- Quote user info -->
+                          <div class="quote-meta">
+                            <span class="created-by" *ngIf="quote.modifiedBy || quote.createdBy">
+                              {{ 'procurement.by' | translate }}: {{ quote.modifiedBy || quote.createdBy }}
+                            </span>
+                            <span class="modified-at" *ngIf="quote.updatedAt">{{ quote.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                          </div>
                         </div>
                         <div class="quote-actions">
                           <button class="btn-icon" [title]="'procurement.viewFiles' | translate" (click)="viewQuoteFiles(quote)">
@@ -1131,8 +1138,8 @@
                       </button>
                       <button 
                         class="btn-primary" 
-                        (click)="showCreateEvent()" 
-                        *ngIf="canWrite && showEventsPanel && !showCreateEventForm">
+                        (click)="showCreateEvent(); showEventsPanel = true" 
+                        *ngIf="canWrite && !showCreateEventForm">
                         ➕ {{ 'procurement.addEvent' | translate }}
                       </button>
                     </div>
@@ -1198,6 +1205,33 @@
                             [placeholder]="'procurement.optionalComment' | translate"
                           ></textarea>
                         </div>
+                        <!-- File Attachment (optional) - only for new events, not editing -->
+                        <div class="form-group" *ngIf="!editingEvent">
+                          <label>{{ 'procurement.attachFile' | translate }}</label>
+                          <div class="file-upload-section">
+                            <input 
+                              type="file" 
+                              (change)="onNewEventFileSelected($event)"
+                              accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                              [disabled]="isCreatingEvent"
+                            />
+                            <div class="selected-file" *ngIf="newEventFile">
+                              <span class="file-name">📎 {{ newEventFile.name }}</span>
+                              <button type="button" class="btn-icon btn-small" (click)="clearNewEventFile()" [title]="'common.remove' | translate">✕</button>
+                            </div>
+                            <div class="form-group" *ngIf="newEventFile">
+                              <label for="newEventFileDescription">{{ 'procurement.fileDescription' | translate }}</label>
+                              <input 
+                                type="text" 
+                                id="newEventFileDescription"
+                                [(ngModel)]="newEventFileDescription"
+                                name="newEventFileDescription"
+                                [placeholder]="'procurement.optionalDescription' | translate"
+                                [disabled]="isCreatingEvent"
+                              />
+                            </div>
+                          </div>
+                        </div>
                         <div class="form-actions">
                           <button type="button" class="btn-secondary" (click)="cancelEventForm()">{{ 'common.cancel' | translate }}</button>
                           <button
@@ -1256,6 +1290,7 @@
                               <div class="form-group">
                                 <label>{{ 'procurement.selectFile' | translate }}</label>
                                 <input type="file" (change)="onEventFileSelected($event)" 
+                                       accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv"
                                        [disabled]="isUploadingEventFile" />
                               </div>
                               <div class="form-group">
