@@ -20,6 +20,7 @@ import { CurrencyService } from '../../services/currency.service';
 import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { CategoryService } from '../../services/category.service';
 import { CurrencyInputDirective } from '../../directives/currency-input.directive';
+import { DateInputDirective } from '../../directives/date-input.directive';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { Category } from '../../models/category.model';
@@ -50,7 +51,7 @@ import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/curren
 @Component({
   selector: 'app-procurement',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, CurrencyInputDirective],
+  imports: [CommonModule, FormsModule, TranslateModule, CurrencyInputDirective, DateInputDirective],
   templateUrl: './procurement.component.html',
   styleUrls: ['./procurement.component.scss'],
 })

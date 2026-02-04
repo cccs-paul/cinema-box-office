@@ -277,7 +277,8 @@
             <div class="form-group">
               <label for="newItemContractStartDate">{{ 'procurement.contractStartDate' | translate }}</label>
               <input
-                type="date"
+                type="text"
+                dateInput
                 id="newItemContractStartDate"
                 [(ngModel)]="newItemContractStartDate"
                 name="newItemContractStartDate"
@@ -286,7 +287,8 @@
             <div class="form-group">
               <label for="newItemContractEndDate">{{ 'procurement.contractEndDate' | translate }}</label>
               <input
-                type="date"
+                type="text"
+                dateInput
                 id="newItemContractEndDate"
                 [(ngModel)]="newItemContractEndDate"
                 name="newItemContractEndDate"
@@ -669,7 +671,8 @@
                       <label for="editItemContractStartDate">{{ 'procurement.contractStartDate' | translate }}</label>
                       <input
                         id="editItemContractStartDate"
-                        type="date"
+                        type="text"
+                        dateInput
                         [(ngModel)]="editItemContractStartDate"
                         [disabled]="isUpdatingItem"
                       />
@@ -678,7 +681,8 @@
                       <label for="editItemContractEndDate">{{ 'procurement.contractEndDate' | translate }}</label>
                       <input
                         id="editItemContractEndDate"
-                        type="date"
+                        type="text"
+                        dateInput
                         [(ngModel)]="editItemContractEndDate"
                         [disabled]="isUpdatingItem"
                       />
@@ -827,7 +831,8 @@
                         <div class="form-group">
                           <label for="newQuoteReceivedDate">{{ 'procurement.receivedDate' | translate }}</label>
                           <input
-                            type="date"
+                            type="text"
+                            dateInput
                             id="newQuoteReceivedDate"
                             [(ngModel)]="newQuoteReceivedDate"
                             name="newQuoteReceivedDate"
@@ -836,7 +841,8 @@
                         <div class="form-group">
                           <label for="newQuoteExpiryDate">{{ 'procurement.expiryDate' | translate }}</label>
                           <input
-                            type="date"
+                            type="text"
+                            dateInput
                             id="newQuoteExpiryDate"
                             [(ngModel)]="newQuoteExpiryDate"
                             name="newQuoteExpiryDate"
@@ -1009,7 +1015,8 @@
                             <div class="form-group">
                               <label for="editQuoteReceivedDate">{{ 'procurement.receivedDate' | translate }}</label>
                               <input
-                                type="date"
+                                type="text"
+                                dateInput
                                 id="editQuoteReceivedDate"
                                 [(ngModel)]="editQuoteReceivedDate"
                                 name="editQuoteReceivedDate"
@@ -1018,7 +1025,8 @@
                             <div class="form-group">
                               <label for="editQuoteExpiryDate">{{ 'procurement.expiryDate' | translate }}</label>
                               <input
-                                type="date"
+                                type="text"
+                                dateInput
                                 id="editQuoteExpiryDate"
                                 [(ngModel)]="editQuoteExpiryDate"
                                 name="editQuoteExpiryDate"
@@ -1161,7 +1169,8 @@
                           <div class="form-group">
                             <label for="newEventDate">{{ 'common.date' | translate }} *</label>
                             <input
-                              type="date"
+                              type="text"
+                              dateInput
                               id="newEventDate"
                               [(ngModel)]="newEventDate"
                               name="newEventDate"
