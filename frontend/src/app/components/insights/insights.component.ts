@@ -22,7 +22,7 @@ import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.mode
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { FundingItem } from '../../models/funding-item.model';
 import { SpendingItem } from '../../models/spending-item.model';
-import { ProcurementItem, PROCUREMENT_STATUS_INFO, ProcurementItemStatus } from '../../models/procurement.model';
+import { ProcurementItem, TRACKING_STATUS_INFO, TrackingStatus } from '../../models/procurement.model';
 
 // Chart.js imports
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
@@ -407,7 +407,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   private createProcurementStatusChart(): void {
     if (!this.procurementStatusChartRef?.nativeElement) return;
 
-    const statusCounts = this.countByStatus(this.procurementItems);
+    const statusCounts = this.countByTrackingStatus(this.procurementItems);
     
     const chart = new Chart(this.procurementStatusChartRef.nativeElement, {
       type: 'pie',
@@ -416,13 +416,9 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
         datasets: [{
           data: statusCounts.values,
           backgroundColor: [
-            '#94a3b8', // DRAFT - gray
-            '#fbbf24', // PENDING_QUOTES - yellow
-            '#3b82f6', // QUOTES_RECEIVED - blue
-            '#f97316', // UNDER_REVIEW - orange
-            '#10b981', // APPROVED - green
-            '#8b5cf6', // PO_ISSUED - purple
-            '#22c55e', // COMPLETED - bright green
+            '#10b981', // ON_TRACK - green
+            '#fbbf24', // AT_RISK - yellow
+            '#3b82f6', // COMPLETED - blue
             '#ef4444'  // CANCELLED - red
           ],
           borderWidth: 2,
@@ -566,27 +562,36 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Count procurement items by status.
+   * Count procurement items by tracking status.
    */
-  private countByStatus(items: ProcurementItem[]): { labels: string[]; values: number[] } {
-    const statusMap = new Map<string, number>();
+  private countByTrackingStatus(items: ProcurementItem[]): { labels: string[]; values: number[] } {
+    // Use fixed order for consistent chart colors
+    const trackingStatuses: TrackingStatus[] = ['ON_TRACK', 'AT_RISK', 'COMPLETED', 'CANCELLED'];
+    const statusCounts = new Map<TrackingStatus, number>();
+    
+    // Initialize all statuses with 0
+    for (const status of trackingStatuses) {
+      statusCounts.set(status, 0);
+    }
     
     for (const item of items) {
-      // Use PROCUREMENT_STATUS_INFO for user-friendly labels
-      const currentStatus = item.currentStatus;
-      if (currentStatus) {
-        const statusInfo = PROCUREMENT_STATUS_INFO[currentStatus];
-        const label = statusInfo?.label || currentStatus;
-        statusMap.set(label, (statusMap.get(label) || 0) + 1);
-      } else {
-        statusMap.set('Unknown', (statusMap.get('Unknown') || 0) + 1);
+      const trackingStatus = (item.trackingStatus as TrackingStatus) || 'ON_TRACK';
+      statusCounts.set(trackingStatus, (statusCounts.get(trackingStatus) || 0) + 1);
+    }
+    
+    // Build arrays in fixed order, only including statuses with counts > 0
+    const labels: string[] = [];
+    const values: number[] = [];
+    
+    for (const status of trackingStatuses) {
+      const count = statusCounts.get(status) || 0;
+      if (count > 0) {
+        labels.push(TRACKING_STATUS_INFO[status].label);
+        values.push(count);
       }
     }
     
-    return {
-      labels: Array.from(statusMap.keys()),
-      values: Array.from(statusMap.values())
-    };
+    return { labels, values };
   }
 
   /**

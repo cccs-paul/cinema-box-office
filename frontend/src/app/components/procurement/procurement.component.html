@@ -481,7 +481,7 @@
                       [disabled]="isTogglingSpendingLink"
                       (click)="toggleSpendingLink(); $event.stopPropagation()"
                     >
-                      {{ isTogglingSpendingLink ? '⏳' : (item.linkedSpendingItemIds && item.linkedSpendingItemIds.length > 0 ? '🔗 ' + ('procurement.unlinkSpending' | translate) : '➕💰 ' + ('procurement.linkSpending' | translate)) }}
+                      {{ isTogglingSpendingLink ? '⏳' : (hasLinkedSpendingItems() ? '🔗 ' + ('procurement.unlinkSpending' | translate) : '➕💰 ' + ('procurement.linkSpending' | translate)) }}
                     </button>
                   </div>
                   
