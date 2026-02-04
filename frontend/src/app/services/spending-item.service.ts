@@ -22,6 +22,7 @@ export interface SpendingItemCreateRequest {
   vendor?: string;
   referenceNumber?: string;
   amount?: number;
+  ecoAmount?: number;
   status?: string;
   currency?: string;
   exchangeRate?: number;
@@ -38,6 +39,7 @@ export interface SpendingItemUpdateRequest {
   vendor?: string;
   referenceNumber?: string;
   amount?: number;
+  ecoAmount?: number;
   status?: string;
   currency?: string;
   exchangeRate?: number;

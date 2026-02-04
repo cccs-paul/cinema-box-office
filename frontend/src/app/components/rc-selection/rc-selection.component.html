@@ -17,7 +17,7 @@
       <span class="action-icon">📋</span>
       <span class="action-label">{{ 'rcSelection.cloneRc' | translate }}</span>
     </button>
-    <button class="btn btn-action btn-danger" (click)="confirmDelete()" [disabled]="selectedRCId === null || !selectedRCIsOwner" [title]="'rcSelection.deleteRc' | translate">
+    <button class="btn btn-action" (click)="confirmDelete()" [disabled]="selectedRCId === null || !selectedRCIsOwner" [title]="'rcSelection.deleteRc' | translate">
       <span class="action-icon">🗑️</span>
       <span class="action-label">{{ 'rcSelection.deleteRc' | translate }}</span>
     </button>

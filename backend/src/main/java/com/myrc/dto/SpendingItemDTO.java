@@ -35,6 +35,7 @@ public class SpendingItemDTO {
   private String vendor;
   private String referenceNumber;
   private BigDecimal amount;
+  private BigDecimal ecoAmount;
   private String status;
   private String currency;
   private BigDecimal exchangeRate;
@@ -135,6 +136,8 @@ public class SpendingItemDTO {
         spendingItem.getActive(),
         allocations
     );
+    // Set ECO amount for standalone items
+    dto.setEcoAmount(spendingItem.getEcoAmount());
     // Set procurement item details if linked
     if (spendingItem.getProcurementItem() != null) {
       var procItem = spendingItem.getProcurementItem();
@@ -202,6 +205,14 @@ public class SpendingItemDTO {
 
   public void setAmount(BigDecimal amount) {
     this.amount = amount;
+  }
+
+  public BigDecimal getEcoAmount() {
+    return ecoAmount;
+  }
+
+  public void setEcoAmount(BigDecimal ecoAmount) {
+    this.ecoAmount = ecoAmount;
   }
 
   public String getStatus() {

@@ -73,6 +73,9 @@ export interface SpendingItem {
   /** Total amount of the spending item */
   amount: number | null;
 
+  /** ECO estimated amount (for standalone items not linked to procurement) */
+  ecoAmount: number | null;
+
   /** Current status of the spending item */
   status: SpendingItemStatus;
 

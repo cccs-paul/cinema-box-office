@@ -89,6 +89,14 @@ public class SpendingItem {
   @Column(precision = 15, scale = 2)
   private BigDecimal amount;
 
+  /**
+   * ECO (Expenditure Control Officer) estimated amount.
+   * Used for standalone spending items not linked to procurement.
+   * Represents the rough estimated monetary amount before final figures.
+   */
+  @Column(precision = 15, scale = 2)
+  private BigDecimal ecoAmount;
+
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
   private Status status = Status.DRAFT;
@@ -224,6 +232,14 @@ public class SpendingItem {
 
   public void setAmount(BigDecimal amount) {
     this.amount = amount;
+  }
+
+  public BigDecimal getEcoAmount() {
+    return ecoAmount;
+  }
+
+  public void setEcoAmount(BigDecimal ecoAmount) {
+    this.ecoAmount = ecoAmount;
   }
 
   public Status getStatus() {

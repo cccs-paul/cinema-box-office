@@ -1276,6 +1276,27 @@ textarea.form-control {
     }
   }
 
+  .standalone-tracking {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+
+      label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-tertiary);
+        margin: 0;
+      }
+    }
+  }
+
   .money-grid {
     display: flex;
     flex-wrap: wrap;

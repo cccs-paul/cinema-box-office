@@ -299,6 +299,9 @@ public class SpendingItemServiceImpl implements SpendingItemService {
     if (dto.getReferenceNumber() != null) {
       si.setReferenceNumber(dto.getReferenceNumber());
     }
+    if (dto.getEcoAmount() != null) {
+      si.setEcoAmount(dto.getEcoAmount());
+    }
     if (dto.getAmount() != null) {
       si.setAmount(dto.getAmount());
     }

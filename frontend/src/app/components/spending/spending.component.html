@@ -336,6 +336,11 @@
             <label>{{ 'spending.referenceNumber' | translate }}</label>
             <span>{{ item.referenceNumber }}</span>
           </div>
+          <!-- ECO Amount for standalone items -->
+          <div class="info-item" *ngIf="!item.procurementItemId && item.ecoAmount != null">
+            <label>{{ 'spending.ecoAmount' | translate }}</label>
+            <span>{{ formatCurrency(item.ecoAmount, item.currency) }}</span>
+          </div>
           <div class="info-item" *ngIf="item.currency !== 'CAD' && item.exchangeRate">
             <label>{{ 'spending.exchangeRate' | translate }}</label>
             <span>1 {{ item.currency }} = {{ item.exchangeRate }} CAD</span>
@@ -409,11 +414,11 @@
         </div>
         
         <!-- Tracking Events Section for non-procurement-linked items -->
-        <div class="tracking-section" *ngIf="!item.procurementItemId">
+        <div class="tracking-section standalone-tracking" *ngIf="!item.procurementItemId">
           <div class="section-header">
             <label>📋 {{ 'spending.trackingEvents' | translate }} ({{ getEventCount(item) }})</label>
             <button 
-              class="btn-primary btn-sm" 
+              class="btn btn-primary" 
               *ngIf="canWrite"
               (click)="openAddEventModal(item)">
               ➕ {{ 'spending.addEvent' | translate }}
@@ -561,6 +566,19 @@
               [(ngModel)]="editItemReferenceNumber"
               [placeholder]="'spending.referenceNumber' | translate"
               [disabled]="isUpdating"
+            />
+          </div>
+          <!-- ECO Amount for standalone items -->
+          <div class="form-group" *ngIf="!item.procurementItemId">
+            <label for="editItemEcoAmount">{{ 'spending.ecoAmount' | translate }}</label>
+            <input
+              id="editItemEcoAmount"
+              type="number"
+              [(ngModel)]="editItemEcoAmount"
+              [placeholder]="'spending.ecoAmountPlaceholder' | translate"
+              [disabled]="isUpdating"
+              step="0.01"
+              min="0"
             />
           </div>
         </div>

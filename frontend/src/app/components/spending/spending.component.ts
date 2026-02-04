@@ -96,6 +96,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
   editItemDescription = '';
   editItemVendor = '';
   editItemReferenceNumber = '';
+  editItemEcoAmount: number | null = null;
   editItemStatus: SpendingItemStatus = 'DRAFT';
   editItemCurrency = DEFAULT_CURRENCY;
   editItemExchangeRate: number | null = null;
@@ -682,6 +683,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
     this.editItemDescription = item.description || '';
     this.editItemVendor = item.vendor || '';
     this.editItemReferenceNumber = item.referenceNumber || '';
+    this.editItemEcoAmount = item.ecoAmount || null;
     this.editItemStatus = item.status;
     this.editItemCurrency = item.currency || DEFAULT_CURRENCY;
     this.editItemExchangeRate = item.exchangeRate || null;
@@ -743,6 +745,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
       description: this.editItemDescription?.trim() || undefined,
       vendor: this.editItemVendor?.trim() || undefined,
       referenceNumber: this.editItemReferenceNumber?.trim() || undefined,
+      ecoAmount: this.editItemEcoAmount ?? undefined,
       status: this.editItemStatus,
       currency: this.editItemCurrency,
       exchangeRate: this.editItemCurrency !== 'CAD' ? (this.editItemExchangeRate ?? undefined) : undefined,
@@ -788,6 +791,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
     this.editItemDescription = '';
     this.editItemVendor = '';
     this.editItemReferenceNumber = '';
+    this.editItemEcoAmount = null;
     this.editItemStatus = 'DRAFT';
     this.editItemCurrency = DEFAULT_CURRENCY;
     this.editItemExchangeRate = null;
