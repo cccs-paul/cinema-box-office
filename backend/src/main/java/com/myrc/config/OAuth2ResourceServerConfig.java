@@ -40,6 +40,9 @@ public class OAuth2ResourceServerConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .headers(headers -> headers
+                .frameOptions(frameOptions -> frameOptions.sameOrigin())
+            )
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/health", "/actuator/**").permitAll()
                 .anyRequest().authenticated()

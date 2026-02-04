@@ -74,6 +74,7 @@ public class ProcurementItem {
     public enum TrackingStatus {
         ON_TRACK,
         AT_RISK,
+        COMPLETED,
         CANCELLED
     }
 

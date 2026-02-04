@@ -4,14 +4,38 @@
  * Licensed under MIT License
  */
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { Router } from '@angular/router';
-import { BehaviorSubject, of, throwError } from 'rxjs';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Directive, Input } from '@angular/core';
+import { BehaviorSubject, of, throwError, Subject } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { SidebarComponent } from './sidebar.component';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
+
+/**
+ * Stub directive for routerLink to avoid router dependency.
+ */
+@Directive({
+  standalone: true,
+  selector: '[routerLink]'
+})
+class RouterLinkStubDirective {
+  @Input() routerLink: string | unknown[] = '';
+}
+
+/**
+ * Stub directive for routerLinkActive to avoid router dependency.
+ */
+@Directive({
+  standalone: true,
+  selector: '[routerLinkActive]'
+})
+class RouterLinkActiveStubDirective {
+  @Input() routerLinkActive: string | string[] = '';
+  @Input() routerLinkActiveOptions: { exact: boolean } = { exact: false };
+}
 
 describe('SidebarComponent', () => {
   let component: SidebarComponent;
@@ -61,11 +85,18 @@ describe('SidebarComponent', () => {
     fyService = jasmine.createSpyObj('FiscalYearService', ['getFiscalYear']);
     fyService.getFiscalYear.and.returnValue(of(mockFY));
 
-    router = jasmine.createSpyObj('Router', ['navigate']);
+    router = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject(),
+      routerState: { root: {} }
+    });
     router.navigate.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
       imports: [SidebarComponent, TranslateModule.forRoot()]
+    })
+    .overrideComponent(SidebarComponent, {
+      remove: { imports: [RouterLink, RouterLinkActive] },
+      add: { imports: [RouterLinkStubDirective, RouterLinkActiveStubDirective] }
     })
     .overrideProvider(ResponsibilityCentreService, { useValue: rcService })
     .overrideProvider(FiscalYearService, { useValue: fyService })

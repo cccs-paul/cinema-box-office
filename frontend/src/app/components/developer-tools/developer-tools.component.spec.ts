@@ -5,8 +5,8 @@
  */
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { RouterTestingModule } from '@angular/router/testing';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { DeveloperToolsComponent } from './developer-tools.component';
@@ -23,26 +23,30 @@ describe('DeveloperToolsComponent', () => {
   let component: DeveloperToolsComponent;
   let fixture: ComponentFixture<DeveloperToolsComponent>;
   let httpMock: HttpTestingController;
-  let router: Router;
+  let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject(),
+      routerState: { root: {} }
+    });
+    routerSpy.navigate.and.returnValue(Promise.resolve(true));
+
     await TestBed.configureTestingModule({
       imports: [
         DeveloperToolsComponent,
         HttpClientTestingModule,
-        RouterTestingModule.withRoutes([
-          { path: 'dashboard', component: DeveloperToolsComponent },
-        ]),
         TranslateModule.forRoot(),
       ],
+      providers: [
+        { provide: Router, useValue: routerSpy }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(DeveloperToolsComponent);
     component = fixture.componentInstance;
     httpMock = TestBed.inject(HttpTestingController);
-    router = TestBed.inject(Router);
-    
-    spyOn(router, 'navigate');
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
   });
 
   afterEach(() => {

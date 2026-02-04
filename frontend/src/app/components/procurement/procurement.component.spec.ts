@@ -9,9 +9,9 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
+import { Router, ActivatedRoute } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
-import { of, BehaviorSubject, throwError } from 'rxjs';
+import { of, BehaviorSubject, throwError, Subject } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { ProcurementComponent } from './procurement.component';
 import { AuthService } from '../../services/auth.service';
@@ -24,7 +24,6 @@ import { CategoryService } from '../../services/category.service';
 import { User } from '../../models/user.model';
 import { ProcurementItem } from '../../models/procurement.model';
 import { Category } from '../../models/category.model';
-import { Router } from '@angular/router';
 
 describe('ProcurementComponent', () => {
   let component: ProcurementComponent;
@@ -171,14 +170,24 @@ describe('ProcurementComponent', () => {
     const currencySpy = jasmine.createSpyObj('CurrencyService', ['getCurrencies']);
     const fuzzySpy = jasmine.createSpyObj('FuzzySearchService', ['filter']);
     const categorySpy = jasmine.createSpyObj('CategoryService', ['getCategoriesByFY']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject(),
+      routerState: { root: {} }
+    });
+    routerSpy.navigate.and.returnValue(Promise.resolve(true));
     const sanitizerSpy = jasmine.createSpyObj('DomSanitizer', ['bypassSecurityTrustResourceUrl']);
+
+    const mockActivatedRoute = {
+      snapshot: { params: {}, queryParams: {}, data: {} },
+      params: of({}),
+      queryParams: of({}),
+      data: of({})
+    };
 
     await TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
         FormsModule,
-        RouterTestingModule,
         TranslateModule.forRoot(),
         ProcurementComponent
       ],
@@ -191,7 +200,8 @@ describe('ProcurementComponent', () => {
         { provide: FuzzySearchService, useValue: fuzzySpy },
         { provide: CategoryService, useValue: categorySpy },
         { provide: Router, useValue: routerSpy },
-        { provide: DomSanitizer, useValue: sanitizerSpy }
+        { provide: DomSanitizer, useValue: sanitizerSpy },
+        { provide: ActivatedRoute, useValue: mockActivatedRoute }
       ]
     }).compileComponents();
 

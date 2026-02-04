@@ -272,6 +272,7 @@
     <div class="item-summary" (click)="toggleItemDetails(item)">
       <div class="item-info">
         <span class="item-name">{{ item.name }}</span>
+        <span class="procurement-badge" *ngIf="item.procurementItemId" [title]="'spending.linkedProcurement' | translate">📦</span>
         <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">{{ item.categoryName }}</span>
         <span class="status-badge" [ngClass]="getStatusClass(item.status)">
           {{ getStatusLabel(item.status) }}

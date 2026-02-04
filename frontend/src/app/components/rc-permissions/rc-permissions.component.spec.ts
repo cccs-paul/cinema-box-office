@@ -5,8 +5,8 @@
  */
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Router, ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, of, throwError } from 'rxjs';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { BehaviorSubject, of, throwError, Subject } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 import { RCPermissionsComponent } from './rc-permissions.component';
 import { RCPermissionService, RCAccess } from '../../services/rc-permission.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
@@ -17,7 +17,6 @@ describe('RCPermissionsComponent', () => {
   let permissionService: jasmine.SpyObj<RCPermissionService>;
   let rcService: jasmine.SpyObj<ResponsibilityCentreService>;
   let router: jasmine.SpyObj<Router>;
-  let translateService: jasmine.SpyObj<TranslateService>;
 
   let routeParams$: BehaviorSubject<any>;
   let selectedRC$: BehaviorSubject<number | null>;
@@ -61,11 +60,13 @@ describe('RCPermissionsComponent', () => {
     selectedRC$ = new BehaviorSubject<number | null>(1);
 
     permissionService = jasmine.createSpyObj('RCPermissionService', 
-      ['getPermissionsForRC', 'grantUserAccess', 'grantGroupAccess', 'updatePermission', 'revokeAccess']);
+      ['getPermissionsForRC', 'grantUserAccess', 'grantGroupAccess', 'updatePermission', 'revokeAccess', 'getPrincipalTypeIcon', 'getAccessLevelIcon']);
     permissionService.getPermissionsForRC.and.returnValue(of(mockPermissions));
     permissionService.grantUserAccess.and.returnValue(of(mockPermissions[1]));
     permissionService.updatePermission.and.returnValue(of(mockPermissions[1]));
     permissionService.revokeAccess.and.returnValue(of(undefined));
+    permissionService.getPrincipalTypeIcon.and.callFake((type: string) => type === 'USER' ? '👤' : '👥');
+    permissionService.getAccessLevelIcon.and.callFake((level: string) => '📝');
 
     rcService = jasmine.createSpyObj('ResponsibilityCentreService', 
       ['getResponsibilityCentre'], {
@@ -73,11 +74,11 @@ describe('RCPermissionsComponent', () => {
     });
     rcService.getResponsibilityCentre.and.returnValue(of(mockRC as any));
 
-    router = jasmine.createSpyObj('Router', ['navigate']);
+    router = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject(),
+      routerState: { root: {} }
+    });
     router.navigate.and.returnValue(Promise.resolve(true));
-
-    translateService = jasmine.createSpyObj('TranslateService', ['instant']);
-    translateService.instant.and.callFake((key: string) => key);
 
     await TestBed.configureTestingModule({
       imports: [RCPermissionsComponent, TranslateModule.forRoot()]
@@ -85,7 +86,6 @@ describe('RCPermissionsComponent', () => {
     .overrideProvider(RCPermissionService, { useValue: permissionService })
     .overrideProvider(ResponsibilityCentreService, { useValue: rcService })
     .overrideProvider(Router, { useValue: router })
-    .overrideProvider(TranslateService, { useValue: translateService })
     .overrideProvider(ActivatedRoute, { 
       useValue: { params: routeParams$.asObservable() }
     })

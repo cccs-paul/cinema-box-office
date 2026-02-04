@@ -75,14 +75,12 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
       if (id) {
         this.rcId = parseInt(id, 10);
         this.loadRC();
-        this.loadPermissions();
       } else {
         // Try to get from the stored selection
         this.rcService.selectedRC$.pipe(takeUntil(this.destroy$)).subscribe(selectedId => {
           if (selectedId) {
             this.rcId = selectedId;
             this.loadRC();
-            this.loadPermissions();
           } else {
             this.router.navigate(['/rc-selection']);
           }
@@ -105,10 +103,14 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
         // Check if user is owner
         if (!rc.isOwner) {
           this.errorMessage = this.translate.instant('rcPermissions.noPermissionToManage');
+        } else {
+          // Only load permissions if user is owner
+          this.loadPermissions();
         }
       },
       error: (error) => {
         this.errorMessage = this.translate.instant('rcPermissions.loadRCError');
+        this.isLoading = false;
         console.error('Error loading RC:', error);
       }
     });

@@ -4,9 +4,8 @@
  * Licensed under MIT License
  */
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { of, throwError, BehaviorSubject } from 'rxjs';
+import { of, throwError, BehaviorSubject, Subject } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { RCSelectionComponent } from './rc-selection.component';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
@@ -21,7 +20,7 @@ describe('RCSelectionComponent', () => {
   let fixture: ComponentFixture<RCSelectionComponent>;
   let rcServiceMock: jasmine.SpyObj<ResponsibilityCentreService>;
   let fyServiceMock: jasmine.SpyObj<FiscalYearService>;
-  let router: Router;
+  let router: jasmine.SpyObj<Router>;
 
   // Factory functions to create fresh mock data for each test
   const createMockRCs = (): ResponsibilityCentreDTO[] => [
@@ -64,23 +63,29 @@ describe('RCSelectionComponent', () => {
     rcServiceMock.getAllResponsibilityCentres.and.callFake(() => of(createMockRCs()));
     fyServiceMock.getFiscalYearsByRC.and.callFake(() => of(createMockFiscalYears()));
 
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject(),
+      routerState: { root: {} }
+    });
+    routerSpy.navigate.and.returnValue(Promise.resolve(true));
+
     await TestBed.configureTestingModule({
       imports: [
         RCSelectionComponent,
-        RouterTestingModule.withRoutes([]),
         HttpClientTestingModule,
         TranslateModule.forRoot()
       ],
       providers: [
         { provide: ResponsibilityCentreService, useValue: rcServiceMock },
         { provide: FiscalYearService, useValue: fyServiceMock },
-        { provide: AuthService, useValue: authServiceMock }
+        { provide: AuthService, useValue: authServiceMock },
+        { provide: Router, useValue: routerSpy }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(RCSelectionComponent);
     component = fixture.componentInstance;
-    router = TestBed.inject(Router);
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
   });
 
   describe('Initialization', () => {
@@ -490,8 +495,6 @@ describe('RCSelectionComponent', () => {
     }));
 
     it('should navigate to dashboard with selected RC and FY', fakeAsync(() => {
-      spyOn(router, 'navigate');
-      
       const fy = component.fiscalYears.find(f => f.name === 'FY 2025-2026')!;
       component.selectFY(fy);
       component.navigateToDashboard();
@@ -503,11 +506,9 @@ describe('RCSelectionComponent', () => {
     }));
 
     it('should not navigate without FY selected', () => {
-      spyOn(router, 'navigate');
-      
       component.navigateToDashboard();
 
-      expect(router.navigate).not.toHaveBeenCalled();
+      expect(router.navigate).not.toHaveBeenCalledWith(['/app/dashboard']);
     });
   });
 

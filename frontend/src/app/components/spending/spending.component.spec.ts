@@ -9,8 +9,8 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
-import { of, BehaviorSubject, throwError } from 'rxjs';
+import { Router, ActivatedRoute } from '@angular/router';
+import { of, BehaviorSubject, throwError, Subject } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { SpendingComponent } from './spending.component';
 import { AuthService } from '../../services/auth.service';
@@ -24,7 +24,6 @@ import { User } from '../../models/user.model';
 import { Money } from '../../models/money.model';
 import { SpendingItem, SpendingMoneyAllocation } from '../../models/spending-item.model';
 import { Category } from '../../models/category.model';
-import { Router } from '@angular/router';
 
 describe('SpendingComponent', () => {
   let component: SpendingComponent;
@@ -160,13 +159,23 @@ describe('SpendingComponent', () => {
     ]);
     const moneySpy = jasmine.createSpyObj('MoneyService', ['getMoniesByFiscalYear']);
     const currencySpy = jasmine.createSpyObj('CurrencyService', ['getCurrencies']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject(),
+      routerState: { root: {} }
+    });
+    routerSpy.navigate.and.returnValue(Promise.resolve(true));
+
+    const mockActivatedRoute = {
+      snapshot: { params: {}, queryParams: {}, data: {} },
+      params: of({}),
+      queryParams: of({}),
+      data: of({})
+    };
 
     await TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
         FormsModule,
-        RouterTestingModule,
         TranslateModule.forRoot(),
         SpendingComponent
       ],
@@ -178,7 +187,8 @@ describe('SpendingComponent', () => {
         { provide: CategoryService, useValue: spendingCategorySpy },
         { provide: MoneyService, useValue: moneySpy },
         { provide: CurrencyService, useValue: currencySpy },
-        { provide: Router, useValue: routerSpy }
+        { provide: Router, useValue: routerSpy },
+        { provide: ActivatedRoute, useValue: mockActivatedRoute }
       ]
     }).compileComponents();
 

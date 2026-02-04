@@ -5,7 +5,7 @@
  */
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { HeaderComponent } from './header.component';
 import { AuthService } from '../../services/auth.service';
@@ -49,7 +49,10 @@ describe('HeaderComponent', () => {
     });
     languageService.getOtherLanguageNativeName.and.returnValue('Français');
 
-    router = jasmine.createSpyObj('Router', ['navigate']);
+    router = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject(),
+      routerState: { root: {} }
+    });
     router.navigate.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({

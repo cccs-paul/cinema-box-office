@@ -380,7 +380,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
 
   /**
    * Get sorted and filtered list of procurement items.
-   * Uses fuzzy search to filter items by PR, PO, name, description, vendor, or contract number.
+   * Uses fuzzy search to filter items by PR, PO, name, description, vendor, contract number, or tracking status.
    */
   get filteredProcurementItems(): ProcurementItem[] {
     let items = [...this.procurementItems];
@@ -398,7 +398,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           vendor: item.vendor,
           contractNumber: item.contractNumber,
           categoryName: item.categoryName,
-          status: item.currentStatus ? (PROCUREMENT_STATUS_INFO[item.currentStatus]?.label || item.currentStatus) : ''
+          status: item.currentStatus ? (PROCUREMENT_STATUS_INFO[item.currentStatus]?.label || item.currentStatus) : '',
+          trackingStatus: item.trackingStatus ? (TRACKING_STATUS_INFO[item.trackingStatus as TrackingStatus]?.label || item.trackingStatus) : ''
         })
       );
     }

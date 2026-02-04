@@ -273,26 +273,6 @@
               />
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group form-checkbox">
-              <input
-                type="checkbox"
-                id="newItemProcurementCompleted"
-                [(ngModel)]="newItemProcurementCompleted"
-                name="newItemProcurementCompleted"
-              />
-              <label for="newItemProcurementCompleted">{{ 'procurement.procurementCompleted' | translate }}</label>
-            </div>
-            <div class="form-group" *ngIf="newItemProcurementCompleted">
-              <label for="newItemProcurementCompletedDate">{{ 'procurement.completionDate' | translate }}</label>
-              <input
-                type="date"
-                id="newItemProcurementCompletedDate"
-                [(ngModel)]="newItemProcurementCompletedDate"
-                name="newItemProcurementCompletedDate"
-              />
-            </div>
-          </div>
 
           <div class="form-actions">
             <button type="button" class="btn btn-secondary" (click)="cancelCreateItem()">{{ 'common.cancel' | translate }}</button>
@@ -440,15 +420,6 @@
                         {{ item.contractStartDate | date:'dd/MM/yyyy' }}
                         <ng-container *ngIf="item.contractStartDate && item.contractEndDate"> - </ng-container>
                         {{ item.contractEndDate | date:'dd/MM/yyyy' }}
-                      </span>
-                    </div>
-                    <div class="info-item">
-                      <label>{{ 'procurement.procurementCompleted' | translate }}</label>
-                      <span class="completion-badge" [class.completed]="item.procurementCompleted">
-                        {{ item.procurementCompleted ? ('common.yes' | translate) + ' ✅' : ('common.no' | translate) + ' ⏳' }}
-                      </span>
-                      <span *ngIf="item.procurementCompleted && item.procurementCompletedDate" class="completion-date">
-                        ({{ item.procurementCompletedDate | date:'dd/MM/yyyy' }})
                       </span>
                     </div>
                     <div class="info-item">
@@ -689,27 +660,6 @@
                         id="editItemContractEndDate"
                         type="date"
                         [(ngModel)]="editItemContractEndDate"
-                        [disabled]="isUpdatingItem"
-                      />
-                    </div>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="checkbox-label">
-                        <input
-                          type="checkbox"
-                          [(ngModel)]="editItemProcurementCompleted"
-                          [disabled]="isUpdatingItem"
-                        />
-                        {{ 'procurement.procurementCompleted' | translate }}
-                      </label>
-                    </div>
-                    <div class="form-group" *ngIf="editItemProcurementCompleted">
-                      <label for="editItemProcurementCompletedDate">{{ 'procurement.completionDate' | translate }}</label>
-                      <input
-                        id="editItemProcurementCompletedDate"
-                        type="date"
-                        [(ngModel)]="editItemProcurementCompletedDate"
                         [disabled]="isUpdatingItem"
                       />
                     </div>
@@ -1084,9 +1034,6 @@
                             <span class="vendor-name">{{ quote.vendorName }}</span>
                             <span class="quote-ref" *ngIf="quote.quoteReference">#{{ quote.quoteReference }}</span>
                           </div>
-                          <span class="status-badge" [ngClass]="getQuoteStatusClass(quote.status)">
-                            {{ getQuoteStatusLabel(quote.status) }}
-                          </span>
                         </div>
                         <div class="quote-body">
                           <div class="quote-amount" *ngIf="quote.amount !== null && quote.amount !== undefined">
@@ -1110,15 +1057,6 @@
                             (click)="startEditQuote(quote)"
                           >
                             ✏️
-                          </button>
-                          <button
-                            class="btn-icon btn-select"
-                            [title]="'procurement.selectQuoteComingSoon' | translate"
-                            *ngIf="canWrite && !quote.selected && quote.status !== 'REJECTED'"
-                            disabled
-                            [class.disabled]="true"
-                          >
-                            ✅ {{ 'procurement.select' | translate }}
                           </button>
                           <button
                             class="btn-icon btn-danger"

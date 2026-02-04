@@ -9,8 +9,8 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
-import { RouterTestingModule } from '@angular/router/testing';
-import { of, BehaviorSubject } from 'rxjs';
+import { Router } from '@angular/router';
+import { of, BehaviorSubject, Subject } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { DashboardComponent } from './dashboard.component';
 import { AuthService } from '../../services/auth.service';
@@ -96,12 +96,16 @@ describe('DashboardComponent', () => {
     ]);
     const currencySpy = jasmine.createSpyObj('CurrencyService', ['getCurrencies']);
     const moneySpy = jasmine.createSpyObj('MoneyService', ['getMoniesByFiscalYear']);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject(),
+      routerState: { root: {} }
+    });
+    routerSpy.navigate.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
         FormsModule,
-        RouterTestingModule,
         TranslateModule.forRoot(),
         DashboardComponent
       ],
@@ -111,7 +115,8 @@ describe('DashboardComponent', () => {
         { provide: FiscalYearService, useValue: fySpy },
         { provide: FundingItemService, useValue: fundingItemSpy },
         { provide: CurrencyService, useValue: currencySpy },
-        { provide: MoneyService, useValue: moneySpy }
+        { provide: MoneyService, useValue: moneySpy },
+        { provide: Router, useValue: routerSpy }
       ]
     }).compileComponents();
 

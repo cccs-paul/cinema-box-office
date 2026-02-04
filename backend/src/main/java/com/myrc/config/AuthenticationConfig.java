@@ -72,6 +72,9 @@ public class AuthenticationConfig {
             HttpSessionSecurityContextRepository securityContextRepository) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .headers(headers -> headers
+                .frameOptions(frameOptions -> frameOptions.sameOrigin())
+            )
             .securityContext(context -> context
                 .securityContextRepository(securityContextRepository)
                 .requireExplicitSave(true))

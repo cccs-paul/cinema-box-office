@@ -75,15 +75,15 @@ describe('ConfigurationComponent', () => {
 
     moneyService = jasmine.createSpyObj('MoneyService', 
       ['getMoniesByFiscalYear', 'createMoney', 'updateMoney', 'deleteMoney']);
-    moneyService.getMoniesByFiscalYear.and.returnValue(of(mockMonies));
-    moneyService.createMoney.and.returnValue(of(mockMonies[1]));
+    moneyService.getMoniesByFiscalYear.and.callFake(() => of([...mockMonies]));
+    moneyService.createMoney.and.returnValue(of({ ...mockMonies[1], id: 3 }));
     moneyService.updateMoney.and.returnValue(of(mockMonies[1]));
     moneyService.deleteMoney.and.returnValue(of(undefined));
 
     categoryService = jasmine.createSpyObj('CategoryService', 
       ['getCategoriesByFY', 'createCategory', 'updateCategory', 'deleteCategory']);
-    categoryService.getCategoriesByFY.and.returnValue(of(mockCategories));
-    categoryService.createCategory.and.returnValue(of(mockCategories[1]));
+    categoryService.getCategoriesByFY.and.callFake(() => of([...mockCategories]));
+    categoryService.createCategory.and.returnValue(of({ ...mockCategories[1], id: 3 }));
     categoryService.updateCategory.and.returnValue(of(mockCategories[1]));
     categoryService.deleteCategory.and.returnValue(of(undefined));
 
