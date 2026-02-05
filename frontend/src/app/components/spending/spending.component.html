@@ -778,3 +778,59 @@
     </div>
   </div>
 </div>
+
+<!-- Add Event Modal -->
+<div class="modal-overlay" *ngIf="showAddEventModal" (click)="closeAddEventModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ 'spending.addTrackingEvent' | translate }}</h3>
+      <button class="close-btn" (click)="closeAddEventModal()">✕</button>
+    </div>
+    <form (ngSubmit)="createSpendingEvent()">
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="newEventType">{{ 'spending.eventType' | translate }} *</label>
+          <select 
+            id="newEventType" 
+            [(ngModel)]="newEventType" 
+            name="newEventType"
+            required>
+            <option *ngFor="let type of eventTypeOptions" [value]="type">
+              {{ getSpendingEventIcon(type) }} {{ getSpendingEventLabel(type) }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="newEventDate">{{ 'common.date' | translate }} *</label>
+          <input
+            type="text"
+            dateInput
+            id="newEventDate"
+            [(ngModel)]="newEventDate"
+            name="newEventDate"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="newEventComment">{{ 'spending.comment' | translate }}</label>
+          <textarea
+            id="newEventComment"
+            [(ngModel)]="newEventComment"
+            name="newEventComment"
+            rows="3"
+            [placeholder]="'spending.optionalComment' | translate"
+          ></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeAddEventModal()">{{ 'common.cancel' | translate }}</button>
+        <button 
+          type="submit" 
+          class="btn btn-primary" 
+          [disabled]="isCreatingEvent || !newEventDate">
+          {{ isCreatingEvent ? ('spending.adding' | translate) : ('spending.addEvent' | translate) }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

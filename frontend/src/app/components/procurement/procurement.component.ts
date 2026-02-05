@@ -2178,6 +2178,15 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   spendingLinkWarningMessage: string | null = null;
 
   /**
+   * Link to spending from view mode without switching to edit mode.
+   * Sets the selected item and calls toggleSpendingLink.
+   */
+  linkSpendingFromViewMode(item: ProcurementItem): void {
+    this.selectedItem = item;
+    this.toggleSpendingLink();
+  }
+
+  /**
    * Toggle the spending link for the selected procurement item.
    * Creates a spending item if none exists, or unlinks if one exists.
    */

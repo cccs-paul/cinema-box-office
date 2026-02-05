@@ -473,7 +473,7 @@
                       class="btn btn-spending-link"
                       [title]="'procurement.linkSpending' | translate"
                       [disabled]="isTogglingSpendingLink"
-                      (click)="startEditProcurementItem(item); toggleSpendingLink(); $event.stopPropagation()"
+                      (click)="linkSpendingFromViewMode(item); $event.stopPropagation()"
                     >
                       {{ isTogglingSpendingLink ? '⏳' : '➕💰 ' + ('procurement.linkSpending' | translate) }}
                     </button>
