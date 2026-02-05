@@ -352,6 +352,7 @@
               <div class="procurement-row-compact">
                 <div class="procurement-item-link">
                   <span class="procurement-icon">📦</span>
+                  <span class="warning-indicator" *ngIf="hasPriceMismatch(item)">⚠️</span>
                   <span class="procurement-name">{{ item.procurementItemName || ('spending.procurementItem' | translate) }}</span>
                 </div>
                 <button 

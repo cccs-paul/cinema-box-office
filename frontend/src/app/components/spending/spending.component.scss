@@ -1221,6 +1221,16 @@ textarea.form-control {
         font-size: 1rem;
       }
 
+      .warning-indicator {
+        font-size: 0.85rem;
+        animation: pulse-warning 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse-warning {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+      }
+
       .procurement-name {
         font-weight: 500;
         color: var(--text-primary);
