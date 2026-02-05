@@ -411,7 +411,7 @@
     "linkedToSpending": "Linked to Spending",
     "linkSpending": "Link to Spending",
     "editModeRequiredForLink": "Enter edit mode to create or unlink spending",
-    "unlinkSpending": "Unlink from Spending",
+    "unlinkSpending": "Delete linked Spending",
     "spendingLinkCreated": "Spending item created from procurement",
     "spendingLinkRemoved": "Spending item link removed",
     "spendingLinkError": "Failed to toggle spending link",

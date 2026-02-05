@@ -416,10 +416,10 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
         datasets: [{
           data: statusCounts.values,
           backgroundColor: [
-            '#10b981', // ON_TRACK - green
-            '#fbbf24', // AT_RISK - yellow
-            '#3b82f6', // COMPLETED - blue
-            '#ef4444'  // CANCELLED - red
+            '#16a34a', // ON_TRACK - green (matches status-green badge)
+            '#b45309', // AT_RISK - yellow (matches status-yellow badge)
+            '#2563eb', // COMPLETED - blue (matches status-blue badge)
+            '#dc2626'  // CANCELLED - red (matches status-red badge)
           ],
           borderWidth: 2,
           borderColor: '#ffffff'

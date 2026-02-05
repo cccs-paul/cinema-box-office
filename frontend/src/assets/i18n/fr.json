@@ -393,7 +393,7 @@
     "linkedToSpending": "Lié aux dépenses",
     "linkSpending": "Lier aux dépenses",
     "editModeRequiredForLink": "Entrez en mode édition pour créer ou dissocier les dépenses",
-    "unlinkSpending": "Délier des dépenses",
+    "unlinkSpending": "Supprimer la dépense liée",
     "spendingLinkCreated": "Article de dépense créé à partir de l'approvisionnement",
     "spendingLinkRemoved": "Lien avec l'article de dépense supprimé",
     "spendingLinkError": "Échec du changement de lien de dépense",

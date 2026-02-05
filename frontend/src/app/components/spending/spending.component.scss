@@ -1041,6 +1041,17 @@ textarea.form-control {
     cursor: default;
   }
 
+  .warning-indicator {
+    font-size: 0.85rem;
+    cursor: help;
+    animation: pulse-warning 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-warning {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
   .category-badge {
     display: inline-block;
     padding: 0.15rem 0.5rem;
