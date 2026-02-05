@@ -683,7 +683,7 @@
     "saveCategory": "Enregistrer la catégorie",
     "categoryNamePlaceholder": "ex: Services infonuagiques, Maintenance",
     "groupByCategory": "Grouper les éléments par catégorie",
-    "groupByCategoryDesc": "Regrouper les éléments de financement et de dépenses par catégorie avec des en-têtes de section",
+    "groupByCategoryDesc": "Regrouper les éléments de financement, d'approvisionnement et de dépenses par catégorie avec des en-têtes de section",
     "exportDataTitle": "Importer/Exporter des données",
     "exportLineItemsDesc": "Exporter tous les éléments de financement, approvisionnement et dépenses vers un fichier CSV pour sauvegarde ou analyse.",
     "importLineItemsDesc": "Importer des éléments depuis un fichier CSV. Cette fonctionnalité est en cours de développement.",
