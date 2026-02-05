@@ -2204,6 +2204,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           const index = this.procurementItems.findIndex(i => i.id === response.procurementItem.id);
           if (index !== -1) {
             this.procurementItems[index] = response.procurementItem;
+            // Create a new array reference to trigger change detection
+            this.procurementItems = [...this.procurementItems];
           }
           
           const actionKey = response.spendingLinked 
@@ -2212,14 +2214,6 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           this.showSuccess(this.translate.instant(actionKey));
           this.showSpendingLinkWarning = false;
           this.spendingLinkWarningMessage = null;
-          
-          // If a spending item was created, navigate to the Spending page
-          if (response.spendingLinked && response.procurementItem.linkedSpendingItemIds && response.procurementItem.linkedSpendingItemIds.length > 0) {
-            const spendingItemId = response.procurementItem.linkedSpendingItemIds[0];
-            this.router.navigate(['/app/spending'], {
-              queryParams: { expandItem: spendingItemId }
-            });
-          }
         }
       },
       error: (err) => {

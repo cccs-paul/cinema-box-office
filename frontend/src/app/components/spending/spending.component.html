@@ -354,17 +354,22 @@
                   <span class="procurement-icon">📦</span>
                   <span class="procurement-name">{{ item.procurementItemName || ('spending.procurementItem' | translate) }}</span>
                 </div>
-                <div class="procurement-status-compact" *ngIf="item.procurementMostRecentEventType">
-                  <span class="event-type-badge compact" [ngClass]="getTrackingStatusClass(item.procurementMostRecentEventType)">
-                    {{ getEventTypeIcon(item.procurementMostRecentEventType) }} {{ getEventTypeLabel(item.procurementMostRecentEventType) }}
-                  </span>
-                </div>
                 <button 
                   class="btn-link" 
                   [title]="'spending.viewInProcurement' | translate"
                   (click)="viewLinkedProcurement()">
                   {{ 'common.view' | translate }} →
                 </button>
+              </div>
+              <!-- Latest Procurement Tracking Event -->
+              <div class="procurement-tracking-compact" *ngIf="item.procurementMostRecentEventType">
+                <span class="tracking-label">{{ 'spending.latestStatus' | translate }}:</span>
+                <span class="event-type-badge compact" [ngClass]="getTrackingStatusClass(item.procurementMostRecentEventType)">
+                  {{ getEventTypeIcon(item.procurementMostRecentEventType) }} {{ getEventTypeLabel(item.procurementMostRecentEventType) }}
+                </span>
+                <span class="tracking-date" *ngIf="item.procurementMostRecentEventDate">
+                  ({{ item.procurementMostRecentEventDate | date:'dd/MM/yyyy' }})
+                </span>
               </div>
               <!-- Procurement Price Display (inline) -->
               <div class="procurement-price-inline" *ngIf="item.procurementFinalPrice != null || item.procurementQuotedPrice != null">

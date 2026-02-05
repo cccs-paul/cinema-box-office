@@ -390,6 +390,7 @@
     "loadingPreview": "Chargement de l'aperçu...",
     "pdfPreview": "Aperçu PDF",
     "imagePreview": "Aperçu de l'image",
+    "linkedToSpending": "Lié aux dépenses",
     "linkSpending": "Lier aux dépenses",
     "editModeRequiredForLink": "Entrez en mode édition pour créer ou dissocier les dépenses",
     "unlinkSpending": "Délier des dépenses",
@@ -476,6 +477,7 @@
     "poInvoice": "BC/Facture #",
     "rateToCad": "Taux vers CAD",
     "linkedProcurement": "Approvisionnement lié",
+    "latestStatus": "Dernier statut",
     "linkedTo": "Lié à",
     "viewInProcurement": "Voir dans Approvisionnement",
     "procurementItem": "Article d'approvisionnement",
@@ -586,6 +588,7 @@
     "spendingItems": "Éléments de dépenses",
     "procurementItems": "Éléments d'approvisionnement",
     "linkedProcurement": "Approvisionnement lié",
+    "latestStatus": "Dernier statut",
     "viewInProcurement": "Voir dans l'approvisionnement"
   },
   "configuration": {

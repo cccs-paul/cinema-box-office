@@ -1227,6 +1227,30 @@ textarea.form-control {
         font-size: 0.9rem;
       }
 
+      .procurement-tracking-compact {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        font-size: 0.8rem;
+
+        .tracking-label {
+          color: var(--text-tertiary);
+          font-weight: 500;
+        }
+
+        .event-type-badge.compact {
+          padding: 0.2rem 0.5rem;
+          font-size: 0.75rem;
+          border-radius: 0.25rem;
+        }
+
+        .tracking-date {
+          color: var(--text-tertiary);
+          font-size: 0.75rem;
+        }
+      }
+
       .procurement-status-compact {
         .event-type-badge.compact {
           padding: 0.25rem 0.5rem;
