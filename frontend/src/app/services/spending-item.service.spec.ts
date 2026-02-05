@@ -31,7 +31,7 @@ describe('SpendingItemService', () => {
     referenceNumber: 'PO-001',
     amount: 50000,
     ecoAmount: null,
-    status: 'DRAFT',
+    status: 'PLANNING',
     currency: 'CAD',
     exchangeRate: null,
     categoryId: 2,
@@ -54,7 +54,7 @@ describe('SpendingItemService', () => {
     vendor: 'Microsoft',
     referenceNumber: 'INV-002',
     amount: 25000,
-    status: 'PENDING',
+    status: 'COMMITTED',
     categoryId: 4,
     categoryName: 'Software Licenses'
   };

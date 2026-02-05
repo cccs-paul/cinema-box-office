@@ -95,10 +95,12 @@ export class SummaryComponent implements OnInit, OnDestroy {
   spendingPercentOm = 0;
   spendingPercentTotal = 0;
 
-  // Procurement stats
+  // Procurement stats by tracking status
+  procurementPlanning = 0;
+  procurementOnTrack = 0;
+  procurementAtRisk = 0;
   procurementCompleted = 0;
-  procurementPending = 0;
-  procurementInProgress = 0;
+  procurementCancelled = 0;
 
   private destroy$ = new Subject<void>();
 
@@ -238,15 +240,21 @@ export class SummaryComponent implements OnInit, OnDestroy {
       ? (this.totalSpending / this.totalFunding) * 100 
       : 0;
 
-    // Calculate procurement stats using currentStatus from events
+    // Calculate procurement stats using trackingStatus
+    this.procurementPlanning = this.procurementItems.filter(
+      p => p.trackingStatus === 'PLANNING'
+    ).length;
+    this.procurementOnTrack = this.procurementItems.filter(
+      p => p.trackingStatus === 'ON_TRACK'
+    ).length;
+    this.procurementAtRisk = this.procurementItems.filter(
+      p => p.trackingStatus === 'AT_RISK'
+    ).length;
     this.procurementCompleted = this.procurementItems.filter(
-      p => ['COMPLETED'].includes(p.currentStatus || '')
+      p => p.trackingStatus === 'COMPLETED'
     ).length;
-    this.procurementPending = this.procurementItems.filter(
-      p => ['DRAFT', 'PENDING_QUOTES', 'QUOTES_RECEIVED'].includes(p.currentStatus || '')
-    ).length;
-    this.procurementInProgress = this.procurementItems.filter(
-      p => ['UNDER_REVIEW', 'APPROVED', 'PO_ISSUED'].includes(p.currentStatus || '')
+    this.procurementCancelled = this.procurementItems.filter(
+      p => p.trackingStatus === 'CANCELLED'
     ).length;
   }
 

@@ -64,13 +64,10 @@
 .items-panel {
   flex: 1;
   background: var(--background-primary);
-  border-radius: 0.75rem;
-  box-shadow: var(--shadow-sm);
-  padding: 1.25rem;
+  padding: 0;
   display: flex;
   flex-direction: column;
   transition: flex 0.3s ease, background-color 0.3s ease;
-  border: 1px solid var(--border-color);
 
   &.collapsed {
     flex: 0 0 400px;

@@ -431,11 +431,62 @@
             <label>📋 {{ 'spending.trackingEvents' | translate }} ({{ getEventCount(item) }})</label>
             <button 
               class="btn btn-primary" 
-              *ngIf="canWrite"
-              (click)="openAddEventModal(item)">
+              *ngIf="canWrite && addEventItemId !== item.id"
+              (click)="openAddEventForm(item)">
               ➕ {{ 'spending.addEvent' | translate }}
             </button>
           </div>
+          
+          <!-- Inline Add Event Form -->
+          <div class="add-event-form" *ngIf="addEventItemId === item.id">
+            <form (ngSubmit)="createSpendingEvent()">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="newEventType">{{ 'spending.eventType' | translate }} *</label>
+                  <select 
+                    id="newEventType" 
+                    [(ngModel)]="newEventType" 
+                    name="newEventType"
+                    required>
+                    <option *ngFor="let type of eventTypeOptions" [value]="type">
+                      {{ getSpendingEventIcon(type) }} {{ getSpendingEventLabel(type) }}
+                    </option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="newEventDate">{{ 'common.date' | translate }} *</label>
+                  <input
+                    type="text"
+                    dateInput
+                    id="newEventDate"
+                    [(ngModel)]="newEventDate"
+                    name="newEventDate"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="newEventComment">{{ 'spending.comment' | translate }}</label>
+                <textarea
+                  id="newEventComment"
+                  [(ngModel)]="newEventComment"
+                  name="newEventComment"
+                  rows="2"
+                  [placeholder]="'spending.optionalComment' | translate"
+                ></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn btn-secondary" (click)="closeAddEventForm()">{{ 'common.cancel' | translate }}</button>
+                <button 
+                  type="submit" 
+                  class="btn btn-primary" 
+                  [disabled]="isCreatingEvent || !newEventDate">
+                  {{ isCreatingEvent ? ('spending.adding' | translate) : ('spending.addEvent' | translate) }}
+                </button>
+              </div>
+            </form>
+          </div>
+          
           <div class="events-list" *ngIf="selectedItemEvents.length > 0 && selectedEventItemId === item.id">
             <div class="event-item" *ngFor="let event of selectedItemEvents">
               <div class="event-header">
@@ -454,7 +505,7 @@
               </div>
             </div>
           </div>
-          <div class="events-collapsed" *ngIf="(selectedItemEvents.length === 0 || selectedEventItemId !== item.id) && item.mostRecentEventType">
+          <div class="events-collapsed" *ngIf="(selectedItemEvents.length === 0 || selectedEventItemId !== item.id) && item.mostRecentEventType && addEventItemId !== item.id">
             <div class="recent-event-info">
               <span class="event-type-badge" [ngClass]="getSpendingEventStatusClass(item.mostRecentEventType)">
                 {{ getSpendingEventIcon(item.mostRecentEventType) }} {{ getSpendingEventLabel(item.mostRecentEventType) }}
@@ -463,7 +514,7 @@
             </div>
             <button class="btn-link" (click)="loadEventsForItem(item)">{{ 'common.showAll' | translate }}</button>
           </div>
-          <div class="empty-state" *ngIf="!item.mostRecentEventType && (selectedItemEvents.length === 0 || selectedEventItemId !== item.id)">
+          <div class="empty-state" *ngIf="!item.mostRecentEventType && (selectedItemEvents.length === 0 || selectedEventItemId !== item.id) && addEventItemId !== item.id">
             <p>{{ 'spending.noEvents' | translate }}</p>
             <p class="hint" *ngIf="canWrite">{{ 'spending.noEventsHint' | translate }}</p>
           </div>
@@ -776,61 +827,5 @@
         </tbody>
       </table>
     </div>
-  </div>
-</div>
-
-<!-- Add Event Modal -->
-<div class="modal-overlay" *ngIf="showAddEventModal" (click)="closeAddEventModal()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>{{ 'spending.addTrackingEvent' | translate }}</h3>
-      <button class="close-btn" (click)="closeAddEventModal()">✕</button>
-    </div>
-    <form (ngSubmit)="createSpendingEvent()">
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="newEventType">{{ 'spending.eventType' | translate }} *</label>
-          <select 
-            id="newEventType" 
-            [(ngModel)]="newEventType" 
-            name="newEventType"
-            required>
-            <option *ngFor="let type of eventTypeOptions" [value]="type">
-              {{ getSpendingEventIcon(type) }} {{ getSpendingEventLabel(type) }}
-            </option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="newEventDate">{{ 'common.date' | translate }} *</label>
-          <input
-            type="text"
-            dateInput
-            id="newEventDate"
-            [(ngModel)]="newEventDate"
-            name="newEventDate"
-            required
-          />
-        </div>
-        <div class="form-group">
-          <label for="newEventComment">{{ 'spending.comment' | translate }}</label>
-          <textarea
-            id="newEventComment"
-            [(ngModel)]="newEventComment"
-            name="newEventComment"
-            rows="3"
-            [placeholder]="'spending.optionalComment' | translate"
-          ></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeAddEventModal()">{{ 'common.cancel' | translate }}</button>
-        <button 
-          type="submit" 
-          class="btn btn-primary" 
-          [disabled]="isCreatingEvent || !newEventDate">
-          {{ isCreatingEvent ? ('spending.adding' | translate) : ('spending.addEvent' | translate) }}
-        </button>
-      </div>
-    </form>
   </div>
 </div>

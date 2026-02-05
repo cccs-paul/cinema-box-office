@@ -1425,6 +1425,74 @@ textarea.form-control {
     }
   }
 
+  /* Inline Add Event Form */
+  .add-event-form {
+    background-color: var(--background-secondary);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 1rem 0;
+    border: 1px solid var(--border-color);
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+
+      .form-group {
+        flex: 1;
+        min-width: 150px;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+      }
+
+      select,
+      input,
+      textarea {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 0.375rem;
+        background: var(--background-primary);
+        color: var(--text-primary);
+        font-size: 0.875rem;
+
+        &:focus {
+          outline: none;
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+        }
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 3rem;
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+  }
+
   .money-grid {
     display: flex;
     flex-wrap: wrap;

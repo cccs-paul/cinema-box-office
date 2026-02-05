@@ -78,8 +78,10 @@ describe('SummaryComponent', () => {
   ];
 
   const mockProcurementItems = [
-    { id: 1, prNumber: 'PR-001', procurementCompleted: true },
-    { id: 2, prNumber: 'PR-002', procurementCompleted: false, trackingStatus: 'IN_PROGRESS' }
+    { id: 1, prNumber: 'PR-001', trackingStatus: 'COMPLETED' },
+    { id: 2, prNumber: 'PR-002', trackingStatus: 'ON_TRACK' },
+    { id: 3, prNumber: 'PR-003', trackingStatus: 'PLANNING' },
+    { id: 4, prNumber: 'PR-004', trackingStatus: 'AT_RISK' }
   ];
 
   const mockMoneyTypes = [
@@ -256,6 +258,44 @@ describe('SummaryComponent', () => {
     it('should start with money type section expanded', () => {
       expect(component.moneyTypeExpanded).toBeTrue();
     });
+  });
+
+  describe('Procurement Tracking Status Statistics', () => {
+    it('should count procurement items by tracking status', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      // mockProcurementItems has: COMPLETED, ON_TRACK, PLANNING, AT_RISK
+      expect(component.procurementPlanning).toBe(1);
+      expect(component.procurementOnTrack).toBe(1);
+      expect(component.procurementAtRisk).toBe(1);
+      expect(component.procurementCompleted).toBe(1);
+      expect(component.procurementCancelled).toBe(0);
+    }));
+
+    it('should handle empty procurement items', fakeAsync(() => {
+      procurementService.getProcurementItems.and.returnValue(of([]));
+      fixture.detectChanges();
+      tick();
+
+      expect(component.procurementPlanning).toBe(0);
+      expect(component.procurementOnTrack).toBe(0);
+      expect(component.procurementAtRisk).toBe(0);
+      expect(component.procurementCompleted).toBe(0);
+      expect(component.procurementCancelled).toBe(0);
+    }));
+
+    it('should count cancelled items correctly', fakeAsync(() => {
+      procurementService.getProcurementItems.and.returnValue(of([
+        { id: 1, prNumber: 'PR-001', trackingStatus: 'CANCELLED', name: 'Item 1', fiscalYearId: 1 },
+        { id: 2, prNumber: 'PR-002', trackingStatus: 'CANCELLED', name: 'Item 2', fiscalYearId: 1 }
+      ] as any[]));
+      fixture.detectChanges();
+      tick();
+
+      expect(component.procurementCancelled).toBe(2);
+      expect(component.procurementCompleted).toBe(0);
+    }));
   });
 
   describe('ngOnDestroy', () => {

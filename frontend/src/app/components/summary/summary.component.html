@@ -266,16 +266,24 @@
             <span class="stat-value">{{ procurementItems.length }}</span>
           </div>
           <div class="stat-row">
+            <span class="stat-label">{{ 'summary.planning' | translate }}</span>
+            <span class="stat-value status-neutral">{{ procurementPlanning }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">{{ 'summary.onTrack' | translate }}</span>
+            <span class="stat-value status-good">{{ procurementOnTrack }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">{{ 'summary.atRisk' | translate }}</span>
+            <span class="stat-value status-warning">{{ procurementAtRisk }}</span>
+          </div>
+          <div class="stat-row">
             <span class="stat-label">{{ 'summary.completed' | translate }}</span>
-            <span class="stat-value status-good">{{ procurementCompleted }}</span>
+            <span class="stat-value status-info">{{ procurementCompleted }}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-label">{{ 'summary.inProgress' | translate }}</span>
-            <span class="stat-value status-caution">{{ procurementInProgress }}</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">{{ 'summary.pending' | translate }}</span>
-            <span class="stat-value status-warning">{{ procurementPending }}</span>
+            <span class="stat-label">{{ 'summary.cancelled' | translate }}</span>
+            <span class="stat-value status-danger">{{ procurementCancelled }}</span>
           </div>
         </div>
       </div>

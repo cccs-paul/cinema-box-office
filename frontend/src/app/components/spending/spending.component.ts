@@ -1080,22 +1080,38 @@ export class SpendingComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Open the add event modal for an item.
+   * Open the inline add event form for an item.
    */
-  openAddEventModal(item: SpendingItem): void {
+  openAddEventForm(item: SpendingItem): void {
     this.addEventItemId = item.id;
     this.newEventType = 'PENDING';
-    this.newEventDate = new Date().toISOString().split('T')[0];
+    this.newEventDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format for input
     this.newEventComment = '';
-    this.showAddEventModal = true;
   }
 
   /**
-   * Close the add event modal.
+   * Alias for backwards compatibility.
+   */
+  openAddEventModal(item: SpendingItem): void {
+    this.openAddEventForm(item);
+  }
+
+  /**
+   * Close the inline add event form.
+   */
+  closeAddEventForm(): void {
+    this.addEventItemId = null;
+    this.newEventType = 'PENDING';
+    this.newEventDate = '';
+    this.newEventComment = '';
+  }
+
+  /**
+   * Close the add event modal (alias for backwards compatibility).
    */
   closeAddEventModal(): void {
+    this.closeAddEventForm();
     this.showAddEventModal = false;
-    this.addEventItemId = null;
   }
 
   /**

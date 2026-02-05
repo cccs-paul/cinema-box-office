@@ -121,7 +121,7 @@ describe('SpendingComponent', () => {
       referenceNumber: 'PO-001',
       amount: 50000,
       ecoAmount: null,
-      status: 'DRAFT',
+      status: 'PLANNING',
       currency: 'CAD',
       exchangeRate: null,
       categoryId: 2,
@@ -468,12 +468,12 @@ describe('SpendingComponent', () => {
 
   describe('getStatusLabel and getStatusClass', () => {
     it('should return status label for valid status', () => {
-      const label = component.getStatusLabel('DRAFT');
-      expect(label).toBe('Draft');
+      const label = component.getStatusLabel('PLANNING');
+      expect(label).toBe('Planning');
     });
 
     it('should return status class for valid status', () => {
-      const cssClass = component.getStatusClass('DRAFT');
+      const cssClass = component.getStatusClass('PLANNING');
       expect(cssClass).toContain('status-');
     });
   });
@@ -609,6 +609,52 @@ describe('SpendingComponent', () => {
     it('trackByGroupName should handle empty category names', () => {
       const mockGroup = { categoryName: '', categoryId: null, items: [] } as any;
       expect(component.trackByGroupName(0, mockGroup)).toBe('');
+    });
+  });
+
+  describe('Inline Event Form', () => {
+    beforeEach(fakeAsync(() => {
+      fixture = TestBed.createComponent(SpendingComponent);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      tick();
+    }));
+
+    it('should initialize addEventItemId as null', () => {
+      expect(component.addEventItemId).toBeNull();
+    });
+
+    it('should set addEventItemId when openAddEventForm is called', () => {
+      const mockItem = { id: 42 } as any;
+      component.openAddEventForm(mockItem);
+      expect(component.addEventItemId).toBe(42);
+    });
+
+    it('should initialize new event fields when opening form', () => {
+      const mockItem = { id: 42 } as any;
+      component.openAddEventForm(mockItem);
+      
+      expect(component.newEventType).toBeDefined();
+      expect(component.newEventDate).toBeDefined();
+      expect(component.newEventComment).toBe('');
+    });
+
+    it('should clear addEventItemId when closeAddEventForm is called', () => {
+      component.addEventItemId = 42;
+      component.closeAddEventForm();
+      expect(component.addEventItemId).toBeNull();
+    });
+
+    it('should alias openAddEventModal to openAddEventForm', () => {
+      const mockItem = { id: 42 } as any;
+      component.openAddEventModal(mockItem);
+      expect(component.addEventItemId).toBe(42);
+    });
+
+    it('should alias closeAddEventModal to closeAddEventForm', () => {
+      component.addEventItemId = 42;
+      component.closeAddEventModal();
+      expect(component.addEventItemId).toBeNull();
     });
   });
 });
