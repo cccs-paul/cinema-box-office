@@ -883,7 +883,7 @@ public class DataInitializer implements ApplicationRunner {
         // Demo Procurement Items with sample data
         // {pr, po, name, description, targetStatus, finalPriceCurrency, finalPriceExchangeRate, trackingStatus}
         // Status values: DRAFT, PENDING_QUOTES, QUOTES_RECEIVED, UNDER_REVIEW, APPROVED, PO_ISSUED, COMPLETED, CANCELLED
-        // TrackingStatus values: ON_TRACK, AT_RISK, COMPLETED, CANCELLED
+        // TrackingStatus values: PLANNING, ON_TRACK, AT_RISK, COMPLETED, CANCELLED
         Object[][] demoItems = {
             {"PR-2025-001", "PO-2025-001", "Dell PowerEdge Servers", 
              "3x Dell PowerEdge R750 rack servers for data center expansion",
@@ -908,7 +908,7 @@ public class DataInitializer implements ApplicationRunner {
              ProcurementItem.Status.COMPLETED, Currency.CAD, null, ProcurementItem.TrackingStatus.COMPLETED},
             {"PR-2025-008", null, "Autodesk Licenses", 
              "50x Autodesk AutoCAD licenses - 3-year subscription",
-             ProcurementItem.Status.DRAFT, Currency.USD, new BigDecimal("1.360000"), ProcurementItem.TrackingStatus.ON_TRACK},
+             ProcurementItem.Status.DRAFT, Currency.USD, new BigDecimal("1.360000"), ProcurementItem.TrackingStatus.PLANNING},
             {"PR-2025-009", null, "Laboratory Equipment", 
              "Oscilloscopes and signal generators for research laboratory",
              ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000"), ProcurementItem.TrackingStatus.AT_RISK},
@@ -923,13 +923,13 @@ public class DataInitializer implements ApplicationRunner {
              ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null, ProcurementItem.TrackingStatus.CANCELLED},
             {"PR-2025-013", null, "UK Training Program", 
              "Staff training program with UK-based vendor",
-             ProcurementItem.Status.DRAFT, Currency.GBP, new BigDecimal("1.680000"), ProcurementItem.TrackingStatus.ON_TRACK},
+             ProcurementItem.Status.DRAFT, Currency.GBP, new BigDecimal("1.680000"), ProcurementItem.TrackingStatus.PLANNING},
             {"PR-2025-014", null, "Video Conferencing System", 
              "Cisco Webex Board 85 for main conference room",
              ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null, ProcurementItem.TrackingStatus.AT_RISK},
             {"PR-2025-015", null, "European Instrumentation", 
              "Specialized instrumentation from European manufacturer",
-             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000"), ProcurementItem.TrackingStatus.ON_TRACK}
+             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000"), ProcurementItem.TrackingStatus.PLANNING}
         };
 
         for (Object[] item : demoItems) {

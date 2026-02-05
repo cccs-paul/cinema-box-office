@@ -2085,7 +2085,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   /**
    * Get the available tracking status options.
    */
-  trackingStatusOptions: TrackingStatus[] = ['ON_TRACK', 'AT_RISK', 'COMPLETED', 'CANCELLED'];
+  trackingStatusOptions: TrackingStatus[] = ['PLANNING', 'ON_TRACK', 'AT_RISK', 'COMPLETED', 'CANCELLED'];
 
   getStatusLabel(status: ProcurementItemStatus): string {
     return PROCUREMENT_STATUS_INFO[status]?.label || status;

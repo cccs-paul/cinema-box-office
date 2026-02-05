@@ -72,6 +72,7 @@ public class ProcurementItem {
      * Used to indicate the overall health/risk of the procurement.
      */
     public enum TrackingStatus {
+        PLANNING,
         ON_TRACK,
         AT_RISK,
         COMPLETED,

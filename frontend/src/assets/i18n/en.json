@@ -422,6 +422,7 @@
     "linkedSpendingItems": "Linked Spending Items",
     "viewInSpending": "View in Spending",
     "trackingStatus": "Tracking Status",
+    "statusPlanning": "Planning",
     "statusOnTrack": "On Track",
     "statusAtRisk": "At Risk",
     "statusCancelled": "Cancelled",

@@ -416,6 +416,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
         datasets: [{
           data: statusCounts.values,
           backgroundColor: [
+            '#64748b', // PLANNING - gray (matches status-gray badge)
             '#16a34a', // ON_TRACK - green (matches status-green badge)
             '#b45309', // AT_RISK - yellow (matches status-yellow badge)
             '#2563eb', // COMPLETED - blue (matches status-blue badge)
@@ -566,7 +567,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   private countByTrackingStatus(items: ProcurementItem[]): { labels: string[]; values: number[] } {
     // Use fixed order for consistent chart colors
-    const trackingStatuses: TrackingStatus[] = ['ON_TRACK', 'AT_RISK', 'COMPLETED', 'CANCELLED'];
+    const trackingStatuses: TrackingStatus[] = ['PLANNING', 'ON_TRACK', 'AT_RISK', 'COMPLETED', 'CANCELLED'];
     const statusCounts = new Map<TrackingStatus, number>();
     
     // Initialize all statuses with 0
