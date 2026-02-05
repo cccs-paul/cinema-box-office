@@ -365,6 +365,8 @@
     "addEvent": "Add Event",
     "editEvent": "Edit Event",
     "addNewEvent": "Add New Event",
+    "eventType": "Event Type",
+    "optionalDescription": "Optional description",
     "commentNotes": "Comment/Notes",
     "optionalComment": "Optional comment or description...",
     "loadingEvents": "Loading events...",

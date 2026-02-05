@@ -44,11 +44,9 @@ export interface SpendingMoneyAllocation {
  * Enum for spending item status values.
  */
 export type SpendingItemStatus = 
-  | 'DRAFT' 
-  | 'PENDING' 
-  | 'APPROVED' 
+  | 'PLANNING' 
   | 'COMMITTED' 
-  | 'PAID' 
+  | 'COMPLETED' 
   | 'CANCELLED';
 
 /**
@@ -168,10 +166,8 @@ export function isLinkedToProcurement(item: SpendingItem): boolean {
  * Spending item status display information.
  */
 export const SPENDING_STATUS_INFO: Record<SpendingItemStatus, { label: string; color: string }> = {
-  DRAFT: { label: 'Draft', color: 'secondary' },
-  PENDING: { label: 'Pending', color: 'warning' },
-  APPROVED: { label: 'Approved', color: 'info' },
+  PLANNING: { label: 'Planning', color: 'secondary' },
   COMMITTED: { label: 'Committed', color: 'primary' },
-  PAID: { label: 'Paid', color: 'success' },
+  COMPLETED: { label: 'Completed', color: 'success' },
   CANCELLED: { label: 'Cancelled', color: 'danger' }
 };

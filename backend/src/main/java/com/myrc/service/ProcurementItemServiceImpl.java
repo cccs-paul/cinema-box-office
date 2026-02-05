@@ -1044,7 +1044,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             spendingItem.setCategory(procurementItem.getCategory());
             spendingItem.setFiscalYear(procurementItem.getFiscalYear());
             spendingItem.setProcurementItem(procurementItem);
-            spendingItem.setStatus(SpendingItem.Status.DRAFT);
+            spendingItem.setStatus(SpendingItem.Status.PLANNING);
             spendingItem.setCurrency(procurementItem.getFinalPriceCurrency() != null 
                     ? procurementItem.getFinalPriceCurrency() : Currency.CAD);
             spendingItem.setAmount(procurementItem.getFinalPrice() != null 

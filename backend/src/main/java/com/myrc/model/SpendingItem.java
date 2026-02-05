@@ -56,11 +56,9 @@ public class SpendingItem {
    * Enumeration of spending item status values.
    */
   public enum Status {
-    DRAFT,
-    PENDING,
-    APPROVED,
+    PLANNING,
     COMMITTED,
-    PAID,
+    COMPLETED,
     CANCELLED
   }
 
@@ -99,7 +97,7 @@ public class SpendingItem {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
-  private Status status = Status.DRAFT;
+  private Status status = Status.PLANNING;
 
   /**
    * The currency for this spending item. Defaults to CAD.
@@ -176,13 +174,13 @@ public class SpendingItem {
     this.name = name;
     this.description = description;
     this.amount = amount;
-    this.status = status != null ? status : Status.DRAFT;
+    this.status = status != null ? status : Status.PLANNING;
     this.category = category;
     this.fiscalYear = fiscalYear;
   }
 
   public SpendingItem(String name, String description, Category category, FiscalYear fiscalYear) {
-    this(name, description, null, Status.DRAFT, category, fiscalYear);
+    this(name, description, null, Status.PLANNING, category, fiscalYear);
   }
 
   // Getters and Setters

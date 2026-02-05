@@ -80,7 +80,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
   newItemVendor = '';
   newItemReferenceNumber = '';
   newItemAmount: number | null = null;
-  newItemStatus: SpendingItemStatus = 'DRAFT';
+  newItemStatus: SpendingItemStatus = 'PLANNING';
   newItemCurrency = DEFAULT_CURRENCY;
   newItemExchangeRate: number | null = null;
   newItemCategoryId: number | null = null;
@@ -97,7 +97,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
   editItemVendor = '';
   editItemReferenceNumber = '';
   editItemEcoAmount: number | null = null;
-  editItemStatus: SpendingItemStatus = 'DRAFT';
+  editItemStatus: SpendingItemStatus = 'PLANNING';
   editItemCurrency = DEFAULT_CURRENCY;
   editItemExchangeRate: number | null = null;
   editItemCategoryId: number | null = null;
@@ -108,7 +108,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
   successMessage: string | null = null;
 
   // Status list for dropdown
-  statusOptions: SpendingItemStatus[] = ['DRAFT', 'PENDING', 'APPROVED', 'COMMITTED', 'PAID', 'CANCELLED'];
+  statusOptions: SpendingItemStatus[] = ['PLANNING', 'COMMITTED', 'COMPLETED', 'CANCELLED'];
 
   // Summary data
   summaryByMoneyType: { moneyCode: string; moneyName: string; totalCap: number; totalOm: number; total: number }[] = [];
@@ -578,7 +578,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
     this.newItemVendor = '';
     this.newItemReferenceNumber = '';
     this.newItemAmount = null;
-    this.newItemStatus = 'DRAFT';
+    this.newItemStatus = 'PLANNING';
     this.newItemCurrency = DEFAULT_CURRENCY;
     this.newItemExchangeRate = null;
     this.newItemCategoryId = this.categories.length > 0 ? this.categories[0].id : null;
@@ -792,7 +792,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
     this.editItemVendor = '';
     this.editItemReferenceNumber = '';
     this.editItemEcoAmount = null;
-    this.editItemStatus = 'DRAFT';
+    this.editItemStatus = 'PLANNING';
     this.editItemCurrency = DEFAULT_CURRENCY;
     this.editItemExchangeRate = null;
     this.editItemCategoryId = null;

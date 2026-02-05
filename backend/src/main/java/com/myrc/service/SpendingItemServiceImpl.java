@@ -182,7 +182,7 @@ public class SpendingItemServiceImpl implements SpendingItemService {
     }
 
     // Parse status
-    SpendingItem.Status itemStatus = SpendingItem.Status.DRAFT;
+    SpendingItem.Status itemStatus = SpendingItem.Status.PLANNING;
     if (dto.getStatus() != null && !dto.getStatus().trim().isEmpty()) {
       try {
         itemStatus = SpendingItem.Status.valueOf(dto.getStatus().toUpperCase());

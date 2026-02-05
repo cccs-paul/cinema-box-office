@@ -366,6 +366,8 @@
     "editEvent": "Modifier l'événement",
     "addNewEvent": "Ajouter un nouvel événement",
     "eventType": "Type d'événement",
+    "optionalDescription": "Description optionnelle",
+    "eventType": "Type d'événement",
     "commentNotes": "Commentaire/Notes",
     "optionalComment": "Commentaire ou description optionnel...",
     "loadingEvents": "Chargement des événements...",

@@ -102,7 +102,9 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     'PACKAGE_SENT_TO_PROCUREMENT', 'ACKNOWLEDGED_BY_PROCUREMENT', 'PAUSED', 'CANCELLED',
     'CONTRACT_AWARDED', 'GOODS_RECEIVED', 'FULL_INVOICE_RECEIVED', 'PARTIAL_INVOICE_RECEIVED',
     'MONTHLY_INVOICE_RECEIVED', 'FULL_INVOICE_SIGNED', 'PARTIAL_INVOICE_SIGNED',
-    'MONTHLY_INVOICE_SIGNED', 'CONTRACT_AMENDED'
+    'MONTHLY_INVOICE_SIGNED', 'CONTRACT_AMENDED', 'ADDITIONAL_DOCUMENT_REQUESTED',
+    'ADDITIONAL_SECTION_32_REQUESTED', 'REJECTED_INVOICE', 'RECEIVED_NEW_INVOICE',
+    'RETROACTIVE_AWARD_LETTER', 'STILL_IN_PROCUREMENT', 'WITH_SECURITY', 'EXERCISED_OPTION', 'UPDATE'
   ];
 
   // Event Files
@@ -230,7 +232,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   editItemProcurementCompleted = false;
   editItemProcurementCompletedDate = '';
   editItemCategoryId: number | null = null;
-  editItemTrackingStatus: TrackingStatus = 'ON_TRACK';
+  editItemTrackingStatus: TrackingStatus = 'PLANNING';
 
   // Status options - these are the new status values tracked via procurement events
   statusOptions: ProcurementItemStatus[] = [
@@ -698,7 +700,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemProcurementCompleted = item.procurementCompleted || false;
     this.editItemProcurementCompletedDate = item.procurementCompletedDate ? item.procurementCompletedDate.split('T')[0] : '';
     this.editItemCategoryId = item.categoryId !== undefined && item.categoryId !== null ? item.categoryId : null;
-    this.editItemTrackingStatus = (item.trackingStatus as TrackingStatus) || 'ON_TRACK';
+    this.editItemTrackingStatus = (item.trackingStatus as TrackingStatus) || 'PLANNING';
     
     // Expand the item to show the edit form
     this.selectedItem = item;
@@ -726,7 +728,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     const origProcurementCompleted = item.procurementCompleted || false;
     const origProcurementCompletedDate = item.procurementCompletedDate ? item.procurementCompletedDate.split('T')[0] : '';
     const origCategoryId = item.categoryId !== undefined && item.categoryId !== null ? item.categoryId : null;
-    const origTrackingStatus = (item.trackingStatus as TrackingStatus) || 'ON_TRACK';
+    const origTrackingStatus = (item.trackingStatus as TrackingStatus) || 'PLANNING';
 
     return this.editItemPR !== origPR ||
            this.editItemPO !== origPO ||
@@ -855,7 +857,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     }
 
     // Prevent unnecessary updates
-    const currentStatus = item.trackingStatus || 'ON_TRACK';
+    const currentStatus = item.trackingStatus || 'PLANNING';
     if (currentStatus === status) {
       return;
     }

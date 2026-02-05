@@ -460,11 +460,9 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
         datasets: [{
           data: statusCounts.values,
           backgroundColor: [
-            '#94a3b8', // DRAFT - gray
-            '#fbbf24', // PENDING - yellow
-            '#10b981', // APPROVED - green
+            '#64748b', // PLANNING - gray
             '#8b5cf6', // COMMITTED - purple
-            '#22c55e', // PAID - bright green
+            '#22c55e', // COMPLETED - green
             '#ef4444'  // CANCELLED - red
           ],
           borderWidth: 2,
@@ -576,7 +574,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     
     for (const item of items) {
-      const trackingStatus = (item.trackingStatus as TrackingStatus) || 'ON_TRACK';
+      const trackingStatus = (item.trackingStatus as TrackingStatus) || 'PLANNING';
       statusCounts.set(trackingStatus, (statusCounts.get(trackingStatus) || 0) + 1);
     }
     
@@ -602,11 +600,9 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     const statusMap = new Map<string, number>();
     
     const statusLabels: Record<string, string> = {
-      'DRAFT': 'Draft',
-      'PENDING': 'Pending',
-      'APPROVED': 'Approved',
+      'PLANNING': 'Planning',
       'COMMITTED': 'Committed',
-      'PAID': 'Paid',
+      'COMPLETED': 'Completed',
       'CANCELLED': 'Cancelled'
     };
     

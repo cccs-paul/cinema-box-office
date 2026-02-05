@@ -86,6 +86,24 @@ public class ProcurementEvent {
         MONTHLY_INVOICE_SIGNED,
         /** Procurement process completed and existing contract amended */
         CONTRACT_AMENDED,
+        /** Additional documentation has been requested */
+        ADDITIONAL_DOCUMENT_REQUESTED,
+        /** Additional Section 32 authorization has been requested */
+        ADDITIONAL_SECTION_32_REQUESTED,
+        /** Invoice has been rejected and returned for correction */
+        REJECTED_INVOICE,
+        /** A new or corrected invoice has been received */
+        RECEIVED_NEW_INVOICE,
+        /** A retroactive award letter has been issued */
+        RETROACTIVE_AWARD_LETTER,
+        /** Item is still being processed by Procurement */
+        STILL_IN_PROCUREMENT,
+        /** Procurement is currently with Security for review */
+        WITH_SECURITY,
+        /** A contract option has been exercised */
+        EXERCISED_OPTION,
+        /** General update or note */
+        UPDATE,
 
         // Legacy event types - kept for backward compatibility with existing data
         /** @deprecated Legacy: Item was created */

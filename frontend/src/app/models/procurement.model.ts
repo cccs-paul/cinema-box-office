@@ -372,7 +372,16 @@ export type ProcurementEventType =
   | 'FULL_INVOICE_SIGNED'
   | 'PARTIAL_INVOICE_SIGNED'
   | 'MONTHLY_INVOICE_SIGNED'
-  | 'CONTRACT_AMENDED';
+  | 'CONTRACT_AMENDED'
+  | 'ADDITIONAL_DOCUMENT_REQUESTED'
+  | 'ADDITIONAL_SECTION_32_REQUESTED'
+  | 'REJECTED_INVOICE'
+  | 'RECEIVED_NEW_INVOICE'
+  | 'RETROACTIVE_AWARD_LETTER'
+  | 'STILL_IN_PROCUREMENT'
+  | 'WITH_SECURITY'
+  | 'EXERCISED_OPTION'
+  | 'UPDATE';
 
 /**
  * Event type display information.
@@ -404,7 +413,16 @@ export const EVENT_TYPE_INFO: Record<ProcurementEventType, EventTypeInfo> = {
   FULL_INVOICE_SIGNED: { label: 'Full Invoice signed', description: 'Invoice for all goods/services received signed for Section 34 and submitted to Accounts Payable.', color: 'green', icon: '✍️' },
   PARTIAL_INVOICE_SIGNED: { label: 'Partial Invoice signed', description: 'Invoice for some, but not all goods signed for Section 34 and submitted to Accounts Payable.', color: 'orange', icon: '✍️' },
   MONTHLY_INVOICE_SIGNED: { label: 'Monthly Invoice signed', description: 'Invoice for last delivery period of services signed for Section 34 and submitted to Accounts Payable.', color: 'green', icon: '📅' },
-  CONTRACT_AMENDED: { label: 'Contract Amended', description: 'Procurement process completed and existing contract amended, awaiting delivery if applicable.', color: 'purple', icon: '📝' }
+  CONTRACT_AMENDED: { label: 'Contract Amended', description: 'Procurement process completed and existing contract amended, awaiting delivery if applicable.', color: 'purple', icon: '📝' },
+  ADDITIONAL_DOCUMENT_REQUESTED: { label: 'Additional Document Requested', description: 'Additional documentation has been requested for the procurement.', color: 'orange', icon: '📄' },
+  ADDITIONAL_SECTION_32_REQUESTED: { label: 'Additional Section 32 Requested', description: 'Additional Section 32 authorization has been requested.', color: 'orange', icon: '📋' },
+  REJECTED_INVOICE: { label: 'Rejected Invoice', description: 'Invoice has been rejected and returned for correction.', color: 'red', icon: '❌' },
+  RECEIVED_NEW_INVOICE: { label: 'Received New Invoice', description: 'A new or corrected invoice has been received.', color: 'blue', icon: '🧾' },
+  RETROACTIVE_AWARD_LETTER: { label: 'Retroactive Award Letter', description: 'A retroactive award letter has been issued.', color: 'purple', icon: '📜' },
+  STILL_IN_PROCUREMENT: { label: 'Still in Procurement', description: 'Item is still being processed by Procurement.', color: 'yellow', icon: '⏳' },
+  WITH_SECURITY: { label: 'With Security', description: 'Procurement is currently with Security for review.', color: 'orange', icon: '🔒' },
+  EXERCISED_OPTION: { label: 'Exercised Option', description: 'A contract option has been exercised.', color: 'green', icon: '✔️' },
+  UPDATE: { label: 'Update', description: 'General update or note on the procurement.', color: 'blue', icon: '📝' }
 };
 
 /**

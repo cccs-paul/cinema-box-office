@@ -157,7 +157,7 @@ class SpendingItemServiceTest {
     gpuPurchase.setVendor("NVIDIA");
     gpuPurchase.setReferenceNumber("PO-001");
     gpuPurchase.setAmount(new BigDecimal("50000"));
-    gpuPurchase.setStatus(SpendingItem.Status.DRAFT);
+    gpuPurchase.setStatus(SpendingItem.Status.PLANNING);
     gpuPurchase.setCurrency(Currency.CAD);
     gpuPurchase.setCategory(gpuCategory);
     gpuPurchase.setFiscalYear(fy);
@@ -302,7 +302,7 @@ class SpendingItemServiceTest {
         item.setName("New Purchase");
         item.setFiscalYear(fy);
         item.setCategory(gpuCategory);
-        item.setStatus(SpendingItem.Status.DRAFT);
+        item.setStatus(SpendingItem.Status.PLANNING);
         item.setCurrency(Currency.CAD);
         return Optional.of(item);
       });
@@ -402,9 +402,9 @@ class SpendingItemServiceTest {
     }
 
     @Test
-    @DisplayName("Deletes APPROVED item")
+    @DisplayName("Deletes COMMITTED item")
     void deletesApprovedItem() {
-      gpuPurchase.setStatus(SpendingItem.Status.APPROVED);
+      gpuPurchase.setStatus(SpendingItem.Status.COMMITTED);
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
       when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));

@@ -626,7 +626,7 @@ public class DataInitializer implements ApplicationRunner {
             SpendingItem.Status spendingStatus;
             switch (currentStatus) {
                 case COMPLETED:
-                    spendingStatus = SpendingItem.Status.PAID;
+                    spendingStatus = SpendingItem.Status.COMPLETED;
                     break;
                 case PO_ISSUED:
                 case APPROVED:
@@ -634,10 +634,10 @@ public class DataInitializer implements ApplicationRunner {
                     break;
                 case UNDER_REVIEW:
                 case QUOTES_RECEIVED:
-                    spendingStatus = SpendingItem.Status.APPROVED;
+                    spendingStatus = SpendingItem.Status.COMMITTED;
                     break;
                 default:
-                    spendingStatus = SpendingItem.Status.PENDING;
+                    spendingStatus = SpendingItem.Status.PLANNING;
             }
             
             // Determine category based on procurement name/description
