@@ -2199,14 +2199,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           this.showSpendingLinkWarning = true;
           this.spendingLinkWarningMessage = response.warningMessage;
         } else {
-          // Update the selected item with new data
+          // Immediately update the selected item with new data
           this.selectedItem = response.procurementItem;
-          const index = this.procurementItems.findIndex(i => i.id === response.procurementItem.id);
-          if (index !== -1) {
-            this.procurementItems[index] = response.procurementItem;
-            // Create a new array reference to trigger change detection
-            this.procurementItems = [...this.procurementItems];
-          }
           
           const actionKey = response.spendingLinked 
             ? 'procurement.spendingLinkCreated' 
@@ -2214,6 +2208,29 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           this.showSuccess(this.translate.instant(actionKey));
           this.showSpendingLinkWarning = false;
           this.spendingLinkWarningMessage = null;
+          
+          // Reload the entire list to ensure consistency, preserving the selected item
+          const selectedItemId = this.selectedItem?.id;
+          this.procurementService.getProcurementItems(
+            this.selectedRC!.id,
+            this.selectedFY!.id,
+            undefined,
+            this.searchTerm.trim() || undefined
+          ).subscribe({
+            next: (items) => {
+              this.procurementItems = items;
+              // Re-select the item to maintain the edit panel state
+              if (selectedItemId) {
+                const updatedItem = items.find(i => i.id === selectedItemId);
+                if (updatedItem) {
+                  this.selectedItem = updatedItem;
+                }
+              }
+            },
+            error: () => {
+              // Silent fail on reload - the UI already has the updated item
+            }
+          });
         }
       },
       error: (err) => {
