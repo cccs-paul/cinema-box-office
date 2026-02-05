@@ -120,6 +120,7 @@ describe('SpendingComponent', () => {
       vendor: 'NVIDIA',
       referenceNumber: 'PO-001',
       amount: 50000,
+      ecoAmount: null,
       status: 'DRAFT',
       currency: 'CAD',
       exchangeRate: null,

@@ -781,7 +781,7 @@ describe('ProcurementComponent', () => {
         
         expect(component.selectedEventForUpload).toBe(mockEvent);
         expect(component.showEventFileUploadForm).toBe(true);
-        expect(component.selectedEventFile).toBeNull();
+        expect(component.selectedEventFiles).toEqual([]);
         expect(component.eventFileDescription).toBe('');
       });
     });
@@ -790,50 +790,57 @@ describe('ProcurementComponent', () => {
       it('should hide upload form and reset state', () => {
         component.selectedEventForUpload = mockEvent;
         component.showEventFileUploadForm = true;
-        component.selectedEventFile = new File(['test'], 'test.pdf');
+        component.selectedEventFiles = [new File(['test'], 'test.pdf')];
         component.eventFileDescription = 'Some description';
         
         component.cancelEventFileUpload();
         
         expect(component.showEventFileUploadForm).toBe(false);
         expect(component.selectedEventForUpload).toBeNull();
-        expect(component.selectedEventFile).toBeNull();
+        expect(component.selectedEventFiles).toEqual([]);
         expect(component.eventFileDescription).toBe('');
       });
     });
 
     describe('onEventFileSelected', () => {
-      it('should set selected file from input event', () => {
+      it('should set selected files from input event', () => {
         const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' });
-        const event = { target: { files: [file] } } as unknown as Event;
+        const file2 = new File(['test content 2'], 'test2.pdf', { type: 'application/pdf' });
+        const fileList = [file, file2];
+        Object.defineProperty(fileList, 'length', { value: 2 });
+        const event = { target: { files: fileList } } as unknown as Event;
         
         component.onEventFileSelected(event);
         
-        expect(component.selectedEventFile).toEqual(file);
+        expect(component.selectedEventFiles.length).toBe(2);
+        expect(component.selectedEventFiles).toContain(file);
+        expect(component.selectedEventFiles).toContain(file2);
       });
 
       it('should handle null files', () => {
         const event = { target: { files: null } } as unknown as Event;
+        component.selectedEventFiles = [];
         
         component.onEventFileSelected(event);
         
-        expect(component.selectedEventFile).toBeNull();
+        expect(component.selectedEventFiles).toEqual([]);
       });
 
       it('should handle empty files array', () => {
         const event = { target: { files: [] } } as unknown as Event;
+        component.selectedEventFiles = [];
         
         component.onEventFileSelected(event);
         
-        expect(component.selectedEventFile).toBeNull();
+        expect(component.selectedEventFiles).toEqual([]);
       });
     });
 
     describe('uploadEventFile', () => {
-      it('should upload file to event', fakeAsync(() => {
+      it('should upload files to event', fakeAsync(() => {
         const testFile = new File(['test'], 'test.pdf', { type: 'application/pdf' });
         component.selectedEventForUpload = mockEvent;
-        component.selectedEventFile = testFile;
+        component.selectedEventFiles = [testFile];
         component.eventFileDescription = 'Test description';
         component.expandedEventFiles = { [mockEvent.id]: true };
         component.eventFiles = { [mockEvent.id]: [] };
@@ -850,9 +857,9 @@ describe('ProcurementComponent', () => {
         expect(component.eventFiles[mockEvent.id]).toEqual([mockEventFiles[0]]);
       }));
 
-      it('should not upload if no file selected', () => {
+      it('should not upload if no files selected', () => {
         component.selectedEventForUpload = mockEvent;
-        component.selectedEventFile = null;
+        component.selectedEventFiles = [];
         
         component.uploadEventFile();
         
@@ -861,7 +868,7 @@ describe('ProcurementComponent', () => {
 
       it('should not upload if no event selected', () => {
         component.selectedEventForUpload = null;
-        component.selectedEventFile = new File(['test'], 'test.pdf');
+        component.selectedEventFiles = [new File(['test'], 'test.pdf')];
         
         component.uploadEventFile();
         
@@ -870,7 +877,7 @@ describe('ProcurementComponent', () => {
 
       it('should clear uploading state after successful upload', fakeAsync(() => {
         component.selectedEventForUpload = mockEvent;
-        component.selectedEventFile = new File(['test'], 'test.pdf');
+        component.selectedEventFiles = [new File(['test'], 'test.pdf')];
         component.eventFiles = { [mockEvent.id]: [] };
         
         component.uploadEventFile();
@@ -884,7 +891,7 @@ describe('ProcurementComponent', () => {
           throwError(() => new Error('Upload failed'))
         );
         component.selectedEventForUpload = mockEvent;
-        component.selectedEventFile = new File(['test'], 'test.pdf');
+        component.selectedEventFiles = [new File(['test'], 'test.pdf')];
         
         component.uploadEventFile();
         tick();
