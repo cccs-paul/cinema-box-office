@@ -764,11 +764,11 @@
   <!-- Summary Section -->
   <div class="summary-section" [class.collapsed]="!summaryExpanded" *ngIf="spendingItems.length > 0">
     <div class="summary-header" (click)="toggleSummary()">
-      <h3>{{ 'common.summary' | translate }}</h3>
       <button 
         class="btn-toggle-summary" 
-        [title]="summaryExpanded ? ('common.collapse' | translate) : ('common.expand' | translate)">
+        [title]="summaryExpanded ? ('common.hideSummary' | translate) : ('common.showSummary' | translate)">
         <span class="toggle-icon" [class.collapsed]="!summaryExpanded">▼</span>
+        <span class="toggle-label">{{ summaryExpanded ? ('common.hideSummary' | translate) : ('common.showSummary' | translate) }}</span>
       </button>
     </div>
     

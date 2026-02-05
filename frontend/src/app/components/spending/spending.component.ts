@@ -74,7 +74,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
   filtersExpanded = false;
 
   // Summary Section
-  summaryExpanded = true;
+  summaryExpanded = false;
 
   // Create Form
   showCreateForm = false;
@@ -1132,6 +1132,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
     if (!this.selectedRC || !this.selectedFY || !this.addEventItemId) return;
     
     this.isCreatingEvent = true;
+    const itemId = this.addEventItemId; // Store the item ID before closing
     
     const request: SpendingEventRequest = {
       eventType: this.newEventType,
@@ -1140,15 +1141,24 @@ export class SpendingComponent implements OnInit, OnDestroy {
     };
     
     this.spendingEventService.createEvent(
-      this.selectedRC.id, this.selectedFY.id, this.addEventItemId, request
+      this.selectedRC.id, this.selectedFY.id, itemId, request
     ).subscribe({
       next: () => {
         this.showSuccess('Event created successfully');
         this.closeAddEventModal();
         this.loadSpendingItems(); // Refresh to get updated event info
-        if (this.selectedEventItemId) {
-          this.loadEventsForItem(this.spendingItems.find(i => i.id === this.selectedEventItemId)!);
-        }
+        // Reload events for the item where the event was just added
+        this.selectedEventItemId = itemId;
+        this.spendingEventService.getEvents(
+          this.selectedRC!.id, this.selectedFY!.id, itemId
+        ).subscribe({
+          next: (events) => {
+            this.selectedItemEvents = events;
+          },
+          error: () => {
+            // Silently fail, the item list will still show the count
+          }
+        });
         this.isCreatingEvent = false;
       },
       error: (error) => {

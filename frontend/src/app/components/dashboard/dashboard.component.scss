@@ -1950,24 +1950,19 @@
   .summary-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     cursor: pointer;
     user-select: none;
 
-    h3 {
-      margin: 0;
-      font-size: 1.125rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
     .btn-toggle-summary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       background: transparent;
       border: none;
       color: var(--text-secondary);
       cursor: pointer;
+      font-size: 0.875rem;
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
       transition: background 0.2s, color 0.2s;
@@ -1984,6 +1979,10 @@
         &.collapsed {
           transform: rotate(-90deg);
         }
+      }
+
+      .toggle-label {
+        font-weight: 500;
       }
     }
   }

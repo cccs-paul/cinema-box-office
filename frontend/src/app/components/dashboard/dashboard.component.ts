@@ -70,7 +70,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   filtersExpanded = false;
 
   // Summary Section
-  summaryExpanded = true;
+  summaryExpanded = false;
 
   // Create Form
   showCreateForm = false;
