@@ -28,6 +28,7 @@ import { Category, categoryAllowsCap, categoryAllowsOm } from '../../models/cate
 import { Money } from '../../models/money.model';
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 import { CurrencyInputDirective } from '../../directives/currency-input.directive';
+import { DateInputDirective } from '../../directives/date-input.directive';
 import { EVENT_TYPE_INFO, ProcurementEventType } from '../../models/procurement.model';
 
 /**
@@ -40,7 +41,7 @@ import { EVENT_TYPE_INFO, ProcurementEventType } from '../../models/procurement.
 @Component({
   selector: 'app-spending',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, CurrencyInputDirective],
+  imports: [CommonModule, FormsModule, TranslateModule, CurrencyInputDirective, DateInputDirective],
   templateUrl: './spending.component.html',
   styleUrls: ['./spending.component.scss'],
 })
@@ -70,7 +71,10 @@ export class SpendingComponent implements OnInit, OnDestroy {
 
   // Search filter
   searchTerm = '';
-  filtersExpanded = true;
+  filtersExpanded = false;
+
+  // Summary Section
+  summaryExpanded = true;
 
   // Create Form
   showCreateForm = false;
@@ -531,6 +535,13 @@ export class SpendingComponent implements OnInit, OnDestroy {
    */
   toggleFilters(): void {
     this.filtersExpanded = !this.filtersExpanded;
+  }
+
+  /**
+   * Toggle the summary section visibility.
+   */
+  toggleSummary(): void {
+    this.summaryExpanded = !this.summaryExpanded;
   }
 
   /**

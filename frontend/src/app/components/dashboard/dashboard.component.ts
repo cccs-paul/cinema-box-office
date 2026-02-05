@@ -67,7 +67,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Search filter
   searchTerm = '';
-  filtersExpanded = true;
+  filtersExpanded = false;
+
+  // Summary Section
+  summaryExpanded = true;
 
   // Create Form
   showCreateForm = false;
@@ -461,6 +464,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
    */
   toggleFilters(): void {
     this.filtersExpanded = !this.filtersExpanded;
+  }
+
+  /**
+   * Toggle the summary section visibility.
+   */
+  toggleSummary(): void {
+    this.summaryExpanded = !this.summaryExpanded;
   }
 
   /**

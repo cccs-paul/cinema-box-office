@@ -19,7 +19,7 @@ import { SpendingEvent, SpendingEventRequest } from '../models/spending-event.mo
   providedIn: 'root'
 })
 export class SpendingEventService {
-  private apiUrl = '/api/v1/responsibility-centres';
+  private apiUrl = '/api/responsibility-centres';
 
   constructor(private http: HttpClient) {}
 

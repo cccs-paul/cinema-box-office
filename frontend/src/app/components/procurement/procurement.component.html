@@ -4,13 +4,6 @@
   Licensed under MIT License
 -->
 <div class="procurement-container">
-  <!-- Action Bar -->
-  <div class="action-bar" *ngIf="canWrite && !showCreateItemForm">
-    <button class="btn btn-primary" (click)="showCreateItem()">
-      + {{ 'procurement.addItem' | translate }}
-    </button>
-  </div>
-
   <!-- Messages -->
   <div class="messages" *ngIf="errorMessage || successMessage">
     <div class="alert alert-error" *ngIf="errorMessage">
@@ -27,7 +20,21 @@
     <div class="items-panel">
       <!-- Search and Category Filter -->
       <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateItemForm && selectedFY?.showSearchBox !== false">
-        <div class="filters-header">
+        <!-- Search Box - Always Visible -->
+        <div class="search-box-always-visible">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            [placeholder]="'procurement.searchPlaceholder' | translate"
+            class="search-input"
+          />
+          <button 
+            class="btn-clear" 
+            *ngIf="searchTerm" 
+            (click)="clearSearch()"
+            [title]="'common.clear' | translate">
+            ✕
+          </button>
           <button 
             class="btn-toggle-filters" 
             (click)="toggleFilters()"
@@ -37,23 +44,6 @@
           </button>
         </div>
         <div class="filters-content" *ngIf="filtersExpanded">
-          <!-- Search Box -->
-          <div class="search-box">
-            <input
-              type="text"
-              [(ngModel)]="searchTerm"
-              [placeholder]="'procurement.searchPlaceholder' | translate"
-              class="search-input"
-            />
-            <button 
-              class="btn-clear" 
-              *ngIf="searchTerm" 
-              (click)="clearSearch()"
-              [title]="'common.clear' | translate">
-              ✕
-            </button>
-          </div>
-
           <!-- Category Filter -->
           <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
             <span class="filter-label">{{ 'common.category' | translate }}:</span>
@@ -1333,6 +1323,13 @@
               </div>
             </div>
         </ng-template>
+
+        <!-- Add Button - After Items List -->
+        <div class="action-bar bottom" *ngIf="canWrite && !showCreateItemForm && procurementItems.length > 0">
+          <button class="btn btn-primary" (click)="showCreateItem()">
+            + {{ 'procurement.addItem' | translate }}
+          </button>
+        </div>
 
         <!-- Empty State - No items match filter -->
         <div class="empty-state" *ngIf="!isLoadingItems && procurementItems.length > 0 && filteredProcurementItems.length === 0">

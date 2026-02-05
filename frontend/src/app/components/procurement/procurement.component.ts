@@ -67,7 +67,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   procurementItems: ProcurementItem[] = [];
   isLoadingItems = false;
   searchTerm = '';
-  filtersExpanded = true;
+  filtersExpanded = false;
 
   // Categories
   categories: Category[] = [];

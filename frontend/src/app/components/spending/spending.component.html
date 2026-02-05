@@ -4,13 +4,6 @@
   Licensed under MIT License
 -->
 <div class="spending-container">
-  <!-- Action Bar -->
-  <div class="action-bar">
-    <button class="btn btn-primary" (click)="showCreate()" *ngIf="canWrite && !showCreateForm" [disabled]="categories.length === 0">
-      + {{ 'spending.addItem' | translate }}
-    </button>
-  </div>
-
   <!-- Messages -->
   <div class="messages">
     <div class="alert alert-danger" *ngIf="errorMessage">
@@ -23,7 +16,21 @@
 
   <!-- Search and Category Filter -->
   <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateForm && selectedFY?.showSearchBox !== false">
-    <div class="filters-header">
+    <!-- Search Box - Always Visible -->
+    <div class="search-box-always-visible">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        [placeholder]="'spending.searchPlaceholder' | translate"
+        class="search-input"
+      />
+      <button 
+        class="btn-clear" 
+        *ngIf="searchTerm" 
+        (click)="clearSearch()"
+        [title]="'common.clearSearch' | translate">
+        ✕
+      </button>
       <button 
         class="btn-toggle-filters" 
         (click)="toggleFilters()"
@@ -33,23 +40,6 @@
       </button>
     </div>
     <div class="filters-content" *ngIf="filtersExpanded">
-      <!-- Search Box -->
-      <div class="search-box">
-        <input
-          type="text"
-          [(ngModel)]="searchTerm"
-          [placeholder]="'spending.searchPlaceholder' | translate"
-          class="search-input"
-        />
-        <button 
-          class="btn-clear" 
-          *ngIf="searchTerm" 
-          (click)="clearSearch()"
-          [title]="'common.clearSearch' | translate">
-          ✕
-        </button>
-      </div>
-
       <!-- Category Filter -->
       <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
         <span class="filter-label">{{ 'common.category' | translate }}:</span>
@@ -764,68 +754,84 @@
     </div>
   </ng-template>
 
+  <!-- Add Button - After Items List -->
+  <div class="action-bar bottom" *ngIf="canWrite && !showCreateForm && spendingItems.length > 0">
+    <button class="btn btn-primary" (click)="showCreate()" [disabled]="categories.length === 0">
+      + {{ 'spending.addItem' | translate }}
+    </button>
+  </div>
+
   <!-- Summary Section -->
-  <div class="summary-section" *ngIf="spendingItems.length > 0">
-    <h3>{{ 'common.summary' | translate }}</h3>
-    
-    <!-- Summary by Money Type -->
-    <div class="summary-group">
-      <h4>{{ 'spending.totalsByMoneyType' | translate }}</h4>
-      <table class="summary-table">
-        <thead>
-          <tr>
-            <th>{{ 'spending.moneyType' | translate }}</th>
-            <th>{{ 'spending.totalCap' | translate }}</th>
-            <th>{{ 'spending.totalOm' | translate }}</th>
-            <th>{{ 'common.total' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let summary of summaryByMoneyType">
-            <td>{{ summary.moneyCode }} - {{ summary.moneyName }}</td>
-            <td class="amount">{{ formatCurrency(summary.totalCap) }}</td>
-            <td class="amount">{{ formatCurrency(summary.totalOm) }}</td>
-            <td class="amount total">{{ formatCurrency(summary.total) }}</td>
-          </tr>
-        </tbody>
-      </table>
+  <div class="summary-section" [class.collapsed]="!summaryExpanded" *ngIf="spendingItems.length > 0">
+    <div class="summary-header" (click)="toggleSummary()">
+      <h3>{{ 'common.summary' | translate }}</h3>
+      <button 
+        class="btn-toggle-summary" 
+        [title]="summaryExpanded ? ('common.collapse' | translate) : ('common.expand' | translate)">
+        <span class="toggle-icon" [class.collapsed]="!summaryExpanded">▼</span>
+      </button>
     </div>
     
-    <!-- Summary by Category -->
-    <div class="summary-group" *ngIf="summaryByCategory.length > 0">
-      <h4>{{ 'spending.totalsByCategory' | translate }}</h4>
-      <table class="summary-table">
-        <thead>
-          <tr>
-            <th>{{ 'common.category' | translate }}</th>
-            <th>{{ 'spending.totalCap' | translate }}</th>
-            <th>{{ 'spending.totalOm' | translate }}</th>
-            <th>{{ 'common.total' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let summary of summaryByCategory">
-            <td>{{ summary.categoryName }}</td>
-            <td class="amount">{{ formatCurrency(summary.totalCap) }}</td>
-            <td class="amount">{{ formatCurrency(summary.totalOm) }}</td>
-            <td class="amount total">{{ formatCurrency(summary.total) }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    
-    <!-- Grand Total -->
-    <div class="grand-total">
-      <table class="summary-table">
-        <tbody>
-          <tr class="grand-total-row">
-            <td><strong>{{ 'spending.grandTotal' | translate }}</strong></td>
-            <td class="amount"><strong>{{ formatCurrency(grandTotalCap) }}</strong></td>
-            <td class="amount"><strong>{{ formatCurrency(grandTotalOm) }}</strong></td>
-            <td class="amount total"><strong>{{ formatCurrency(grandTotal) }}</strong></td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="summary-content" *ngIf="summaryExpanded">
+      <!-- Summary by Money Type -->
+      <div class="summary-group">
+        <h4>{{ 'spending.totalsByMoneyType' | translate }}</h4>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>{{ 'spending.moneyType' | translate }}</th>
+              <th>{{ 'spending.totalCap' | translate }}</th>
+              <th>{{ 'spending.totalOm' | translate }}</th>
+              <th>{{ 'common.total' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let summary of summaryByMoneyType">
+              <td>{{ summary.moneyCode }} - {{ summary.moneyName }}</td>
+              <td class="amount">{{ formatCurrency(summary.totalCap) }}</td>
+              <td class="amount">{{ formatCurrency(summary.totalOm) }}</td>
+              <td class="amount total">{{ formatCurrency(summary.total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Summary by Category -->
+      <div class="summary-group" *ngIf="summaryByCategory.length > 0">
+        <h4>{{ 'spending.totalsByCategory' | translate }}</h4>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>{{ 'common.category' | translate }}</th>
+              <th>{{ 'spending.totalCap' | translate }}</th>
+              <th>{{ 'spending.totalOm' | translate }}</th>
+              <th>{{ 'common.total' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let summary of summaryByCategory">
+              <td>{{ summary.categoryName }}</td>
+              <td class="amount">{{ formatCurrency(summary.totalCap) }}</td>
+              <td class="amount">{{ formatCurrency(summary.totalOm) }}</td>
+              <td class="amount total">{{ formatCurrency(summary.total) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Grand Total -->
+      <div class="grand-total">
+        <table class="summary-table">
+          <tbody>
+            <tr class="grand-total-row">
+              <td><strong>{{ 'spending.grandTotal' | translate }}</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(grandTotalCap) }}</strong></td>
+              <td class="amount"><strong>{{ formatCurrency(grandTotalOm) }}</strong></td>
+              <td class="amount total"><strong>{{ formatCurrency(grandTotal) }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
