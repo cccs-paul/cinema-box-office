@@ -100,6 +100,9 @@ After logging in, you'll see:
 | **Main Content** | The primary workspace area |
 | **RC/FY Selection** | Quick context selector for your active RC and Fiscal Year |
 
+![Main Interface](screenshots/main-interface.png)
+*The main application interface showing the header, sidebar, and content area*
+
 ### 2.4 Navigation Overview
 
 The main navigation sections are:
@@ -141,6 +144,9 @@ myRC supports multiple authentication methods:
 2. Enter your **Username** or **Email**
 3. Enter your **Password**
 4. Click **Login**
+
+![Login Page](screenshots/login-page.png)
+*The login page with authentication options*
 
 ### 3.3 Password Requirements
 
@@ -223,6 +229,9 @@ You automatically become the **Owner** of any RC you create.
 2. The RC selection screen appears
 3. Click on the RC you want to work with
 4. Select a Fiscal Year within that RC
+
+![RC Selection](screenshots/rc-list.png)
+*The Responsibility Centre selection screen*
 
 ### 5.4 Editing an RC
 
@@ -319,6 +328,9 @@ The Dashboard displays funding items with:
 - **List View**: All items in a sortable list
 - **Grouped View**: Items grouped by category
 - **Summary Cards**: Totals by money type
+
+![Dashboard Overview](screenshots/dashboard-overview.png)
+*The Dashboard showing funding items grouped by category*
 
 ### 7.5 Editing a Funding Item
 
@@ -418,6 +430,12 @@ Use the filter options to narrow down spending items:
 - **Category Filter**: Show only items in a specific category
 - **Status Filter**: Filter by spending status
 
+![Spending List](screenshots/spending-list.png)
+*The Spending page with items list and filters*
+
+![Spending with Linked Procurement](screenshots/spending-linked-procurement.png)
+*A spending item showing linked procurement with price mismatch warning (⚠️)*
+
 ---
 
 ## 9. Procurement Items
@@ -453,7 +471,11 @@ In addition to procurement status, items have a tracking status:
 |-----------------|-------|-------------|
 | **ON_TRACK** | 🟢 Green | Proceeding normally |
 | **AT_RISK** | 🟡 Yellow | Potential issues identified |
-| **BLOCKED** | 🔴 Red | Procurement blocked |
+| **COMPLETED** | 🟦 Blue | Procurement completed |
+| **CANCELLED** | 🔴 Red | Procurement cancelled |
+
+![Procurement List](screenshots/procurement-list.png)
+*Procurement items with tracking status badges showing ON_TRACK, AT_RISK, and other statuses*
 
 ### 9.4 Creating a Procurement Item
 
@@ -515,6 +537,9 @@ Each procurement item can have multiple vendor quotes.
 
 Files can be viewed inline (PDFs and images) or downloaded.
 
+![Procurement Quotes](screenshots/procurement-quotes.png)
+*The quotes section showing vendor quotes with status badges*
+
 ### 9.6 Procurement Events
 
 Procurement events provide a detailed audit trail:
@@ -563,11 +588,15 @@ Procurement events provide a detailed audit trail:
 When a procurement item progresses to a billable state, you can create linked spending:
 
 1. Expand the procurement item
-2. Click **Create Spending Item**
+2. Click **Link to Spending** (➡️💰)
 3. A new spending item is created linked to the procurement
 4. The spending item inherits procurement details
+5. The button changes to **Delete linked Spending** (🔗) to manage the link
 
-Linked spending items show the connection in both views.
+Linked spending items show the connection in both views. The procurement list shows a 🔗 icon for items with linked spending.
+
+![Procurement Link Spending](screenshots/procurement-link-spending.png)
+*The Link to Spending button and linked spending display in a procurement item*
 
 ### 9.8 Contract Management
 
@@ -594,6 +623,9 @@ Use filters to find specific items:
 
 The Insights dashboard provides visual analytics for your financial data with interactive charts and summaries.
 
+![Insights Overview](screenshots/insights-overview.png)
+*The Insights dashboard with funding, spending, and procurement charts*
+
 ### 10.2 Available Charts
 
 #### Funding Charts
@@ -609,8 +641,11 @@ The Insights dashboard provides visual analytics for your financial data with in
 - **Budget Utilization**: Percentage of budget used with color indicators
 
 #### Procurement Charts
-- **Procurement Status Distribution**: Distribution of items by status
-- **Tracking Status Overview**: ON_TRACK, AT_RISK, BLOCKED distribution
+- **Procurement by Status**: Distribution of items by tracking status (colors match the status badges: green for ON_TRACK, yellow for AT_RISK, blue for COMPLETED, red for CANCELLED)
+- **Tracking Status Overview**: Visual summary of procurement health
+
+![Procurement Status Chart](screenshots/insights-procurement-status.png)
+*Procurement by Status pie chart with colors matching the tracking status badges*
 
 ### 10.3 Interacting with Charts
 
@@ -911,6 +946,12 @@ To change theme:
 3. Select Light or Dark
 
 Theme preference is saved to your user account.
+
+![Light Theme](screenshots/theme-light.png)
+*Application in light theme*
+
+![Dark Theme](screenshots/theme-dark.png)
+*Application in dark theme*
 
 ---
 
