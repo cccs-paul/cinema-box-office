@@ -98,13 +98,14 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   newEventDate: string = '';
   newEventComment: string = '';
   eventTypeOptions: ProcurementEventType[] = [
-    'NOT_STARTED', 'QUOTE', 'SAM_ACKNOWLEDGEMENT_REQUESTED', 'SAM_ACKNOWLEDGEMENT_RECEIVED',
-    'PACKAGE_SENT_TO_PROCUREMENT', 'ACKNOWLEDGED_BY_PROCUREMENT', 'PAUSED', 'CANCELLED',
-    'CONTRACT_AWARDED', 'GOODS_RECEIVED', 'FULL_INVOICE_RECEIVED', 'PARTIAL_INVOICE_RECEIVED',
-    'MONTHLY_INVOICE_RECEIVED', 'FULL_INVOICE_SIGNED', 'PARTIAL_INVOICE_SIGNED',
-    'MONTHLY_INVOICE_SIGNED', 'CONTRACT_AMENDED', 'ADDITIONAL_DOCUMENT_REQUESTED',
-    'ADDITIONAL_SECTION_32_REQUESTED', 'REJECTED_INVOICE', 'RECEIVED_NEW_INVOICE',
-    'RETROACTIVE_AWARD_LETTER', 'STILL_IN_PROCUREMENT', 'WITH_SECURITY', 'EXERCISED_OPTION', 'UPDATE'
+    'ACKNOWLEDGED_BY_PROCUREMENT', 'ADDITIONAL_DOCUMENT_REQUESTED', 'ADDITIONAL_SECTION_32_REQUESTED',
+    'CANCELLED', 'CONTRACT_AMENDED', 'CONTRACT_AWARDED', 'EXERCISED_OPTION',
+    'FULL_INVOICE_RECEIVED', 'FULL_INVOICE_SIGNED', 'GOODS_RECEIVED',
+    'MONTHLY_INVOICE_RECEIVED', 'MONTHLY_INVOICE_SIGNED', 'NOT_STARTED',
+    'PACKAGE_SENT_TO_PROCUREMENT', 'PARTIAL_INVOICE_RECEIVED', 'PARTIAL_INVOICE_SIGNED',
+    'PAUSED', 'QUOTE', 'RECEIVED_NEW_INVOICE', 'REJECTED_INVOICE',
+    'RETROACTIVE_AWARD_LETTER', 'SAM_ACKNOWLEDGEMENT_RECEIVED', 'SAM_ACKNOWLEDGEMENT_REQUESTED',
+    'STILL_IN_PROCUREMENT', 'UPDATE', 'WITH_SECURITY'
   ];
 
   // Event Files
@@ -620,6 +621,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       name: this.newItemName.trim(),
       description: this.newItemDescription.trim() || undefined,
       vendor: this.newItemVendor.trim() || undefined,
+      trackingStatus: 'PLANNING',
       finalPrice: this.newItemFinalPrice,
       finalPriceCurrency: this.newItemFinalPriceCurrency,
       finalPriceExchangeRate: this.newItemFinalPriceCurrency !== 'CAD' ? this.newItemFinalPriceExchangeRate : undefined,
@@ -780,7 +782,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemProcurementCompleted = false;
     this.editItemProcurementCompletedDate = '';
     this.editItemCategoryId = null;
-    this.editItemTrackingStatus = 'ON_TRACK';
+    this.editItemTrackingStatus = 'PLANNING';
   }
 
   /**

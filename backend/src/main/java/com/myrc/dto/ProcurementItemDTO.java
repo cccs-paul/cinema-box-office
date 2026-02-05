@@ -176,7 +176,7 @@ public class ProcurementItemDTO {
         }
         
         // Populate tracking status
-        dto.setTrackingStatus(item.getTrackingStatus() != null ? item.getTrackingStatus().name() : "ON_TRACK");
+        dto.setTrackingStatus(item.getTrackingStatus() != null ? item.getTrackingStatus().name() : "PLANNING");
         
         return dto;
     }
@@ -241,7 +241,7 @@ public class ProcurementItemDTO {
         }
         
         // Populate tracking status
-        dto.setTrackingStatus(item.getTrackingStatus() != null ? item.getTrackingStatus().name() : "ON_TRACK");
+        dto.setTrackingStatus(item.getTrackingStatus() != null ? item.getTrackingStatus().name() : "PLANNING");
         
         return dto;
     }

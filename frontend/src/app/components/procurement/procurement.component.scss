@@ -506,6 +506,18 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
+
+      &.btn-danger-outline {
+        background: #fef2f2;
+        border-color: #dc2626;
+        color: #dc2626;
+
+        &:hover:not(:disabled) {
+          background: #fee2e2;
+          border-color: #b91c1c;
+          color: #b91c1c;
+        }
+      }
     }
   }
 
@@ -921,6 +933,7 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  margin-bottom: 0.75rem;
 
   .status-toggle-btn {
     padding: 0.25rem 0.75rem;
@@ -1296,6 +1309,39 @@
     font-size: 0.875rem;
     color: var(--text-secondary);
     line-height: 1.5;
+  }
+}
+
+/* Link Spending Action Button (View Mode) */
+.link-spending-action {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+
+  .btn-spending-link {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    background: #ccfbf1;
+    border: 1px solid #0d9488;
+    border-radius: 0.375rem;
+    color: #0d9488;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:hover:not(:disabled) {
+      background: #99f6e4;
+      border-color: #0f766e;
+      color: #0f766e;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 }
 

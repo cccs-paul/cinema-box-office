@@ -247,7 +247,7 @@ public class ProcurementItem {
      */
     @Enumerated(EnumType.STRING)
     @Column(name = "tracking_status", length = 20)
-    private TrackingStatus trackingStatus = TrackingStatus.ON_TRACK;
+    private TrackingStatus trackingStatus = TrackingStatus.PLANNING;
 
     // Constructors
     public ProcurementItem() {

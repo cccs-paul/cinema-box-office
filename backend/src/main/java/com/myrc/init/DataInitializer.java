@@ -499,23 +499,24 @@ public class DataInitializer implements ApplicationRunner {
         // DISCRETE Spending Items (not linked to procurement)
         // These are small purchases, recurring expenses, or items that don't require formal procurement
         // {name, description, amount, status, categoryName, vendor, reference, moneyCode, capAmount, omAmount}
+        // Status values: PLANNING, COMMITTED, COMPLETED, CANCELLED
         String[][] discreteItems = {
             // Monthly cloud service payments - recurring expenses
-            {"AWS Monthly Services - January", "AWS EC2, S3, and RDS services for January 2026", "8500.00", "PAID", 
+            {"AWS Monthly Services - January", "AWS EC2, S3, and RDS services for January 2026", "8500.00", "COMPLETED", 
              "Cloud Services", "Amazon Web Services", "INV-AWS-JAN26", "OA", "0.00", "8500.00"},
-            {"AWS Monthly Services - February", "AWS EC2, S3, and RDS services for February 2026", "9200.00", "PAID", 
+            {"AWS Monthly Services - February", "AWS EC2, S3, and RDS services for February 2026", "9200.00", "COMPLETED", 
              "Cloud Services", "Amazon Web Services", "INV-AWS-FEB26", "OA", "0.00", "9200.00"},
-            {"Azure Monthly Services", "Azure compute and storage - January 2026", "6800.00", "PAID", 
+            {"Azure Monthly Services", "Azure compute and storage - January 2026", "6800.00", "COMPLETED", 
              "Cloud Services", "Microsoft Azure", "INV-AZ-JAN26", "OA", "0.00", "6800.00"},
             {"GCP ML Credits", "Google Cloud ML Platform credits - Q1", "12500.00", "COMMITTED", 
              "Cloud Services", "Google Cloud", "INV-GCP-Q1-26", "WCF", "0.00", "12500.00"},
             
             // Office supplies and small purchases
-            {"Office Supplies Q1", "General office supplies and consumables for Q1", "3500.00", "PAID", 
+            {"Office Supplies Q1", "General office supplies and consumables for Q1", "3500.00", "COMPLETED", 
              "Small Procurement", "Staples", "INV-STP-JAN26", "AB", "0.00", "3500.00"},
-            {"Coffee & Refreshments", "Kitchen supplies and refreshments for Q1", "850.00", "PAID", 
+            {"Coffee & Refreshments", "Kitchen supplies and refreshments for Q1", "850.00", "COMPLETED", 
              "Small Procurement", "Costco Business", "INV-COST-Q126", "AB", "0.00", "850.00"},
-            {"Printer Supplies", "Toner cartridges and paper for printers", "1200.00", "APPROVED", 
+            {"Printer Supplies", "Toner cartridges and paper for printers", "1200.00", "COMMITTED", 
              "Small Procurement", "Staples", "PO-PRNT-001", "AB", "0.00", "1200.00"},
             
             // Software subscriptions (usually don't need procurement)
@@ -523,41 +524,41 @@ public class DataInitializer implements ApplicationRunner {
              "Software Licenses", "Slack Technologies", "INV-SLACK-2026", "AB", "0.00", "21600.00"},
             {"GitHub Enterprise", "GitHub Enterprise Cloud - annual subscription", "18000.00", "COMMITTED", 
              "Software Licenses", "GitHub Inc", "INV-GH-2026", "AB", "0.00", "18000.00"},
-            {"JetBrains All Products Pack", "IDE licenses for development team - 25 users", "7500.00", "APPROVED", 
+            {"JetBrains All Products Pack", "IDE licenses for development team - 25 users", "7500.00", "COMMITTED", 
              "Software Licenses", "JetBrains", "INV-JB-2026", "AB", "0.00", "7500.00"},
-            {"Zoom Business Licenses", "Video conferencing - 50 licenses", "4800.00", "PAID", 
+            {"Zoom Business Licenses", "Video conferencing - 50 licenses", "4800.00", "COMPLETED", 
              "Software Licenses", "Zoom Communications", "INV-ZOOM-2026", "OA", "0.00", "4800.00"},
             
             // Professional services and contractors (often discrete purchases)
-            {"Tax Advisory Services", "Annual tax consulting and advisory", "8500.00", "APPROVED", 
+            {"Tax Advisory Services", "Annual tax consulting and advisory", "8500.00", "COMMITTED", 
              "Professional Services", "KPMG Canada", "SO-TAX-2026", "OA", "0.00", "8500.00"},
-            {"Legal Review Services", "Contract review and legal consultation", "5200.00", "PAID", 
+            {"Legal Review Services", "Contract review and legal consultation", "5200.00", "COMPLETED", 
              "Professional Services", "Norton Rose Fulbright", "INV-NRF-JAN26", "OA", "0.00", "5200.00"},
             {"Data Center Cabling", "Network cabling services for rack expansion", "3800.00", "COMMITTED", 
              "Contractors", "DataCom Services", "WO-CABLE-001", "AB", "3800.00", "0.00"},
             
             // Training and development
-            {"AWS Certification Training", "AWS Solutions Architect training - 5 staff", "4500.00", "APPROVED", 
+            {"AWS Certification Training", "AWS Solutions Architect training - 5 staff", "4500.00", "COMMITTED", 
              "Professional Services", "AWS Training", "TR-AWS-2026", "OA", "0.00", "4500.00"},
             {"Kubernetes Workshop", "On-site K8s training workshop - 2 days", "8000.00", "COMMITTED", 
              "Professional Services", "Cloud Native Computing", "TR-K8S-2026", "OA", "0.00", "8000.00"},
             
             // Security services
-            {"Annual Security Audit", "Compliance audit and security assessment", "35000.00", "APPROVED", 
+            {"Annual Security Audit", "Compliance audit and security assessment", "35000.00", "COMMITTED", 
              "Security", "CrowdStrike", "SO-SEC-2026", "OA", "0.00", "35000.00"},
             {"Penetration Testing", "Quarterly pen testing service - Q1", "12000.00", "COMMITTED", 
              "Security", "Rapid7", "SO-PEN-Q126", "OA", "0.00", "12000.00"},
             
             // Research and lab supplies
-            {"Research Consumables", "Lab consumables and supplies for Q1", "2800.00", "PAID", 
+            {"Research Consumables", "Lab consumables and supplies for Q1", "2800.00", "COMPLETED", 
              "Research Equipment", "Fisher Scientific", "INV-FISH-Q126", "GF", "0.00", "2800.00"},
-            {"Calibration Services", "Annual equipment calibration", "4200.00", "APPROVED", 
+            {"Calibration Services", "Annual equipment calibration", "4200.00", "COMMITTED", 
              "Research Equipment", "Keysight Services", "SO-CAL-2026", "GF", "0.00", "4200.00"},
             
             // Data services
             {"Snowflake Credits", "Snowflake data warehouse compute credits", "15000.00", "COMMITTED", 
              "Data Services", "Snowflake Inc", "INV-SF-Q126", "OA", "0.00", "15000.00"},
-            {"Datadog Monitoring", "Infrastructure monitoring - annual", "9600.00", "APPROVED", 
+            {"Datadog Monitoring", "Infrastructure monitoring - annual", "9600.00", "COMMITTED", 
              "Data Services", "Datadog Inc", "INV-DD-2026", "OA", "0.00", "9600.00"}
         };
 

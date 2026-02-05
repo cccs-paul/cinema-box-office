@@ -467,21 +467,32 @@
                       </div>
                     </div>
                   </div>
+                  <!-- Link to Spending button - shown in view mode -->
+                  <div class="link-spending-action" *ngIf="canWrite && item.trackingStatus !== 'CANCELLED' && (!item.linkedSpendingItemIds || item.linkedSpendingItemIds.length === 0)">
+                    <button
+                      class="btn btn-spending-link"
+                      [title]="'procurement.linkSpending' | translate"
+                      [disabled]="isTogglingSpendingLink"
+                      (click)="startEditProcurementItem(item); toggleSpendingLink(); $event.stopPropagation()"
+                    >
+                      {{ isTogglingSpendingLink ? '⏳' : '➕💰 ' + ('procurement.linkSpending' | translate) }}
+                    </button>
+                  </div>
                 </div>
 
                 <!-- Edit Mode -->
                 <div class="edit-form" *ngIf="editingItemId === item.id">
                   <div class="edit-form-header">
                     <h4>{{ 'procurement.editTitle' | translate }}</h4>
-                    <!-- Link to Spending button - shown only in edit mode -->
+                    <!-- Delete Linked Spending button - shown only in edit mode when items are linked -->
                     <button
-                      class="btn btn-spending-link"
-                      [title]="(item.trackingStatus === 'CANCELLED' ? 'procurement.cannotLinkCancelled' : (hasLinkedSpendingItems() ? 'procurement.unlinkSpending' : 'procurement.linkSpending')) | translate"
-                      *ngIf="canWrite && item.trackingStatus !== 'CANCELLED'"
+                      class="btn btn-spending-link btn-danger-outline"
+                      [title]="'procurement.unlinkSpending' | translate"
+                      *ngIf="canWrite && hasLinkedSpendingItems()"
                       [disabled]="isTogglingSpendingLink"
                       (click)="toggleSpendingLink(); $event.stopPropagation()"
                     >
-                      {{ isTogglingSpendingLink ? '⏳' : (hasLinkedSpendingItems() ? '🔗 ' + ('procurement.unlinkSpending' | translate) : '➕💰 ' + ('procurement.linkSpending' | translate)) }}
+                      {{ isTogglingSpendingLink ? '⏳' : '🗑️ ' + ('procurement.unlinkSpending' | translate) }}
                     </button>
                   </div>
                   
