@@ -50,8 +50,7 @@ html[data-theme='dark'] {
   }
 
   .header-content {
-    max-width: 1400px;
-    margin: 0 auto;
+    width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -62,6 +61,7 @@ html[data-theme='dark'] {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    margin-left: 0;
 
     .header-logo {
       width: 32px;
@@ -82,6 +82,7 @@ html[data-theme='dark'] {
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-right: 0;
   }
 }
 

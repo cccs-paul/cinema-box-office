@@ -345,13 +345,20 @@
             <label>{{ 'spending.exchangeRate' | translate }}</label>
             <span>1 {{ item.currency }} = {{ item.exchangeRate }} CAD</span>
           </div>
-          <!-- Linked Procurement Item -->
+          <!-- Linked Procurement Item (compact box with status) -->
           <div class="info-item procurement-link-box" *ngIf="item.procurementItemId">
             <label>{{ 'spending.linkedProcurement' | translate }}</label>
             <div class="procurement-link-content">
-              <div class="procurement-item-link">
-                <span class="procurement-icon">📦</span>
-                <span class="procurement-name">{{ item.procurementItemName || ('spending.procurementItem' | translate) }}</span>
+              <div class="procurement-row-compact">
+                <div class="procurement-item-link">
+                  <span class="procurement-icon">📦</span>
+                  <span class="procurement-name">{{ item.procurementItemName || ('spending.procurementItem' | translate) }}</span>
+                </div>
+                <div class="procurement-status-compact" *ngIf="item.procurementMostRecentEventType">
+                  <span class="event-type-badge compact" [ngClass]="getTrackingStatusClass(item.procurementMostRecentEventType)">
+                    {{ getEventTypeIcon(item.procurementMostRecentEventType) }} {{ getEventTypeLabel(item.procurementMostRecentEventType) }}
+                  </span>
+                </div>
                 <button 
                   class="btn-link" 
                   [title]="'spending.viewInProcurement' | translate"
@@ -359,9 +366,9 @@
                   {{ 'common.view' | translate }} →
                 </button>
               </div>
-              <!-- Procurement Price Display -->
-              <div class="procurement-price-info">
-                <div class="price-row" *ngIf="item.procurementFinalPrice != null">
+              <!-- Procurement Price Display (inline) -->
+              <div class="procurement-price-inline" *ngIf="item.procurementFinalPrice != null || item.procurementQuotedPrice != null">
+                <span class="price-row" *ngIf="item.procurementFinalPrice != null">
                   <span class="price-label">{{ 'procurement.finalPrice' | translate }}:</span>
                   <span class="price-value">
                     {{ formatCurrency(item.procurementFinalPrice, item.procurementPriceCurrency || 'CAD') }}
@@ -369,8 +376,8 @@
                       ({{ formatCurrency(item.procurementFinalPriceCad, 'CAD') }})
                     </span>
                   </span>
-                </div>
-                <div class="price-row" *ngIf="item.procurementFinalPrice == null && item.procurementQuotedPrice != null">
+                </span>
+                <span class="price-row" *ngIf="item.procurementFinalPrice == null && item.procurementQuotedPrice != null">
                   <span class="price-label">{{ 'procurement.quotedPrice' | translate }}:</span>
                   <span class="price-value">
                     {{ formatCurrency(item.procurementQuotedPrice, item.procurementPriceCurrency || 'CAD') }}
@@ -378,7 +385,7 @@
                       ({{ formatCurrency(item.procurementQuotedPriceCad, 'CAD') }})
                     </span>
                   </span>
-                </div>
+                </span>
               </div>
               <!-- Price Mismatch Warning -->
               <div class="price-mismatch-warning" *ngIf="hasPriceMismatch(item)">
@@ -454,27 +461,6 @@
           <div class="empty-state" *ngIf="!item.mostRecentEventType && (selectedItemEvents.length === 0 || selectedEventItemId !== item.id)">
             <p>{{ 'spending.noEvents' | translate }}</p>
             <p class="hint" *ngIf="canWrite">{{ 'spending.noEventsHint' | translate }}</p>
-          </div>
-        </div>
-        
-        <!-- Procurement Tracking Reference for linked items -->
-        <div class="procurement-tracking-section" *ngIf="item.procurementItemId">
-          <div class="section-header">
-            <label>📦 {{ 'spending.procurementTracking' | translate }}</label>
-          </div>
-          <div class="procurement-tracking-info">
-            <div class="recent-event-info" *ngIf="item.procurementMostRecentEventType">
-              <span class="event-type-badge" [ngClass]="getTrackingStatusClass(item.procurementMostRecentEventType)">
-                {{ getEventTypeIcon(item.procurementMostRecentEventType) }} {{ getEventTypeLabel(item.procurementMostRecentEventType) }}
-              </span>
-              <span class="event-date" *ngIf="item.procurementMostRecentEventDate">{{ item.procurementMostRecentEventDate | date:'dd/MM/yyyy' }}</span>
-            </div>
-            <button 
-              class="btn-link" 
-              (click)="viewLinkedProcurement()"
-              [title]="'spending.viewProcurementTracking' | translate">
-              {{ 'spending.viewProcurementTracking' | translate }} →
-            </button>
           </div>
         </div>
       </div>
