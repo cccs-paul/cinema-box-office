@@ -15,4 +15,5 @@
   flex: 1;
   background: var(--background-primary);
   min-height: calc(100vh - 60px);
+  padding-top: 60px; /* Offset for fixed header */
 }
