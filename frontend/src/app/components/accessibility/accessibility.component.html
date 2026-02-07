@@ -1,0 +1,118 @@
+<!--
+  myRC - Accessibility Component Template
+  Copyright (c) 2026 myRC Team
+  Licensed under MIT License
+
+  Author: myRC Team
+  Date: 2026-02-07
+  Version: 1.0.0
+-->
+<div class="accessibility-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-title-row">
+      <h2>♿ {{ 'accessibility.title' | translate }}</h2>
+      <div class="header-actions">
+        <button
+          class="btn btn-secondary"
+          (click)="restoreDefaults()"
+          [disabled]="!hasCustom"
+          [title]="'accessibility.restoreDefaultsTooltip' | translate">
+          🔄 {{ 'accessibility.restoreDefaults' | translate }}
+        </button>
+      </div>
+    </div>
+    <p class="page-description">{{ 'accessibility.description' | translate }}</p>
+  </div>
+
+  <!-- Live Preview -->
+  <div class="preview-section">
+    <h3>{{ 'accessibility.preview' | translate }}</h3>
+    <div class="preview-card">
+      <div class="preview-item-summary">
+        <div class="preview-item-info">
+          <span class="preview-item-name">{{ 'accessibility.previewItemName' | translate }}</span>
+          <span class="preview-category-badge">{{ 'accessibility.previewCategory' | translate }}</span>
+          <span class="preview-tracking-badge status-approved">✅ {{ 'accessibility.previewTracking' | translate }}</span>
+          <span class="preview-currency-badge">🇨🇦 CAD</span>
+          <span class="preview-total-amount">$12,500.00</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Groups -->
+  <div class="settings-groups">
+    <!-- Font Sizes -->
+    <div class="settings-group" *ngIf="groupedSettings['fontSizes']">
+      <h3>🔤 {{ 'accessibility.fontSizes' | translate }}</h3>
+      <div class="settings-list">
+        <div class="setting-row" *ngFor="let setting of groupedSettings['fontSizes']">
+          <div class="setting-info">
+            <label [for]="'setting-' + setting.key">{{ setting.labelKey | translate }}</label>
+            <span class="setting-description">{{ setting.descriptionKey | translate }}</span>
+          </div>
+          <div class="setting-control">
+            <input
+              type="range"
+              [id]="'setting-' + setting.key"
+              [min]="setting.min"
+              [max]="setting.max"
+              [step]="setting.step"
+              [ngModel]="setting.value"
+              (ngModelChange)="onSettingChange(setting.key, $event)"
+              class="setting-slider"
+              [attr.aria-label]="setting.labelKey | translate"
+            />
+            <div class="setting-value-row">
+              <span class="setting-value">{{ setting.value | number:'1.2-2' }}{{ setting.unit }}</span>
+              <button
+                class="btn-reset-single"
+                *ngIf="setting.value !== setting.defaultValue"
+                (click)="resetSetting(setting.key)"
+                [title]="'accessibility.resetSingle' | translate">
+                ↩
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Element Sizes -->
+    <div class="settings-group" *ngIf="groupedSettings['elementSizes']">
+      <h3>📐 {{ 'accessibility.elementSizes' | translate }}</h3>
+      <div class="settings-list">
+        <div class="setting-row" *ngFor="let setting of groupedSettings['elementSizes']">
+          <div class="setting-info">
+            <label [for]="'setting-' + setting.key">{{ setting.labelKey | translate }}</label>
+            <span class="setting-description">{{ setting.descriptionKey | translate }}</span>
+          </div>
+          <div class="setting-control">
+            <input
+              type="range"
+              [id]="'setting-' + setting.key"
+              [min]="setting.min"
+              [max]="setting.max"
+              [step]="setting.step"
+              [ngModel]="setting.value"
+              (ngModelChange)="onSettingChange(setting.key, $event)"
+              class="setting-slider"
+              [attr.aria-label]="setting.labelKey | translate"
+            />
+            <div class="setting-value-row">
+              <span class="setting-value">{{ setting.value | number:'1.2-2' }}{{ setting.unit }}</span>
+              <button
+                class="btn-reset-single"
+                *ngIf="setting.value !== setting.defaultValue"
+                (click)="resetSetting(setting.key)"
+                [title]="'accessibility.resetSingle' | translate">
+                ↩
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

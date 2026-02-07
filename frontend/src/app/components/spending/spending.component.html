@@ -478,24 +478,32 @@
           </div>
           
           <div class="events-list" *ngIf="selectedItemEvents.length > 0 && selectedEventItemId === item.id">
-            <div class="event-item" *ngFor="let event of selectedItemEvents">
-              <!-- View Mode -->
-              <ng-container *ngIf="editingEventId !== event.id">
-                <div class="event-header">
-                  <span class="event-type-badge" [ngClass]="getSpendingEventStatusClass(event.eventType)">
-                    {{ getSpendingEventIcon(event.eventType) }} {{ getSpendingEventLabel(event.eventType) }}
-                  </span>
-                  <span class="event-date">{{ event.eventDate | date:'dd/MM/yyyy' }}</span>
-                </div>
-                <div class="event-comment" *ngIf="event.comment">{{ event.comment }}</div>
-                <div class="event-meta">
-                  <span class="created-by" *ngIf="event.createdBy">{{ event.createdBy }}</span>
-                </div>
-                <div class="event-actions" *ngIf="canWrite">
-                  <button class="btn-icon btn-edit" (click)="editEvent(event)" [title]="'common.edit' | translate">✏️</button>
-                  <button class="btn-icon btn-delete" (click)="deleteEvent(event)" [title]="'common.delete' | translate">🗑️</button>
-                </div>
-              </ng-container>
+            <div class="events-list-header">
+              <button class="btn-toggle" (click)="collapseEvents()">
+                {{ 'common.hideAll' | translate }} ▼
+              </button>
+            </div>
+            <div class="events-timeline">
+              <div class="event-item" *ngFor="let event of selectedItemEvents"
+                   [ngClass]="getSpendingEventStatusClass(event.eventType)">
+                <div class="event-icon">{{ getSpendingEventIcon(event.eventType) }}</div>
+                <!-- View Mode -->
+                <ng-container *ngIf="editingEventId !== event.id">
+                  <div class="event-content">
+                    <div class="event-header">
+                      <span class="event-type">{{ getSpendingEventLabel(event.eventType) }}</span>
+                      <span class="event-date">{{ event.eventDate | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <p class="event-comment" *ngIf="event.comment">{{ event.comment }}</p>
+                    <div class="event-meta">
+                      <span class="created-by" *ngIf="event.createdBy">{{ event.createdBy }}</span>
+                    </div>
+                  </div>
+                  <div class="event-actions" *ngIf="canWrite">
+                    <button class="btn-icon btn-edit" (click)="editEvent(event)" [title]="'common.edit' | translate">✏️</button>
+                    <button class="btn-icon btn-delete" (click)="deleteEvent(event)" [title]="'common.delete' | translate">🗑️</button>
+                  </div>
+                </ng-container>
               <!-- Edit Mode -->
               <div class="edit-event-form" *ngIf="editingEventId === event.id">
                 <form (ngSubmit)="updateSpendingEvent()">
@@ -547,14 +555,18 @@
               </div>
             </div>
           </div>
+          </div>
           <div class="events-collapsed" *ngIf="(selectedItemEvents.length === 0 || selectedEventItemId !== item.id) && item.mostRecentEventType && addEventItemId !== item.id">
-            <div class="recent-event-info">
-              <span class="event-type-badge" [ngClass]="getSpendingEventStatusClass(item.mostRecentEventType)">
-                {{ getSpendingEventIcon(item.mostRecentEventType) }} {{ getSpendingEventLabel(item.mostRecentEventType) }}
-              </span>
-              <span class="event-date" *ngIf="item.mostRecentEventDate">{{ item.mostRecentEventDate | date:'dd/MM/yyyy' }}</span>
+            <div class="event-item collapsed-event" [ngClass]="getSpendingEventStatusClass(item.mostRecentEventType)">
+              <div class="event-icon">{{ getSpendingEventIcon(item.mostRecentEventType) }}</div>
+              <div class="event-content">
+                <div class="event-header">
+                  <span class="event-type">{{ getSpendingEventLabel(item.mostRecentEventType) }}</span>
+                  <span class="event-date" *ngIf="item.mostRecentEventDate">{{ item.mostRecentEventDate | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
             </div>
-            <button class="btn-link" (click)="loadEventsForItem(item)">{{ 'common.showAll' | translate }}</button>
+            <button class="btn-link" (click)="loadEventsForItem(item)">{{ 'common.showAll' | translate }} ▶</button>
           </div>
           <div class="empty-state" *ngIf="!item.mostRecentEventType && (selectedItemEvents.length === 0 || selectedEventItemId !== item.id) && addEventItemId !== item.id">
             <p>{{ 'spending.noEvents' | translate }}</p>

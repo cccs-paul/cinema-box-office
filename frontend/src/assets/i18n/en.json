@@ -63,7 +63,9 @@
     "uncategorized": "Uncategorized",
     "comments": "Comments",
     "creating": "Creating...",
-    "deleting": "Deleting..."
+    "deleting": "Deleting...",
+    "showAll": "Show All",
+    "hideAll": "Hide All"
   },
   "header": {
     "userMenu": "User menu",

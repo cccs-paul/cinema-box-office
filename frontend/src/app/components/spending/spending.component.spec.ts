@@ -656,5 +656,13 @@ describe('SpendingComponent', () => {
       component.closeAddEventModal();
       expect(component.addEventItemId).toBeNull();
     });
+
+    it('should clear selectedItemEvents and selectedEventItemId when collapseEvents is called', () => {
+      component.selectedItemEvents = [{ id: 1, eventType: 'PENDING' } as any];
+      component.selectedEventItemId = 42;
+      component.collapseEvents();
+      expect(component.selectedItemEvents).toEqual([]);
+      expect(component.selectedEventItemId).toBeNull();
+    });
   });
 });

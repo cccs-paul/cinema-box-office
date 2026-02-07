@@ -1101,6 +1101,14 @@ export class SpendingComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Collapse the expanded events list, returning to the collapsed summary view.
+   */
+  collapseEvents(): void {
+    this.selectedItemEvents = [];
+    this.selectedEventItemId = null;
+  }
+
+  /**
    * Alias for backwards compatibility.
    */
   openAddEventModal(item: SpendingItem): void {

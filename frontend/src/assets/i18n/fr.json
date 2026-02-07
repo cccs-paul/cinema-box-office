@@ -63,7 +63,9 @@
     "uncategorized": "Non catégorisé",
     "comments": "Commentaires",
     "creating": "Création...",
-    "deleting": "Suppression..."
+    "deleting": "Suppression...",
+    "showAll": "Tout afficher",
+    "hideAll": "Tout masquer"
   },
   "header": {
     "userMenu": "Menu utilisateur",
