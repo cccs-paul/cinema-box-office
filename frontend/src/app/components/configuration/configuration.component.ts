@@ -290,6 +290,11 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (money.canDelete === false) {
+      this.moneyError = 'Cannot delete this money type because it has non-zero funding or spending allocations';
+      return;
+    }
+
     if (!confirm(`Are you sure you want to delete the money type "${money.code}"?`)) {
       return;
     }

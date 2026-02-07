@@ -112,6 +112,16 @@ public interface MoneyAllocationRepository extends JpaRepository<MoneyAllocation
   void deleteByMoney(@Param("money") Money money);
 
   /**
+   * Check if a money type has any allocations with non-zero CAP or OM amounts.
+   *
+   * @param moneyId the money ID
+   * @return true if any allocation has non-zero amounts
+   */
+  @Query("SELECT CASE WHEN COUNT(ma) > 0 THEN true ELSE false END FROM MoneyAllocation ma " +
+         "WHERE ma.money.id = :moneyId AND (ma.capAmount <> 0 OR ma.omAmount <> 0)")
+  boolean hasNonZeroAllocationsByMoneyId(@Param("moneyId") Long moneyId);
+
+  /**
    * Get total CAP amount for a funding item.
    *
    * @param fundingItemId the funding item ID

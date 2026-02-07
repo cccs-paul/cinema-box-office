@@ -264,9 +264,17 @@ describe('ConfigurationComponent', () => {
         expect(component.moneyError).toBe('Cannot delete the default money type (AB)');
       });
 
+      it('should not delete money type that cannot be deleted', () => {
+        const nonDeletableMoney: Money = { ...mockMonies[1], canDelete: false };
+        component.deleteMoney(nonDeletableMoney);
+        expect(component.moneyError).toBe('Cannot delete this money type because it has non-zero funding or spending allocations');
+        expect(moneyService.deleteMoney).not.toHaveBeenCalled();
+      });
+
       it('should delete non-default money with confirmation', fakeAsync(() => {
         spyOn(window, 'confirm').and.returnValue(true);
-        component.deleteMoney(mockMonies[1]);
+        const deletableMoney: Money = { ...mockMonies[1], canDelete: true };
+        component.deleteMoney(deletableMoney);
         tick();
         
         expect(moneyService.deleteMoney).toHaveBeenCalledWith(1, 1, 2);
@@ -274,7 +282,8 @@ describe('ConfigurationComponent', () => {
 
       it('should not delete when confirmation is cancelled', () => {
         spyOn(window, 'confirm').and.returnValue(false);
-        component.deleteMoney(mockMonies[1]);
+        const deletableMoney: Money = { ...mockMonies[1], canDelete: true };
+        component.deleteMoney(deletableMoney);
         
         expect(moneyService.deleteMoney).not.toHaveBeenCalled();
       });

@@ -291,6 +291,18 @@ class MoneyControllerTest {
 
       assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
+
+    @Test
+    @DisplayName("Returns 409 when money is in use")
+    void returnsConflictWhenMoneyInUse() {
+      doThrow(new IllegalArgumentException(
+          "Cannot delete money type \"OA\" because it is in use with non-zero funding or spending allocations"))
+          .when(moneyService).deleteMoney(eq(2L), anyString());
+
+      ResponseEntity<?> response = controller.deleteMoney(1L, 1L, 2L, null);
+
+      assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+    }
   }
 
   @Nested

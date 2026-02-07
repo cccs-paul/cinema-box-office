@@ -26,6 +26,7 @@ import com.myrc.model.ProcurementQuoteFile;
 import com.myrc.model.RCAccess;
 import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.SpendingItem;
+import com.myrc.model.SpendingEvent;
 import com.myrc.model.SpendingMoneyAllocation;
 import com.myrc.model.User;
 import com.myrc.repository.CategoryRepository;
@@ -39,6 +40,7 @@ import com.myrc.repository.ProcurementQuoteRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.SpendingItemRepository;
+import com.myrc.repository.SpendingEventRepository;
 import com.myrc.repository.UserRepository;
 import com.myrc.service.MoneyService;
 import com.myrc.service.CategoryService;
@@ -97,6 +99,9 @@ public class DataInitializer implements ApplicationRunner {
 
     @Autowired
     private SpendingItemRepository spendingItemRepository;
+
+    @Autowired
+    private SpendingEventRepository spendingEventRepository;
 
     @Autowired
     private ProcurementItemRepository procurementItemRepository;
@@ -242,6 +247,8 @@ public class DataInitializer implements ApplicationRunner {
                 initializeDemoProcurementItems(demoFY);
                 // Create spending items linked to procurement items (after procurement is created)
                 initializeProcurementLinkedSpendingItems(demoFY);
+                // Create demo spending events for discrete spending items
+                initializeDemoSpendingEvents(demoFY);
             }
             return;
         }
@@ -283,6 +290,9 @@ public class DataInitializer implements ApplicationRunner {
             
             // Create spending items linked to procurement items (after procurement is created)
             initializeProcurementLinkedSpendingItems(savedFY);
+
+            // Create demo spending events for discrete spending items
+            initializeDemoSpendingEvents(savedFY);
         } catch (Exception e) {
             logger.warning(() -> "Failed to create Demo FY: " + e.getMessage());
         }
@@ -760,7 +770,100 @@ public class DataInitializer implements ApplicationRunner {
             logger.warning(() -> "Failed to create demo spending item '" + name + "': " + e.getMessage());
         }
     }
-    
+
+    /**
+     * Initialize demo spending events for discrete spending items (not linked to procurement).
+     * Creates realistic tracking events for spending items that are not linked to a procurement item.
+     *
+     * @param demoFY the fiscal year to create events for
+     */
+    private void initializeDemoSpendingEvents(FiscalYear demoFY) {
+        // Get all spending items for this fiscal year that are NOT linked to procurement
+        List<SpendingItem> spendingItems = spendingItemRepository.findByFiscalYearIdOrderByNameAsc(demoFY.getId());
+        if (spendingItems.isEmpty()) {
+            logger.info("No spending items found for Demo FY, skipping spending event creation");
+            return;
+        }
+
+        // Filter to only discrete items (no procurement link)
+        List<SpendingItem> discreteItems = spendingItems.stream()
+            .filter(si -> si.getProcurementItem() == null)
+            .collect(java.util.stream.Collectors.toList());
+
+        if (discreteItems.isEmpty()) {
+            logger.info("No discrete spending items found, skipping spending event creation");
+            return;
+        }
+
+        LocalDate baseDate = LocalDate.of(2025, 11, 15);
+
+        for (SpendingItem item : discreteItems) {
+            // Check if events already exist for this item
+            long existingEvents = spendingEventRepository.countBySpendingItemIdAndActiveTrue(item.getId());
+            if (existingEvents > 0) {
+                logger.info("Spending events already exist for '" + item.getName() + "', skipping");
+                continue;
+            }
+
+            try {
+                SpendingItem.Status status = item.getStatus();
+                String itemName = item.getName();
+
+                if (status == SpendingItem.Status.COMPLETED) {
+                    // Completed items get a full event trail
+                    SpendingEvent e1 = new SpendingEvent(item, SpendingEvent.EventType.PENDING, baseDate, "Spending initiated for " + itemName);
+                    e1.setCreatedBy("admin");
+                    spendingEventRepository.save(e1);
+
+                    SpendingEvent e2 = new SpendingEvent(item, SpendingEvent.EventType.SECTION_32_PROVIDED, baseDate.plusDays(3), "Section 32 certification provided");
+                    e2.setCreatedBy("admin");
+                    spendingEventRepository.save(e2);
+
+                    SpendingEvent e3 = new SpendingEvent(item, SpendingEvent.EventType.RECEIVED_GOODS_SERVICES, baseDate.plusDays(10), "Goods/services received");
+                    e3.setCreatedBy("admin");
+                    spendingEventRepository.save(e3);
+
+                    SpendingEvent e4 = new SpendingEvent(item, SpendingEvent.EventType.SECTION_34_PROVIDED, baseDate.plusDays(12), "Section 34 certification provided");
+                    e4.setCreatedBy("admin");
+                    spendingEventRepository.save(e4);
+
+                    logger.info("Created 4 spending events for completed item: " + itemName);
+                } else if (status == SpendingItem.Status.COMMITTED) {
+                    // Committed items get partial event trail
+                    SpendingEvent e1 = new SpendingEvent(item, SpendingEvent.EventType.PENDING, baseDate, "Spending request submitted for " + itemName);
+                    e1.setCreatedBy("admin");
+                    spendingEventRepository.save(e1);
+
+                    SpendingEvent e2 = new SpendingEvent(item, SpendingEvent.EventType.ECO_REQUESTED, baseDate.plusDays(2), "ECO approval requested");
+                    e2.setCreatedBy("admin");
+                    spendingEventRepository.save(e2);
+
+                    SpendingEvent e3 = new SpendingEvent(item, SpendingEvent.EventType.ECO_RECEIVED, baseDate.plusDays(5), "ECO approval received");
+                    e3.setCreatedBy("admin");
+                    spendingEventRepository.save(e3);
+
+                    SpendingEvent e4 = new SpendingEvent(item, SpendingEvent.EventType.SECTION_32_PROVIDED, baseDate.plusDays(7), "Section 32 certification provided");
+                    e4.setCreatedBy("admin");
+                    spendingEventRepository.save(e4);
+
+                    logger.info("Created 4 spending events for committed item: " + itemName);
+                } else if (status == SpendingItem.Status.PLANNING) {
+                    // Planning items get just a pending event
+                    SpendingEvent e1 = new SpendingEvent(item, SpendingEvent.EventType.PENDING, baseDate, "Spending being planned for " + itemName);
+                    e1.setCreatedBy("admin");
+                    spendingEventRepository.save(e1);
+
+                    logger.info("Created 1 spending event for planning item: " + itemName);
+                }
+                // CANCELLED items get no events
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create spending events for '" + item.getName() + "': " + e.getMessage());
+            }
+        }
+
+        logger.info("Demo spending events initialized for FY: " + demoFY.getName());
+    }
+
     /**
      * Determine the spending amount for a procurement item.
      * Uses selected quote, or estimates based on available quotes.
@@ -888,49 +991,49 @@ public class DataInitializer implements ApplicationRunner {
         Object[][] demoItems = {
             {"PR-2025-001", "PO-2025-001", "Dell PowerEdge Servers", 
              "3x Dell PowerEdge R750 rack servers for data center expansion",
-             ProcurementItem.Status.COMPLETED, Currency.CAD, null, ProcurementItem.TrackingStatus.COMPLETED},
+             ProcurementItem.Status.COMPLETED, Currency.CAD, null, ProcurementItem.TrackingStatus.COMPLETED, ProcurementItem.ProcurementType.RC_INITIATED},
             {"PR-2025-002", "PO-2025-002", "NVIDIA A100 GPUs", 
              "4x NVIDIA A100 80GB GPUs for machine learning workloads",
-             ProcurementItem.Status.APPROVED, Currency.USD, new BigDecimal("1.360000"), ProcurementItem.TrackingStatus.ON_TRACK},
+             ProcurementItem.Status.APPROVED, Currency.USD, new BigDecimal("1.360000"), ProcurementItem.TrackingStatus.ON_TRACK, ProcurementItem.ProcurementType.CENTRALLY_MANAGED},
             {"PR-2025-003", null, "Cisco Network Switches", 
              "Cisco Catalyst 9300 switches for network infrastructure upgrade",
-             ProcurementItem.Status.UNDER_REVIEW, Currency.CAD, null, ProcurementItem.TrackingStatus.AT_RISK},
+             ProcurementItem.Status.UNDER_REVIEW, Currency.CAD, null, ProcurementItem.TrackingStatus.AT_RISK, ProcurementItem.ProcurementType.RC_INITIATED},
             {"PR-2025-004", null, "NetApp Storage Array", 
              "NetApp AFF A400 storage system with 50TB capacity for data center",
-             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null, ProcurementItem.TrackingStatus.ON_TRACK},
+             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null, ProcurementItem.TrackingStatus.ON_TRACK, ProcurementItem.ProcurementType.CENTRALLY_MANAGED},
             {"PR-2025-005", null, "HP LaserJet Printers", 
              "5x HP LaserJet Enterprise printers for office deployment",
-             ProcurementItem.Status.PENDING_QUOTES, Currency.CAD, null, ProcurementItem.TrackingStatus.AT_RISK},
+             ProcurementItem.Status.PENDING_QUOTES, Currency.CAD, null, ProcurementItem.TrackingStatus.AT_RISK, ProcurementItem.ProcurementType.RC_INITIATED},
             {"PR-2025-006", null, "IBM Cloud Credits", 
              "Annual IBM Cloud compute and storage credits",
-             ProcurementItem.Status.QUOTES_RECEIVED, Currency.USD, new BigDecimal("1.360000"), ProcurementItem.TrackingStatus.ON_TRACK},
+             ProcurementItem.Status.QUOTES_RECEIVED, Currency.USD, new BigDecimal("1.360000"), ProcurementItem.TrackingStatus.ON_TRACK, ProcurementItem.ProcurementType.CENTRALLY_MANAGED},
             {"PR-2025-007", "PO-2025-003", "Lenovo ThinkPads", 
              "25x Lenovo ThinkPad X1 Carbon laptops for staff refresh",
-             ProcurementItem.Status.COMPLETED, Currency.CAD, null, ProcurementItem.TrackingStatus.COMPLETED},
+             ProcurementItem.Status.COMPLETED, Currency.CAD, null, ProcurementItem.TrackingStatus.COMPLETED, ProcurementItem.ProcurementType.RC_INITIATED},
             {"PR-2025-008", null, "Autodesk Licenses", 
              "50x Autodesk AutoCAD licenses - 3-year subscription",
-             ProcurementItem.Status.DRAFT, Currency.USD, new BigDecimal("1.360000"), ProcurementItem.TrackingStatus.PLANNING},
+             ProcurementItem.Status.DRAFT, Currency.USD, new BigDecimal("1.360000"), ProcurementItem.TrackingStatus.PLANNING, ProcurementItem.ProcurementType.CENTRALLY_MANAGED},
             {"PR-2025-009", null, "Laboratory Equipment", 
              "Oscilloscopes and signal generators for research laboratory",
-             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000"), ProcurementItem.TrackingStatus.AT_RISK},
+             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000"), ProcurementItem.TrackingStatus.AT_RISK, ProcurementItem.ProcurementType.RC_INITIATED},
             {"PR-2025-010", "PO-2025-004", "AWS Reserved Instances", 
              "3-year reserved capacity for EC2 and RDS instances",
-             ProcurementItem.Status.APPROVED, Currency.USD, new BigDecimal("1.360000"), ProcurementItem.TrackingStatus.ON_TRACK},
+             ProcurementItem.Status.APPROVED, Currency.USD, new BigDecimal("1.360000"), ProcurementItem.TrackingStatus.ON_TRACK, ProcurementItem.ProcurementType.CENTRALLY_MANAGED},
             {"PR-2025-011", null, "Office Furniture", 
              "Standing desks and ergonomic chairs for new office space",
-             ProcurementItem.Status.UNDER_REVIEW, Currency.CAD, null, ProcurementItem.TrackingStatus.ON_TRACK},
+             ProcurementItem.Status.UNDER_REVIEW, Currency.CAD, null, ProcurementItem.TrackingStatus.ON_TRACK, ProcurementItem.ProcurementType.RC_INITIATED},
             {"PR-2025-012", null, "Security Assessment Services", 
              "Annual penetration testing and security audit services",
-             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null, ProcurementItem.TrackingStatus.CANCELLED},
+             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null, ProcurementItem.TrackingStatus.CANCELLED, ProcurementItem.ProcurementType.CENTRALLY_MANAGED},
             {"PR-2025-013", null, "UK Training Program", 
              "Staff training program with UK-based vendor",
-             ProcurementItem.Status.DRAFT, Currency.GBP, new BigDecimal("1.680000"), ProcurementItem.TrackingStatus.PLANNING},
+             ProcurementItem.Status.DRAFT, Currency.GBP, new BigDecimal("1.680000"), ProcurementItem.TrackingStatus.PLANNING, ProcurementItem.ProcurementType.RC_INITIATED},
             {"PR-2025-014", null, "Video Conferencing System", 
              "Cisco Webex Board 85 for main conference room",
-             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null, ProcurementItem.TrackingStatus.AT_RISK},
+             ProcurementItem.Status.QUOTES_RECEIVED, Currency.CAD, null, ProcurementItem.TrackingStatus.AT_RISK, ProcurementItem.ProcurementType.CENTRALLY_MANAGED},
             {"PR-2025-015", null, "European Instrumentation", 
              "Specialized instrumentation from European manufacturer",
-             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000"), ProcurementItem.TrackingStatus.PLANNING}
+             ProcurementItem.Status.PENDING_QUOTES, Currency.EUR, new BigDecimal("1.470000"), ProcurementItem.TrackingStatus.PLANNING, ProcurementItem.ProcurementType.RC_INITIATED}
         };
 
         for (Object[] item : demoItems) {
@@ -942,6 +1045,7 @@ public class DataInitializer implements ApplicationRunner {
             Currency finalPriceCurrency = (Currency) item[5];
             BigDecimal finalPriceExchangeRate = (BigDecimal) item[6];
             ProcurementItem.TrackingStatus trackingStatus = (ProcurementItem.TrackingStatus) item[7];
+            ProcurementItem.ProcurementType procurementType = (ProcurementItem.ProcurementType) item[8];
 
             // Check if procurement item already exists
             if (procurementItemRepository.existsByPurchaseRequisitionAndFiscalYearAndActiveTrue(pr, demoFY)) {
@@ -955,6 +1059,7 @@ public class DataInitializer implements ApplicationRunner {
                 procurementItem.setFinalPriceCurrency(finalPriceCurrency);
                 procurementItem.setFinalPriceExchangeRate(finalPriceExchangeRate);
                 procurementItem.setTrackingStatus(trackingStatus);
+                procurementItem.setProcurementType(procurementType);
                 ProcurementItem savedItem = procurementItemRepository.save(procurementItem);
 
                 // Add demo quotes for certain procurement items (status determines if quotes should be added)
@@ -966,7 +1071,8 @@ public class DataInitializer implements ApplicationRunner {
                 String currencyInfo = finalPriceCurrency != Currency.CAD ? 
                     " (" + finalPriceCurrency + " @ " + finalPriceExchangeRate + ")" : "";
                 logger.info("Created demo procurement item: " + pr + " - " + name + 
-                           " [Status: " + targetStatus + ", Tracking: " + trackingStatus + "]" + currencyInfo);
+                           " [Status: " + targetStatus + ", Tracking: " + trackingStatus + 
+                           ", Type: " + procurementType + "]" + currencyInfo);
             } catch (Exception e) {
                 logger.warning(() -> "Failed to create demo procurement item '" + pr + "': " + e.getMessage());
             }

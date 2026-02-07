@@ -19,9 +19,11 @@ import com.myrc.model.RCAccess;
 import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.User;
 import com.myrc.repository.FiscalYearRepository;
+import com.myrc.repository.MoneyAllocationRepository;
 import com.myrc.repository.MoneyRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
+import com.myrc.repository.SpendingMoneyAllocationRepository;
 import com.myrc.repository.UserRepository;
 import java.util.List;
 import java.util.Optional;
@@ -47,17 +49,23 @@ public class MoneyServiceImpl implements MoneyService {
   private static final String DEFAULT_MONEY_DESCRIPTION = "Default A-Base funding allocation";
 
   private final MoneyRepository moneyRepository;
+  private final MoneyAllocationRepository moneyAllocationRepository;
+  private final SpendingMoneyAllocationRepository spendingMoneyAllocationRepository;
   private final FiscalYearRepository fiscalYearRepository;
   private final ResponsibilityCentreRepository rcRepository;
   private final RCAccessRepository accessRepository;
   private final UserRepository userRepository;
 
   public MoneyServiceImpl(MoneyRepository moneyRepository,
+      MoneyAllocationRepository moneyAllocationRepository,
+      SpendingMoneyAllocationRepository spendingMoneyAllocationRepository,
       FiscalYearRepository fiscalYearRepository,
       ResponsibilityCentreRepository rcRepository,
       RCAccessRepository accessRepository,
       UserRepository userRepository) {
     this.moneyRepository = moneyRepository;
+    this.moneyAllocationRepository = moneyAllocationRepository;
+    this.spendingMoneyAllocationRepository = spendingMoneyAllocationRepository;
     this.fiscalYearRepository = fiscalYearRepository;
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
@@ -82,7 +90,11 @@ public class MoneyServiceImpl implements MoneyService {
 
     List<Money> monies = moneyRepository.findByFiscalYearId(fiscalYearId);
     return monies.stream()
-        .map(MoneyDTO::fromEntity)
+        .map(money -> {
+          MoneyDTO dto = MoneyDTO.fromEntity(money);
+          dto.setCanDelete(computeCanDelete(money));
+          return dto;
+        })
         .collect(Collectors.toList());
   }
 
@@ -102,7 +114,9 @@ public class MoneyServiceImpl implements MoneyService {
       return Optional.empty();
     }
 
-    return Optional.of(MoneyDTO.fromEntity(money));
+    MoneyDTO dto = MoneyDTO.fromEntity(money);
+    dto.setCanDelete(computeCanDelete(money));
+    return Optional.of(dto);
   }
 
   @Override
@@ -218,6 +232,19 @@ public class MoneyServiceImpl implements MoneyService {
       throw new IllegalArgumentException("Cannot delete the default money (AB)");
     }
 
+    // Check if money type is in use (has non-zero allocations)
+    boolean fundingInUse = moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(moneyId);
+    boolean spendingInUse = spendingMoneyAllocationRepository.hasNonZeroAllocationsByMoneyId(moneyId);
+    if (fundingInUse || spendingInUse) {
+      throw new IllegalArgumentException(
+          "Cannot delete money type \"" + money.getCode() +
+          "\" because it is in use with non-zero funding or spending allocations");
+    }
+
+    // Delete any zero-amount allocations referencing this money to avoid FK constraint violations
+    spendingMoneyAllocationRepository.deleteByMoneyId(moneyId);
+    moneyAllocationRepository.deleteByMoney(money);
+
     moneyRepository.delete(money);
     logger.info("Deleted money " + money.getCode() + " from fiscal year " +
         money.getFiscalYear().getName() + " by user " + username);
@@ -285,6 +312,23 @@ public class MoneyServiceImpl implements MoneyService {
     }
 
     logger.info("Reordered monies for fiscal year " + fy.getName() + " by user " + username);
+  }
+
+  /**
+   * Compute whether a money type can be deleted.
+   * Default money (AB) cannot be deleted. Non-default money can only be deleted
+   * if all funding and spending allocations for it are zero.
+   *
+   * @param money the money entity
+   * @return true if the money can be deleted
+   */
+  private boolean computeCanDelete(Money money) {
+    if (Boolean.TRUE.equals(money.getIsDefault())) {
+      return false;
+    }
+    boolean fundingInUse = moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(money.getId());
+    boolean spendingInUse = spendingMoneyAllocationRepository.hasNonZeroAllocationsByMoneyId(money.getId());
+    return !fundingInUse && !spendingInUse;
   }
 
   /**

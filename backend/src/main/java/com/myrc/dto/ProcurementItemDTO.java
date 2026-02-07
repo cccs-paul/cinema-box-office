@@ -83,6 +83,12 @@ public class ProcurementItemDTO {
      */
     private String trackingStatus;
 
+    /**
+     * Procurement type indicating whether the procurement was RC-initiated or centrally managed.
+     * Values: RC_INITIATED, CENTRALLY_MANAGED
+     */
+    private String procurementType;
+
     // Constructors
     public ProcurementItemDTO() {
         this.quotes = new ArrayList<>();
@@ -178,6 +184,9 @@ public class ProcurementItemDTO {
         // Populate tracking status
         dto.setTrackingStatus(item.getTrackingStatus() != null ? item.getTrackingStatus().name() : "PLANNING");
         
+        // Populate procurement type
+        dto.setProcurementType(item.getProcurementType() != null ? item.getProcurementType().name() : "RC_INITIATED");
+        
         return dto;
     }
 
@@ -242,6 +251,9 @@ public class ProcurementItemDTO {
         
         // Populate tracking status
         dto.setTrackingStatus(item.getTrackingStatus() != null ? item.getTrackingStatus().name() : "PLANNING");
+        
+        // Populate procurement type
+        dto.setProcurementType(item.getProcurementType() != null ? item.getProcurementType().name() : "RC_INITIATED");
         
         return dto;
     }
@@ -526,5 +538,13 @@ public class ProcurementItemDTO {
 
     public void setTrackingStatus(String trackingStatus) {
         this.trackingStatus = trackingStatus;
+    }
+
+    public String getProcurementType() {
+        return procurementType;
+    }
+
+    public void setProcurementType(String procurementType) {
+        this.procurementType = procurementType;
     }
 }

@@ -129,7 +129,7 @@ describe('SpendingItemService', () => {
 
       service.getSpendingItem(rcId, fyId, spendingItemId).subscribe(item => {
         expect(item.name).toBe('GPU Purchase');
-        expect(item.status).toBe('DRAFT');
+        expect(item.status).toBe('PLANNING');
         expect(item.moneyAllocations?.length).toBe(1);
       });
 
@@ -170,7 +170,7 @@ describe('SpendingItemService', () => {
 
       service.createSpendingItem(rcId, fyId, request).subscribe(item => {
         expect(item.name).toBe('GPU Purchase');
-        expect(item.status).toBe('DRAFT');
+        expect(item.status).toBe('PLANNING');
       });
 
       const req = httpMock.expectOne(`/api/responsibility-centres/${rcId}/fiscal-years/${fyId}/spending-items`);

@@ -227,6 +227,24 @@ describe('MoneyService', () => {
       const req = httpMock.expectOne(`/api/responsibility-centres/${rcId}/fiscal-years/${fyId}/monies/${moneyId}`);
       req.flush({}, { status: 403, statusText: 'Forbidden' });
     });
+
+    it('should handle conflict errors when deleting money in use', () => {
+      const rcId = 1;
+      const fyId = 1;
+      const moneyId = 2;
+
+      service.deleteMoney(rcId, fyId, moneyId).subscribe({
+        error: (error) => {
+          expect(error.message).toContain('in use');
+        }
+      });
+
+      const req = httpMock.expectOne(`/api/responsibility-centres/${rcId}/fiscal-years/${fyId}/monies/${moneyId}`);
+      req.flush(
+        { message: 'Cannot delete money type "OA" because it is in use with non-zero funding or spending allocations' },
+        { status: 409, statusText: 'Conflict' }
+      );
+    });
   });
 
   describe('reorderMonies', () => {

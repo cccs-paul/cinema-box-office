@@ -72,6 +72,20 @@ export const TRACKING_STATUS_INFO: Record<TrackingStatus, ProcurementStatusInfo>
 };
 
 /**
+ * Enum for procurement type values.
+ * Indicates whether the procurement is initiated by the RC or centrally managed.
+ */
+export type ProcurementType = 'RC_INITIATED' | 'CENTRALLY_MANAGED';
+
+/**
+ * Map of procurement type to display information.
+ */
+export const PROCUREMENT_TYPE_INFO: Record<ProcurementType, ProcurementStatusInfo> = {
+  RC_INITIATED: { label: 'RC Initiated', color: 'blue', icon: '🏢' },
+  CENTRALLY_MANAGED: { label: 'Centrally Managed', color: 'purple', icon: '🏛️' }
+};
+
+/**
  * Enum for quote status values.
  */
 export type QuoteStatus =
@@ -350,6 +364,9 @@ export interface ProcurementItem {
 
   /** Tracking status indicating the overall health/risk of the procurement */
   trackingStatus?: TrackingStatus;
+
+  /** Procurement type indicating whether the item is RC initiated or centrally managed */
+  procurementType?: ProcurementType;
 }
 
 /**

@@ -304,6 +304,17 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             item.setTrackingStatus(ProcurementItem.TrackingStatus.ON_TRACK);
         }
         
+        // Set procurement type if provided
+        if (dto.getProcurementType() != null) {
+            try {
+                item.setProcurementType(ProcurementItem.ProcurementType.valueOf(dto.getProcurementType().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                item.setProcurementType(ProcurementItem.ProcurementType.RC_INITIATED);
+            }
+        } else {
+            item.setProcurementType(ProcurementItem.ProcurementType.RC_INITIATED);
+        }
+        
         item.setActive(true);
 
         ProcurementItem saved = procurementItemRepository.save(item);
@@ -424,6 +435,15 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
                 item.setTrackingStatus(ProcurementItem.TrackingStatus.valueOf(dto.getTrackingStatus().toUpperCase()));
             } catch (IllegalArgumentException e) {
                 // Keep existing tracking status if invalid value provided
+            }
+        }
+
+        // Update procurement type if provided
+        if (dto.getProcurementType() != null) {
+            try {
+                item.setProcurementType(ProcurementItem.ProcurementType.valueOf(dto.getProcurementType().toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                // Keep existing procurement type if invalid value provided
             }
         }
 

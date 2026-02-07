@@ -43,6 +43,12 @@ public class MoneyDTO {
   private String capLabel;
   private String omLabel;
 
+  /**
+   * Whether this money type can be deleted.
+   * False for default money (AB) and for money types with non-zero allocations.
+   */
+  private Boolean canDelete;
+
   // Constructors
   public MoneyDTO() {}
 
@@ -208,6 +214,14 @@ public class MoneyDTO {
     this.omLabel = omLabel;
   }
 
+  public Boolean getCanDelete() {
+    return canDelete;
+  }
+
+  public void setCanDelete(Boolean canDelete) {
+    this.canDelete = canDelete;
+  }
+
   @Override
   public String toString() {
     return "MoneyDTO{" +
@@ -223,6 +237,7 @@ public class MoneyDTO {
         ", active=" + active +
         ", capLabel='" + capLabel + '\'' +
         ", omLabel='" + omLabel + '\'' +
+        ", canDelete=" + canDelete +
         '}';
   }
 }

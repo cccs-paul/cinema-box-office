@@ -80,6 +80,25 @@ public interface SpendingMoneyAllocationRepository extends JpaRepository<Spendin
   BigDecimal sumOmAmountBySpendingItemId(@Param("spendingItemId") Long spendingItemId);
 
   /**
+   * Check if a money type has any spending allocations with non-zero CAP or OM amounts.
+   *
+   * @param moneyId the money ID
+   * @return true if any allocation has non-zero amounts
+   */
+  @Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END FROM SpendingMoneyAllocation a " +
+         "WHERE a.money.id = :moneyId AND (a.capAmount <> 0 OR a.omAmount <> 0)")
+  boolean hasNonZeroAllocationsByMoneyId(@Param("moneyId") Long moneyId);
+
+  /**
+   * Delete all spending allocations for a money type.
+   *
+   * @param moneyId the money ID
+   */
+  @Modifying
+  @Query("DELETE FROM SpendingMoneyAllocation a WHERE a.money.id = :moneyId")
+  void deleteByMoneyId(@Param("moneyId") Long moneyId);
+
+  /**
    * Get total CAP amount for a money type across all spending items in a fiscal year.
    *
    * @param fiscalYearId the fiscal year ID

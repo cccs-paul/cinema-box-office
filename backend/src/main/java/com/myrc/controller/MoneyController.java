@@ -256,6 +256,7 @@ public class MoneyController {
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
       @ApiResponse(responseCode = "403", description = "Access denied or cannot delete default money"),
       @ApiResponse(responseCode = "404", description = "Money not found"),
+      @ApiResponse(responseCode = "409", description = "Money is in use and cannot be deleted"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
   public ResponseEntity<?> deleteMoney(
@@ -274,6 +275,10 @@ public class MoneyController {
       String message = e.getMessage();
       if (message.contains("not found")) {
         return ResponseEntity.notFound().build();
+      }
+      if (message.contains("in use")) {
+        logger.warning("Money delete conflict: " + message);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(message));
       }
       if (message.contains("access") || message.contains("default")) {
         logger.warning("Money delete denied: " + message);

@@ -48,6 +48,7 @@ export interface ProcurementItemCreateRequest {
   procurementCompletedDate?: string;
   categoryId?: number | null;
   trackingStatus?: string;
+  procurementType?: string;
 }
 
 /**

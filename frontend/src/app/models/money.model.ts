@@ -49,6 +49,9 @@ export interface Money {
   /** O&M label derived from code (e.g., "AB (O&M)") */
   omLabel: string;
 
+  /** Whether this money type can be deleted (false for default or in-use money) */
+  canDelete?: boolean;
+
   /** Creation timestamp */
   createdAt?: string;
 

@@ -31,9 +31,11 @@ import {
   ProcurementItemStatus,
   QuoteStatus,
   TrackingStatus,
+  ProcurementType,
   PROCUREMENT_STATUS_INFO,
   QUOTE_STATUS_INFO,
   TRACKING_STATUS_INFO,
+  PROCUREMENT_TYPE_INFO,
   ProcurementEvent,
   ProcurementEventType,
   ProcurementEventRequest,
@@ -151,6 +153,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   newItemProcurementCompleted = false;
   newItemProcurementCompletedDate = '';
   newItemCategoryId: number | null = null;
+  newItemProcurementType: ProcurementType = 'RC_INITIATED';
 
   // Create Quote Form
   showCreateQuoteForm = false;
@@ -234,6 +237,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   editItemProcurementCompletedDate = '';
   editItemCategoryId: number | null = null;
   editItemTrackingStatus: TrackingStatus = 'PLANNING';
+  editItemProcurementType: ProcurementType = 'RC_INITIATED';
 
   // Status options - these are the new status values tracked via procurement events
   statusOptions: ProcurementItemStatus[] = [
@@ -425,7 +429,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           contractNumber: item.contractNumber,
           categoryName: item.categoryName,
           status: item.currentStatus ? (PROCUREMENT_STATUS_INFO[item.currentStatus]?.label || item.currentStatus) : '',
-          trackingStatus: item.trackingStatus ? (TRACKING_STATUS_INFO[item.trackingStatus as TrackingStatus]?.label || item.trackingStatus) : ''
+          trackingStatus: item.trackingStatus ? (TRACKING_STATUS_INFO[item.trackingStatus as TrackingStatus]?.label || item.trackingStatus) : '',
+          procurementType: item.procurementType ? (PROCUREMENT_TYPE_INFO[item.procurementType as ProcurementType]?.label || item.procurementType) : ''
         })
       );
     }
@@ -605,6 +610,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newItemProcurementCompleted = false;
     this.newItemProcurementCompletedDate = '';
     this.newItemCategoryId = null;
+    this.newItemProcurementType = 'RC_INITIATED';
   }
 
   createProcurementItem(): void {
@@ -635,7 +641,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       contractEndDate: this.newItemContractEndDate || undefined,
       procurementCompleted: this.newItemProcurementCompleted,
       procurementCompletedDate: this.newItemProcurementCompletedDate || undefined,
-      categoryId: this.newItemCategoryId
+      categoryId: this.newItemCategoryId,
+      procurementType: this.newItemProcurementType
     };
 
     this.procurementService.createProcurementItem(this.selectedRC.id, this.selectedFY.id, request).subscribe({
@@ -703,6 +710,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemProcurementCompletedDate = item.procurementCompletedDate ? item.procurementCompletedDate.split('T')[0] : '';
     this.editItemCategoryId = item.categoryId !== undefined && item.categoryId !== null ? item.categoryId : null;
     this.editItemTrackingStatus = (item.trackingStatus as TrackingStatus) || 'PLANNING';
+    this.editItemProcurementType = (item.procurementType as ProcurementType) || 'RC_INITIATED';
     
     // Expand the item to show the edit form
     this.selectedItem = item;
@@ -731,6 +739,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     const origProcurementCompletedDate = item.procurementCompletedDate ? item.procurementCompletedDate.split('T')[0] : '';
     const origCategoryId = item.categoryId !== undefined && item.categoryId !== null ? item.categoryId : null;
     const origTrackingStatus = (item.trackingStatus as TrackingStatus) || 'PLANNING';
+    const origProcurementType = (item.procurementType as ProcurementType) || 'RC_INITIATED';
 
     return this.editItemPR !== origPR ||
            this.editItemPO !== origPO ||
@@ -747,7 +756,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
            this.editItemProcurementCompleted !== origProcurementCompleted ||
            this.editItemProcurementCompletedDate !== origProcurementCompletedDate ||
            this.editItemCategoryId !== origCategoryId ||
-           this.editItemTrackingStatus !== origTrackingStatus;
+           this.editItemTrackingStatus !== origTrackingStatus ||
+           this.editItemProcurementType !== origProcurementType;
   }
 
   /**
@@ -783,6 +793,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editItemProcurementCompletedDate = '';
     this.editItemCategoryId = null;
     this.editItemTrackingStatus = 'PLANNING';
+    this.editItemProcurementType = 'RC_INITIATED';
   }
 
   /**
@@ -822,7 +833,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
         ? this.editItemProcurementCompletedDate 
         : undefined,
       categoryId: this.editItemCategoryId || undefined,
-      trackingStatus: this.editItemTrackingStatus
+      trackingStatus: this.editItemTrackingStatus,
+      procurementType: this.editItemProcurementType
     };
 
     this.procurementService.updateProcurementItem(this.selectedRC.id, this.selectedFY.id, this.editingItemId, updateRequest)
@@ -2090,6 +2102,35 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    * Get the available tracking status options.
    */
   trackingStatusOptions: TrackingStatus[] = ['PLANNING', 'ON_TRACK', 'AT_RISK', 'COMPLETED', 'CANCELLED'];
+
+  /**
+   * Get the available procurement type options.
+   */
+  procurementTypeOptions: ProcurementType[] = ['RC_INITIATED', 'CENTRALLY_MANAGED'];
+
+  /**
+   * Get the procurement type label.
+   */
+  getProcurementTypeLabel(type: ProcurementType | string | undefined): string {
+    if (!type) return PROCUREMENT_TYPE_INFO['RC_INITIATED'].label;
+    return PROCUREMENT_TYPE_INFO[type as ProcurementType]?.label || type;
+  }
+
+  /**
+   * Get the procurement type CSS class.
+   */
+  getProcurementTypeClass(type: ProcurementType | string | undefined): string {
+    if (!type) return 'status-blue';
+    return `status-${PROCUREMENT_TYPE_INFO[type as ProcurementType]?.color || 'blue'}`;
+  }
+
+  /**
+   * Get the procurement type icon.
+   */
+  getProcurementTypeIcon(type: ProcurementType | string | undefined): string {
+    if (!type) return PROCUREMENT_TYPE_INFO['RC_INITIATED'].icon;
+    return PROCUREMENT_TYPE_INFO[type as ProcurementType]?.icon || '🏢';
+  }
 
   getStatusLabel(status: ProcurementItemStatus): string {
     return PROCUREMENT_STATUS_INFO[status]?.label || status;

@@ -102,8 +102,8 @@
             <button 
               class="btn btn-danger" 
               (click)="deleteMoney(money)"
-              [disabled]="isSaving || isDeleting"
-              [title]="'common.delete' | translate">
+              [disabled]="isSaving || isDeleting || money.canDelete === false"
+              [title]="money.canDelete === false ? ('configuration.cannotDeleteMoneyInUse' | translate) : ('common.delete' | translate)">
               {{ 'common.delete' | translate }}
             </button>
           </div>

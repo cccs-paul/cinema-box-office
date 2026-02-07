@@ -277,7 +277,7 @@ class SpendingItemServiceTest {
       dto.setName("New Purchase");
       dto.setDescription("New description");
       dto.setCategoryId(2L);
-      dto.setStatus("DRAFT");
+      dto.setStatus("PLANNING");
       dto.setCurrency("CAD");
 
       SpendingMoneyAllocationDTO allocationDTO = new SpendingMoneyAllocationDTO();
@@ -333,22 +333,22 @@ class SpendingItemServiceTest {
   class UpdateSpendingItemStatusTests {
 
     @Test
-    @DisplayName("Updates DRAFT to PENDING")
-    void updatesDraftToPending() {
+    @DisplayName("Updates PLANNING to COMMITTED")
+    void updatesPlanningToCommitted() {
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
       when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
       when(spendingItemRepository.save(any(SpendingItem.class))).thenAnswer(i -> i.getArgument(0));
 
-      SpendingItemDTO result = spendingItemService.updateSpendingItemStatus(1L, "PENDING", "testuser");
+      SpendingItemDTO result = spendingItemService.updateSpendingItemStatus(1L, "COMMITTED", "testuser");
 
       assertNotNull(result);
-      assertEquals("PENDING", result.getStatus());
+      assertEquals("COMMITTED", result.getStatus());
     }
 
     @Test
-    @DisplayName("Updates DRAFT to CANCELLED")
-    void updatesDraftToCancelled() {
+    @DisplayName("Updates PLANNING to CANCELLED")
+    void updatesPlanningToCancelled() {
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
       when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));

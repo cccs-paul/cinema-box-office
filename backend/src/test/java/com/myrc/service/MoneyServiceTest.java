@@ -31,9 +31,11 @@ import com.myrc.model.RCAccess;
 import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.User;
 import com.myrc.repository.FiscalYearRepository;
+import com.myrc.repository.MoneyAllocationRepository;
 import com.myrc.repository.MoneyRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
+import com.myrc.repository.SpendingMoneyAllocationRepository;
 import com.myrc.repository.UserRepository;
 import java.util.Arrays;
 import java.util.List;
@@ -61,6 +63,12 @@ class MoneyServiceTest {
 
   @Mock
   private MoneyRepository moneyRepository;
+
+  @Mock
+  private MoneyAllocationRepository moneyAllocationRepository;
+
+  @Mock
+  private SpendingMoneyAllocationRepository spendingMoneyAllocationRepository;
 
   @Mock
   private FiscalYearRepository fiscalYearRepository;
@@ -118,12 +126,59 @@ class MoneyServiceTest {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyRepository.findByFiscalYearId(1L))
           .thenReturn(Arrays.asList(defaultMoney, customMoney));
+      when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
+      when(spendingMoneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
 
       List<MoneyDTO> result = moneyService.getMoniesByFiscalYearId(1L, "testuser");
 
       assertEquals(2, result.size());
       assertEquals("AB", result.get(0).getCode());
       assertEquals("OA", result.get(1).getCode());
+    }
+
+    @Test
+    @DisplayName("Returns canDelete=false for default money")
+    void canDeleteFalseForDefault() {
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(moneyRepository.findByFiscalYearId(1L))
+          .thenReturn(Arrays.asList(defaultMoney));
+
+      List<MoneyDTO> result = moneyService.getMoniesByFiscalYearId(1L, "testuser");
+
+      assertFalse(result.get(0).getCanDelete());
+    }
+
+    @Test
+    @DisplayName("Returns canDelete=true for custom money with zero allocations")
+    void canDeleteTrueForUnusedCustomMoney() {
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(moneyRepository.findByFiscalYearId(1L))
+          .thenReturn(Arrays.asList(customMoney));
+      when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
+      when(spendingMoneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
+
+      List<MoneyDTO> result = moneyService.getMoniesByFiscalYearId(1L, "testuser");
+
+      assertTrue(result.get(0).getCanDelete());
+    }
+
+    @Test
+    @DisplayName("Returns canDelete=false for custom money with non-zero allocations")
+    void canDeleteFalseForInUseCustomMoney() {
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(moneyRepository.findByFiscalYearId(1L))
+          .thenReturn(Arrays.asList(customMoney));
+      when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(true);
+
+      List<MoneyDTO> result = moneyService.getMoniesByFiscalYearId(1L, "testuser");
+
+      assertFalse(result.get(0).getCanDelete());
     }
 
     @Test
@@ -266,14 +321,18 @@ class MoneyServiceTest {
   class DeleteMoneyTests {
 
     @Test
-    @DisplayName("Deletes custom money successfully")
+    @DisplayName("Deletes custom money successfully when no allocations in use")
     void deletesCustomMoney() {
       when(moneyRepository.findById(2L)).thenReturn(Optional.of(customMoney));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
+      when(spendingMoneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
 
       moneyService.deleteMoney(2L, "testuser");
 
+      verify(spendingMoneyAllocationRepository).deleteByMoneyId(2L);
+      verify(moneyAllocationRepository).deleteByMoney(customMoney);
       verify(moneyRepository).delete(customMoney);
     }
 
@@ -297,6 +356,37 @@ class MoneyServiceTest {
 
       assertThrows(IllegalArgumentException.class,
           () -> moneyService.deleteMoney(99L, "testuser"));
+    }
+
+    @Test
+    @DisplayName("Cannot delete money with non-zero funding allocations")
+    void cannotDeleteWithNonZeroFundingAllocations() {
+      when(moneyRepository.findById(2L)).thenReturn(Optional.of(customMoney));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(true);
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+          () -> moneyService.deleteMoney(2L, "testuser"));
+
+      assertTrue(exception.getMessage().contains("in use"));
+      verify(moneyRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("Cannot delete money with non-zero spending allocations")
+    void cannotDeleteWithNonZeroSpendingAllocations() {
+      when(moneyRepository.findById(2L)).thenReturn(Optional.of(customMoney));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
+      when(spendingMoneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(true);
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+          () -> moneyService.deleteMoney(2L, "testuser"));
+
+      assertTrue(exception.getMessage().contains("in use"));
+      verify(moneyRepository, never()).delete(any());
     }
   }
 
@@ -390,6 +480,19 @@ class MoneyServiceTest {
       MoneyDTO dto = MoneyDTO.fromEntity(null);
 
       assertEquals(null, dto);
+    }
+
+    @Test
+    @DisplayName("canDelete getter and setter work")
+    void canDeleteGetterSetter() {
+      MoneyDTO dto = MoneyDTO.fromEntity(customMoney);
+      assertNotNull(dto);
+
+      dto.setCanDelete(true);
+      assertTrue(dto.getCanDelete());
+
+      dto.setCanDelete(false);
+      assertFalse(dto.getCanDelete());
     }
   }
 }

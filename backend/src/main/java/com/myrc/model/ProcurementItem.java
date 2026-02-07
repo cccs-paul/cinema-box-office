@@ -67,6 +67,17 @@ public class ProcurementItem {
         CANCELLED
     }
 
+
+    /**
+     * Enumeration of procurement type values.
+     * Indicates whether the procurement was initiated by the RC or centrally managed.
+     */
+    public enum ProcurementType {
+        /** Procurement initiated by the Responsibility Centre */
+        RC_INITIATED,
+        /** Procurement centrally managed by the organization */
+        CENTRALLY_MANAGED
+    }
     /**
      * Enumeration of tracking status values.
      * Used to indicate the overall health/risk of the procurement.
@@ -249,6 +260,13 @@ public class ProcurementItem {
     @Column(name = "tracking_status", length = 20)
     private TrackingStatus trackingStatus = TrackingStatus.PLANNING;
 
+
+    /**
+     * Procurement type indicating whether the procurement was RC-initiated or centrally managed.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "procurement_type", length = 20)
+    private ProcurementType procurementType = ProcurementType.RC_INITIATED;
     // Constructors
     public ProcurementItem() {
     }
@@ -504,6 +522,24 @@ public class ProcurementItem {
         this.trackingStatus = trackingStatus;
     }
 
+
+    /**
+     * Get the procurement type for this procurement.
+     *
+     * @return the procurement type
+     */
+    public ProcurementType getProcurementType() {
+        return procurementType;
+    }
+
+    /**
+     * Set the procurement type for this procurement.
+     *
+     * @param procurementType the procurement type
+     */
+    public void setProcurementType(ProcurementType procurementType) {
+        this.procurementType = procurementType;
+    }
     /**
      * Get the version for optimistic locking.
      *
