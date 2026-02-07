@@ -479,19 +479,71 @@
           
           <div class="events-list" *ngIf="selectedItemEvents.length > 0 && selectedEventItemId === item.id">
             <div class="event-item" *ngFor="let event of selectedItemEvents">
-              <div class="event-header">
-                <span class="event-type-badge" [ngClass]="getSpendingEventStatusClass(event.eventType)">
-                  {{ getSpendingEventIcon(event.eventType) }} {{ getSpendingEventLabel(event.eventType) }}
-                </span>
-                <span class="event-date">{{ event.eventDate | date:'dd/MM/yyyy' }}</span>
-              </div>
-              <div class="event-comment" *ngIf="event.comment">{{ event.comment }}</div>
-              <div class="event-meta">
-                <span class="created-by" *ngIf="event.createdBy">{{ event.createdBy }}</span>
-              </div>
-              <div class="event-actions" *ngIf="canWrite">
-                <button class="btn-icon btn-edit" (click)="editEvent(event)" [title]="'common.edit' | translate">✏️</button>
-                <button class="btn-icon btn-delete" (click)="deleteEvent(event)" [title]="'common.delete' | translate">🗑️</button>
+              <!-- View Mode -->
+              <ng-container *ngIf="editingEventId !== event.id">
+                <div class="event-header">
+                  <span class="event-type-badge" [ngClass]="getSpendingEventStatusClass(event.eventType)">
+                    {{ getSpendingEventIcon(event.eventType) }} {{ getSpendingEventLabel(event.eventType) }}
+                  </span>
+                  <span class="event-date">{{ event.eventDate | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="event-comment" *ngIf="event.comment">{{ event.comment }}</div>
+                <div class="event-meta">
+                  <span class="created-by" *ngIf="event.createdBy">{{ event.createdBy }}</span>
+                </div>
+                <div class="event-actions" *ngIf="canWrite">
+                  <button class="btn-icon btn-edit" (click)="editEvent(event)" [title]="'common.edit' | translate">✏️</button>
+                  <button class="btn-icon btn-delete" (click)="deleteEvent(event)" [title]="'common.delete' | translate">🗑️</button>
+                </div>
+              </ng-container>
+              <!-- Edit Mode -->
+              <div class="edit-event-form" *ngIf="editingEventId === event.id">
+                <form (ngSubmit)="updateSpendingEvent()">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="editEventType">{{ 'spending.eventType' | translate }} *</label>
+                      <select
+                        id="editEventType"
+                        [(ngModel)]="editEventType"
+                        name="editEventType"
+                        required>
+                        <option *ngFor="let type of eventTypeOptions" [value]="type">
+                          {{ getSpendingEventIcon(type) }} {{ getSpendingEventLabel(type) }}
+                        </option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="editEventDate">{{ 'common.date' | translate }} *</label>
+                      <input
+                        type="text"
+                        dateInput
+                        id="editEventDate"
+                        [(ngModel)]="editEventDate"
+                        name="editEventDate"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="editEventComment">{{ 'spending.comment' | translate }}</label>
+                    <textarea
+                      id="editEventComment"
+                      [(ngModel)]="editEventComment"
+                      name="editEventComment"
+                      rows="2"
+                      [placeholder]="'spending.optionalComment' | translate"
+                    ></textarea>
+                  </div>
+                  <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" (click)="cancelEditEvent()">{{ 'common.cancel' | translate }}</button>
+                    <button
+                      type="submit"
+                      class="btn btn-primary"
+                      [disabled]="isUpdatingEvent || !editEventDate">
+                      {{ isUpdatingEvent ? ('common.updating' | translate) : ('common.save' | translate) }}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>

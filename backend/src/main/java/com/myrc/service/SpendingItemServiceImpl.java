@@ -12,6 +12,15 @@
  */
 package com.myrc.service;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.myrc.dto.SpendingItemDTO;
 import com.myrc.dto.SpendingMoneyAllocationDTO;
 import com.myrc.model.Category;
@@ -26,18 +35,13 @@ import com.myrc.model.User;
 import com.myrc.repository.CategoryRepository;
 import com.myrc.repository.FiscalYearRepository;
 import com.myrc.repository.MoneyRepository;
+import com.myrc.repository.ProcurementEventRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
+import com.myrc.repository.SpendingEventRepository;
 import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.SpendingMoneyAllocationRepository;
 import com.myrc.repository.UserRepository;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Implementation of SpendingItemService.
@@ -60,6 +64,8 @@ public class SpendingItemServiceImpl implements SpendingItemService {
   private final UserRepository userRepository;
   private final MoneyRepository moneyRepository;
   private final SpendingMoneyAllocationRepository allocationRepository;
+  private final SpendingEventRepository spendingEventRepository;
+  private final ProcurementEventRepository procurementEventRepository;
 
   public SpendingItemServiceImpl(SpendingItemRepository spendingItemRepository,
       CategoryRepository categoryRepository,
@@ -68,7 +74,9 @@ public class SpendingItemServiceImpl implements SpendingItemService {
       RCAccessRepository accessRepository,
       UserRepository userRepository,
       MoneyRepository moneyRepository,
-      SpendingMoneyAllocationRepository allocationRepository) {
+      SpendingMoneyAllocationRepository allocationRepository,
+      SpendingEventRepository spendingEventRepository,
+      ProcurementEventRepository procurementEventRepository) {
     this.spendingItemRepository = spendingItemRepository;
     this.categoryRepository = categoryRepository;
     this.fiscalYearRepository = fiscalYearRepository;
@@ -77,6 +85,8 @@ public class SpendingItemServiceImpl implements SpendingItemService {
     this.userRepository = userRepository;
     this.moneyRepository = moneyRepository;
     this.allocationRepository = allocationRepository;
+    this.spendingEventRepository = spendingEventRepository;
+    this.procurementEventRepository = procurementEventRepository;
   }
 
   @Override
@@ -97,7 +107,7 @@ public class SpendingItemServiceImpl implements SpendingItemService {
 
     List<SpendingItem> spendingItems = spendingItemRepository.findByFiscalYearIdOrderByNameAsc(fiscalYearId);
     return spendingItems.stream()
-        .map(SpendingItemDTO::fromEntity)
+        .map(si -> enrichEventTrackingInfo(SpendingItemDTO.fromEntity(si), si))
         .collect(Collectors.toList());
   }
 
@@ -119,7 +129,7 @@ public class SpendingItemServiceImpl implements SpendingItemService {
 
     List<SpendingItem> spendingItems = spendingItemRepository.findByFiscalYearIdAndCategoryId(fiscalYearId, categoryId);
     return spendingItems.stream()
-        .map(SpendingItemDTO::fromEntity)
+        .map(si -> enrichEventTrackingInfo(SpendingItemDTO.fromEntity(si), si))
         .collect(Collectors.toList());
   }
 
@@ -139,7 +149,7 @@ public class SpendingItemServiceImpl implements SpendingItemService {
       return Optional.empty();
     }
 
-    return Optional.of(SpendingItemDTO.fromEntity(si));
+    return Optional.of(enrichEventTrackingInfo(SpendingItemDTO.fromEntity(si), si));
   }
 
   @Override
@@ -238,7 +248,7 @@ public class SpendingItemServiceImpl implements SpendingItemService {
     saved = spendingItemRepository.findById(saved.getId()).orElse(saved);
     logger.info("Created spending item '" + dto.getName() + "' for FY: " + fy.getName() + " by user " + username);
 
-    return SpendingItemDTO.fromEntity(saved);
+    return enrichEventTrackingInfo(SpendingItemDTO.fromEntity(saved), saved);
   }
 
   /**
@@ -365,7 +375,7 @@ public class SpendingItemServiceImpl implements SpendingItemService {
     SpendingItem saved = spendingItemRepository.save(si);
     logger.info("Updated spending item '" + si.getName() + "' by user " + username);
 
-    return SpendingItemDTO.fromEntity(saved);
+    return enrichEventTrackingInfo(SpendingItemDTO.fromEntity(saved), saved);
   }
 
   /**
@@ -447,7 +457,7 @@ public class SpendingItemServiceImpl implements SpendingItemService {
     SpendingItem saved = spendingItemRepository.save(si);
     logger.info("Updated spending item '" + si.getName() + "' status to " + status + " by user " + username);
 
-    return SpendingItemDTO.fromEntity(saved);
+    return enrichEventTrackingInfo(SpendingItemDTO.fromEntity(saved), saved);
   }
 
   @Override
@@ -496,7 +506,7 @@ public class SpendingItemServiceImpl implements SpendingItemService {
     SpendingItem saved = spendingItemRepository.save(si);
     logger.info("Updated money allocations for spending item '" + si.getName() + "' by user " + username);
 
-    return SpendingItemDTO.fromEntity(saved);
+    return enrichEventTrackingInfo(SpendingItemDTO.fromEntity(saved), saved);
   }
 
   /**
@@ -510,6 +520,43 @@ public class SpendingItemServiceImpl implements SpendingItemService {
         (allocation.getCapAmount() != null && allocation.getCapAmount().compareTo(BigDecimal.ZERO) > 0) ||
         (allocation.getOmAmount() != null && allocation.getOmAmount().compareTo(BigDecimal.ZERO) > 0)
     );
+  }
+
+  /**
+   * Enrich a SpendingItemDTO with event tracking information.
+   * For non-procurement-linked items: populates eventCount, mostRecentEventType, mostRecentEventDate
+   * from the spending_events table.
+   * For procurement-linked items: populates procurementMostRecentEventType, procurementMostRecentEventDate
+   * from the procurement_events table.
+   *
+   * @param dto the spending item DTO to enrich
+   * @param entity the spending item entity (used to check procurement link)
+   * @return the enriched DTO
+   */
+  private SpendingItemDTO enrichEventTrackingInfo(SpendingItemDTO dto, SpendingItem entity) {
+    if (entity.getProcurementItem() == null) {
+      // Non-procurement-linked: populate spending event tracking info
+      long count = spendingEventRepository.countBySpendingItemIdAndActiveTrue(entity.getId());
+      dto.setEventCount((int) count);
+      if (count > 0) {
+        spendingEventRepository.findMostRecentBySpendingItemId(entity.getId())
+            .ifPresent(event -> {
+              dto.setMostRecentEventType(event.getEventType().name());
+              dto.setMostRecentEventDate(event.getEventDate() != null
+                  ? event.getEventDate().toString() : null);
+            });
+      }
+    } else {
+      // Procurement-linked: populate procurement event tracking info
+      Long procItemId = entity.getProcurementItem().getId();
+      procurementEventRepository.findMostRecentByProcurementItemId(procItemId)
+          .ifPresent(event -> {
+            dto.setProcurementMostRecentEventType(event.getEventType().name());
+            dto.setProcurementMostRecentEventDate(event.getEventDate() != null
+                ? event.getEventDate().toString() : null);
+          });
+    }
+    return dto;
   }
 
   /**

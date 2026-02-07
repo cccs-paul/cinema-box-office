@@ -12,17 +12,29 @@
  */
 package com.myrc.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
+import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.myrc.dto.SpendingItemDTO;
 import com.myrc.dto.SpendingMoneyAllocationDTO;
@@ -33,30 +45,17 @@ import com.myrc.model.Money;
 import com.myrc.model.RCAccess;
 import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.SpendingItem;
-import com.myrc.model.SpendingMoneyAllocation;
 import com.myrc.model.User;
 import com.myrc.repository.CategoryRepository;
 import com.myrc.repository.FiscalYearRepository;
 import com.myrc.repository.MoneyRepository;
+import com.myrc.repository.ProcurementEventRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
+import com.myrc.repository.SpendingEventRepository;
 import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.SpendingMoneyAllocationRepository;
 import com.myrc.repository.UserRepository;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Unit tests for SpendingItemServiceImpl.
@@ -93,6 +92,12 @@ class SpendingItemServiceTest {
   @Mock
   private SpendingMoneyAllocationRepository allocationRepository;
 
+  @Mock
+  private SpendingEventRepository spendingEventRepository;
+
+  @Mock
+  private ProcurementEventRepository procurementEventRepository;
+
   private SpendingItemServiceImpl spendingItemService;
 
   private User testUser;
@@ -113,7 +118,9 @@ class SpendingItemServiceTest {
         accessRepository,
         userRepository,
         moneyRepository,
-        allocationRepository
+        allocationRepository,
+        spendingEventRepository,
+        procurementEventRepository
     );
 
     // Setup test user
@@ -169,6 +176,17 @@ class SpendingItemServiceTest {
     rcAccess.setUser(testUser);
     rcAccess.setResponsibilityCentre(rc);
     rcAccess.setAccessLevel(RCAccess.AccessLevel.READ_WRITE);
+
+    // Lenient mocking for event tracking enrichment (called by enrichEventTrackingInfo)
+    org.mockito.Mockito.lenient()
+        .when(spendingEventRepository.countBySpendingItemIdAndActiveTrue(anyLong()))
+        .thenReturn(0L);
+    org.mockito.Mockito.lenient()
+        .when(spendingEventRepository.findMostRecentBySpendingItemId(anyLong()))
+        .thenReturn(Optional.empty());
+    org.mockito.Mockito.lenient()
+        .when(procurementEventRepository.findMostRecentByProcurementItemId(anyLong()))
+        .thenReturn(Optional.empty());
   }
 
   @Nested
@@ -464,6 +482,58 @@ class SpendingItemServiceTest {
 
       assertThrows(IllegalArgumentException.class, () ->
           spendingItemService.updateMoneyAllocations(1L, Arrays.asList(zeroAllocation), "testuser"));
+    }
+  }
+
+  @Nested
+  @DisplayName("Event Tracking Enrichment Tests")
+  class EventTrackingEnrichmentTests {
+
+    @Test
+    @DisplayName("Populates event count and most recent event for standalone items")
+    void populatesEventTrackingForStandaloneItems() {
+      // Setup: gpuPurchase has no procurementItem (standalone)
+      com.myrc.model.SpendingEvent mockEvent = new com.myrc.model.SpendingEvent();
+      mockEvent.setId(10L);
+      mockEvent.setSpendingItem(gpuPurchase);
+      mockEvent.setEventType(com.myrc.model.SpendingEvent.EventType.SECTION_32_PROVIDED);
+      mockEvent.setEventDate(LocalDate.of(2025, 12, 1));
+      mockEvent.setCreatedBy("admin");
+
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
+      when(spendingItemRepository.findByFiscalYearIdOrderByNameAsc(1L))
+          .thenReturn(Arrays.asList(gpuPurchase));
+      when(spendingEventRepository.countBySpendingItemIdAndActiveTrue(1L)).thenReturn(3L);
+      when(spendingEventRepository.findMostRecentBySpendingItemId(1L))
+          .thenReturn(Optional.of(mockEvent));
+
+      List<SpendingItemDTO> result = spendingItemService.getSpendingItemsByFiscalYearId(1L, "testuser");
+
+      assertEquals(1, result.size());
+      SpendingItemDTO dto = result.get(0);
+      assertEquals(3, dto.getEventCount());
+      assertEquals("SECTION_32_PROVIDED", dto.getMostRecentEventType());
+      assertEquals("2025-12-01", dto.getMostRecentEventDate());
+    }
+
+    @Test
+    @DisplayName("Event count is zero for items with no events")
+    void eventCountZeroForNoEvents() {
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
+      when(spendingItemRepository.findByFiscalYearIdOrderByNameAsc(1L))
+          .thenReturn(Arrays.asList(gpuPurchase));
+      when(spendingEventRepository.countBySpendingItemIdAndActiveTrue(1L)).thenReturn(0L);
+
+      List<SpendingItemDTO> result = spendingItemService.getSpendingItemsByFiscalYearId(1L, "testuser");
+
+      assertEquals(1, result.size());
+      assertEquals(0, result.get(0).getEventCount());
+      // mostRecentEventType should remain null when no events
+      assertEquals(null, result.get(0).getMostRecentEventType());
     }
   }
 }

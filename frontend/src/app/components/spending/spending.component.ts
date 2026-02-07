@@ -1192,6 +1192,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
     if (!this.selectedRC || !this.selectedFY || !this.editingEventId || !this.selectedEventItemId) return;
     
     this.isUpdatingEvent = true;
+    const currentItemId = this.selectedEventItemId;
     
     const request: SpendingEventRequest = {
       eventType: this.editEventType,
@@ -1200,14 +1201,23 @@ export class SpendingComponent implements OnInit, OnDestroy {
     };
     
     this.spendingEventService.updateEvent(
-      this.selectedRC.id, this.selectedFY.id, this.selectedEventItemId, this.editingEventId, request
+      this.selectedRC.id, this.selectedFY.id, currentItemId, this.editingEventId, request
     ).subscribe({
       next: () => {
         this.showSuccess('Event updated successfully');
         this.editingEventId = null;
-        this.loadSpendingItems();
-        this.loadEventsForItem(this.spendingItems.find(i => i.id === this.selectedEventItemId)!);
         this.isUpdatingEvent = false;
+        this.loadSpendingItems();
+        // Reload events list independently
+        this.spendingEventService.getEvents(
+          this.selectedRC!.id, this.selectedFY!.id, currentItemId
+        ).subscribe({
+          next: (events) => {
+            this.selectedItemEvents = events;
+            this.selectedEventItemId = currentItemId;
+          },
+          error: () => { /* silently fail */ }
+        });
       },
       error: (error) => {
         this.showError('Failed to update event: ' + error.message);
@@ -1225,13 +1235,24 @@ export class SpendingComponent implements OnInit, OnDestroy {
     const confirmed = confirm(this.translate.instant('common.deleteConfirm'));
     if (!confirmed) return;
     
+    const currentItemId = this.selectedEventItemId;
+    
     this.spendingEventService.deleteEvent(
-      this.selectedRC.id, this.selectedFY.id, this.selectedEventItemId, event.id
+      this.selectedRC.id, this.selectedFY.id, currentItemId, event.id
     ).subscribe({
       next: () => {
         this.showSuccess('Event deleted successfully');
         this.loadSpendingItems();
-        this.loadEventsForItem(this.spendingItems.find(i => i.id === this.selectedEventItemId)!);
+        // Reload events list independently
+        this.spendingEventService.getEvents(
+          this.selectedRC!.id, this.selectedFY!.id, currentItemId
+        ).subscribe({
+          next: (events) => {
+            this.selectedItemEvents = events;
+            this.selectedEventItemId = currentItemId;
+          },
+          error: () => { /* silently fail */ }
+        });
       },
       error: (error) => {
         this.showError('Failed to delete event: ' + error.message);
