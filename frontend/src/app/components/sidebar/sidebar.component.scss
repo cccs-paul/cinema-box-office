@@ -7,17 +7,22 @@
 .app-sidebar {
   position: fixed;
   left: 0;
-  top: 60px;
+  top: 0;
   width: 250px;
-  height: calc(100vh - 60px);
+  height: 100vh;
+  padding-top: 60px;
   background-color: var(--background-secondary);
   border-right: 1px solid var(--border-color);
   overflow-y: auto;
   z-index: 999;
-  padding: 0;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
   display: flex;
   flex-direction: column;
+
+  &.header-hidden {
+    transform: translateY(-60px);
+    padding-top: 0;
+  }
 }
 
 /* Context Display Section */

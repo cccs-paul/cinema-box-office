@@ -3,7 +3,7 @@
   Copyright (c) 2026 myRC Team
   Licensed under MIT License
 -->
-<aside class="app-sidebar">
+<aside class="app-sidebar" [class.header-hidden]="!isHeaderVisible">
   <!-- Context Display -->
   <div class="sidebar-context" *ngIf="selectedRC">
     <div class="context-info">

@@ -3,8 +3,8 @@
   Copyright (c) 2026 myRC Team
   Licensed under MIT License
 -->
-<app-header></app-header>
-<app-sidebar></app-sidebar>
+<app-header [isHeaderVisible]="isHeaderVisible"></app-header>
+<app-sidebar [isHeaderVisible]="isHeaderVisible"></app-sidebar>
 <main class="app-main">
   <router-outlet></router-outlet>
 </main>

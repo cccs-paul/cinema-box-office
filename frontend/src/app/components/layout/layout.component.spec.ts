@@ -3,7 +3,7 @@
  * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterOutlet } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -29,7 +29,9 @@ class RouterOutletStubComponent {}
   selector: 'app-header',
   template: '<div>Header Stub</div>'
 })
-class HeaderStubComponent {}
+class HeaderStubComponent {
+  @Input() isHeaderVisible = true;
+}
 
 /**
  * Stub component for app-sidebar.
@@ -39,7 +41,9 @@ class HeaderStubComponent {}
   selector: 'app-sidebar',
   template: '<div>Sidebar Stub</div>'
 })
-class SidebarStubComponent {}
+class SidebarStubComponent {
+  @Input() isHeaderVisible = true;
+}
 
 describe('LayoutComponent', () => {
   let component: LayoutComponent;
@@ -80,5 +84,57 @@ describe('LayoutComponent', () => {
   it('should contain router-outlet', () => {
     const outlet = fixture.nativeElement.querySelector('router-outlet');
     expect(outlet).toBeTruthy();
+  });
+
+  describe('Scroll behavior', () => {
+    it('should initialize with header visible', () => {
+      expect(component.isHeaderVisible).toBeTrue();
+    });
+
+    it('should show header when near top of page', () => {
+      Object.defineProperty(window, 'pageYOffset', { value: 10, configurable: true });
+      component.onWindowScroll();
+      expect(component.isHeaderVisible).toBeTrue();
+    });
+
+    it('should hide header when scrolling down past threshold', () => {
+      // First scroll - establish last position
+      Object.defineProperty(window, 'pageYOffset', { value: 100, configurable: true });
+      component.onWindowScroll();
+
+      // Second scroll - scrolling down
+      Object.defineProperty(window, 'pageYOffset', { value: 200, configurable: true });
+      component.onWindowScroll();
+
+      expect(component.isHeaderVisible).toBeFalse();
+    });
+
+    it('should show header when scrolling up', () => {
+      // First scroll down
+      Object.defineProperty(window, 'pageYOffset', { value: 200, configurable: true });
+      component.onWindowScroll();
+
+      // Then scroll up
+      Object.defineProperty(window, 'pageYOffset', { value: 100, configurable: true });
+      component.onWindowScroll();
+
+      expect(component.isHeaderVisible).toBeTrue();
+    });
+
+    it('should always show header when below scroll threshold', () => {
+      // First scroll past threshold
+      Object.defineProperty(window, 'pageYOffset', { value: 100, configurable: true });
+      component.onWindowScroll();
+
+      // Scroll down to hide
+      Object.defineProperty(window, 'pageYOffset', { value: 200, configurable: true });
+      component.onWindowScroll();
+      expect(component.isHeaderVisible).toBeFalse();
+
+      // Scroll back below threshold
+      Object.defineProperty(window, 'pageYOffset', { value: 30, configurable: true });
+      component.onWindowScroll();
+      expect(component.isHeaderVisible).toBeTrue();
+    });
   });
 });

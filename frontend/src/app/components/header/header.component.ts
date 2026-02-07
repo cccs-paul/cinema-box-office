@@ -3,7 +3,7 @@
  * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -36,10 +36,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   currentLanguage: Language = 'en';
   isLoggingOut = false;
   isLoggedIn = false;
-  isHeaderVisible = true;
+  /** Whether the header is visible, controlled by the parent layout component. */
+  @Input() isHeaderVisible = true;
   private destroy$ = new Subject<void>();
-  private lastScrollPosition = 0;
-  private readonly scrollThreshold = 50;
 
   constructor(
     private authService: AuthService,
@@ -83,21 +82,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (!target.closest('.user-menu-container')) {
       this.closeUserMenu();
     }
-  }
-
-  @HostListener('window:scroll', [])
-  onWindowScroll(): void {
-    const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-    
-    // If scrolled past threshold, hide header when scrolling down, show when scrolling up
-    if (currentScrollPosition > this.scrollThreshold) {
-      this.isHeaderVisible = currentScrollPosition < this.lastScrollPosition;
-    } else {
-      // Always show header when near the top
-      this.isHeaderVisible = true;
-    }
-    
-    this.lastScrollPosition = currentScrollPosition;
   }
 
   toggleUserMenu(): void {

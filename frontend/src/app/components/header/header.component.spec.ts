@@ -210,38 +210,6 @@ describe('HeaderComponent', () => {
     });
   });
 
-  describe('Scroll behavior', () => {
-    it('should show header when near top of page', () => {
-      Object.defineProperty(window, 'pageYOffset', { value: 10, configurable: true });
-      component.onWindowScroll();
-      expect(component.isHeaderVisible).toBeTrue();
-    });
-
-    it('should hide header when scrolling down past threshold', () => {
-      // First scroll - establish last position
-      Object.defineProperty(window, 'pageYOffset', { value: 100, configurable: true });
-      component.onWindowScroll();
-      
-      // Second scroll - scrolling down
-      Object.defineProperty(window, 'pageYOffset', { value: 200, configurable: true });
-      component.onWindowScroll();
-      
-      expect(component.isHeaderVisible).toBeFalse();
-    });
-
-    it('should show header when scrolling up', () => {
-      // First scroll down
-      Object.defineProperty(window, 'pageYOffset', { value: 200, configurable: true });
-      component.onWindowScroll();
-      
-      // Then scroll up
-      Object.defineProperty(window, 'pageYOffset', { value: 100, configurable: true });
-      component.onWindowScroll();
-      
-      expect(component.isHeaderVisible).toBeTrue();
-    });
-  });
-
   describe('API Docs', () => {
     it('should open Swagger UI in new tab', () => {
       spyOn(window, 'open');
