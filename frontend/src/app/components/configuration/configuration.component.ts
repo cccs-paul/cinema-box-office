@@ -87,6 +87,15 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
+  /**
+   * Checks whether the current user has read-only access to the RC.
+   * When true, editing operations (add/edit/delete money types and categories,
+   * changing on-target settings) should be disabled in the UI.
+   */
+  get isReadOnly(): boolean {
+    return this.selectedRC?.accessLevel === 'READ_ONLY';
+  }
+
   constructor(
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,

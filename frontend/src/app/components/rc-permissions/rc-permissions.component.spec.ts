@@ -10,12 +10,14 @@ import { TranslateModule } from '@ngx-translate/core';
 import { RCPermissionsComponent } from './rc-permissions.component';
 import { RCPermissionService, RCAccess } from '../../services/rc-permission.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
+import { DirectorySearchService, DirectorySearchResult } from '../../services/directory-search.service';
 
 describe('RCPermissionsComponent', () => {
   let component: RCPermissionsComponent;
   let fixture: ComponentFixture<RCPermissionsComponent>;
   let permissionService: jasmine.SpyObj<RCPermissionService>;
   let rcService: jasmine.SpyObj<ResponsibilityCentreService>;
+  let directorySearchService: jasmine.SpyObj<DirectorySearchService>;
   let router: jasmine.SpyObj<Router>;
 
   let routeParams$: BehaviorSubject<any>;
@@ -68,6 +70,12 @@ describe('RCPermissionsComponent', () => {
     permissionService.getPrincipalTypeIcon.and.callFake((type: string) => type === 'USER' ? '👤' : '👥');
     permissionService.getAccessLevelIcon.and.callFake((level: string) => '📝');
 
+    directorySearchService = jasmine.createSpyObj('DirectorySearchService',
+      ['searchUsers', 'searchGroups', 'searchDistributionLists']);
+    directorySearchService.searchUsers.and.returnValue(of([]));
+    directorySearchService.searchGroups.and.returnValue(of([]));
+    directorySearchService.searchDistributionLists.and.returnValue(of([]));
+
     rcService = jasmine.createSpyObj('ResponsibilityCentreService', 
       ['getResponsibilityCentre'], {
       selectedRC$: selectedRC$.asObservable()
@@ -85,6 +93,7 @@ describe('RCPermissionsComponent', () => {
     })
     .overrideProvider(RCPermissionService, { useValue: permissionService })
     .overrideProvider(ResponsibilityCentreService, { useValue: rcService })
+    .overrideProvider(DirectorySearchService, { useValue: directorySearchService })
     .overrideProvider(Router, { useValue: router })
     .overrideProvider(ActivatedRoute, { 
       useValue: { params: routeParams$.asObservable() }
@@ -252,6 +261,394 @@ describe('RCPermissionsComponent', () => {
       
       expect(nextSpy).toHaveBeenCalled();
       expect(completeSpy).toHaveBeenCalled();
+    }));
+
+    it('should unsubscribe from search subscription', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      const subscription = component['searchSubscription'];
+      expect(subscription).toBeTruthy();
+
+      component.ngOnDestroy();
+      expect(subscription!.closed).toBeTrue();
+    }));
+  });
+
+  describe('Autocomplete', () => {
+    const mockUserSuggestions: DirectorySearchResult[] = [
+      { identifier: 'jdoe', displayName: 'John Doe', source: 'APP', email: 'jdoe@test.com' },
+      { identifier: 'jsmith', displayName: 'Jane Smith', source: 'LDAP', email: 'jsmith@test.com' }
+    ];
+
+    const mockGroupSuggestions: DirectorySearchResult[] = [
+      { identifier: 'cn=finance,ou=groups,dc=example,dc=com', displayName: 'Finance Team', source: 'LDAP', email: null }
+    ];
+
+    beforeEach(fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+    }));
+
+    it('should initialize autocomplete properties', () => {
+      expect(component.suggestions).toEqual([]);
+      expect(component.showSuggestions).toBeFalse();
+      expect(component.isSearching).toBeFalse();
+      expect(component.activeSuggestionIndex).toBe(-1);
+    });
+
+    it('should search users on input when grant form type is USER', fakeAsync(() => {
+      directorySearchService.searchUsers.and.returnValue(of(mockUserSuggestions));
+      component.openGrantForm('USER');
+
+      component.newPrincipalIdentifier = 'j';
+      component.onIdentifierInput();
+      tick(300);
+
+      expect(directorySearchService.searchUsers).toHaveBeenCalledWith('j');
+      expect(component.suggestions).toEqual(mockUserSuggestions);
+      expect(component.showSuggestions).toBeTrue();
+      expect(component.isSearching).toBeFalse();
+    }));
+
+    it('should search groups on input when grant form type is GROUP', fakeAsync(() => {
+      directorySearchService.searchGroups.and.returnValue(of(mockGroupSuggestions));
+      component.openGrantForm('GROUP');
+
+      component.newPrincipalIdentifier = 'fin';
+      component.onIdentifierInput();
+      tick(300);
+
+      expect(directorySearchService.searchGroups).toHaveBeenCalledWith('fin');
+      expect(component.suggestions).toEqual(mockGroupSuggestions);
+      expect(component.showSuggestions).toBeTrue();
+    }));
+
+    it('should search distribution lists on input when grant form type is DISTRIBUTION_LIST', fakeAsync(() => {
+      const mockDistListSuggestions: DirectorySearchResult[] = [
+        { identifier: 'cn=all-staff,ou=distribution-lists,dc=example,dc=com', displayName: 'all-staff - All staff', source: 'LDAP', email: 'all-staff@example.com' }
+      ];
+      directorySearchService.searchDistributionLists.and.returnValue(of(mockDistListSuggestions));
+      component.openGrantForm('DISTRIBUTION_LIST');
+
+      component.newPrincipalIdentifier = 'staff';
+      component.onIdentifierInput();
+      tick(300);
+
+      expect(directorySearchService.searchDistributionLists).toHaveBeenCalledWith('staff');
+      expect(component.suggestions).toEqual(mockDistListSuggestions);
+      expect(component.showSuggestions).toBeTrue();
+    }));
+
+    it('should debounce search input', fakeAsync(() => {
+      directorySearchService.searchUsers.and.returnValue(of(mockUserSuggestions));
+      component.openGrantForm('USER');
+
+      component.newPrincipalIdentifier = 'a';
+      component.onIdentifierInput();
+      tick(100);
+      component.newPrincipalIdentifier = 'ab';
+      component.onIdentifierInput();
+      tick(100);
+      component.newPrincipalIdentifier = 'abc';
+      component.onIdentifierInput();
+      tick(300);
+
+      expect(directorySearchService.searchUsers).toHaveBeenCalledTimes(1);
+      expect(directorySearchService.searchUsers).toHaveBeenCalledWith('abc');
+    }));
+
+    it('should select a suggestion and update identifier', () => {
+      component.openGrantForm('USER');
+      component.suggestions = mockUserSuggestions;
+      component.showSuggestions = true;
+
+      component.selectSuggestion(mockUserSuggestions[0]);
+
+      expect(component.newPrincipalIdentifier).toBe('jdoe');
+      expect(component.showSuggestions).toBeFalse();
+      expect(component.suggestions).toEqual([]);
+    });
+
+    it('should set display name for group suggestions', () => {
+      component.openGrantForm('GROUP');
+      component.suggestions = mockGroupSuggestions;
+      component.showSuggestions = true;
+
+      component.selectSuggestion(mockGroupSuggestions[0]);
+
+      expect(component.newPrincipalIdentifier).toBe('cn=finance,ou=groups,dc=example,dc=com');
+      expect(component.newPrincipalDisplayName).toBe('Finance Team');
+      expect(component.showSuggestions).toBeFalse();
+    });
+
+    it('should set display name for distribution list suggestions', () => {
+      const mockDistListSuggestion: DirectorySearchResult = {
+        identifier: 'cn=all-staff,ou=distribution-lists,dc=example,dc=com',
+        displayName: 'all-staff - All staff',
+        source: 'LDAP',
+        email: 'all-staff@example.com'
+      };
+      component.openGrantForm('DISTRIBUTION_LIST');
+      component.suggestions = [mockDistListSuggestion];
+      component.showSuggestions = true;
+
+      component.selectSuggestion(mockDistListSuggestion);
+
+      expect(component.newPrincipalIdentifier).toBe('cn=all-staff,ou=distribution-lists,dc=example,dc=com');
+      expect(component.newPrincipalDisplayName).toBe('all-staff - All staff');
+      expect(component.showSuggestions).toBeFalse();
+    });
+
+    it('should not set display name for user suggestions', () => {
+      component.openGrantForm('USER');
+      component.newPrincipalDisplayName = '';
+
+      component.selectSuggestion(mockUserSuggestions[0]);
+
+      expect(component.newPrincipalDisplayName).toBe('');
+    });
+
+    it('should close suggestions on closeSuggestions call', () => {
+      component.suggestions = mockUserSuggestions;
+      component.showSuggestions = true;
+      component.isSearching = true;
+      component.activeSuggestionIndex = 1;
+
+      component.closeSuggestions();
+
+      expect(component.suggestions).toEqual([]);
+      expect(component.showSuggestions).toBeFalse();
+      expect(component.isSearching).toBeFalse();
+      expect(component.activeSuggestionIndex).toBe(-1);
+    });
+
+    it('should close suggestions when opening grant form', () => {
+      component.suggestions = mockUserSuggestions;
+      component.showSuggestions = true;
+
+      component.openGrantForm('USER');
+
+      expect(component.showSuggestions).toBeFalse();
+      expect(component.suggestions).toEqual([]);
+    });
+
+    it('should close suggestions when closing grant form', () => {
+      component.openGrantForm('USER');
+      component.suggestions = mockUserSuggestions;
+      component.showSuggestions = true;
+
+      component.closeGrantForm();
+
+      expect(component.showSuggestions).toBeFalse();
+      expect(component.suggestions).toEqual([]);
+    });
+
+    describe('Keyboard Navigation', () => {
+      beforeEach(() => {
+        component.openGrantForm('USER');
+        component.suggestions = mockUserSuggestions;
+        component.showSuggestions = true;
+        component.activeSuggestionIndex = -1;
+      });
+
+      it('should navigate down on ArrowDown', () => {
+        const event = new KeyboardEvent('keydown', { key: 'ArrowDown' });
+        spyOn(event, 'preventDefault');
+
+        component.onSuggestionKeydown(event);
+
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(component.activeSuggestionIndex).toBe(0);
+      });
+
+      it('should not go beyond last suggestion on ArrowDown', () => {
+        component.activeSuggestionIndex = mockUserSuggestions.length - 1;
+
+        const event = new KeyboardEvent('keydown', { key: 'ArrowDown' });
+        component.onSuggestionKeydown(event);
+
+        expect(component.activeSuggestionIndex).toBe(mockUserSuggestions.length - 1);
+      });
+
+      it('should navigate up on ArrowUp', () => {
+        component.activeSuggestionIndex = 1;
+
+        const event = new KeyboardEvent('keydown', { key: 'ArrowUp' });
+        spyOn(event, 'preventDefault');
+
+        component.onSuggestionKeydown(event);
+
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(component.activeSuggestionIndex).toBe(0);
+      });
+
+      it('should not go below -1 on ArrowUp', () => {
+        component.activeSuggestionIndex = 0;
+
+        const event = new KeyboardEvent('keydown', { key: 'ArrowUp' });
+        component.onSuggestionKeydown(event);
+
+        expect(component.activeSuggestionIndex).toBe(-1);
+      });
+
+      it('should select suggestion on Enter', () => {
+        component.activeSuggestionIndex = 0;
+
+        const event = new KeyboardEvent('keydown', { key: 'Enter' });
+        spyOn(event, 'preventDefault');
+
+        component.onSuggestionKeydown(event);
+
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(component.newPrincipalIdentifier).toBe('jdoe');
+        expect(component.showSuggestions).toBeFalse();
+      });
+
+      it('should not select suggestion on Enter when no suggestion is active', () => {
+        component.activeSuggestionIndex = -1;
+
+        const event = new KeyboardEvent('keydown', { key: 'Enter' });
+        component.onSuggestionKeydown(event);
+
+        expect(component.showSuggestions).toBeTrue();
+      });
+
+      it('should close suggestions on Escape', () => {
+        const event = new KeyboardEvent('keydown', { key: 'Escape' });
+        spyOn(event, 'preventDefault');
+
+        component.onSuggestionKeydown(event);
+
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(component.showSuggestions).toBeFalse();
+      });
+
+      it('should trigger browse-all on Enter when suggestions are not shown', () => {
+        component.showSuggestions = false;
+        component.suggestions = [];
+        component.newPrincipalIdentifier = '';
+
+        const event = new KeyboardEvent('keydown', { key: 'Enter' });
+        spyOn(event, 'preventDefault');
+        spyOn(component, 'triggerBrowseAll');
+
+        component.onSuggestionKeydown(event);
+
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(component.triggerBrowseAll).toHaveBeenCalled();
+      });
+
+      it('should trigger browse-all on ArrowDown when suggestions are not shown', () => {
+        component.showSuggestions = false;
+        component.suggestions = [];
+
+        const event = new KeyboardEvent('keydown', { key: 'ArrowDown' });
+        spyOn(event, 'preventDefault');
+        spyOn(component, 'triggerBrowseAll');
+
+        component.onSuggestionKeydown(event);
+
+        expect(event.preventDefault).toHaveBeenCalled();
+        expect(component.triggerBrowseAll).toHaveBeenCalled();
+      });
+
+      it('should do nothing for other keys if suggestions are not shown', () => {
+        component.showSuggestions = false;
+
+        const event = new KeyboardEvent('keydown', { key: 'Escape' });
+        spyOn(event, 'preventDefault');
+
+        component.onSuggestionKeydown(event);
+
+        expect(event.preventDefault).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('Source Label', () => {
+      it('should return translated App label', () => {
+        const label = component.getSuggestionSourceLabel('APP');
+        expect(label).toBeTruthy();
+      });
+
+      it('should return translated LDAP label', () => {
+        const label = component.getSuggestionSourceLabel('LDAP');
+        expect(label).toBeTruthy();
+      });
+
+      it('should return raw source for unknown type', () => {
+        const label = component.getSuggestionSourceLabel('UNKNOWN');
+        expect(label).toBe('UNKNOWN');
+      });
+    });
+
+    it('should handle empty search results', fakeAsync(() => {
+      directorySearchService.searchUsers.and.returnValue(of([]));
+      component.openGrantForm('USER');
+
+      component.newPrincipalIdentifier = 'xyz';
+      component.onIdentifierInput();
+      tick(300);
+
+      expect(component.suggestions).toEqual([]);
+      expect(component.showSuggestions).toBeFalse();
+    }));
+
+    it('should reset activeSuggestionIndex on new results', fakeAsync(() => {
+      directorySearchService.searchUsers.and.returnValue(of(mockUserSuggestions));
+      component.openGrantForm('USER');
+      component.activeSuggestionIndex = 1;
+
+      component.newPrincipalIdentifier = 'j';
+      component.onIdentifierInput();
+      tick(300);
+
+      expect(component.activeSuggestionIndex).toBe(-1);
+    }));
+
+    it('should show all entries when triggerBrowseAll is called with empty field', fakeAsync(() => {
+      directorySearchService.searchUsers.and.returnValue(of(mockUserSuggestions));
+      component.openGrantForm('USER');
+      component.newPrincipalIdentifier = '';
+
+      component.triggerBrowseAll();
+      tick(300);
+
+      expect(directorySearchService.searchUsers).toHaveBeenCalledWith('');
+      expect(component.suggestions.length).toBe(2);
+      expect(component.showSuggestions).toBeTrue();
+    }));
+
+    it('should show all groups when triggerBrowseAll is called for GROUP form', fakeAsync(() => {
+      const mockGroups: DirectorySearchResult[] = [
+        { identifier: 'cn=Finance,ou=groups,dc=example,dc=com', displayName: 'Finance', source: 'LDAP', email: null }
+      ];
+      directorySearchService.searchGroups.and.returnValue(of(mockGroups));
+      component.openGrantForm('GROUP');
+      component.newPrincipalIdentifier = '';
+
+      component.triggerBrowseAll();
+      tick(300);
+
+      expect(directorySearchService.searchGroups).toHaveBeenCalledWith('');
+      expect(component.suggestions.length).toBe(1);
+      expect(component.showSuggestions).toBeTrue();
+    }));
+
+    it('should show all distribution lists when triggerBrowseAll is called for DISTRIBUTION_LIST form', fakeAsync(() => {
+      const mockDLists: DirectorySearchResult[] = [
+        { identifier: 'cn=all-staff,ou=distribution-lists,dc=example,dc=com', displayName: 'all-staff', source: 'LDAP', email: 'all-staff@example.com' }
+      ];
+      directorySearchService.searchDistributionLists.and.returnValue(of(mockDLists));
+      component.openGrantForm('DISTRIBUTION_LIST');
+      component.newPrincipalIdentifier = '';
+
+      component.triggerBrowseAll();
+      tick(300);
+
+      expect(directorySearchService.searchDistributionLists).toHaveBeenCalledWith('');
+      expect(component.suggestions.length).toBe(1);
+      expect(component.showSuggestions).toBeTrue();
     }));
   });
 });

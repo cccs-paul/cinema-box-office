@@ -105,6 +105,11 @@ public class LdapProperties {
     private String groupNameAttribute = "cn";
 
     /**
+     * Search base for distribution lists, relative to base-dn.
+     */
+    private String distributionListSearchBase = "ou=distribution-lists";
+
+    /**
      * DN of the manager/admin user for binding to LDAP server.
      * Required for search+bind authentication mode.
      */
@@ -462,6 +467,14 @@ public class LdapProperties {
 
     public void setGroupNameAttribute(String groupNameAttribute) {
         this.groupNameAttribute = groupNameAttribute;
+    }
+
+    public String getDistributionListSearchBase() {
+        return distributionListSearchBase;
+    }
+
+    public void setDistributionListSearchBase(String distributionListSearchBase) {
+        this.distributionListSearchBase = distributionListSearchBase;
     }
 
     public String getManagerDn() {

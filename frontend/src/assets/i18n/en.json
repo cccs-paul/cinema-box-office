@@ -735,7 +735,8 @@
     "exportLineItemsDesc": "Export all Funding, Procurement, and Spending line items to a CSV file for backup or analysis.",
     "importLineItemsDesc": "Import line items from a CSV file. This feature is currently under development.",
     "exportCompleted": "Export completed successfully!",
-    "cannotDeleteCategoryInUse": "This category cannot be deleted because it is in use by funding, procurement, or spending items"
+    "cannotDeleteCategoryInUse": "This category cannot be deleted because it is in use by funding, procurement, or spending items",
+    "readOnlyNotice": "You have read-only access to this Responsibility Centre. Configuration changes are disabled."
   },
   "developerTools": {
     "title": "Developer Tools",
@@ -848,7 +849,13 @@
     "accessRevokedError": "Failed to revoke access.",
     "loadPermissionsError": "Failed to load permissions.",
     "loadRCError": "Failed to load RC information.",
-    "noPermissionToManage": "You do not have permission to manage this RC's permissions."
+    "noPermissionToManage": "You do not have permission to manage this RC's permissions.",
+    "sourceApp": "App",
+    "sourceLdap": "LDAP",
+    "typeToSearch": "Start typing to search, or press Enter to browse all",
+    "pressEnterToBrowse": "Press Enter or ↓ to browse all available entries",
+    "noSuggestionsFound": "No matching entries found",
+    "searching": "Searching..."
   },
   "accessibility": {
     "title": "Accessibility Settings",

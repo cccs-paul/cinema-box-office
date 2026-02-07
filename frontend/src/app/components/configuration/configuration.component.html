@@ -23,6 +23,12 @@
     <button class="dismiss-btn" (click)="clearCategoryError()">×</button>
   </div>
 
+  <!-- Read-Only Notice -->
+  <div class="info-message" *ngIf="isReadOnly">
+    <span class="info-icon">🔒</span>
+    {{ 'configuration.readOnlyNotice' | translate }}
+  </div>
+
   <!-- Configuration Tabs -->
   <div class="config-tabs">
     <button 
@@ -92,7 +98,7 @@
             <span class="part-tag cap">{{ money.capLabel }}</span>
             <span class="part-tag om">{{ money.omLabel }}</span>
           </div>
-          <div class="money-actions" *ngIf="!money.isDefault">
+          <div class="money-actions" *ngIf="!money.isDefault && !isReadOnly">
             <button 
               class="btn btn-secondary" 
               (click)="startEditMoney(money)"
@@ -110,7 +116,7 @@
         </div>
 
         <!-- Edit Mode -->
-        <div class="money-edit-form" *ngIf="editingMoneyId === money.id">
+        <div class="money-edit-form" *ngIf="editingMoneyId === money.id && !isReadOnly">
           <h4>{{ 'configuration.editMoneyType' | translate }}</h4>
           <div class="form-row">
             <div class="form-group">
@@ -161,7 +167,7 @@
       <div class="empty-state" *ngIf="monies.length === 0 && !isAddingMoney">
         <span class="empty-icon">💰</span>
         <p>{{ 'configuration.noMoneyTypes' | translate }}</p>
-        <button class="btn btn-primary" (click)="startAddMoney()">
+        <button class="btn btn-primary" (click)="startAddMoney()" [disabled]="isReadOnly">
           {{ 'configuration.addFirstMoneyType' | translate }}
         </button>
       </div>
@@ -172,14 +178,14 @@
       <button 
         class="btn btn-primary" 
         (click)="startAddMoney()"
-        [disabled]="isAddingMoney || isSaving">
+        [disabled]="isAddingMoney || isSaving || isReadOnly">
         <span class="btn-icon">+</span>
         {{ 'configuration.addMoney' | translate }}
       </button>
     </div>
 
     <!-- Add Money Form -->
-    <div class="money-form" *ngIf="isAddingMoney">
+    <div class="money-form" *ngIf="isAddingMoney && !isReadOnly">
       <h3>{{ 'configuration.addNewMoneyType' | translate }}</h3>
       <div class="form-row">
         <div class="form-group">
@@ -279,7 +285,7 @@
               {{ getFundingTypeLabel(category.fundingType) }}
             </span>
           </div>
-          <div class="category-actions" *ngIf="!category.isDefault">
+          <div class="category-actions" *ngIf="!category.isDefault && !isReadOnly">
             <button 
               class="btn btn-secondary" 
               (click)="startEditCategory(category)"
@@ -297,7 +303,7 @@
         </div>
 
         <!-- Edit Mode (only for custom categories) -->
-        <div class="category-edit-form" *ngIf="editingCategoryId === category.id && !category.isDefault">
+        <div class="category-edit-form" *ngIf="editingCategoryId === category.id && !category.isDefault && !isReadOnly">
           <h4>{{ 'configuration.editCategory' | translate }}</h4>
           <div class="form-group">
             <label>{{ 'common.name' | translate }} *</label>
@@ -346,7 +352,7 @@
       <div class="empty-state" *ngIf="categories.length === 0 && !isAddingCategory">
         <span class="empty-icon">📁</span>
         <p>{{ 'configuration.noCategories' | translate }}</p>
-        <button class="btn btn-primary" (click)="startAddCategory()">
+        <button class="btn btn-primary" (click)="startAddCategory()" [disabled]="isReadOnly">
           {{ 'configuration.addFirstCategory' | translate }}
         </button>
       </div>
@@ -357,14 +363,14 @@
       <button 
         class="btn btn-primary" 
         (click)="startAddCategory()"
-        [disabled]="isAddingCategory || isSaving">
+        [disabled]="isAddingCategory || isSaving || isReadOnly">
         <span class="btn-icon">+</span>
         {{ 'configuration.addCategory' | translate }}
       </button>
     </div>
 
     <!-- Add Category Form -->
-    <div class="category-form" *ngIf="isAddingCategory">
+    <div class="category-form" *ngIf="isAddingCategory && !isReadOnly">
       <h3>{{ 'configuration.addNewCategory' | translate }}</h3>
       <div class="form-group">
         <label for="new-category-name">{{ 'common.name' | translate }} *</label>
@@ -449,7 +455,8 @@
             <input 
               type="checkbox" 
               [checked]="selectedFY?.showSearchBox !== false"
-              (change)="updateDisplaySettings('showSearchBox', $any($event.target).checked)">
+              (change)="updateDisplaySettings('showSearchBox', $any($event.target).checked)"
+              [disabled]="isReadOnly">
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -465,7 +472,8 @@
             <input 
               type="checkbox" 
               [checked]="selectedFY?.showCategoryFilter !== false"
-              (change)="updateDisplaySettings('showCategoryFilter', $any($event.target).checked)">
+              (change)="updateDisplaySettings('showCategoryFilter', $any($event.target).checked)"
+              [disabled]="isReadOnly">
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -481,7 +489,8 @@
             <input 
               type="checkbox" 
               [checked]="selectedFY?.groupByCategory === true"
-              (change)="updateDisplaySettings('groupByCategory', $any($event.target).checked)">
+              (change)="updateDisplaySettings('groupByCategory', $any($event.target).checked)"
+              [disabled]="isReadOnly">
             <span class="toggle-slider"></span>
           </label>
         </div>
@@ -521,7 +530,8 @@
             step="1"
             [value]="selectedFY?.onTargetMin ?? -10"
             (input)="onTargetMinValue = $any($event.target).value"
-            (change)="updateOnTargetSetting('onTargetMin', $any($event.target).value)">
+            (change)="updateOnTargetSetting('onTargetMin', $any($event.target).value)"
+            [disabled]="isReadOnly">
           <span class="range-value">{{ onTargetMinValue ?? selectedFY?.onTargetMin ?? -10 }}%</span>
         </div>
       </div>
@@ -542,7 +552,8 @@
             step="1"
             [value]="selectedFY?.onTargetMax ?? 10"
             (input)="onTargetMaxValue = $any($event.target).value"
-            (change)="updateOnTargetSetting('onTargetMax', $any($event.target).value)">
+            (change)="updateOnTargetSetting('onTargetMax', $any($event.target).value)"
+            [disabled]="isReadOnly">
           <span class="range-value">{{ onTargetMaxValue ?? selectedFY?.onTargetMax ?? 10 }}%</span>
         </div>
       </div>

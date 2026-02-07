@@ -86,12 +86,51 @@
               <label *ngIf="grantFormType === 'USER'">{{ 'rcPermissions.username' | translate }}</label>
               <label *ngIf="grantFormType === 'GROUP'">{{ 'rcPermissions.groupIdentifier' | translate }}</label>
               <label *ngIf="grantFormType === 'DISTRIBUTION_LIST'">{{ 'rcPermissions.distributionList' | translate }}</label>
-              <input 
-                type="text" 
-                [(ngModel)]="newPrincipalIdentifier" 
-                [placeholder]="getIdentifierPlaceholderTranslated()"
-                class="form-input"
-              />
+              <div class="autocomplete-wrapper">
+                <input 
+                  type="text" 
+                  [(ngModel)]="newPrincipalIdentifier" 
+                  [placeholder]="getIdentifierPlaceholderTranslated()"
+                  class="form-input"
+                  (input)="onIdentifierInput()"
+                  (keydown)="onSuggestionKeydown($event)"
+                  (blur)="closeSuggestions()"
+                  autocomplete="off"
+                  role="combobox"
+                  [attr.aria-expanded]="showSuggestions"
+                  aria-autocomplete="list"
+                  aria-haspopup="listbox"
+                />
+                <span class="autocomplete-spinner" *ngIf="isSearching">⏳</span>
+                <div class="autocomplete-dropdown" 
+                     *ngIf="showSuggestions && suggestions.length > 0"
+                     role="listbox">
+                  <div class="autocomplete-item"
+                       *ngFor="let suggestion of suggestions; let i = index"
+                       [class.active]="i === activeSuggestionIndex"
+                       (mousedown)="selectSuggestion(suggestion)"
+                       role="option"
+                       [attr.aria-selected]="i === activeSuggestionIndex">
+                    <div class="suggestion-main">
+                      <span class="suggestion-identifier">{{ suggestion.identifier }}</span>
+                      <span class="suggestion-display" *ngIf="suggestion.displayName && suggestion.displayName !== suggestion.identifier">
+                        ({{ suggestion.displayName }})
+                      </span>
+                    </div>
+                    <div class="suggestion-meta">
+                      <span class="suggestion-email" *ngIf="suggestion.email">{{ suggestion.email }}</span>
+                      <span class="suggestion-source" [class]="'source-' + suggestion.source.toLowerCase()">
+                        {{ getSuggestionSourceLabel(suggestion.source) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="autocomplete-dropdown autocomplete-no-results"
+                     *ngIf="!isSearching && !showSuggestions && suggestions.length === 0">
+                  <div class="autocomplete-message" *ngIf="newPrincipalIdentifier.trim().length > 0">{{ 'rcPermissions.typeToSearch' | translate }}</div>
+                  <div class="autocomplete-message" *ngIf="newPrincipalIdentifier.trim().length === 0">{{ 'rcPermissions.pressEnterToBrowse' | translate }}</div>
+                </div>
+              </div>
             </div>
             <div class="form-group" *ngIf="grantFormType !== 'USER'">
               <label>{{ 'rcPermissions.displayNameOptional' | translate }}</label>

@@ -4,16 +4,17 @@
  * Licensed under MIT License
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject, Subscription } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RCPermissionService, RCAccess, GrantUserAccessRequest, GrantGroupAccessRequest } from '../../services/rc-permission.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
+import { DirectorySearchService, DirectorySearchResult } from '../../services/directory-search.service';
 
 /**
  * RC Permissions Configuration Component.
@@ -49,6 +50,14 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   newAccessLevel: 'OWNER' | 'READ_WRITE' | 'READ_ONLY' = 'READ_WRITE';
   isGranting = false;
 
+  // Autocomplete
+  suggestions: DirectorySearchResult[] = [];
+  showSuggestions = false;
+  isSearching = false;
+  activeSuggestionIndex = -1;
+  private searchSubject$ = new Subject<string>();
+  private searchSubscription: Subscription | null = null;
+
   // Edit form
   editingPermissionId: number | null = null;
   editAccessLevel: 'OWNER' | 'READ_WRITE' | 'READ_ONLY' = 'READ_WRITE';
@@ -63,12 +72,16 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   constructor(
     private permissionService: RCPermissionService,
     private rcService: ResponsibilityCentreService,
+    private directorySearchService: DirectorySearchService,
     private router: Router,
     private route: ActivatedRoute,
     private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
+    // Set up autocomplete search pipeline
+    this.initSearchPipeline();
+
     // Get RC ID from route params
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       const id = params['rcId'];
@@ -90,6 +103,9 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.searchSubscription) {
+      this.searchSubscription.unsubscribe();
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -141,6 +157,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
     this.newPrincipalIdentifier = '';
     this.newPrincipalDisplayName = '';
     this.newAccessLevel = 'READ_WRITE';
+    this.closeSuggestions();
     this.clearMessages();
   }
 
@@ -148,6 +165,125 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
     this.showGrantForm = false;
     this.newPrincipalIdentifier = '';
     this.newPrincipalDisplayName = '';
+    this.closeSuggestions();
+  }
+
+  /**
+   * Initialize the debounced search pipeline for autocomplete.
+   */
+  private initSearchPipeline(): void {
+    this.searchSubscription = this.searchSubject$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(query => {
+        this.isSearching = true;
+        const trimmedQuery = query != null ? query.trim() : '';
+        if (this.grantFormType === 'USER') {
+          return this.directorySearchService.searchUsers(trimmedQuery);
+        } else if (this.grantFormType === 'GROUP') {
+          return this.directorySearchService.searchGroups(trimmedQuery);
+        } else if (this.grantFormType === 'DISTRIBUTION_LIST') {
+          return this.directorySearchService.searchDistributionLists(trimmedQuery);
+        }
+        return [];
+      })
+    ).subscribe(results => {
+      this.suggestions = results;
+      this.showSuggestions = results.length > 0;
+      this.isSearching = false;
+      this.activeSuggestionIndex = -1;
+    });
+  }
+
+  /**
+   * Called when the identifier input value changes.
+   * Triggers the debounced autocomplete search.
+   */
+  onIdentifierInput(): void {
+    this.searchSubject$.next(this.newPrincipalIdentifier);
+  }
+
+  /**
+   * Select a suggestion from the autocomplete dropdown.
+   */
+  selectSuggestion(suggestion: DirectorySearchResult): void {
+    this.newPrincipalIdentifier = suggestion.identifier;
+    if (this.grantFormType !== 'USER' && suggestion.displayName) {
+      this.newPrincipalDisplayName = suggestion.displayName;
+    }
+    this.closeSuggestions();
+  }
+
+  /**
+   * Close the autocomplete suggestions dropdown.
+   */
+  closeSuggestions(): void {
+    this.suggestions = [];
+    this.showSuggestions = false;
+    this.isSearching = false;
+    this.activeSuggestionIndex = -1;
+  }
+
+  /**
+   * Handle keyboard navigation in the autocomplete dropdown.
+   * When Enter or ArrowDown is pressed with no suggestions showing,
+   * triggers a browse-all search to display available entries.
+   */
+  onSuggestionKeydown(event: KeyboardEvent): void {
+    // If suggestions are not showing, Enter or ArrowDown triggers browse-all
+    if (!this.showSuggestions || this.suggestions.length === 0) {
+      if (event.key === 'Enter' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        this.triggerBrowseAll();
+      }
+      return;
+    }
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.activeSuggestionIndex = Math.min(
+          this.activeSuggestionIndex + 1,
+          this.suggestions.length - 1
+        );
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.activeSuggestionIndex = Math.max(this.activeSuggestionIndex - 1, -1);
+        break;
+      case 'Enter':
+        event.preventDefault();
+        if (this.activeSuggestionIndex >= 0 && this.activeSuggestionIndex < this.suggestions.length) {
+          this.selectSuggestion(this.suggestions[this.activeSuggestionIndex]);
+        }
+        break;
+      case 'Escape':
+        event.preventDefault();
+        this.closeSuggestions();
+        break;
+    }
+  }
+
+  /**
+   * Trigger a browse-all search to display all available entries.
+   * Called when the user presses Enter or ArrowDown with no suggestions showing.
+   */
+  triggerBrowseAll(): void {
+    this.searchSubject$.next(this.newPrincipalIdentifier);
+  }
+
+  /**
+   * Get the source label for a suggestion (translated).
+   */
+  getSuggestionSourceLabel(source: string): string {
+    switch (source) {
+      case 'APP':
+        return this.translate.instant('rcPermissions.sourceApp');
+      case 'LDAP':
+        return this.translate.instant('rcPermissions.sourceLdap');
+      default:
+        return source;
+    }
   }
 
   grantAccess(): void {

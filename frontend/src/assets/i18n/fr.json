@@ -706,7 +706,8 @@
     "exportLineItemsDesc": "Exporter tous les éléments de financement, approvisionnement et dépenses vers un fichier CSV pour sauvegarde ou analyse.",
     "importLineItemsDesc": "Importer des éléments depuis un fichier CSV. Cette fonctionnalité est en cours de développement.",
     "exportCompleted": "Exportation terminée avec succès!",
-    "cannotDeleteCategoryInUse": "Cette catégorie ne peut pas être supprimée car elle est utilisée par des éléments de financement, d'approvisionnement ou de dépenses"
+    "cannotDeleteCategoryInUse": "Cette catégorie ne peut pas être supprimée car elle est utilisée par des éléments de financement, d'approvisionnement ou de dépenses",
+    "readOnlyNotice": "Vous avez un accès en lecture seule à ce Centre de responsabilité. Les modifications de configuration sont désactivées."
   },
   "developerTools": {
     "title": "Outils développeur",
@@ -810,7 +811,13 @@
     "returnToRcSelection": "Retourner à la sélection du CR",
     "enterUsername": "Entrez le nom d'utilisateur",
     "enterGroupId": "Entrez l'identifiant du groupe",
-    "enterDistList": "Entrez l'adresse courriel de la liste de distribution"
+    "enterDistList": "Entrez l'adresse courriel de la liste de distribution",
+    "sourceApp": "Application",
+    "sourceLdap": "LDAP",
+    "typeToSearch": "Commencez à taper pour rechercher, ou appuyez sur Entrée pour tout parcourir",
+    "pressEnterToBrowse": "Appuyez sur Entrée ou ↓ pour parcourir toutes les entrées disponibles",
+    "noSuggestionsFound": "Aucune entrée correspondante trouvée",
+    "searching": "Recherche en cours..."
   },
   "accessibility": {
     "title": "Paramètres d'accessibilité",

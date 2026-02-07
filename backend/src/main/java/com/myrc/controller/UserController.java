@@ -29,15 +29,21 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
@@ -46,9 +52,13 @@ public class UserController {
 
     private static final Logger logger = Logger.getLogger(UserController.class.getName());
     private final UserService userService;
+    private final LdapAuthenticationProvider ldapAuthenticationProvider;
 
-    public UserController(UserService userService) {
+    public UserController(
+            UserService userService,
+            @Autowired(required = false) LdapAuthenticationProvider ldapAuthenticationProvider) {
         this.userService = userService;
+        this.ldapAuthenticationProvider = ldapAuthenticationProvider;
     }
 
     /**
@@ -442,6 +452,90 @@ public class UserController {
             return ResponseEntity.ok(user.get());
         } else {
             logger.warning("Authentication failed for user: " + username);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    /**
+     * Authenticate user via LDAP and create/update the local user record.
+     * Uses Spring Security's LdapAuthenticationProvider for LDAP bind authentication,
+     * then creates or updates the user in the local database.
+     *
+     * @param username the LDAP username
+     * @param password the LDAP password
+     * @param request the HTTP request for session management
+     * @param response the HTTP response for session management
+     * @return authenticated user information or 401 if authentication fails
+     */
+    @PostMapping("/authenticate/ldap")
+    @Operation(summary = "Authenticate via LDAP", description = "Authenticates a user against the LDAP server and creates/updates a local user record")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "User authenticated successfully via LDAP"),
+        @ApiResponse(responseCode = "401", description = "LDAP authentication failed - invalid credentials"),
+        @ApiResponse(responseCode = "503", description = "LDAP authentication is not configured")
+    })
+    public ResponseEntity<UserDTO> authenticateLdap(
+            @Parameter(description = "LDAP Username", required = true)
+            @RequestParam String username,
+            @Parameter(description = "LDAP Password", required = true)
+            @RequestParam String password,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        if (ldapAuthenticationProvider == null) {
+            logger.warning("LDAP authentication attempted but LDAP is not configured");
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
+        }
+
+        try {
+            // Authenticate against LDAP using Spring Security's LdapAuthenticationProvider
+            UsernamePasswordAuthenticationToken authRequest =
+                new UsernamePasswordAuthenticationToken(username, password);
+            Authentication authResult = ldapAuthenticationProvider.authenticate(authRequest);
+
+            if (authResult != null && authResult.isAuthenticated()) {
+                // Extract LDAP attributes for user creation/update
+                String email = null;
+                String fullName = null;
+                String externalId = username;
+
+                Object principal = authResult.getPrincipal();
+                if (principal instanceof org.springframework.security.ldap.userdetails.LdapUserDetails ldapUser) {
+                    externalId = ldapUser.getDn();
+                }
+
+                // Extract roles from LDAP authentication result
+                Collection<? extends GrantedAuthority> authorities = authResult.getAuthorities();
+                String roles = authorities.stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.joining(","));
+
+                // Create or update the local user record
+                UserDTO user = userService.createOrUpdateLdapUser(username, email, fullName, externalId);
+
+                // Establish security context with LDAP-assigned roles
+                UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(username, null, authorities);
+                SecurityContextHolder.getContext().setAuthentication(auth);
+
+                // Create session and persist security context
+                HttpSession session = request.getSession(true);
+                HttpSessionSecurityContextRepository repository = new HttpSessionSecurityContextRepository();
+                repository.saveContext(SecurityContextHolder.getContext(), request, response);
+
+                logger.info("LDAP user authenticated with session: " + username
+                    + " (Session ID: " + session.getId() + ", Roles: " + roles + ")");
+                return ResponseEntity.ok(user);
+            }
+
+            logger.warning("LDAP authentication returned non-authenticated result for user: " + username);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        } catch (org.springframework.security.core.AuthenticationException e) {
+            logger.warning("LDAP authentication failed for user: " + username + " - " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            logger.severe("Unexpected error during LDAP authentication for user: " + username + " - " + e.getMessage());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }

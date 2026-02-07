@@ -54,7 +54,7 @@ class UserControllerTest {
 
   @BeforeEach
   void setUp() {
-    controller = new UserController(userService);
+    controller = new UserController(userService, null);
     
     // Create a simple Authentication implementation
     authentication = createAuthentication("testuser");

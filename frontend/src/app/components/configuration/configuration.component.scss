@@ -84,6 +84,23 @@
   }
 }
 
+.info-message {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  background-color: rgba(25, 118, 210, 0.1);
+  border: 1px solid rgba(25, 118, 210, 0.3);
+  color: #1565c0;
+
+  .info-icon {
+    font-size: 1.1rem;
+  }
+}
+
 // Tabs
 .config-tabs {
   display: flex;

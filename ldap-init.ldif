@@ -100,3 +100,38 @@ cn: staff
 member: uid=movieuser,ou=users,dc=myrc,dc=local
 member: uid=ticketuser,ou=users,dc=myrc,dc=local
 description: Staff group
+
+# Add distribution lists OU
+
+dn: ou=distribution-lists,dc=myrc,dc=local
+objectClass: organizationalUnit
+ou: distribution-lists
+description: myRC Distribution Lists
+
+# Add distribution lists
+
+dn: cn=all-staff,ou=distribution-lists,dc=myrc,dc=local
+objectClass: groupOfNames
+cn: all-staff
+member: uid=testuser,ou=users,dc=myrc,dc=local
+member: uid=adminuser,ou=users,dc=myrc,dc=local
+member: uid=movieuser,ou=users,dc=myrc,dc=local
+member: uid=ticketuser,ou=users,dc=myrc,dc=local
+mail: all-staff@myrc.local
+description: All staff distribution list
+
+dn: cn=finance-team,ou=distribution-lists,dc=myrc,dc=local
+objectClass: groupOfNames
+cn: finance-team
+member: uid=adminuser,ou=users,dc=myrc,dc=local
+member: uid=movieuser,ou=users,dc=myrc,dc=local
+mail: finance-team@myrc.local
+description: Finance team distribution list
+
+dn: cn=operations-notify,ou=distribution-lists,dc=myrc,dc=local
+objectClass: groupOfNames
+cn: operations-notify
+member: uid=movieuser,ou=users,dc=myrc,dc=local
+member: uid=ticketuser,ou=users,dc=myrc,dc=local
+mail: operations-notify@myrc.local
+description: Operations notification distribution list
