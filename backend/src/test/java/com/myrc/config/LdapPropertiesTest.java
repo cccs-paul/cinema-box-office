@@ -207,6 +207,37 @@ class LdapPropertiesTest {
             properties.setGroupNameAttribute(attribute);
             assertEquals(attribute, properties.getGroupNameAttribute());
         }
+
+        @Test
+        @DisplayName("Should have default group object class filter")
+        void shouldHaveDefaultGroupObjectClass() {
+            String defaultValue = properties.getGroupObjectClass();
+            assertNotNull(defaultValue);
+            assertTrue(defaultValue.contains("objectClass=groupOfNames"));
+            assertTrue(defaultValue.contains("objectClass=Group"));
+        }
+
+        @Test
+        @DisplayName("Should set and get group object class")
+        void shouldSetAndGetGroupObjectClass() {
+            properties.setGroupObjectClass("(objectClass=Group)");
+            assertEquals("(objectClass=Group)", properties.getGroupObjectClass());
+        }
+
+        @Test
+        @DisplayName("Should accept simple group object class value")
+        void shouldAcceptSimpleGroupObjectClassValue() {
+            properties.setGroupObjectClass("posixGroup");
+            assertEquals("posixGroup", properties.getGroupObjectClass());
+        }
+
+        @Test
+        @DisplayName("Should accept complex filter expression for group object class")
+        void shouldAcceptComplexFilterExpression() {
+            String complexFilter = "(|(objectClass=groupOfNames)(objectClass=Group))";
+            properties.setGroupObjectClass(complexFilter);
+            assertEquals(complexFilter, properties.getGroupObjectClass());
+        }
     }
 
     @Nested

@@ -117,10 +117,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Navigate to the accessibility settings page.
+   * Navigate to the preferences page.
    */
-  openAccessibility(): void {
-    this.router.navigate(['/app/accessibility']);
+  openPreferences(): void {
+    this.router.navigate(['/app/preferences']);
     this.closeUserMenu();
   }
 

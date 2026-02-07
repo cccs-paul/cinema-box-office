@@ -19,6 +19,7 @@ import com.myrc.model.RCAccess.AccessLevel;
 import com.myrc.model.RCAccess.PrincipalType;
 import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.User;
+import com.myrc.model.User.AuthProvider;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.UserRepository;
@@ -53,6 +54,9 @@ class RCPermissionServiceTest {
   @Mock
   private UserRepository userRepository;
 
+  @Mock
+  private DirectorySearchService directorySearchService;
+
   private RCPermissionServiceImpl permissionService;
   private User testUser;
   private User ownerUser;
@@ -61,7 +65,7 @@ class RCPermissionServiceTest {
 
   @BeforeEach
   void setUp() {
-    permissionService = new RCPermissionServiceImpl(accessRepository, rcRepository, userRepository);
+    permissionService = new RCPermissionServiceImpl(accessRepository, rcRepository, userRepository, directorySearchService);
 
     ownerUser = new User();
     ownerUser.setId(1L);
@@ -190,14 +194,85 @@ class RCPermissionServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when target user not found")
+    @DisplayName("Should throw exception when target user not found in DB or directory")
     void shouldThrowExceptionWhenTargetUserNotFound() {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
       when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
+      // Directory search also returns no exact match
+      when(directorySearchService.searchUsers("nonexistent", 50)).thenReturn(Collections.emptyList());
 
       assertThrows(IllegalArgumentException.class, () ->
           permissionService.grantUserAccess(1L, "nonexistent", AccessLevel.READ_WRITE, "owner"));
+    }
+
+    @Test
+    @DisplayName("Should auto-provision LDAP user when not found in local DB")
+    void shouldAutoProvisionLdapUserWhenNotInLocalDb() {
+      User ldapUser = new User();
+      ldapUser.setId(10L);
+      ldapUser.setUsername("amy");
+      ldapUser.setFullName("Amy Wong");
+      ldapUser.setEmail("amy@planetexpress.com");
+      ldapUser.setAuthProvider(AuthProvider.LDAP);
+
+      DirectorySearchService.SearchResult ldapResult =
+          new DirectorySearchService.SearchResult("amy", "Amy Wong", "LDAP", "amy@planetexpress.com");
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(userRepository.findByUsername("amy")).thenReturn(Optional.empty());
+      when(directorySearchService.searchUsers("amy", 50)).thenReturn(List.of(ldapResult));
+      when(userRepository.save(any(User.class))).thenReturn(ldapUser);
+      when(accessRepository.findByResponsibilityCentreAndUser(eq(testRC), eq(ldapUser)))
+          .thenReturn(Optional.empty());
+      when(accessRepository.save(any(RCAccess.class))).thenAnswer(invocation -> {
+        RCAccess saved = invocation.getArgument(0);
+        saved.setId(5L);
+        return saved;
+      });
+
+      RCAccessDTO result = permissionService.grantUserAccess(1L, "amy", AccessLevel.READ_WRITE, "owner");
+
+      assertNotNull(result);
+      verify(userRepository).save(any(User.class));
+      verify(accessRepository).save(any(RCAccess.class));
+    }
+
+    @Test
+    @DisplayName("Should auto-provision user with fallback email when directory has no email")
+    void shouldAutoProvisionWithFallbackEmail() {
+      User provisionedUser = new User();
+      provisionedUser.setId(11L);
+      provisionedUser.setUsername("bender");
+      provisionedUser.setFullName("Bender Rodriguez");
+      provisionedUser.setEmail("bender@provisioned.local");
+
+      DirectorySearchService.SearchResult noEmailResult =
+          new DirectorySearchService.SearchResult("bender", "Bender Rodriguez", "LDAP", null);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(userRepository.findByUsername("bender")).thenReturn(Optional.empty());
+      when(directorySearchService.searchUsers("bender", 50)).thenReturn(List.of(noEmailResult));
+      when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+        User saved = invocation.getArgument(0);
+        saved.setId(11L);
+        assertEquals("bender@provisioned.local", saved.getEmail());
+        return saved;
+      });
+      when(accessRepository.findByResponsibilityCentreAndUser(eq(testRC), any(User.class)))
+          .thenReturn(Optional.empty());
+      when(accessRepository.save(any(RCAccess.class))).thenAnswer(invocation -> {
+        RCAccess saved = invocation.getArgument(0);
+        saved.setId(6L);
+        return saved;
+      });
+
+      RCAccessDTO result = permissionService.grantUserAccess(1L, "bender", AccessLevel.READ_ONLY, "owner");
+
+      assertNotNull(result);
+      verify(userRepository).save(argThat(user -> "bender@provisioned.local".equals(user.getEmail())));
     }
 
     @Test

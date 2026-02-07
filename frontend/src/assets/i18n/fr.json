@@ -74,7 +74,8 @@
     "lightTheme": "Thème clair",
     "signOut": "Se déconnecter",
     "signingOut": "Déconnexion...",
-    "accessibility": "Accessibilité"
+    "accessibility": "Accessibilité",
+    "preferences": "Préférences"
   },
   "sidebar": {
     "changeRcFy": "Changer CR / Exercice",
@@ -810,14 +811,15 @@
     "accessDeniedMessage": "Seuls les propriétaires du CR peuvent gérer les permissions de ce centre de responsabilité.",
     "returnToRcSelection": "Retourner à la sélection du CR",
     "enterUsername": "Entrez le nom d'utilisateur",
-    "enterGroupId": "Entrez l'identifiant du groupe",
+    "enterGroupId": "Entrez le nom du groupe",
     "enterDistList": "Entrez l'adresse courriel de la liste de distribution",
     "sourceApp": "Application",
     "sourceLdap": "LDAP",
     "typeToSearch": "Commencez à taper pour rechercher, ou appuyez sur Entrée pour tout parcourir",
     "pressEnterToBrowse": "Appuyez sur Entrée ou ↓ pour parcourir toutes les entrées disponibles",
     "noSuggestionsFound": "Aucune entrée correspondante trouvée",
-    "searching": "Recherche en cours..."
+    "searching": "Recherche en cours...",
+    "addGroup": "Ajouter un groupe"
   },
   "accessibility": {
     "title": "Paramètres d'accessibilité",
@@ -875,5 +877,21 @@
     "smallProcurementDesc": "Achats divers et équipements mineurs",
     "contractors": "Contractuels",
     "contractorsDesc": "Services de contractuels et de consultation externes"
+  },
+  "preferences": {
+    "title": "Préférences",
+    "description": "Personnalisez vos paramètres d'affichage et vos options d'accessibilité. Les modifications sont enregistrées automatiquement.",
+    "generalTab": "Paramètres généraux",
+    "accessibilityTab": "Accessibilité",
+    "displaySettings": "Paramètres d'affichage",
+    "displaySettingsDesc": "Configurer les options d'affichage pour les pages de financement, de dépenses et d'approvisionnement.",
+    "showSearchBox": "Afficher la barre de recherche / filtres de catégorie",
+    "showSearchBoxDesc": "Afficher la barre de recherche et le filtre de catégorie dans les vues Financement, Dépenses et Approvisionnement",
+    "showCategoryFilter": "Afficher le filtre de catégorie",
+    "showCategoryFilterDesc": "Afficher le filtre de catégorie dans les vues Financement et Dépenses",
+    "groupByCategory": "Grouper les éléments par catégorie",
+    "groupByCategoryDesc": "Regrouper les éléments de financement, d'approvisionnement et de dépenses par catégorie avec des en-têtes de section",
+    "settingUpdated": "Paramètre mis à jour",
+    "accessibilityRestored": "Paramètres d'accessibilité rétablis par défaut"
   }
 }

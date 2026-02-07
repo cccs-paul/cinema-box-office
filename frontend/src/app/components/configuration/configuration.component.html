@@ -33,13 +33,6 @@
   <div class="config-tabs">
     <button 
       class="tab-btn" 
-      [class.active]="activeTab === 'general'"
-      (click)="setActiveTab('general')">
-      <span class="tab-icon">⚙️</span>
-      <span class="tab-label">{{ 'configuration.general' | translate }}</span>
-    </button>
-    <button 
-      class="tab-btn" 
       [class.active]="activeTab === 'monies'"
       (click)="setActiveTab('monies')">
       <span class="tab-icon">💰</span>
@@ -429,72 +422,6 @@
     <div class="loading-state" *ngIf="isLoadingCategories">
       <span class="loading-spinner"></span>
       <p>{{ 'configuration.loadingCategories' | translate }}</p>
-    </div>
-  </div>
-
-  <!-- General Tab Content -->
-  <div class="tab-content" *ngIf="activeTab === 'general'">
-    <div class="section-header">
-      <h2>{{ 'configuration.generalSettings' | translate }}</h2>
-      <p class="section-description">
-        {{ 'configuration.generalSettingsDesc' | translate }}
-      </p>
-    </div>
-
-    <!-- Display Settings -->
-    <div class="settings-section">
-      <h3>{{ 'configuration.displaySettings' | translate }}</h3>
-      
-      <div class="setting-card">
-        <div class="setting-info">
-          <span class="setting-label">{{ 'configuration.showSearchBox' | translate }}</span>
-          <span class="setting-description">{{ 'configuration.showSearchBoxDesc' | translate }}</span>
-        </div>
-        <div class="setting-control">
-          <label class="toggle-switch">
-            <input 
-              type="checkbox" 
-              [checked]="selectedFY?.showSearchBox !== false"
-              (change)="updateDisplaySettings('showSearchBox', $any($event.target).checked)"
-              [disabled]="isReadOnly">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-
-      <div class="setting-card">
-        <div class="setting-info">
-          <span class="setting-label">{{ 'configuration.showCategoryFilter' | translate }}</span>
-          <span class="setting-description">{{ 'configuration.showCategoryFilterDesc' | translate }}</span>
-        </div>
-        <div class="setting-control">
-          <label class="toggle-switch">
-            <input 
-              type="checkbox" 
-              [checked]="selectedFY?.showCategoryFilter !== false"
-              (change)="updateDisplaySettings('showCategoryFilter', $any($event.target).checked)"
-              [disabled]="isReadOnly">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
-
-      <div class="setting-card">
-        <div class="setting-info">
-          <span class="setting-label">{{ 'configuration.groupByCategory' | translate }}</span>
-          <span class="setting-description">{{ 'configuration.groupByCategoryDesc' | translate }}</span>
-        </div>
-        <div class="setting-control">
-          <label class="toggle-switch">
-            <input 
-              type="checkbox" 
-              [checked]="selectedFY?.groupByCategory === true"
-              (change)="updateDisplaySettings('groupByCategory', $any($event.target).checked)"
-              [disabled]="isReadOnly">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </div>
     </div>
   </div>
 

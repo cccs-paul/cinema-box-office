@@ -312,4 +312,93 @@ describe('DirectorySearchService', () => {
       req.flush([]);
     });
   });
+
+  describe('searchAllGroups', () => {
+    it('should combine results from groups and distribution lists', () => {
+      service.searchAllGroups('fin').subscribe(results => {
+        expect(results.length).toBe(4);
+      });
+
+      const groupReq = httpMock.expectOne(r => r.url === '/api/directory/groups');
+      const dlReq = httpMock.expectOne(r => r.url === '/api/directory/distribution-lists');
+      groupReq.flush(mockGroupResults);
+      dlReq.flush(mockDistributionListResults);
+    });
+
+    it('should deduplicate results by identifier', () => {
+      const duplicateGroup: DirectorySearchResult = {
+        identifier: 'cn=Finance,ou=groups,dc=example,dc=com',
+        displayName: 'Finance (DL)',
+        source: 'LDAP',
+        email: 'finance@example.com'
+      };
+
+      service.searchAllGroups('fin').subscribe(results => {
+        const financeEntries = results.filter(r => r.identifier === 'cn=Finance,ou=groups,dc=example,dc=com');
+        expect(financeEntries.length).toBe(1);
+      });
+
+      const groupReq = httpMock.expectOne(r => r.url === '/api/directory/groups');
+      const dlReq = httpMock.expectOne(r => r.url === '/api/directory/distribution-lists');
+      groupReq.flush(mockGroupResults);
+      dlReq.flush([duplicateGroup]);
+    });
+
+    it('should sort results alphabetically by identifier', () => {
+      service.searchAllGroups('').subscribe(results => {
+        for (let i = 1; i < results.length; i++) {
+          expect(results[i].identifier.localeCompare(results[i - 1].identifier) >= 0).toBeTrue();
+        }
+      });
+
+      const groupReq = httpMock.expectOne(r => r.url === '/api/directory/groups');
+      const dlReq = httpMock.expectOne(r => r.url === '/api/directory/distribution-lists');
+      groupReq.flush(mockGroupResults);
+      dlReq.flush(mockDistributionListResults);
+    });
+
+    it('should return empty array for null query', () => {
+      service.searchAllGroups(null as any).subscribe(results => {
+        expect(results).toEqual([]);
+      });
+
+      httpMock.expectNone('/api/directory/groups');
+      httpMock.expectNone('/api/directory/distribution-lists');
+    });
+
+    it('should respect maxResults limit', () => {
+      service.searchAllGroups('', 2).subscribe(results => {
+        expect(results.length).toBeLessThanOrEqual(2);
+      });
+
+      const groupReq = httpMock.expectOne(r => r.url === '/api/directory/groups');
+      const dlReq = httpMock.expectOne(r => r.url === '/api/directory/distribution-lists');
+      groupReq.flush(mockGroupResults);
+      dlReq.flush(mockDistributionListResults);
+    });
+
+    it('should handle empty results from both endpoints', () => {
+      service.searchAllGroups('xyz').subscribe(results => {
+        expect(results).toEqual([]);
+      });
+
+      const groupReq = httpMock.expectOne(r => r.url === '/api/directory/groups');
+      const dlReq = httpMock.expectOne(r => r.url === '/api/directory/distribution-lists');
+      groupReq.flush([]);
+      dlReq.flush([]);
+    });
+
+    it('should handle error from one endpoint gracefully', () => {
+      service.searchAllGroups('test').subscribe(results => {
+        // forkJoin will fail if either observable errors, but the underlying
+        // calls use catchError so both should return empty arrays on error
+        expect(results).toBeDefined();
+      });
+
+      const groupReq = httpMock.expectOne(r => r.url === '/api/directory/groups');
+      const dlReq = httpMock.expectOne(r => r.url === '/api/directory/distribution-lists');
+      groupReq.flush('Error', { status: 500, statusText: 'Server Error' });
+      dlReq.flush([]);
+    });
+  });
 });

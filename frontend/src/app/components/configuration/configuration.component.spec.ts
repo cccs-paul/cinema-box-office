@@ -106,8 +106,8 @@ describe('ConfigurationComponent', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should start with general tab active', () => {
-      expect(component.activeTab).toBe('general');
+    it('should start with monies tab active', () => {
+      expect(component.activeTab).toBe('monies');
     });
 
     it('should have funding type options', () => {
@@ -156,11 +156,6 @@ describe('ConfigurationComponent', () => {
     it('should switch to categories tab', () => {
       component.setActiveTab('categories');
       expect(component.activeTab).toBe('categories');
-    });
-
-    it('should switch to general tab', () => {
-      component.setActiveTab('general');
-      expect(component.activeTab).toBe('general');
     });
 
     it('should switch to import-export tab', () => {

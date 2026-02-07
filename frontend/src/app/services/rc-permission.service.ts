@@ -169,9 +169,8 @@ export class RCPermissionService {
       case 'USER':
         return 'User';
       case 'GROUP':
-        return 'Security Group';
       case 'DISTRIBUTION_LIST':
-        return 'Distribution List';
+        return 'Group';
       default:
         return type;
     }
@@ -185,9 +184,8 @@ export class RCPermissionService {
       case 'USER':
         return '👤';
       case 'GROUP':
-        return '👥';
       case 'DISTRIBUTION_LIST':
-        return '📧';
+        return '👥';
       default:
         return '❓';
     }

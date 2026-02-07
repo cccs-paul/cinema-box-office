@@ -11,6 +11,7 @@ import com.myrc.model.RCAccess.AccessLevel;
 import com.myrc.model.RCAccess.PrincipalType;
 import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.User;
+import com.myrc.model.User.AuthProvider;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.UserRepository;
@@ -41,13 +42,16 @@ public class RCPermissionServiceImpl implements RCPermissionService {
   private final RCAccessRepository accessRepository;
   private final ResponsibilityCentreRepository rcRepository;
   private final UserRepository userRepository;
+  private final DirectorySearchService directorySearchService;
 
   public RCPermissionServiceImpl(RCAccessRepository accessRepository,
                                   ResponsibilityCentreRepository rcRepository,
-                                  UserRepository userRepository) {
+                                  UserRepository userRepository,
+                                  DirectorySearchService directorySearchService) {
     this.accessRepository = accessRepository;
     this.rcRepository = rcRepository;
     this.userRepository = userRepository;
+    this.directorySearchService = directorySearchService;
   }
 
   @Override
@@ -112,9 +116,9 @@ public class RCPermissionServiceImpl implements RCPermissionService {
       throw new IllegalArgumentException("Cannot modify permissions for Demo RC");
     }
 
-    // Find the target user
+    // Find the target user, or auto-provision from LDAP if not found locally
     User targetUser = userRepository.findByUsername(principalIdentifier)
-        .orElseThrow(() -> new IllegalArgumentException("User not found: " + principalIdentifier));
+        .orElseGet(() -> provisionLdapUser(principalIdentifier));
 
     // Check if access already exists
     Optional<RCAccess> existingAccess = accessRepository.findByResponsibilityCentreAndUser(rc, targetUser);
@@ -382,6 +386,39 @@ public class RCPermissionServiceImpl implements RCPermissionService {
       case READ_WRITE -> 2;
       case READ_ONLY -> 1;
     };
+  }
+
+  /**
+   * Provision a user from LDAP directory when they don't exist in the local database.
+   * Searches the directory for a matching username and creates a minimal User entity
+   * so that permissions can be granted to LDAP users who haven't logged in yet.
+   *
+   * @param username the LDAP username to provision
+   * @return the newly created User entity
+   * @throws IllegalArgumentException if the user is not found in any directory
+   */
+  private User provisionLdapUser(String username) {
+    List<DirectorySearchService.SearchResult> results =
+        directorySearchService.searchUsers(username, 50);
+
+    DirectorySearchService.SearchResult match = results.stream()
+        .filter(r -> r.identifier().equalsIgnoreCase(username))
+        .findFirst()
+        .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+
+    User user = new User();
+    user.setUsername(match.identifier());
+    user.setFullName(match.displayName());
+    user.setEmail(match.email() != null ? match.email() : match.identifier() + "@provisioned.local");
+    user.setAuthProvider("LDAP".equals(match.source()) ? AuthProvider.LDAP : AuthProvider.LOCAL);
+    user.setEnabled(true);
+    user.setAccountLocked(false);
+    user.setEmailVerified(false);
+    user.setFailedLoginAttempts(0);
+
+    User saved = userRepository.save(user);
+    logger.info("Auto-provisioned {} user {} for permission grant", match.source(), username);
+    return saved;
   }
 
   @Override

@@ -262,15 +262,15 @@ describe('HeaderComponent', () => {
     }));
   });
 
-  describe('openAccessibility', () => {
-    it('should navigate to /app/accessibility', () => {
-      component.openAccessibility();
-      expect(router.navigate).toHaveBeenCalledWith(['/app/accessibility']);
+  describe('openPreferences', () => {
+    it('should navigate to /app/preferences', () => {
+      component.openPreferences();
+      expect(router.navigate).toHaveBeenCalledWith(['/app/preferences']);
     });
 
     it('should close the user menu', () => {
       component.isUserMenuOpen = true;
-      component.openAccessibility();
+      component.openPreferences();
       expect(component.isUserMenuOpen).toBeFalse();
     });
   });

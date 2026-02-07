@@ -105,6 +105,13 @@ public class LdapProperties {
     private String groupNameAttribute = "cn";
 
     /**
+     * LDAP objectClass used for group entries.
+     * Common values: "groupOfNames", "groupOfUniqueNames", "Group", "posixGroup".
+     * Defaults to a broad filter matching the most common types.
+     */
+    private String groupObjectClass = "(|(objectClass=groupOfNames)(objectClass=groupOfUniqueNames)(objectClass=Group)(objectClass=posixGroup))";
+
+    /**
      * Search base for distribution lists, relative to base-dn.
      */
     private String distributionListSearchBase = "ou=distribution-lists";
@@ -467,6 +474,14 @@ public class LdapProperties {
 
     public void setGroupNameAttribute(String groupNameAttribute) {
         this.groupNameAttribute = groupNameAttribute;
+    }
+
+    public String getGroupObjectClass() {
+        return groupObjectClass;
+    }
+
+    public void setGroupObjectClass(String groupObjectClass) {
+        this.groupObjectClass = groupObjectClass;
     }
 
     public String getDistributionListSearchBase() {

@@ -18,6 +18,7 @@ import { SummaryComponent } from './components/summary/summary.component';
 import { DeveloperToolsComponent } from './components/developer-tools/developer-tools.component';
 import { ConfigurationComponent } from './components/configuration/configuration.component';
 import { AccessibilityComponent } from './components/accessibility/accessibility.component';
+import { PreferencesComponent } from './components/preferences/preferences.component';
 import { AuthGuardService } from './guards/auth.guard';
 
 /**
@@ -93,8 +94,13 @@ export const routes: Routes = [
         component: DeveloperToolsComponent,
       },
       {
+        path: 'preferences',
+        component: PreferencesComponent,
+      },
+      {
         path: 'accessibility',
-        component: AccessibilityComponent,
+        redirectTo: 'preferences',
+        pathMatch: 'full',
       },
       {
         path: '',

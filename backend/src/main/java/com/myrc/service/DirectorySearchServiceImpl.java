@@ -250,16 +250,19 @@ public class DirectorySearchServiceImpl implements DirectorySearchService {
 
                 controls.setReturningAttributes(new String[]{groupNameAttr, "description"});
 
+                // Build the objectClass filter from configuration
+                String objectClassFilter = buildGroupObjectClassFilter();
+
                 // Search for groups matching the query by cn or description
                 // Empty query matches all groups (browse-all mode)
                 String filter;
                 if (query.isEmpty()) {
-                    filter = "(objectClass=groupOfNames)";
+                    filter = objectClassFilter;
                 } else {
                     String escapedQuery = escapeForLdapFilter(query);
                     filter = String.format(
-                            "(&(objectClass=groupOfNames)(|(%s=*%s*)(description=*%s*)))",
-                            groupNameAttr, escapedQuery, escapedQuery
+                            "(&%s(|(%s=*%s*)(description=*%s*)))",
+                            objectClassFilter, groupNameAttr, escapedQuery, escapedQuery
                     );
                 }
 
@@ -309,16 +312,19 @@ public class DirectorySearchServiceImpl implements DirectorySearchService {
 
                 controls.setReturningAttributes(new String[]{groupNameAttr, "description", "mail"});
 
+                // Build the objectClass filter from configuration
+                String objectClassFilter = buildGroupObjectClassFilter();
+
                 // Search for distribution lists matching the query by cn, description, or mail
                 // Empty query matches all distribution lists (browse-all mode)
                 String filter;
                 if (query.isEmpty()) {
-                    filter = "(objectClass=groupOfNames)";
+                    filter = objectClassFilter;
                 } else {
                     String escapedQuery = escapeForLdapFilter(query);
                     filter = String.format(
-                            "(&(objectClass=groupOfNames)(|(%s=*%s*)(description=*%s*)(mail=*%s*)))",
-                            groupNameAttr, escapedQuery, escapedQuery, escapedQuery
+                            "(&%s(|(%s=*%s*)(description=*%s*)(mail=*%s*)))",
+                            objectClassFilter, groupNameAttr, escapedQuery, escapedQuery, escapedQuery
                     );
                 }
 
@@ -356,6 +362,26 @@ public class DirectorySearchServiceImpl implements DirectorySearchService {
      */
     private boolean isLdapEnabled() {
         return ldapProperties.isEnabled() && ldapContextSource != null;
+    }
+
+    /**
+     * Build the LDAP objectClass filter for group searches.
+     * If the configured value already contains parentheses, it is used as-is
+     * (e.g., "(|(objectClass=groupOfNames)(objectClass=Group))").
+     * Otherwise, a simple "(objectClass={value})" filter is built.
+     *
+     * @return an LDAP filter string for matching group objectClasses
+     */
+    private String buildGroupObjectClassFilter() {
+        String raw = ldapProperties.getGroupObjectClass();
+        if (raw == null || raw.isBlank()) {
+            return "(objectClass=groupOfNames)";
+        }
+        raw = raw.trim();
+        if (raw.startsWith("(")) {
+            return raw;
+        }
+        return "(objectClass=" + raw + ")";
     }
 
     /**

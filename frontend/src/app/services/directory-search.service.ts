@@ -6,7 +6,7 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Observable, throwError, of } from 'rxjs';
+import { Observable, throwError, of, forkJoin } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 /**
@@ -117,6 +117,39 @@ export class DirectorySearchService {
       withCredentials: true
     }).pipe(
       catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Search for all groups (security groups + distribution lists) matching a query.
+   * Combines results from both endpoints and deduplicates by identifier.
+   * An empty query returns all available entries up to the max limit.
+   *
+   * @param query the search query (empty string returns all entries)
+   * @param maxResults the maximum number of results to return (default 20)
+   * @returns Observable of combined, deduplicated group search results
+   */
+  searchAllGroups(query: string, maxResults: number = 20): Observable<DirectorySearchResult[]> {
+    if (query == null) {
+      return of([]);
+    }
+
+    return forkJoin([
+      this.searchGroups(query, maxResults),
+      this.searchDistributionLists(query, maxResults)
+    ]).pipe(
+      map(([groups, distLists]) => {
+        const seen = new Set<string>();
+        const combined: DirectorySearchResult[] = [];
+        for (const item of [...groups, ...distLists]) {
+          if (!seen.has(item.identifier)) {
+            seen.add(item.identifier);
+            combined.push(item);
+          }
+        }
+        combined.sort((a, b) => a.identifier.localeCompare(b.identifier));
+        return combined.slice(0, maxResults);
+      })
     );
   }
 

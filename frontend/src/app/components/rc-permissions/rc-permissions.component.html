@@ -67,10 +67,7 @@
           <span>👤</span> {{ 'rcPermissions.addUser' | translate }}
         </button>
         <button class="btn-grant" (click)="openGrantForm('GROUP')">
-          <span>👥</span> {{ 'rcPermissions.addSecurityGroup' | translate }}
-        </button>
-        <button class="btn-grant" (click)="openGrantForm('DISTRIBUTION_LIST')">
-          <span>📧</span> {{ 'rcPermissions.addDistributionList' | translate }}
+          <span>👥</span> {{ 'rcPermissions.addGroup' | translate }}
         </button>
       </div>
 
@@ -85,7 +82,6 @@
             <div class="form-group">
               <label *ngIf="grantFormType === 'USER'">{{ 'rcPermissions.username' | translate }}</label>
               <label *ngIf="grantFormType === 'GROUP'">{{ 'rcPermissions.groupIdentifier' | translate }}</label>
-              <label *ngIf="grantFormType === 'DISTRIBUTION_LIST'">{{ 'rcPermissions.distributionList' | translate }}</label>
               <div class="autocomplete-wrapper">
                 <input 
                   type="text" 

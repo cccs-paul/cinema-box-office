@@ -74,7 +74,8 @@
     "lightTheme": "Light Theme",
     "signOut": "Sign Out",
     "signingOut": "Signing Out...",
-    "accessibility": "Accessibility"
+    "accessibility": "Accessibility",
+    "preferences": "Preferences"
   },
   "sidebar": {
     "changeRcFy": "Change RC / Fiscal Year",
@@ -839,7 +840,7 @@
     "accessDeniedMessage": "Only RC owners can manage permissions for this Responsibility Centre.",
     "returnToRcSelection": "Return to RC Selection",
     "enterUsername": "Enter username",
-    "enterGroupId": "Enter group identifier",
+    "enterGroupId": "Enter group name",
     "enterDistList": "Enter distribution list email",
     "accessGrantedSuccess": "Access granted to {{principal}}",
     "accessGrantedError": "Failed to grant access.",
@@ -855,7 +856,8 @@
     "typeToSearch": "Start typing to search, or press Enter to browse all",
     "pressEnterToBrowse": "Press Enter or ↓ to browse all available entries",
     "noSuggestionsFound": "No matching entries found",
-    "searching": "Searching..."
+    "searching": "Searching...",
+    "addGroup": "Add Group"
   },
   "accessibility": {
     "title": "Accessibility Settings",
@@ -913,5 +915,21 @@
     "smallProcurementDesc": "Miscellaneous small purchases and equipment",
     "contractors": "Contractors",
     "contractorsDesc": "External contractors and consulting services"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "description": "Customise your display settings and accessibility options. Changes are saved automatically.",
+    "generalTab": "General Settings",
+    "accessibilityTab": "Accessibility",
+    "displaySettings": "Display Settings",
+    "displaySettingsDesc": "Configure display options for Funding, Spending, and Procurement pages.",
+    "showSearchBox": "Show Search Box / Category Filters",
+    "showSearchBoxDesc": "Display the search box and category filter bar in Funding, Spending, and Procurement views",
+    "showCategoryFilter": "Show Category Filter",
+    "showCategoryFilterDesc": "Display the category filter in Funding and Spending views",
+    "groupByCategory": "Group Items by Category",
+    "groupByCategoryDesc": "Group funding, procurement and spending items by their category with section headers",
+    "settingUpdated": "Setting updated",
+    "accessibilityRestored": "Accessibility settings restored to defaults"
   }
 }

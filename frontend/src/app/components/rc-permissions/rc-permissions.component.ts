@@ -44,7 +44,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
   // Grant access form
   showGrantForm = false;
-  grantFormType: 'USER' | 'GROUP' | 'DISTRIBUTION_LIST' = 'USER';
+  grantFormType: 'USER' | 'GROUP' = 'USER';
   newPrincipalIdentifier = '';
   newPrincipalDisplayName = '';
   newAccessLevel: 'OWNER' | 'READ_WRITE' | 'READ_ONLY' = 'READ_WRITE';
@@ -151,7 +151,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   }
 
   // Grant form methods
-  openGrantForm(type: 'USER' | 'GROUP' | 'DISTRIBUTION_LIST' = 'USER'): void {
+  openGrantForm(type: 'USER' | 'GROUP' = 'USER'): void {
     this.showGrantForm = true;
     this.grantFormType = type;
     this.newPrincipalIdentifier = '';
@@ -181,9 +181,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
         if (this.grantFormType === 'USER') {
           return this.directorySearchService.searchUsers(trimmedQuery);
         } else if (this.grantFormType === 'GROUP') {
-          return this.directorySearchService.searchGroups(trimmedQuery);
-        } else if (this.grantFormType === 'DISTRIBUTION_LIST') {
-          return this.directorySearchService.searchDistributionLists(trimmedQuery);
+          return this.directorySearchService.searchAllGroups(trimmedQuery);
         }
         return [];
       })
@@ -314,7 +312,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
       const request: GrantGroupAccessRequest = {
         principalIdentifier: this.newPrincipalIdentifier.trim(),
         principalDisplayName: this.newPrincipalDisplayName.trim() || this.newPrincipalIdentifier.trim(),
-        principalType: this.grantFormType,
+        principalType: 'GROUP',
         accessLevel: this.newAccessLevel
       };
 
@@ -421,9 +419,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
       case 'USER':
         return 'User';
       case 'GROUP':
-        return 'Security Group';
-      case 'DISTRIBUTION_LIST':
-        return 'Distribution List';
+        return 'Group';
       default:
         return '';
     }
@@ -434,9 +430,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
       case 'USER':
         return 'Enter username (e.g., jsmith)';
       case 'GROUP':
-        return 'Enter LDAP group name (e.g., CN=Finance-Team,OU=Groups,DC=corp,DC=local)';
-      case 'DISTRIBUTION_LIST':
-        return 'Enter distribution list (e.g., finance-team@company.com)';
+        return 'Enter group name (e.g., Finance-Team)';
       default:
         return '';
     }
@@ -451,8 +445,6 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
         return this.translate.instant('rcPermissions.grantUserAccess');
       case 'GROUP':
         return this.translate.instant('rcPermissions.grantGroupAccess');
-      case 'DISTRIBUTION_LIST':
-        return this.translate.instant('rcPermissions.grantDistListAccess');
       default:
         return '';
     }
@@ -467,8 +459,6 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
         return this.translate.instant('rcPermissions.enterUsername');
       case 'GROUP':
         return this.translate.instant('rcPermissions.enterGroupId');
-      case 'DISTRIBUTION_LIST':
-        return this.translate.instant('rcPermissions.enterDistList');
       default:
         return '';
     }
@@ -482,9 +472,8 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
       case 'USER':
         return this.translate.instant('rcPermissions.user');
       case 'GROUP':
-        return this.translate.instant('rcPermissions.group');
       case 'DISTRIBUTION_LIST':
-        return this.translate.instant('rcPermissions.distList');
+        return this.translate.instant('rcPermissions.group');
       default:
         return type;
     }

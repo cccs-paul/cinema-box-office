@@ -42,7 +42,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   fyId: number | null = null;
 
   // Configuration tabs
-  activeTab: 'monies' | 'categories' | 'general' | 'summary' | 'import-export' = 'general';
+  activeTab: 'monies' | 'categories' | 'summary' | 'import-export' = 'monies';
 
   // Money management state
   monies: Money[] = [];
@@ -178,7 +178,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   /**
    * Switch to a configuration tab.
    */
-  setActiveTab(tab: 'monies' | 'categories' | 'general' | 'summary' | 'import-export'): void {
+  setActiveTab(tab: 'monies' | 'categories' | 'summary' | 'import-export'): void {
     this.activeTab = tab;
   }
 
@@ -531,32 +531,6 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    */
   clearCategoryError(): void {
     this.categoryError = null;
-  }
-
-  /**
-   * Update display settings for the fiscal year.
-   */
-  updateDisplaySettings(setting: 'showSearchBox' | 'showCategoryFilter' | 'groupByCategory', value: boolean): void {
-    if (!this.rcId || !this.fyId || !this.selectedFY) {
-      return;
-    }
-
-    const request = { [setting]: value };
-    
-    this.fyService.updateDisplaySettings(this.rcId, this.fyId, request).subscribe({
-      next: (updatedFY) => {
-        this.selectedFY = updatedFY;
-        const settingLabels: Record<string, string> = {
-          'showSearchBox': 'Search box and filters',
-          'showCategoryFilter': 'Category filter',
-          'groupByCategory': 'Group by category'
-        };
-        this.showSuccess(`${settingLabels[setting]} setting updated`);
-      },
-      error: (error) => {
-        this.moneyError = error.message || 'Failed to update display settings';
-      }
-    });
   }
 
   /**

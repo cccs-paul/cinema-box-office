@@ -71,10 +71,11 @@ describe('RCPermissionsComponent', () => {
     permissionService.getAccessLevelIcon.and.callFake((level: string) => '📝');
 
     directorySearchService = jasmine.createSpyObj('DirectorySearchService',
-      ['searchUsers', 'searchGroups', 'searchDistributionLists']);
+      ['searchUsers', 'searchGroups', 'searchDistributionLists', 'searchAllGroups']);
     directorySearchService.searchUsers.and.returnValue(of([]));
     directorySearchService.searchGroups.and.returnValue(of([]));
     directorySearchService.searchDistributionLists.and.returnValue(of([]));
+    directorySearchService.searchAllGroups.and.returnValue(of([]));
 
     rcService = jasmine.createSpyObj('ResponsibilityCentreService', 
       ['getResponsibilityCentre'], {
@@ -312,31 +313,15 @@ describe('RCPermissionsComponent', () => {
     }));
 
     it('should search groups on input when grant form type is GROUP', fakeAsync(() => {
-      directorySearchService.searchGroups.and.returnValue(of(mockGroupSuggestions));
+      directorySearchService.searchAllGroups.and.returnValue(of(mockGroupSuggestions));
       component.openGrantForm('GROUP');
 
       component.newPrincipalIdentifier = 'fin';
       component.onIdentifierInput();
       tick(300);
 
-      expect(directorySearchService.searchGroups).toHaveBeenCalledWith('fin');
+      expect(directorySearchService.searchAllGroups).toHaveBeenCalledWith('fin');
       expect(component.suggestions).toEqual(mockGroupSuggestions);
-      expect(component.showSuggestions).toBeTrue();
-    }));
-
-    it('should search distribution lists on input when grant form type is DISTRIBUTION_LIST', fakeAsync(() => {
-      const mockDistListSuggestions: DirectorySearchResult[] = [
-        { identifier: 'cn=all-staff,ou=distribution-lists,dc=example,dc=com', displayName: 'all-staff - All staff', source: 'LDAP', email: 'all-staff@example.com' }
-      ];
-      directorySearchService.searchDistributionLists.and.returnValue(of(mockDistListSuggestions));
-      component.openGrantForm('DISTRIBUTION_LIST');
-
-      component.newPrincipalIdentifier = 'staff';
-      component.onIdentifierInput();
-      tick(300);
-
-      expect(directorySearchService.searchDistributionLists).toHaveBeenCalledWith('staff');
-      expect(component.suggestions).toEqual(mockDistListSuggestions);
       expect(component.showSuggestions).toBeTrue();
     }));
 
@@ -379,24 +364,6 @@ describe('RCPermissionsComponent', () => {
 
       expect(component.newPrincipalIdentifier).toBe('cn=finance,ou=groups,dc=example,dc=com');
       expect(component.newPrincipalDisplayName).toBe('Finance Team');
-      expect(component.showSuggestions).toBeFalse();
-    });
-
-    it('should set display name for distribution list suggestions', () => {
-      const mockDistListSuggestion: DirectorySearchResult = {
-        identifier: 'cn=all-staff,ou=distribution-lists,dc=example,dc=com',
-        displayName: 'all-staff - All staff',
-        source: 'LDAP',
-        email: 'all-staff@example.com'
-      };
-      component.openGrantForm('DISTRIBUTION_LIST');
-      component.suggestions = [mockDistListSuggestion];
-      component.showSuggestions = true;
-
-      component.selectSuggestion(mockDistListSuggestion);
-
-      expect(component.newPrincipalIdentifier).toBe('cn=all-staff,ou=distribution-lists,dc=example,dc=com');
-      expect(component.newPrincipalDisplayName).toBe('all-staff - All staff');
       expect(component.showSuggestions).toBeFalse();
     });
 
@@ -623,32 +590,17 @@ describe('RCPermissionsComponent', () => {
       const mockGroups: DirectorySearchResult[] = [
         { identifier: 'cn=Finance,ou=groups,dc=example,dc=com', displayName: 'Finance', source: 'LDAP', email: null }
       ];
-      directorySearchService.searchGroups.and.returnValue(of(mockGroups));
+      directorySearchService.searchAllGroups.and.returnValue(of(mockGroups));
       component.openGrantForm('GROUP');
       component.newPrincipalIdentifier = '';
 
       component.triggerBrowseAll();
       tick(300);
 
-      expect(directorySearchService.searchGroups).toHaveBeenCalledWith('');
+      expect(directorySearchService.searchAllGroups).toHaveBeenCalledWith('');
       expect(component.suggestions.length).toBe(1);
       expect(component.showSuggestions).toBeTrue();
     }));
 
-    it('should show all distribution lists when triggerBrowseAll is called for DISTRIBUTION_LIST form', fakeAsync(() => {
-      const mockDLists: DirectorySearchResult[] = [
-        { identifier: 'cn=all-staff,ou=distribution-lists,dc=example,dc=com', displayName: 'all-staff', source: 'LDAP', email: 'all-staff@example.com' }
-      ];
-      directorySearchService.searchDistributionLists.and.returnValue(of(mockDLists));
-      component.openGrantForm('DISTRIBUTION_LIST');
-      component.newPrincipalIdentifier = '';
-
-      component.triggerBrowseAll();
-      tick(300);
-
-      expect(directorySearchService.searchDistributionLists).toHaveBeenCalledWith('');
-      expect(component.suggestions.length).toBe(1);
-      expect(component.showSuggestions).toBeTrue();
-    }));
   });
 });
