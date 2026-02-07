@@ -56,6 +56,12 @@ export interface Category {
   /** Whether the category is active */
   active: boolean;
 
+  /** Whether the category can be deleted (false if in use by items) */
+  canDelete?: boolean;
+
+  /** Translation key for i18n (e.g., 'category.compute'). Null for custom categories. */
+  translationKey?: string;
+
   /** Creation timestamp */
   createdAt?: string;
 

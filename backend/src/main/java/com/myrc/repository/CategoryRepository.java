@@ -117,4 +117,34 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
   @Modifying
   @Query("DELETE FROM Category c WHERE c.fiscalYear.id = :fiscalYearId")
   void deleteByFiscalYearId(@Param("fiscalYearId") Long fiscalYearId);
+
+  /**
+   * Check if any category with the given ID is referenced by a funding item.
+   *
+   * @param categoryId the category ID
+   * @return true if at least one funding item references this category
+   */
+  @Query("SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END " +
+         "FROM FundingItem f WHERE f.category.id = :categoryId")
+  boolean isCategoryUsedByFundingItems(@Param("categoryId") Long categoryId);
+
+  /**
+   * Check if any category with the given ID is referenced by an active procurement item.
+   *
+   * @param categoryId the category ID
+   * @return true if at least one active procurement item references this category
+   */
+  @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END " +
+         "FROM ProcurementItem p WHERE p.category.id = :categoryId AND p.active = true")
+  boolean isCategoryUsedByProcurementItems(@Param("categoryId") Long categoryId);
+
+  /**
+   * Check if any category with the given ID is referenced by a spending item.
+   *
+   * @param categoryId the category ID
+   * @return true if at least one spending item references this category
+   */
+  @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END " +
+         "FROM SpendingItem s WHERE s.category.id = :categoryId")
+  boolean isCategoryUsedBySpendingItems(@Param("categoryId") Long categoryId);
 }

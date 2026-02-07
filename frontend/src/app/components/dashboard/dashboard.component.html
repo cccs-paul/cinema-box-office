@@ -46,7 +46,7 @@
             class="filter-btn"
             [class.active]="selectedCategoryId === category.id"
             (click)="filterByCategory(category.id)">
-            {{ category.name }}
+            {{ getCategoryDisplayName(category) }}
           </button>
         </div>
       </div>
@@ -94,7 +94,7 @@
             >
               <option [ngValue]="null">-- {{ 'funding.noCategory' | translate }} --</option>
               <option *ngFor="let category of categories" [ngValue]="category.id">
-                {{ category.name }}
+                {{ getCategoryDisplayName(category) }}
               </option>
             </select>
           </div>
@@ -222,7 +222,7 @@
       <div class="item-summary" (click)="toggleItemDetails(item)">
         <div class="item-info">
           <span class="item-name">{{ item.name }}</span>
-          <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">{{ item.categoryName }}</span>
+          <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">{{ getCategoryDisplayNameById(item.categoryId, item.categoryName) }}</span>
           <span class="source-badge" [ngClass]="getSourceClass(item.source)">
             {{ getSourceLabel(item.source) }}
           </span>
@@ -345,7 +345,7 @@
               >
                 <option [ngValue]="null">-- {{ 'funding.noCategory' | translate }} --</option>
                 <option *ngFor="let category of categories" [ngValue]="category.id">
-                  {{ category.name }}
+                  {{ getCategoryDisplayName(category) }}
                 </option>
               </select>
             </div>

@@ -87,6 +87,14 @@ public class Category {
   private FundingType fundingType = FundingType.BOTH;
 
   /**
+   * Translation key for internationalization of category names.
+   * Default categories get keys like 'category.compute', 'category.gpus', etc.
+   * Custom categories have null translationKey and use their user-entered name directly.
+   */
+  @Column(length = 100)
+  private String translationKey;
+
+  /**
    * The fiscal year this category belongs to.
    */
   @ManyToOne(optional = false)
@@ -195,6 +203,14 @@ public class Category {
     this.fundingType = fundingType != null ? fundingType : FundingType.BOTH;
   }
 
+  public String getTranslationKey() {
+    return translationKey;
+  }
+
+  public void setTranslationKey(String translationKey) {
+    this.translationKey = translationKey;
+  }
+
   public FiscalYear getFiscalYear() {
     return fiscalYear;
   }
@@ -254,6 +270,7 @@ public class Category {
         ", isDefault=" + isDefault +
         ", displayOrder=" + displayOrder +
         ", fundingType=" + fundingType +
+        ", translationKey='" + translationKey + '\'' +
         ", fiscalYear=" + (fiscalYear != null ? fiscalYear.getName() : null) +
         ", active=" + active +
         ", createdAt=" + createdAt +

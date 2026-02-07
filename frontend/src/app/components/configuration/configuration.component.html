@@ -263,11 +263,11 @@
         <!-- View Mode -->
         <div class="category-content" *ngIf="editingCategoryId !== category.id">
           <div class="category-header">
-            <span class="category-code">{{ category.name }}</span>
+            <span class="category-code">{{ getCategoryDisplayName(category) }}</span>
             <span class="default-badge" *ngIf="category.isDefault">{{ 'configuration.default' | translate }}</span>
             <span class="readonly-badge" *ngIf="category.isDefault">{{ 'configuration.readOnly' | translate }}</span>
           </div>
-          <div class="category-description" *ngIf="category.description">{{ category.description }}</div>
+          <div class="category-description" *ngIf="category.description">{{ getCategoryDescriptionDisplay(category) }}</div>
           <div class="category-tags">
             <span class="category-tag" [class.default-category]="category.isDefault" [class.custom-category]="!category.isDefault">
               {{ category.isDefault ? ('configuration.system' | translate) : ('configuration.custom' | translate) }}
@@ -289,8 +289,8 @@
             <button 
               class="btn btn-danger" 
               (click)="deleteCategory(category)"
-              [disabled]="isSaving || isDeleting"
-              [title]="'common.delete' | translate">
+              [disabled]="isSaving || isDeleting || category.canDelete === false"
+              [title]="category.canDelete === false ? ('configuration.cannotDeleteCategoryInUse' | translate) : ('common.delete' | translate)">
               {{ 'common.delete' | translate }}
             </button>
           </div>
@@ -319,7 +319,7 @@
             <label>{{ 'configuration.fundingType' | translate }}</label>
             <select [(ngModel)]="editCategory.fundingType" [disabled]="isSaving">
               <option *ngFor="let ft of fundingTypeOptions" [value]="ft">
-                {{ fundingTypeLabels[ft] }}
+                {{ getFundingTypeLabel(ft) }}
               </option>
             </select>
             <span class="form-hint">{{ 'configuration.fundingTypeHint' | translate }}</span>
@@ -393,7 +393,7 @@
           [(ngModel)]="newCategory.fundingType" 
           [disabled]="isSaving">
           <option *ngFor="let ft of fundingTypeOptions" [value]="ft">
-            {{ fundingTypeLabels[ft] }}
+            {{ getFundingTypeLabel(ft) }}
           </option>
         </select>
         <span class="form-hint">

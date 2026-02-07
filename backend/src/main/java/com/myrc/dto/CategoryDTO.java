@@ -35,6 +35,8 @@ public class CategoryDTO {
   private Long fiscalYearId;
   private String fiscalYearName;
   private Boolean active;
+  private Boolean canDelete;
+  private String translationKey;
 
   // Constructors
   public CategoryDTO() {}
@@ -74,7 +76,7 @@ public class CategoryDTO {
     if (entity == null) {
       return null;
     }
-    return new CategoryDTO(
+    CategoryDTO dto = new CategoryDTO(
         entity.getId(),
         entity.getName(),
         entity.getDescription(),
@@ -85,6 +87,8 @@ public class CategoryDTO {
         entity.getFiscalYear() != null ? entity.getFiscalYear().getName() : null,
         entity.getActive()
     );
+    dto.setTranslationKey(entity.getTranslationKey());
+    return dto;
   }
 
   // Getters and Setters
@@ -186,5 +190,21 @@ public class CategoryDTO {
 
   public void setActive(Boolean active) {
     this.active = active;
+  }
+
+  public Boolean getCanDelete() {
+    return canDelete;
+  }
+
+  public void setCanDelete(Boolean canDelete) {
+    this.canDelete = canDelete;
+  }
+
+  public String getTranslationKey() {
+    return translationKey;
+  }
+
+  public void setTranslationKey(String translationKey) {
+    this.translationKey = translationKey;
   }
 }

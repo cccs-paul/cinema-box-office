@@ -15,6 +15,7 @@ import { FiscalYearService } from '../../services/fiscal-year.service';
 import { FundingItemService } from '../../services/funding-item.service';
 import { SpendingItemService } from '../../services/spending-item.service';
 import { ProcurementService } from '../../services/procurement.service';
+import { CategoryService } from '../../services/category.service';
 import { User } from '../../models/user.model';
 
 describe('InsightsComponent', () => {
@@ -27,6 +28,7 @@ describe('InsightsComponent', () => {
   let fundingItemService: jasmine.SpyObj<FundingItemService>;
   let spendingItemService: jasmine.SpyObj<SpendingItemService>;
   let procurementService: jasmine.SpyObj<ProcurementService>;
+  let categoryService: jasmine.SpyObj<CategoryService>;
   let languageService: jasmine.SpyObj<LanguageService>;
 
   let currentUserSubject: BehaviorSubject<User | null>;
@@ -114,6 +116,9 @@ describe('InsightsComponent', () => {
     procurementService = jasmine.createSpyObj('ProcurementService', ['getProcurementItems']);
     procurementService.getProcurementItems.and.returnValue(of(mockProcurementItems as any));
 
+    categoryService = jasmine.createSpyObj('CategoryService', ['getCategoriesByFY']);
+    categoryService.getCategoriesByFY.and.returnValue(of([] as any));
+
     languageService = jasmine.createSpyObj('LanguageService', ['toggleLanguage'], {
       currentLanguage$: currentLanguageSubject.asObservable()
     });
@@ -128,6 +133,7 @@ describe('InsightsComponent', () => {
     .overrideProvider(FundingItemService, { useValue: fundingItemService })
     .overrideProvider(SpendingItemService, { useValue: spendingItemService })
     .overrideProvider(ProcurementService, { useValue: procurementService })
+    .overrideProvider(CategoryService, { useValue: categoryService })
     .overrideProvider(LanguageService, { useValue: languageService })
     .compileComponents();
 

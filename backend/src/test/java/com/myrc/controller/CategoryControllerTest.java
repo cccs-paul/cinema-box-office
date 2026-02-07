@@ -295,6 +295,17 @@ class CategoryControllerTest {
 
       assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
+
+    @Test
+    @DisplayName("Should return bad request when deleting category in use")
+    void shouldReturnBadRequestWhenDeletingCategoryInUse() {
+      doThrow(new IllegalArgumentException("Cannot delete category \"Compute\" because it is in use by funding, procurement, or spending items"))
+          .when(categoryService).deleteCategory(1L, "testuser");
+
+      ResponseEntity<?> response = controller.deleteCategory(1L, 1L, 1L, authentication);
+
+      assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
   }
 
   @Nested

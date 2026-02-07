@@ -734,7 +734,8 @@
     "exportDataTitle": "Import/Export Data",
     "exportLineItemsDesc": "Export all Funding, Procurement, and Spending line items to a CSV file for backup or analysis.",
     "importLineItemsDesc": "Import line items from a CSV file. This feature is currently under development.",
-    "exportCompleted": "Export completed successfully!"
+    "exportCompleted": "Export completed successfully!",
+    "cannotDeleteCategoryInUse": "This category cannot be deleted because it is in use by funding, procurement, or spending items"
   },
   "developerTools": {
     "title": "Developer Tools",
@@ -889,5 +890,21 @@
     "itemGapDesc": "Spacing between elements within an item row",
     "sidebarWidth": "Sidebar Width",
     "sidebarWidthDesc": "Width of the navigation sidebar"
+  },
+  "category": {
+    "compute": "Compute",
+    "computeDesc": "Computing infrastructure and services",
+    "gpus": "GPUs",
+    "gpusDesc": "Graphics Processing Units for AI/ML and rendering",
+    "storage": "Storage",
+    "storageDesc": "Data storage and backup services",
+    "softwareLicenses": "Software Licenses",
+    "softwareLicensesDesc": "Software licensing and subscriptions",
+    "hardwareSupportLicensing": "Hardware Support/Licensing",
+    "hardwareSupportLicensingDesc": "Hardware support contracts and licensing fees",
+    "smallProcurement": "Small Procurement",
+    "smallProcurementDesc": "Miscellaneous small purchases and equipment",
+    "contractors": "Contractors",
+    "contractorsDesc": "External contractors and consulting services"
   }
 }

@@ -456,23 +456,57 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Get the translated display name for a category.
+   * Looks up the category by ID in the loaded categories array and uses
+   * the translationKey for i18n. Falls back to the raw name for custom categories.
+   *
+   * @param categoryId the category ID to look up
+   * @param fallbackName the fallback name to use if the category is not found
+   * @returns the translated category name
+   */
+  getCategoryDisplayNameById(categoryId: number | null | undefined, fallbackName: string): string {
+    if (!categoryId) return fallbackName;
+    const category = this.categories.find(c => c.id === categoryId);
+    if (category) {
+      return this.getCategoryDisplayName(category);
+    }
+    return fallbackName;
+  }
+
+  /**
+   * Get the display name for a category, using the translation key if available.
+   * Default (system) categories use their translationKey for i18n.
+   * Custom categories display their user-entered name directly.
+   *
+   * @param category the category to get the display name for
+   * @returns the translated category name
+   */
+  getCategoryDisplayName(category: Category): string {
+    if (category.translationKey) {
+      const translated = this.translate.instant(category.translationKey);
+      return translated !== category.translationKey ? translated : category.name;
+    }
+    return category.name;
+  }
+
+  /**
    * Get procurement items grouped by category.
    * Returns an array of category groups, each containing the category name and its items.
    */
   get groupedProcurementItems(): { categoryName: string; categoryId: number | null; items: ProcurementItem[] }[] {
     const filteredItems = this.filteredProcurementItems;
-    const groups = new Map<string, { categoryName: string; categoryId: number | null; items: ProcurementItem[] }>();
+    const groups = new Map<number | null, { categoryName: string; categoryId: number | null; items: ProcurementItem[] }>();
     const uncategorizedLabel = this.getUncategorizedLabel();
 
-    // Group items by category
+    // Group items by category ID
     for (const item of filteredItems) {
-      const categoryName = item.categoryName || uncategorizedLabel;
       const categoryId = item.categoryId || null;
+      const categoryName = this.getCategoryDisplayNameById(categoryId, item.categoryName || uncategorizedLabel);
       
-      if (!groups.has(categoryName)) {
-        groups.set(categoryName, { categoryName, categoryId, items: [] });
+      if (!groups.has(categoryId)) {
+        groups.set(categoryId, { categoryName, categoryId, items: [] });
       }
-      groups.get(categoryName)!.items.push(item);
+      groups.get(categoryId)!.items.push(item);
     }
 
     // Convert to array and sort by category name (Uncategorized last)

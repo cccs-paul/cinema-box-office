@@ -127,12 +127,107 @@ class CategoryServiceTest {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
           .thenReturn(Arrays.asList(testCategory));
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(1L)).thenReturn(false);
 
       List<CategoryDTO> result = categoryService.getCategoriesByFiscalYearId(1L, "testuser");
 
       assertNotNull(result);
       assertEquals(1, result.size());
       assertEquals("Test Category", result.get(0).getName());
+      assertTrue(result.get(0).getCanDelete());
+    }
+
+    @Test
+    @DisplayName("Should return canDelete=false for default categories")
+    void shouldReturnCanDeleteFalseForDefaultCategories() {
+      testCategory.setIsDefault(true);
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
+          .thenReturn(Arrays.asList(testCategory));
+
+      List<CategoryDTO> result = categoryService.getCategoriesByFiscalYearId(1L, "testuser");
+
+      assertNotNull(result);
+      assertEquals(1, result.size());
+      assertFalse(result.get(0).getCanDelete());
+    }
+
+    @Test
+    @DisplayName("Should return canDelete=false for categories in use by funding items")
+    void shouldReturnCanDeleteFalseForCategoriesInUseByFunding() {
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
+          .thenReturn(Arrays.asList(testCategory));
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(true);
+
+      List<CategoryDTO> result = categoryService.getCategoriesByFiscalYearId(1L, "testuser");
+
+      assertNotNull(result);
+      assertEquals(1, result.size());
+      assertFalse(result.get(0).getCanDelete());
+    }
+
+    @Test
+    @DisplayName("Should return canDelete=false for categories in use by procurement items")
+    void shouldReturnCanDeleteFalseForCategoriesInUseByProcurement() {
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
+          .thenReturn(Arrays.asList(testCategory));
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(true);
+
+      List<CategoryDTO> result = categoryService.getCategoriesByFiscalYearId(1L, "testuser");
+
+      assertNotNull(result);
+      assertEquals(1, result.size());
+      assertFalse(result.get(0).getCanDelete());
+    }
+
+    @Test
+    @DisplayName("Should return canDelete=false for categories in use by spending items")
+    void shouldReturnCanDeleteFalseForCategoriesInUseBySpending() {
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
+          .thenReturn(Arrays.asList(testCategory));
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(1L)).thenReturn(true);
+
+      List<CategoryDTO> result = categoryService.getCategoriesByFiscalYearId(1L, "testuser");
+
+      assertNotNull(result);
+      assertEquals(1, result.size());
+      assertFalse(result.get(0).getCanDelete());
+    }
+
+    @Test
+    @DisplayName("Should return translationKey when set on category")
+    void shouldReturnTranslationKeyWhenSet() {
+      testCategory.setTranslationKey("category.compute");
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
+          .thenReturn(Arrays.asList(testCategory));
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(1L)).thenReturn(false);
+
+      List<CategoryDTO> result = categoryService.getCategoriesByFiscalYearId(1L, "testuser");
+
+      assertNotNull(result);
+      assertEquals(1, result.size());
+      assertEquals("category.compute", result.get(0).getTranslationKey());
     }
 
     @Test
@@ -192,11 +287,15 @@ class CategoryServiceTest {
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(1L)).thenReturn(false);
 
       Optional<CategoryDTO> result = categoryService.getCategoryById(1L, "testuser");
 
       assertTrue(result.isPresent());
       assertEquals("Test Category", result.get().getName());
+      assertTrue(result.get().getCanDelete());
     }
 
     @Test
@@ -246,6 +345,9 @@ class CategoryServiceTest {
       when(categoryRepository.existsByNameAndFiscalYear("New Category", testFY)).thenReturn(false);
       when(categoryRepository.getMaxDisplayOrderByFiscalYearId(1L)).thenReturn(0);
       when(categoryRepository.save(any(Category.class))).thenReturn(testCategory);
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(1L)).thenReturn(false);
 
       CategoryDTO result = categoryService.createCategory(1L, "testuser", "New Category", "Description");
 
@@ -262,6 +364,9 @@ class CategoryServiceTest {
       when(categoryRepository.existsByNameAndFiscalYear("New Category", testFY)).thenReturn(false);
       when(categoryRepository.getMaxDisplayOrderByFiscalYearId(1L)).thenReturn(0);
       when(categoryRepository.save(any(Category.class))).thenReturn(testCategory);
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(1L)).thenReturn(false);
 
       CategoryDTO result = categoryService.createCategory(1L, "testuser", "New Category", "Description", FundingType.CAP_ONLY);
 
@@ -335,6 +440,9 @@ class CategoryServiceTest {
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.save(any(Category.class))).thenReturn(testCategory);
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(1L)).thenReturn(false);
 
       CategoryDTO result = categoryService.updateCategory(1L, "testuser", "Updated Name", "Updated Description");
 
@@ -391,15 +499,63 @@ class CategoryServiceTest {
   class DeleteCategoryTests {
 
     @Test
-    @DisplayName("Should delete category successfully when user is owner")
+    @DisplayName("Should delete category successfully when user is owner and category not in use")
     void shouldDeleteCategorySuccessfullyWhenOwner() {
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(1L)).thenReturn(false);
       doNothing().when(categoryRepository).delete(testCategory);
 
       assertDoesNotThrow(() -> categoryService.deleteCategory(1L, "testuser"));
       verify(categoryRepository).delete(testCategory);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when deleting category in use by funding items")
+    void shouldThrowExceptionWhenDeletingCategoryInUseByFunding() {
+      when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(true);
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+          categoryService.deleteCategory(1L, "testuser"));
+      assertTrue(exception.getMessage().contains("in use"));
+      verify(categoryRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when deleting category in use by procurement items")
+    void shouldThrowExceptionWhenDeletingCategoryInUseByProcurement() {
+      when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(true);
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+          categoryService.deleteCategory(1L, "testuser"));
+      assertTrue(exception.getMessage().contains("in use"));
+      verify(categoryRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when deleting category in use by spending items")
+    void shouldThrowExceptionWhenDeletingCategoryInUseBySpending() {
+      when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(categoryRepository.isCategoryUsedByFundingItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(1L)).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(1L)).thenReturn(true);
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+          categoryService.deleteCategory(1L, "testuser"));
+      assertTrue(exception.getMessage().contains("in use"));
+      verify(categoryRepository, never()).delete(any());
     }
 
     @Test
@@ -461,6 +617,9 @@ class CategoryServiceTest {
       when(categoryRepository.save(any(Category.class))).thenReturn(testCategory);
       when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
           .thenReturn(Arrays.asList(testCategory));
+      when(categoryRepository.isCategoryUsedByFundingItems(anyLong())).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(anyLong())).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(anyLong())).thenReturn(false);
 
       List<CategoryDTO> result = categoryService.ensureDefaultCategoriesExist(1L, "testuser");
 
@@ -472,6 +631,7 @@ class CategoryServiceTest {
     @DisplayName("Should not create duplicates when defaults already exist")
     void shouldNotCreateDuplicatesWhenDefaultsExist() {
       Category defaultCategory = new Category();
+      defaultCategory.setId(10L);
       defaultCategory.setIsDefault(true);
       defaultCategory.setFiscalYear(testFY);
       defaultCategory.setName("Compute");
@@ -519,6 +679,9 @@ class CategoryServiceTest {
       when(categoryRepository.save(any(Category.class))).thenAnswer(invocation -> invocation.getArgument(0));
       when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
           .thenReturn(Arrays.asList(testCategory, category2));
+      when(categoryRepository.isCategoryUsedByFundingItems(anyLong())).thenReturn(false);
+      when(categoryRepository.isCategoryUsedByProcurementItems(anyLong())).thenReturn(false);
+      when(categoryRepository.isCategoryUsedBySpendingItems(anyLong())).thenReturn(false);
 
       List<CategoryDTO> result = categoryService.reorderCategories(1L, "testuser", Arrays.asList(2L, 1L));
 

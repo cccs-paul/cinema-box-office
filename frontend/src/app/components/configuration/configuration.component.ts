@@ -14,7 +14,7 @@ import { FiscalYearService } from '../../services/fiscal-year.service';
 import { MoneyService } from '../../services/money.service';
 import { CategoryService, CategoryCreateRequest, CategoryUpdateRequest } from '../../services/category.service';
 import { Money, MoneyCreateRequest, MoneyUpdateRequest } from '../../models/money.model';
-import { Category, FundingType, FUNDING_TYPE_LABELS } from '../../models/category.model';
+import { Category, FundingType } from '../../models/category.model';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 
@@ -68,7 +68,6 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
 
   // Funding type options for dropdown
   fundingTypeOptions: FundingType[] = ['BOTH', 'CAP_ONLY', 'OM_ONLY'];
-  fundingTypeLabels = FUNDING_TYPE_LABELS;
 
   // Operation state
   isSaving = false;
@@ -92,7 +91,8 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     private rcService: ResponsibilityCentreService,
     private fyService: FiscalYearService,
     private moneyService: MoneyService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private translate: TranslateService
   ) {}
 
   ngOnInit(): void {
@@ -492,6 +492,11 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
       return;
     }
 
+    if (category.canDelete === false) {
+      this.categoryError = 'Cannot delete a category that is in use by funding, procurement, or spending items';
+      return;
+    }
+
     if (!confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
       return;
     }
@@ -599,8 +604,45 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    * Get the display label for a funding type.
    */
   getFundingTypeLabel(fundingType: FundingType | string | undefined): string {
-    if (!fundingType) return FUNDING_TYPE_LABELS['BOTH'];
-    return FUNDING_TYPE_LABELS[fundingType as FundingType] || FUNDING_TYPE_LABELS['BOTH'];
+    if (!fundingType) return this.translate.instant('configuration.fundingTypeBoth');
+    switch (fundingType) {
+      case 'CAP_ONLY': return this.translate.instant('configuration.fundingTypeCapOnly');
+      case 'OM_ONLY': return this.translate.instant('configuration.fundingTypeOmOnly');
+      default: return this.translate.instant('configuration.fundingTypeBoth');
+    }
+  }
+
+  /**
+   * Get the display name for a category, using the translation key if available.
+   * Default (system) categories use their translationKey for i18n.
+   * Custom categories display their user-entered name directly.
+   *
+   * @param category the category to get the display name for
+   * @returns the translated category name
+   */
+  getCategoryDisplayName(category: Category): string {
+    if (category.translationKey) {
+      const translated = this.translate.instant(category.translationKey);
+      return translated !== category.translationKey ? translated : category.name;
+    }
+    return category.name;
+  }
+
+  /**
+   * Get the display description for a category, using the translation key if available.
+   * Default (system) categories use their translationKey + 'Desc' suffix for i18n.
+   * Custom categories display their user-entered description directly.
+   *
+   * @param category the category to get the description for
+   * @returns the translated category description, or the raw description
+   */
+  getCategoryDescriptionDisplay(category: Category): string {
+    if (category.translationKey) {
+      const descKey = category.translationKey + 'Desc';
+      const translated = this.translate.instant(descKey);
+      return translated !== descKey ? translated : (category.description || '');
+    }
+    return category.description || '';
   }
 
   /**

@@ -23,6 +23,8 @@ import { FiscalYear } from '../../models/fiscal-year.model';
 import { FundingItem } from '../../models/funding-item.model';
 import { SpendingItem } from '../../models/spending-item.model';
 import { ProcurementItem, TRACKING_STATUS_INFO, TrackingStatus } from '../../models/procurement.model';
+import { CategoryService } from '../../services/category.service';
+import { Category } from '../../models/category.model';
 
 // Chart.js imports
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
@@ -60,6 +62,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   fundingItems: FundingItem[] = [];
   spendingItems: SpendingItem[] = [];
   procurementItems: ProcurementItem[] = [];
+  categories: Category[] = [];
   
   isLoading = false;
   errorMessage: string | null = null;
@@ -84,6 +87,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     private fundingItemService: FundingItemService,
     private spendingItemService: SpendingItemService,
     private procurementService: ProcurementService,
+    private categoryService: CategoryService,
     private translate: TranslateService,
     private languageService: LanguageService
   ) {}
@@ -160,12 +164,14 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     forkJoin({
       funding: this.fundingItemService.getFundingItemsByFY(this.selectedFY.id),
       spending: this.spendingItemService.getSpendingItemsByFY(this.selectedRC.id, this.selectedFY.id),
-      procurement: this.procurementService.getProcurementItems(this.selectedRC.id, this.selectedFY.id)
+      procurement: this.procurementService.getProcurementItems(this.selectedRC.id, this.selectedFY.id),
+      categories: this.categoryService.getCategoriesByFY(this.selectedRC.id, this.selectedFY.id)
     }).subscribe({
       next: (data) => {
         this.fundingItems = data.funding;
         this.spendingItems = data.spending;
         this.procurementItems = data.procurement;
+        this.categories = data.categories;
         this.isLoading = false;
         
         // Give DOM time to render before creating charts
@@ -496,14 +502,15 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * Aggregate items by category.
+   * Aggregate items by category, using translated category names.
    */
   private aggregateByCategory(items: any[], type: 'funding' | 'spending'): { labels: string[]; values: number[] } {
-    const categoryMap = new Map<string, number>();
+    const categoryMap = new Map<number | null, { name: string; total: number }>();
     const uncategorizedLabel = this.getUncategorizedLabel();
     
     for (const item of items) {
-      const categoryName = item.categoryName || uncategorizedLabel;
+      const categoryId = item.categoryId || null;
+      const categoryName = this.getCategoryDisplayNameById(categoryId, item.categoryName || uncategorizedLabel);
       let total = 0;
       
       if (item.moneyAllocations) {
@@ -512,14 +519,41 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       }
       
-      categoryMap.set(categoryName, (categoryMap.get(categoryName) || 0) + total);
+      const existing = categoryMap.get(categoryId);
+      if (existing) {
+        existing.total += total;
+      } else {
+        categoryMap.set(categoryId, { name: categoryName, total });
+      }
     }
     
-    const sorted = Array.from(categoryMap.entries()).sort((a, b) => b[1] - a[1]);
+    const sorted = Array.from(categoryMap.values()).sort((a, b) => b.total - a.total);
     return {
-      labels: sorted.map(([label]) => label),
-      values: sorted.map(([, value]) => value)
+      labels: sorted.map(entry => entry.name),
+      values: sorted.map(entry => entry.total)
     };
+  }
+
+  /**
+   * Get the translated display name for a category.
+   * Looks up the category by ID in the loaded categories array and uses
+   * the translationKey for i18n. Falls back to the raw name for custom categories.
+   *
+   * @param categoryId the category ID to look up
+   * @param fallbackName the fallback name to use if the category is not found
+   * @returns the translated category name
+   */
+  getCategoryDisplayNameById(categoryId: number | null | undefined, fallbackName: string): string {
+    if (!categoryId) return fallbackName;
+    const category = this.categories.find(c => c.id === categoryId);
+    if (category) {
+      if (category.translationKey) {
+        const translated = this.translate.instant(category.translationKey);
+        return translated !== category.translationKey ? translated : category.name;
+      }
+      return category.name;
+    }
+    return fallbackName;
   }
 
   /**

@@ -66,6 +66,17 @@ public class CategoryServiceImpl implements CategoryService {
       "Contractors", FundingType.OM_ONLY
   );
 
+  // Map of default category names to their translation keys for i18n
+  private static final Map<String, String> DEFAULT_TRANSLATION_KEYS = Map.of(
+      "Compute", "category.compute",
+      "GPUs", "category.gpus",
+      "Storage", "category.storage",
+      "Software Licenses", "category.softwareLicenses",
+      "Hardware Support/Licensing", "category.hardwareSupportLicensing",
+      "Small Procurement", "category.smallProcurement",
+      "Contractors", "category.contractors"
+  );
+
   private final CategoryRepository categoryRepository;
   private final FiscalYearRepository fiscalYearRepository;
   private final ResponsibilityCentreRepository rcRepository;
@@ -102,7 +113,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     List<Category> categories = categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(fiscalYearId);
     return categories.stream()
-        .map(CategoryDTO::fromEntity)
+        .map(this::toDTOWithCanDelete)
         .collect(Collectors.toList());
   }
 
@@ -122,7 +133,7 @@ public class CategoryServiceImpl implements CategoryService {
       return Optional.empty();
     }
 
-    return Optional.of(CategoryDTO.fromEntity(category));
+    return Optional.of(toDTOWithCanDelete(category));
   }
 
   @Override
@@ -166,7 +177,7 @@ public class CategoryServiceImpl implements CategoryService {
     Category saved = categoryRepository.save(category);
     logger.info("Created category '" + name + "' with funding type " + ft + " for fiscal year " + fy.getName() + " by user " + username);
 
-    return CategoryDTO.fromEntity(saved);
+    return toDTOWithCanDelete(saved);
   }
 
   @Override
@@ -213,7 +224,7 @@ public class CategoryServiceImpl implements CategoryService {
     Category saved = categoryRepository.save(category);
     logger.info("Updated category '" + category.getName() + "' by user " + username);
 
-    return CategoryDTO.fromEntity(saved);
+    return toDTOWithCanDelete(saved);
   }
 
   @Override
@@ -234,6 +245,12 @@ public class CategoryServiceImpl implements CategoryService {
     // Cannot delete default categories
     if (category.getIsDefault()) {
       throw new IllegalArgumentException("Cannot delete a default category. Default categories are read-only.");
+    }
+
+    // Cannot delete categories that are in use
+    if (!computeCanDelete(category)) {
+      throw new IllegalArgumentException("Cannot delete category \"" + category.getName() +
+          "\" because it is in use by funding, procurement, or spending items");
     }
 
     categoryRepository.delete(category);
@@ -273,6 +290,7 @@ public class CategoryServiceImpl implements CategoryService {
       // Check if category with this name already exists
       if (!categoryRepository.existsByNameAndFiscalYear(categoryName, fy)) {
         Category category = new Category(categoryName, categoryDescription, fy, true, i, fundingType);
+        category.setTranslationKey(DEFAULT_TRANSLATION_KEYS.get(categoryName));
         categoryRepository.save(category);
         logger.info("Created default category '" + categoryName + "' with funding type " + fundingType + " for fiscal year " + fy.getName());
       }
@@ -339,6 +357,7 @@ public class CategoryServiceImpl implements CategoryService {
       // Check if category with this name already exists
       if (!categoryRepository.existsByNameAndFiscalYear(categoryName, fy)) {
         Category category = new Category(categoryName, categoryDescription, fy, true, i, fundingType);
+        category.setTranslationKey(DEFAULT_TRANSLATION_KEYS.get(categoryName));
         categoryRepository.save(category);
         logger.info("Created default category '" + categoryName + "' with funding type " + fundingType + " for fiscal year " + fy.getName());
       }
@@ -402,5 +421,35 @@ public class CategoryServiceImpl implements CategoryService {
     // Check if has READ_WRITE access record
     Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
     return accessOpt.isPresent() && RCAccess.AccessLevel.READ_WRITE.equals(accessOpt.get().getAccessLevel());
+  }
+
+  /**
+   * Convert a Category entity to a DTO with canDelete computed.
+   *
+   * @param category the Category entity
+   * @return the enriched DTO
+   */
+  private CategoryDTO toDTOWithCanDelete(Category category) {
+    CategoryDTO dto = CategoryDTO.fromEntity(category);
+    dto.setCanDelete(computeCanDelete(category));
+    return dto;
+  }
+
+  /**
+   * Compute whether a category can be deleted.
+   * A category cannot be deleted if it is a default category or if it is in use
+   * by any funding, procurement, or spending items.
+   *
+   * @param category the Category entity
+   * @return true if the category can be safely deleted
+   */
+  private boolean computeCanDelete(Category category) {
+    if (Boolean.TRUE.equals(category.getIsDefault())) {
+      return false;
+    }
+    boolean usedByFunding = categoryRepository.isCategoryUsedByFundingItems(category.getId());
+    boolean usedByProcurement = categoryRepository.isCategoryUsedByProcurementItems(category.getId());
+    boolean usedBySpending = categoryRepository.isCategoryUsedBySpendingItems(category.getId());
+    return !usedByFunding && !usedByProcurement && !usedBySpending;
   }
 }

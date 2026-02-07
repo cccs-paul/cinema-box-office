@@ -705,7 +705,8 @@
     "exportDataTitle": "Importer/Exporter des données",
     "exportLineItemsDesc": "Exporter tous les éléments de financement, approvisionnement et dépenses vers un fichier CSV pour sauvegarde ou analyse.",
     "importLineItemsDesc": "Importer des éléments depuis un fichier CSV. Cette fonctionnalité est en cours de développement.",
-    "exportCompleted": "Exportation terminée avec succès!"
+    "exportCompleted": "Exportation terminée avec succès!",
+    "cannotDeleteCategoryInUse": "Cette catégorie ne peut pas être supprimée car elle est utilisée par des éléments de financement, d'approvisionnement ou de dépenses"
   },
   "developerTools": {
     "title": "Outils développeur",
@@ -851,5 +852,21 @@
     "itemGapDesc": "Espacement entre les éléments au sein d'une ligne d'élément",
     "sidebarWidth": "Largeur de la barre latérale",
     "sidebarWidthDesc": "Largeur de la barre de navigation latérale"
+  },
+  "category": {
+    "compute": "Calcul",
+    "computeDesc": "Infrastructure et services informatiques",
+    "gpus": "GPUs",
+    "gpusDesc": "Unités de traitement graphique pour l'IA/ML et le rendu",
+    "storage": "Stockage",
+    "storageDesc": "Services de stockage et de sauvegarde de données",
+    "softwareLicenses": "Licences logicielles",
+    "softwareLicensesDesc": "Licences et abonnements logiciels",
+    "hardwareSupportLicensing": "Support matériel/licences",
+    "hardwareSupportLicensingDesc": "Contrats de support matériel et frais de licence",
+    "smallProcurement": "Petits achats",
+    "smallProcurementDesc": "Achats divers et équipements mineurs",
+    "contractors": "Contractuels",
+    "contractorsDesc": "Services de contractuels et de consultation externes"
   }
 }

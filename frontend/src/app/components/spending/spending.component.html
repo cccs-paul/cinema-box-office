@@ -54,7 +54,7 @@
           class="filter-btn"
           [class.active]="selectedCategoryId === category.id"
           (click)="filterByCategory(category.id)">
-          {{ category.name }}
+          {{ getCategoryDisplayName(category) }}
         </button>
       </div>
     </div>
@@ -79,7 +79,7 @@
           <label for="category">{{ 'common.category' | translate }} *</label>
           <select id="category" [(ngModel)]="newItemCategoryId" (ngModelChange)="onCategoryChange()" class="form-control">
             <option *ngFor="let category of categories" [ngValue]="category.id">
-              {{ category.name }}
+              {{ getCategoryDisplayName(category) }}
             </option>
           </select>
         </div>
@@ -264,7 +264,7 @@
         <span class="item-name">{{ item.name }}</span>
         <span class="procurement-indicator" *ngIf="item.procurementItemId" [title]="('spending.linkedTo' | translate) + ': ' + (item.procurementItemName || ('spending.procurementItem' | translate))">📦</span>
         <span class="warning-indicator" *ngIf="item.procurementItemId && hasPriceMismatch(item)" [title]="'spending.priceMismatchWarning' | translate">⚠️</span>
-        <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">{{ item.categoryName }}</span>
+        <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">{{ getCategoryDisplayNameById(item.categoryId, item.categoryName) }}</span>
         <!-- Tracking Status Badge - Shows procurement tracking for linked items, spending event for standalone -->
         <span class="tracking-badge" *ngIf="item.procurementItemId && item.procurementMostRecentEventType" 
               [ngClass]="getTrackingStatusClass(item.procurementMostRecentEventType)"
@@ -741,7 +741,7 @@
             >
               <option [ngValue]="null">-- {{ 'spending.noCategory' | translate }} --</option>
               <option *ngFor="let category of categories" [ngValue]="category.id">
-                {{ category.name }}
+                {{ getCategoryDisplayName(category) }}
               </option>
             </select>
           </div>
