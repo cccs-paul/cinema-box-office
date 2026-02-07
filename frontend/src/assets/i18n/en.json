@@ -56,8 +56,6 @@
     "showFilters": "Show Filters",
     "hideSummary": "Hide Summary",
     "showSummary": "Show Summary",
-    "hideSummary": "Hide Summary",
-    "showSummary": "Show Summary",
     "clearSearch": "Clear search",
     "clearFilters": "Clear Filters",
     "updating": "Updating...",
@@ -73,7 +71,8 @@
     "darkTheme": "Dark Theme",
     "lightTheme": "Light Theme",
     "signOut": "Sign Out",
-    "signingOut": "Signing Out..."
+    "signingOut": "Signing Out...",
+    "accessibility": "Accessibility"
   },
   "sidebar": {
     "changeRcFy": "Change RC / Fiscal Year",
@@ -118,7 +117,7 @@
     "demoUsername": "Demo: admin",
     "demoPassword": "Demo: Admin@123",
     "demoCredentials": "Demo Credentials",
-    "copyright": "\u00a9 2026 myRC. All rights reserved.",
+    "copyright": "© 2026 myRC. All rights reserved.",
     "api": "API",
     "database": "Database",
     "apiDocs": "API Documentation",
@@ -435,11 +434,7 @@
     "procurementTypeCentrallyManaged": "Centrally Managed",
     "statusPlanning": "Planning",
     "statusOnTrack": "On Track",
-    "statusAtRisk": "At Risk",
-    "statusCancelled": "Cancelled",
-    "trackingStatusUpdated": "Tracking status updated to {{status}}",
-    "trackingStatusError": "Failed to update tracking status",
-    "cannotLinkCancelled": "Cannot link a cancelled procurement to spending"
+    "statusAtRisk": "At Risk"
   },
   "spending": {
     "title": "Spending",
@@ -763,7 +758,7 @@
     "frontend": "Frontend",
     "backend": "Backend",
     "license": "License",
-    "copyright": "\u00a9 2026 myRC. All rights reserved."
+    "copyright": "© 2026 myRC. All rights reserved."
   },
   "permissions": {
     "title": "Manage Permissions",
@@ -851,5 +846,46 @@
     "loadPermissionsError": "Failed to load permissions.",
     "loadRCError": "Failed to load RC information.",
     "noPermissionToManage": "You do not have permission to manage this RC's permissions."
+  },
+  "accessibility": {
+    "title": "Accessibility Settings",
+    "description": "Customise the size of fonts, badges, spacing, and other UI elements to suit your preferences. Changes are applied instantly and saved automatically.",
+    "restoreDefaults": "Restore Defaults",
+    "restoreDefaultsTooltip": "Reset all accessibility settings to their default values",
+    "preview": "Live Preview",
+    "previewItemName": "Sample Spending Item",
+    "previewCategory": "Compute",
+    "previewTracking": "Section 32 Provided",
+    "fontSizes": "Font Sizes",
+    "elementSizes": "Element & Spacing Sizes",
+    "resetSingle": "Reset to default",
+    "itemNameFontSize": "Item Name",
+    "itemNameFontSizeDesc": "Font size of item names in list rows",
+    "trackingBadgeFontSize": "Tracking Status Badge",
+    "trackingBadgeFontSizeDesc": "Font size of the tracking event status badge in collapsed list items",
+    "categoryBadgeFontSize": "Category Badge",
+    "categoryBadgeFontSizeDesc": "Font size of category badges in list rows",
+    "statusBadgeFontSize": "Status Badge",
+    "statusBadgeFontSizeDesc": "Font size of status badges throughout the application",
+    "currencyBadgeFontSize": "Currency Badge",
+    "currencyBadgeFontSizeDesc": "Font size of currency indicators in list rows",
+    "totalAmountFontSize": "Total Amount",
+    "totalAmountFontSizeDesc": "Font size of monetary totals in list rows",
+    "bodyFontSize": "Body Text",
+    "bodyFontSizeDesc": "Base font size for general body text and form labels",
+    "headerFontSize": "Section Headers",
+    "headerFontSizeDesc": "Font size for section and page headers",
+    "badgePaddingVertical": "Badge Vertical Padding",
+    "badgePaddingVerticalDesc": "Top and bottom padding inside badges",
+    "badgePaddingHorizontal": "Badge Horizontal Padding",
+    "badgePaddingHorizontalDesc": "Left and right padding inside badges",
+    "badgeBorderRadius": "Badge Corner Radius",
+    "badgeBorderRadiusDesc": "Roundness of badge corners",
+    "itemRowPadding": "List Row Padding",
+    "itemRowPaddingDesc": "Vertical padding of each item row in lists",
+    "itemGap": "List Item Gap",
+    "itemGapDesc": "Spacing between elements within an item row",
+    "sidebarWidth": "Sidebar Width",
+    "sidebarWidthDesc": "Width of the navigation sidebar"
   }
 }

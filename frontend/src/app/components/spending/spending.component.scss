@@ -1086,7 +1086,7 @@ textarea.form-control {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.625rem 1rem;
+  padding: var(--a11y-item-row-padding, 0.625rem) 1rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
 
@@ -1102,7 +1102,7 @@ textarea.form-control {
   .item-info {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--a11y-item-gap, 0.75rem);
     flex-wrap: wrap;
     flex: 1;
   }
@@ -1110,7 +1110,7 @@ textarea.form-control {
   .item-name {
     font-weight: 600;
     color: var(--text-primary);
-    font-size: 0.9rem;
+    font-size: var(--a11y-item-name-font-size, 0.9rem);
   }
 
   .procurement-badge {
@@ -1144,15 +1144,24 @@ textarea.form-control {
 
   .category-badge {
     display: inline-block;
-    padding: 0.15rem 0.5rem;
+    padding: var(--a11y-badge-padding-vertical, 0.15rem) var(--a11y-badge-padding-horizontal, 0.5rem);
     background: var(--background-tertiary);
-    border-radius: 0.25rem;
-    font-size: 0.75rem;
+    border-radius: var(--a11y-badge-border-radius, 0.25rem);
+    font-size: var(--a11y-category-badge-font-size, 0.75rem);
     color: var(--text-secondary);
   }
 
+  .tracking-badge {
+    display: inline-block;
+    padding: var(--a11y-badge-padding-vertical, 0.15rem) var(--a11y-badge-padding-horizontal, 0.5rem);
+    border-radius: var(--a11y-badge-border-radius, 0.25rem);
+    font-size: var(--a11y-tracking-badge-font-size, 0.65rem);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
   .currency-badge {
-    font-size: 0.8rem;
+    font-size: var(--a11y-currency-badge-font-size, 0.8rem);
     color: var(--text-secondary);
 
     &.foreign-currency {
@@ -1164,7 +1173,7 @@ textarea.form-control {
     font-weight: 600;
     color: var(--text-primary);
     font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
+    font-size: var(--a11y-total-amount-font-size, 0.9rem);
   }
 
   .item-actions {
@@ -1625,9 +1634,9 @@ textarea.form-control {
 /* Status Badge */
 .status-badge {
   display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.7rem;
+  padding: var(--a11y-badge-padding-vertical, 0.15rem) var(--a11y-badge-padding-horizontal, 0.5rem);
+  border-radius: var(--a11y-badge-border-radius, 0.25rem);
+  font-size: var(--a11y-status-badge-font-size, 0.7rem);
   font-weight: 500;
   text-transform: capitalize;
 }

@@ -41,6 +41,10 @@
               <span class="menu-icon">{{ getThemeIcon() }}</span>
               <span>{{ (currentTheme === 'light' ? 'header.darkTheme' : 'header.lightTheme') | translate }}</span>
             </button>
+            <button (click)="openAccessibility()" class="menu-item">
+              <span class="menu-icon">♿</span>
+              <span>{{ 'header.accessibility' | translate }}</span>
+            </button>
             <div class="menu-divider"></div>
             <button (click)="logout()" class="menu-item logout-item" [disabled]="isLoggingOut">
               <span class="menu-icon">🚪</span>

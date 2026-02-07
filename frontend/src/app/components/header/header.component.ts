@@ -116,6 +116,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     return this.languageService.getOtherLanguageNativeName();
   }
 
+  /**
+   * Navigate to the accessibility settings page.
+   */
+  openAccessibility(): void {
+    this.router.navigate(['/app/accessibility']);
+    this.closeUserMenu();
+  }
+
   openApiDocs(): void {
     // Open API documentation in new tab
     // The API docs are typically available at /api/swagger-ui.html

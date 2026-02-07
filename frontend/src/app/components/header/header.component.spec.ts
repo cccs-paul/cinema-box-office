@@ -262,6 +262,19 @@ describe('HeaderComponent', () => {
     }));
   });
 
+  describe('openAccessibility', () => {
+    it('should navigate to /app/accessibility', () => {
+      component.openAccessibility();
+      expect(router.navigate).toHaveBeenCalledWith(['/app/accessibility']);
+    });
+
+    it('should close the user menu', () => {
+      component.isUserMenuOpen = true;
+      component.openAccessibility();
+      expect(component.isUserMenuOpen).toBeFalse();
+    });
+  });
+
   describe('ngOnDestroy', () => {
     it('should complete destroy$ subject', () => {
       const nextSpy = spyOn(component['destroy$'], 'next');

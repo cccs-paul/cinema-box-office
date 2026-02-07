@@ -10,7 +10,7 @@
 }
 
 .app-main {
-  margin-left: 250px;
+  margin-left: var(--a11y-sidebar-width, 250px);
   height: 100vh;
   overflow-y: auto;
   display: flex;

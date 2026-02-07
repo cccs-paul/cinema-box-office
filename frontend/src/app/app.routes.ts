@@ -17,6 +17,7 @@ import { InsightsComponent } from './components/insights/insights.component';
 import { SummaryComponent } from './components/summary/summary.component';
 import { DeveloperToolsComponent } from './components/developer-tools/developer-tools.component';
 import { ConfigurationComponent } from './components/configuration/configuration.component';
+import { AccessibilityComponent } from './components/accessibility/accessibility.component';
 import { AuthGuardService } from './guards/auth.guard';
 
 /**
@@ -90,6 +91,10 @@ export const routes: Routes = [
       {
         path: 'developer-tools',
         component: DeveloperToolsComponent,
+      },
+      {
+        path: 'accessibility',
+        component: AccessibilityComponent,
       },
       {
         path: '',
