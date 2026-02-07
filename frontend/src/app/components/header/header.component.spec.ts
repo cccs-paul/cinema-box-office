@@ -77,7 +77,7 @@ describe('HeaderComponent', () => {
     it('should initialize with default values', () => {
       expect(component.isUserMenuOpen).toBeFalse();
       expect(component.isLoggingOut).toBeFalse();
-      expect(component.isHeaderVisible).toBeTrue();
+      expect(component.showLogo).toBeFalse();
     });
 
     it('should not be logged in initially', () => {

@@ -3,7 +3,7 @@
  * Copyright (c) 2026 myRC Team
  * Licensed under MIT License
  */
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -81,8 +81,6 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
   selectedRC: ResponsibilityCentreDTO | null = null;
   selectedFY: FiscalYear | null = null;
-  /** Whether the header is visible, controlled by the parent layout component. */
-  @Input() isHeaderVisible = true;
   private destroy$ = new Subject<void>();
 
   constructor(

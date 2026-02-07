@@ -3,12 +3,13 @@
   Copyright (c) 2026 myRC Team
   Licensed under MIT License
 -->
-<header class="app-header" [class.header-hidden]="!isHeaderVisible">
+<header class="app-header">
   <div class="header-content">
-    <div class="header-title">
+    <div class="header-title" *ngIf="showLogo">
       <img src="assets/logo.svg" alt="myRC Logo" class="header-logo" width="32" height="32">
       <h1>myRC</h1>
     </div>
+    <div class="header-spacer" *ngIf="!showLogo"></div>
     <nav class="header-nav">
       <!-- Language Switcher Button -->
       <button 

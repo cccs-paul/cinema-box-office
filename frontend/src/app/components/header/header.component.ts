@@ -36,8 +36,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   currentLanguage: Language = 'en';
   isLoggingOut = false;
   isLoggedIn = false;
-  /** Whether the header is visible, controlled by the parent layout component. */
-  @Input() isHeaderVisible = true;
+  /** Whether to show the logo in the header (used in layouts without a sidebar). */
+  @Input() showLogo = false;
   private destroy$ = new Subject<void>();
 
   constructor(
