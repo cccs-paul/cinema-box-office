@@ -32,6 +32,7 @@ import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.SpendingMoneyAllocationRepository;
 import com.myrc.repository.UserRepository;
 import com.myrc.service.UserService;
+import com.myrc.model.FiscalYear;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,6 +100,9 @@ class ResponsibilityCentreServiceImplTest {
   @Mock
   private ProcurementQuoteFileRepository procurementQuoteFileRepository;
 
+  @Mock
+  private FiscalYearCloneService fiscalYearCloneService;
+
   private ResponsibilityCentreServiceImpl service;
 
   private User testUser;
@@ -121,7 +125,8 @@ class ResponsibilityCentreServiceImplTest {
         spendingMoneyAllocationRepository,
         procurementItemRepository,
         procurementQuoteRepository,
-        procurementQuoteFileRepository
+        procurementQuoteFileRepository,
+        fiscalYearCloneService
     );
 
     // Use reflection to set the entityManager field with a no-op implementation
@@ -612,7 +617,7 @@ class ResponsibilityCentreServiceImplTest {
   class CloneTests {
 
     @Test
-    @DisplayName("Should clone RC successfully")
+    @DisplayName("Should clone RC successfully with deep clone of fiscal years")
     void testCloneResponsibilityCentre() {
       ResponsibilityCentre clonedRc = new ResponsibilityCentre();
       clonedRc.setId(2L);
@@ -620,16 +625,27 @@ class ResponsibilityCentreServiceImplTest {
       clonedRc.setDescription("Test description");
       clonedRc.setOwner(testUser);
 
+      FiscalYear sourceFY = new FiscalYear("FY 2025", "Test FY", testRC);
+      sourceFY.setId(10L);
+
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(rcRepository.existsByName("Cloned RC")).thenReturn(false);
       when(rcRepository.save(any(ResponsibilityCentre.class))).thenReturn(clonedRc);
+      when(fiscalYearRepository.findByResponsibilityCentreId(1L))
+          .thenReturn(List.of(sourceFY));
+
+      FiscalYear clonedFY = new FiscalYear("FY 2025", "Test FY", clonedRc);
+      clonedFY.setId(20L);
+      when(fiscalYearCloneService.deepCloneFiscalYear(eq(sourceFY), eq("FY 2025"), any()))
+          .thenReturn(clonedFY);
 
       ResponsibilityCentreDTO result = service.cloneResponsibilityCentre(1L, "testuser", "Cloned RC");
 
       assertNotNull(result);
       assertEquals("Cloned RC", result.getName());
       assertEquals("testuser", result.getOwnerUsername());
+      verify(fiscalYearCloneService).deepCloneFiscalYear(eq(sourceFY), eq("FY 2025"), any());
     }
 
     @Test

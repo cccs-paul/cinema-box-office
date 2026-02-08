@@ -111,6 +111,22 @@ export class FiscalYearService {
   }
 
   /**
+   * Clone a fiscal year within the same responsibility centre.
+   * Creates a deep copy of the fiscal year and all its child data.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID to clone
+   * @param newName The name for the cloned fiscal year
+   * @returns Observable of the cloned fiscal year
+   */
+  cloneFiscalYear(rcId: number, fyId: number, newName: string): Observable<FiscalYear> {
+    return this.http.post<FiscalYear>(
+      `${this.baseUrl}/${rcId}/fiscal-years/${fyId}/clone`,
+      { newName }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
    * Handle HTTP errors.
    *
    * @param error The HTTP error response

@@ -148,4 +148,46 @@ describe('FiscalYearService', () => {
       req.flush(null);
     });
   });
+
+  describe('cloneFiscalYear', () => {
+    it('should clone fiscal year', () => {
+      const clonedFY: FiscalYear = {
+        ...mockFiscalYear,
+        id: 2,
+        name: 'FY 2025-2026 (Copy)'
+      };
+
+      service.cloneFiscalYear(1, 1, 'FY 2025-2026 (Copy)').subscribe(fy => {
+        expect(fy.name).toBe('FY 2025-2026 (Copy)');
+        expect(fy.id).toBe(2);
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/fiscal-years/1/clone');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ newName: 'FY 2025-2026 (Copy)' });
+      req.flush(clonedFY);
+    });
+
+    it('should handle 400 error for duplicate name', () => {
+      service.cloneFiscalYear(1, 1, 'Existing FY').subscribe({
+        error: (error) => {
+          expect(error.message).toContain('already exists');
+        }
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/fiscal-years/1/clone');
+      req.flush({ message: 'A Fiscal Year with this name already exists' }, { status: 400, statusText: 'Bad Request' });
+    });
+
+    it('should handle 403 error for access denied', () => {
+      service.cloneFiscalYear(1, 1, 'FY Copy').subscribe({
+        error: (error) => {
+          expect(error.message).toContain('Access denied');
+        }
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/fiscal-years/1/clone');
+      req.flush({ message: 'Access denied' }, { status: 403, statusText: 'Forbidden' });
+    });
+  });
 });

@@ -70,6 +70,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
   private final ProcurementItemRepository procurementItemRepository;
   private final ProcurementQuoteRepository procurementQuoteRepository;
   private final ProcurementQuoteFileRepository procurementQuoteFileRepository;
+  private final FiscalYearCloneService fiscalYearCloneService;
 
   public ResponsibilityCentreServiceImpl(
       ResponsibilityCentreRepository rcRepository,
@@ -86,7 +87,8 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       SpendingMoneyAllocationRepository spendingMoneyAllocationRepository,
       ProcurementItemRepository procurementItemRepository,
       ProcurementQuoteRepository procurementQuoteRepository,
-      ProcurementQuoteFileRepository procurementQuoteFileRepository) {
+      ProcurementQuoteFileRepository procurementQuoteFileRepository,
+      FiscalYearCloneService fiscalYearCloneService) {
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
     this.userRepository = userRepository;
@@ -102,6 +104,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     this.procurementItemRepository = procurementItemRepository;
     this.procurementQuoteRepository = procurementQuoteRepository;
     this.procurementQuoteFileRepository = procurementQuoteFileRepository;
+    this.fiscalYearCloneService = fiscalYearCloneService;
   }
 
   private static final String DEMO_RC_NAME = "Demo";
@@ -546,6 +549,18 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     );
 
     ResponsibilityCentre saved = rcRepository.save(clonedRc);
+
+    // Deep-clone all fiscal years and their child data
+    List<FiscalYear> sourceFiscalYears = fiscalYearRepository.findByResponsibilityCentreId(sourceRcId);
+    logger.info("Deep cloning {} fiscal years from RC '{}' to '{}'",
+        sourceFiscalYears.size(), sourceRc.getName(), newName);
+
+    for (FiscalYear sourceFY : sourceFiscalYears) {
+      fiscalYearCloneService.deepCloneFiscalYear(sourceFY, sourceFY.getName(), saved);
+    }
+
+    logger.info("Successfully deep-cloned RC '{}' (ID: {}) as '{}' (ID: {}) with {} fiscal years",
+        sourceRc.getName(), sourceRcId, newName, saved.getId(), sourceFiscalYears.size());
 
     return ResponsibilityCentreDTO.fromEntity(saved, username, "OWNER");
   }

@@ -269,4 +269,83 @@ class FiscalYearControllerTest {
     assertEquals("Test FY", request.getName());
     assertEquals("Test Description", request.getDescription());
   }
+
+  // =========== Clone Fiscal Year Tests ===========
+
+  @Test
+  @DisplayName("cloneFiscalYear - Clones fiscal year successfully")
+  void cloneFiscalYear_ClonesSuccessfully() {
+    when(fiscalYearService.cloneFiscalYear(anyLong(), anyLong(), anyString(), anyString()))
+        .thenReturn(testFiscalYear);
+
+    FiscalYearController.FiscalYearCloneRequest request =
+        new FiscalYearController.FiscalYearCloneRequest("FY Copy");
+
+    ResponseEntity<?> response = controller.cloneFiscalYear(1L, 1L, request, null);
+
+    assertEquals(HttpStatus.CREATED, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals("FY 2025-2026", ((FiscalYearDTO) response.getBody()).getName());
+  }
+
+  @Test
+  @DisplayName("cloneFiscalYear - Returns 400 on empty name")
+  void cloneFiscalYear_ReturnsBadRequestOnEmptyName() {
+    FiscalYearController.FiscalYearCloneRequest request =
+        new FiscalYearController.FiscalYearCloneRequest("");
+
+    ResponseEntity<?> response = controller.cloneFiscalYear(1L, 1L, request, null);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  @DisplayName("cloneFiscalYear - Returns 400 on null name")
+  void cloneFiscalYear_ReturnsBadRequestOnNullName() {
+    FiscalYearController.FiscalYearCloneRequest request =
+        new FiscalYearController.FiscalYearCloneRequest(null);
+
+    ResponseEntity<?> response = controller.cloneFiscalYear(1L, 1L, request, null);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  @DisplayName("cloneFiscalYear - Returns 400 on duplicate name")
+  void cloneFiscalYear_ReturnsBadRequestOnDuplicateName() {
+    when(fiscalYearService.cloneFiscalYear(anyLong(), anyLong(), anyString(), anyString()))
+        .thenThrow(new IllegalArgumentException("A Fiscal Year with this name already exists"));
+
+    FiscalYearController.FiscalYearCloneRequest request =
+        new FiscalYearController.FiscalYearCloneRequest("Existing FY");
+
+    ResponseEntity<?> response = controller.cloneFiscalYear(1L, 1L, request, null);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+  }
+
+  @Test
+  @DisplayName("cloneFiscalYear - Returns 403 on access denied")
+  void cloneFiscalYear_ReturnsForbiddenOnAccessDenied() {
+    when(fiscalYearService.cloneFiscalYear(anyLong(), anyLong(), anyString(), anyString()))
+        .thenThrow(new IllegalArgumentException("User does not have write access to this Responsibility Centre"));
+
+    FiscalYearController.FiscalYearCloneRequest request =
+        new FiscalYearController.FiscalYearCloneRequest("FY Copy");
+
+    ResponseEntity<?> response = controller.cloneFiscalYear(1L, 1L, request, null);
+
+    assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+  }
+
+  @Test
+  @DisplayName("FiscalYearCloneRequest - getters and setters work correctly")
+  void testFiscalYearCloneRequest() {
+    FiscalYearController.FiscalYearCloneRequest request =
+        new FiscalYearController.FiscalYearCloneRequest();
+
+    request.setNewName("Cloned FY");
+
+    assertEquals("Cloned FY", request.getNewName());
+  }
 }

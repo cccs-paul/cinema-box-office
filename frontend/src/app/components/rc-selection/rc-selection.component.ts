@@ -62,13 +62,16 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
   showFYCreateForm = false;
   showFYRenameForm = false;
   showFYDeleteConfirm = false;
+  showFYCloneForm = false;
   isCreatingFY = false;
   isRenamingFY = false;
   isDeletingFY = false;
+  isCloningFY = false;
   isTogglingFYActive = false;
   selectedFYId: number | null = null;
   renameFYNewName = '';
   renameFYNewDescription = '';
+  cloneFYNewName = '';
 
   // Messages
   errorMessage: string | null = null;
@@ -517,6 +520,7 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
     this.showFYCreateForm = false;
     this.showFYRenameForm = false;
     this.showFYDeleteConfirm = false;
+    this.showFYCloneForm = false;
   }
 
   /**
@@ -698,6 +702,57 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
         error: (error: Error) => {
           this.isDeletingFY = false;
           this.errorMessage = error.message || 'Failed to delete fiscal year. Please try again.';
+        }
+      });
+  }
+
+  /**
+   * Toggle the clone FY form visibility.
+   */
+  toggleFYCloneForm(): void {
+    if (this.selectedFYId === null || !this.selectedRCCanWrite) return;
+    this.closeFYForms();
+    this.showFYCloneForm = true;
+    const fy = this.selectedFY;
+    this.cloneFYNewName = fy ? fy.name + ' (Copy)' : '';
+  }
+
+  /**
+   * Clone the selected fiscal year with a deep copy of all child data.
+   */
+  cloneFY(): void {
+    if (this.selectedRCId === null || this.selectedFYId === null || !this.cloneFYNewName.trim()) {
+      this.errorMessage = 'New name is required for cloning';
+      return;
+    }
+
+    this.isCloningFY = true;
+    this.errorMessage = null;
+    this.successMessage = null;
+
+    this.fyService.cloneFiscalYear(this.selectedRCId, this.selectedFYId, this.cloneFYNewName.trim())
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (clonedFY: FiscalYear) => {
+          this.fiscalYears.push(clonedFY);
+          this.showFYCloneForm = false;
+          this.isCloningFY = false;
+          this.cloneFYNewName = '';
+          this.successMessage = `Fiscal Year "${clonedFY.name}" cloned successfully.`;
+          // Select the newly cloned FY
+          this.selectFY(clonedFY);
+          setTimeout(() => this.clearSuccess(), 5000);
+        },
+        error: (error: unknown) => {
+          this.isCloningFY = false;
+          const httpError = error as { status?: number; error?: { message?: string } };
+          if (httpError.status === 400) {
+            this.errorMessage = `A Fiscal Year named "${this.cloneFYNewName}" already exists. Please choose a different name.`;
+          } else if (httpError.status === 403) {
+            this.errorMessage = 'You do not have permission to clone this fiscal year.';
+          } else {
+            this.errorMessage = 'Failed to clone fiscal year. Please try again.';
+          }
         }
       });
   }

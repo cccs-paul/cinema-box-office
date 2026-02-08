@@ -69,15 +69,17 @@ public interface FiscalYearService {
 
   /**
    * Update display settings for a fiscal year.
+   * Only the RC owner can update display settings (including on-target thresholds).
    *
    * @param fiscalYearId the fiscal year ID
-   * @param username the username
+   * @param username the username (must be RC owner)
    * @param showSearchBox whether to show search box and filters
    * @param showCategoryFilter whether to show category filter
    * @param groupByCategory whether to group items by category
    * @param onTargetMin minimum percentage for "On Target" status (-100 to +100)
    * @param onTargetMax maximum percentage for "On Target" status (-100 to +100)
    * @return optional updated fiscal year DTO
+   * @throws IllegalArgumentException if user is not the RC owner
    */
   Optional<FiscalYearDTO> updateDisplaySettings(Long fiscalYearId, String username,
                                                   Boolean showSearchBox, Boolean showCategoryFilter, Boolean groupByCategory,
@@ -94,4 +96,19 @@ public interface FiscalYearService {
    * @throws IllegalArgumentException if user is not the RC owner
    */
   Optional<FiscalYearDTO> toggleActiveStatus(Long fiscalYearId, String username);
+
+  /**
+   * Clone a fiscal year within the same responsibility centre.
+   * Creates a deep copy of the fiscal year and all its child data
+   * (monies, categories, funding items, spending items, procurement items, etc.).
+   * The user must have write access to the RC.
+   *
+   * @param rcId the responsibility centre ID
+   * @param fiscalYearId the fiscal year ID to clone
+   * @param username the username
+   * @param newName the name for the cloned fiscal year
+   * @return the cloned fiscal year DTO
+   * @throws IllegalArgumentException if user lacks write access or name already exists
+   */
+  FiscalYearDTO cloneFiscalYear(Long rcId, Long fiscalYearId, String username, String newName);
 }

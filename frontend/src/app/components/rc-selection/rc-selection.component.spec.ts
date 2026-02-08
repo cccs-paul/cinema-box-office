@@ -50,7 +50,8 @@ describe('RCSelectionComponent', () => {
       'createFiscalYear',
       'updateFiscalYear',
       'deleteFiscalYear',
-      'toggleActiveStatus'
+      'toggleActiveStatus',
+      'cloneFiscalYear'
     ]);
 
     // Create AuthService mock with BehaviorSubject for currentUser$
@@ -584,6 +585,7 @@ describe('RCSelectionComponent', () => {
       component.showFYCreateForm = true;
       component.showFYRenameForm = true;
       component.showFYDeleteConfirm = true;
+      component.showFYCloneForm = true;
 
       component.closeAllForms();
 
@@ -594,6 +596,7 @@ describe('RCSelectionComponent', () => {
       expect(component.showFYCreateForm).toBeFalse();
       expect(component.showFYRenameForm).toBeFalse();
       expect(component.showFYDeleteConfirm).toBeFalse();
+      expect(component.showFYCloneForm).toBeFalse();
     });
   });
 
@@ -657,6 +660,111 @@ describe('RCSelectionComponent', () => {
       component.showFYDeleteConfirm = true;
       component.closeFYForms();
       expect(component.showFYDeleteConfirm).toBeFalse();
+    });
+
+    it('should close FY clone form when closing FY forms', () => {
+      component.showFYCloneForm = true;
+      component.closeFYForms();
+      expect(component.showFYCloneForm).toBeFalse();
+    });
+  });
+
+  describe('Clone Fiscal Year', () => {
+    beforeEach(fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+      component.responsibilityCentres = createMockRCs();
+      component.fiscalYears = createMockFiscalYears();
+      component.selectedRCId = 1;
+      component.selectedFYId = 1;
+    }));
+
+    it('should toggle clone FY form and pre-fill name', () => {
+      component.toggleFYCloneForm();
+      expect(component.showFYCloneForm).toBeTrue();
+      expect(component.cloneFYNewName).toBe('FY 2025-2026 (Copy)');
+    });
+
+    it('should not toggle clone FY form without selected FY', () => {
+      component.selectedFYId = null;
+      component.toggleFYCloneForm();
+      expect(component.showFYCloneForm).toBeFalse();
+    });
+
+    it('should not toggle clone FY form without write access', () => {
+      component.selectedRCId = 2; // READ_ONLY
+      component.toggleFYCloneForm();
+      expect(component.showFYCloneForm).toBeFalse();
+    });
+
+    it('should clone FY successfully', fakeAsync(() => {
+      const clonedFY: FiscalYear = {
+        id: 3,
+        name: 'FY 2025-2026 (Copy)',
+        description: 'Current year',
+        active: true,
+        responsibilityCentreId: 1,
+        showSearchBox: true,
+        showCategoryFilter: true,
+        groupByCategory: false,
+        onTargetMin: -2,
+        onTargetMax: 2
+      };
+
+      fyServiceMock.cloneFiscalYear.and.returnValue(of(clonedFY));
+
+      component.cloneFYNewName = 'FY 2025-2026 (Copy)';
+      component.cloneFY();
+      tick();
+
+      expect(fyServiceMock.cloneFiscalYear).toHaveBeenCalledWith(1, 1, 'FY 2025-2026 (Copy)');
+      expect(component.fiscalYears).toContain(clonedFY);
+      expect(component.selectedFYId).toBe(3);
+      expect(component.showFYCloneForm).toBeFalse();
+      expect(component.isCloningFY).toBeFalse();
+      expect(component.successMessage).toContain('cloned');
+    }));
+
+    it('should handle clone FY duplicate name error', fakeAsync(() => {
+      fyServiceMock.cloneFiscalYear.and.returnValue(
+        throwError(() => ({ status: 400 }))
+      );
+
+      component.cloneFYNewName = 'FY 2025-2026';
+      component.cloneFY();
+      tick();
+
+      expect(component.errorMessage).toContain('already exists');
+      expect(component.isCloningFY).toBeFalse();
+    }));
+
+    it('should handle clone FY access denied error', fakeAsync(() => {
+      fyServiceMock.cloneFiscalYear.and.returnValue(
+        throwError(() => ({ status: 403 }))
+      );
+
+      component.cloneFYNewName = 'FY Copy';
+      component.cloneFY();
+      tick();
+
+      expect(component.errorMessage).toContain('permission');
+      expect(component.isCloningFY).toBeFalse();
+    }));
+
+    it('should not clone FY with empty name', () => {
+      component.cloneFYNewName = '   ';
+      component.cloneFY();
+
+      expect(fyServiceMock.cloneFiscalYear).not.toHaveBeenCalled();
+      expect(component.errorMessage).toContain('required');
+    });
+
+    it('should not clone FY without selected RC', () => {
+      component.selectedRCId = null;
+      component.cloneFYNewName = 'FY Copy';
+      component.cloneFY();
+
+      expect(fyServiceMock.cloneFiscalYear).not.toHaveBeenCalled();
     });
   });
 });

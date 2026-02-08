@@ -279,11 +279,11 @@ public class FiscalYearController {
    */
   @PatchMapping("/{fyId}/display-settings")
   @Operation(summary = "Update fiscal year display settings",
-      description = "Updates display settings like category filter visibility and grouping")
+      description = "Updates display settings like category filter visibility, grouping, and on-target thresholds. Only RC owners can update.")
   @ApiResponses(value = {
       @ApiResponse(responseCode = "200", description = "Display settings updated successfully"),
       @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Access denied"),
+      @ApiResponse(responseCode = "403", description = "Access denied - only RC owners can update display settings"),
       @ApiResponse(responseCode = "404", description = "Fiscal year not found"),
       @ApiResponse(responseCode = "500", description = "Internal server error")
   })
@@ -362,6 +362,52 @@ public class FiscalYearController {
     } catch (Exception e) {
       logger.severe("Toggle active status failed: " + e.getMessage());
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+    }
+  }
+
+  @PostMapping("/{fyId}/clone")
+  @Operation(summary = "Clone a fiscal year",
+      description = "Creates a deep copy of a fiscal year and all its child data within the same RC")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Fiscal year cloned successfully"),
+      @ApiResponse(responseCode = "400", description = "Invalid request data or duplicate name"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied"),
+      @ApiResponse(responseCode = "404", description = "Fiscal year not found"),
+      @ApiResponse(responseCode = "500", description = "Internal server error")
+  })
+  public ResponseEntity<?> cloneFiscalYear(
+      @PathVariable Long rcId,
+      @PathVariable Long fyId,
+      @RequestBody FiscalYearCloneRequest request,
+      Authentication authentication) {
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
+    }
+    logger.info("POST /responsibility-centres/" + rcId + "/fiscal-years/" + fyId
+        + "/clone - Cloning fiscal year as '" + request.getNewName() + "' for user: " + username);
+
+    try {
+      if (request.getNewName() == null || request.getNewName().trim().isEmpty()) {
+        return ResponseEntity.badRequest().body(new ErrorResponse("New name is required"));
+      }
+
+      FiscalYearDTO clonedFY = fiscalYearService.cloneFiscalYear(
+          rcId, fyId, username, request.getNewName().trim());
+      return ResponseEntity.status(HttpStatus.CREATED).body(clonedFY);
+    } catch (IllegalArgumentException e) {
+      String message = e.getMessage();
+      logger.warning("Fiscal year clone failed: " + message);
+      if (message != null && message.contains("write access")) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(message));
+      }
+      return ResponseEntity.badRequest().body(new ErrorResponse(message));
+    } catch (Exception e) {
+      logger.severe("Fiscal year clone failed: " + e.getMessage());
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ErrorResponse("An unexpected error occurred"));
     }
   }
 
@@ -467,6 +513,24 @@ public class FiscalYearController {
 
     public void setOnTargetMax(Integer onTargetMax) {
       this.onTargetMax = onTargetMax;
+    }
+  }
+
+  public static class FiscalYearCloneRequest {
+    private String newName;
+
+    public FiscalYearCloneRequest() {}
+
+    public FiscalYearCloneRequest(String newName) {
+      this.newName = newName;
+    }
+
+    public String getNewName() {
+      return newName;
+    }
+
+    public void setNewName(String newName) {
+      this.newName = newName;
     }
   }
 }

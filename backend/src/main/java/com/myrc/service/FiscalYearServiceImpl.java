@@ -41,11 +41,13 @@ public class FiscalYearServiceImpl implements FiscalYearService {
   private final MoneyService moneyService;
   private final CategoryService categoryService;
   private final RCPermissionService permissionService;
+  private final FiscalYearCloneService fiscalYearCloneService;
 
   public FiscalYearServiceImpl(FiscalYearRepository fiscalYearRepository,
       ResponsibilityCentreRepository rcRepository, RCAccessRepository accessRepository,
       UserRepository userRepository, MoneyService moneyService,
-      CategoryService categoryService, RCPermissionService permissionService) {
+      CategoryService categoryService, RCPermissionService permissionService,
+      FiscalYearCloneService fiscalYearCloneService) {
     this.fiscalYearRepository = fiscalYearRepository;
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
@@ -53,6 +55,7 @@ public class FiscalYearServiceImpl implements FiscalYearService {
     this.moneyService = moneyService;
     this.categoryService = categoryService;
     this.permissionService = permissionService;
+    this.fiscalYearCloneService = fiscalYearCloneService;
   }
 
   @Override
@@ -194,10 +197,10 @@ public class FiscalYearServiceImpl implements FiscalYearService {
     FiscalYear fy = fyOpt.get();
     Long rcId = fy.getResponsibilityCentre().getId();
 
-    // Verify user has write access to the RC
-    if (!hasWriteAccessToRC(rcId, username)) {
+    // Only the RC owner can update display settings (including on-target thresholds)
+    if (!isRCOwner(rcId, username)) {
       throw new IllegalArgumentException(
-          "User does not have write access to this Responsibility Centre");
+          "Only the RC owner can update display settings");
     }
 
     // Update settings if provided
@@ -278,5 +281,47 @@ public class FiscalYearServiceImpl implements FiscalYearService {
     logger.info("Toggled active status for fiscal year '" + fy.getName() + 
         "' to " + (fy.getActive() ? "active" : "inactive") + " by user " + username);
     return Optional.of(FiscalYearDTO.fromEntity(saved));
+  }
+
+  @Override
+  public FiscalYearDTO cloneFiscalYear(Long rcId, Long fiscalYearId, String username,
+      String newName) {
+    // Verify user has write access to the RC
+    if (!hasWriteAccessToRC(rcId, username)) {
+      throw new IllegalArgumentException(
+          "User does not have write access to this Responsibility Centre");
+    }
+
+    Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);
+    if (fyOpt.isEmpty()) {
+      throw new IllegalArgumentException("Fiscal Year not found");
+    }
+
+    FiscalYear sourceFY = fyOpt.get();
+    ResponsibilityCentre rc = sourceFY.getResponsibilityCentre();
+
+    // Verify the FY belongs to the specified RC
+    if (!rc.getId().equals(rcId)) {
+      throw new IllegalArgumentException("Fiscal Year does not belong to this Responsibility Centre");
+    }
+
+    // Validate new name
+    if (newName == null || newName.trim().isEmpty()) {
+      throw new IllegalArgumentException("Name is required");
+    }
+
+    // Check if name already exists for this RC
+    if (fiscalYearRepository.existsByNameAndResponsibilityCentre(newName, rc)) {
+      throw new IllegalArgumentException(
+          "A Fiscal Year with this name already exists for this Responsibility Centre");
+    }
+
+    // Perform the deep clone
+    FiscalYear clonedFY = fiscalYearCloneService.deepCloneFiscalYear(sourceFY, newName, rc);
+
+    logger.info("Cloned fiscal year '" + sourceFY.getName() + "' as '" + newName
+        + "' in RC '" + rc.getName() + "' by user " + username);
+
+    return FiscalYearDTO.fromEntity(clonedFY);
   }
 }

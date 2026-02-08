@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -78,6 +79,9 @@ class FiscalYearServiceTest {
   @Mock
   private RCPermissionService permissionService;
 
+  @Mock
+  private FiscalYearCloneService fiscalYearCloneService;
+
   @InjectMocks
   private FiscalYearServiceImpl fiscalYearService;
 
@@ -109,6 +113,8 @@ class FiscalYearServiceTest {
         .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
     org.mockito.Mockito.lenient()
         .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
+    org.mockito.Mockito.lenient()
+        .when(permissionService.isOwner(anyLong(), anyString())).thenReturn(true);
   }
 
   @Test
@@ -348,9 +354,9 @@ class FiscalYearServiceTest {
   }
 
   @Test
-  @DisplayName("updateDisplaySettings - Throws exception when user has no write access")
-  void updateDisplaySettings_ThrowsWhenNoWriteAccess() {
-    when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+  @DisplayName("updateDisplaySettings - Throws exception when user is not RC owner")
+  void updateDisplaySettings_ThrowsWhenNotOwner() {
+    when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
 
     User anotherUser = new User();
     anotherUser.setId(2L);
@@ -359,7 +365,7 @@ class FiscalYearServiceTest {
     RCAccess access = new RCAccess();
     access.setUser(anotherUser);
     access.setResponsibilityCentre(testRC);
-    access.setAccessLevel(RCAccess.AccessLevel.READ_ONLY);
+    access.setAccessLevel(RCAccess.AccessLevel.READ_WRITE);
 
     when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
     when(userRepository.findByUsername("anotheruser")).thenReturn(Optional.of(anotherUser));
@@ -367,8 +373,9 @@ class FiscalYearServiceTest {
     when(accessRepository.findByResponsibilityCentreAndUser(testRC, anotherUser))
         .thenReturn(Optional.of(access));
 
-    assertThrows(IllegalArgumentException.class,
+    IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
         () -> fiscalYearService.updateDisplaySettings(1L, "anotheruser", true, true, false, null, null));
+    assertTrue(ex.getMessage().contains("owner"));
   }
 
   @Test
@@ -422,5 +429,92 @@ class FiscalYearServiceTest {
     assertTrue(result.isPresent());
     verify(fiscalYearRepository).save(argThat(fy -> 
         fy.getOnTargetMin().equals(-100) && fy.getOnTargetMax().equals(100)));
+  }
+
+  // =========== Clone Fiscal Year Tests ===========
+
+  @Test
+  @DisplayName("cloneFiscalYear - Clones fiscal year successfully")
+  void cloneFiscalYear_ClonesSuccessfully() {
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(fiscalYearRepository.existsByNameAndResponsibilityCentre(anyString(), any()))
+        .thenReturn(false);
+
+    FiscalYear clonedFY = new FiscalYear("FY 2025-2026 (Copy)", "Test Fiscal Year", testRC);
+    clonedFY.setId(2L);
+    when(fiscalYearCloneService.deepCloneFiscalYear(any(), anyString(), any()))
+        .thenReturn(clonedFY);
+
+    FiscalYearDTO result = fiscalYearService.cloneFiscalYear(
+        1L, 1L, "testuser", "FY 2025-2026 (Copy)");
+
+    assertNotNull(result);
+    assertEquals("FY 2025-2026 (Copy)", result.getName());
+    verify(fiscalYearCloneService).deepCloneFiscalYear(
+        any(FiscalYear.class), eq("FY 2025-2026 (Copy)"), any(ResponsibilityCentre.class));
+  }
+
+  @Test
+  @DisplayName("cloneFiscalYear - Throws when user has no write access")
+  void cloneFiscalYear_ThrowsWhenNoWriteAccess() {
+    when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+
+    assertThrows(IllegalArgumentException.class,
+        () -> fiscalYearService.cloneFiscalYear(1L, 1L, "testuser", "FY Copy"));
+  }
+
+  @Test
+  @DisplayName("cloneFiscalYear - Throws when fiscal year not found")
+  void cloneFiscalYear_ThrowsWhenFYNotFound() {
+    when(fiscalYearRepository.findById(999L)).thenReturn(Optional.empty());
+
+    assertThrows(IllegalArgumentException.class,
+        () -> fiscalYearService.cloneFiscalYear(1L, 999L, "testuser", "FY Copy"));
+  }
+
+  @Test
+  @DisplayName("cloneFiscalYear - Throws when FY does not belong to RC")
+  void cloneFiscalYear_ThrowsWhenFYNotInRC() {
+    ResponsibilityCentre otherRC = new ResponsibilityCentre();
+    otherRC.setId(99L);
+    otherRC.setName("Other RC");
+    otherRC.setOwner(testUser);
+
+    FiscalYear otherFY = new FiscalYear("Other FY", "Other", otherRC);
+    otherFY.setId(2L);
+
+    when(fiscalYearRepository.findById(2L)).thenReturn(Optional.of(otherFY));
+
+    assertThrows(IllegalArgumentException.class,
+        () -> fiscalYearService.cloneFiscalYear(1L, 2L, "testuser", "FY Copy"));
+  }
+
+  @Test
+  @DisplayName("cloneFiscalYear - Throws on duplicate name")
+  void cloneFiscalYear_ThrowsOnDuplicateName() {
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+    when(fiscalYearRepository.existsByNameAndResponsibilityCentre(anyString(), any()))
+        .thenReturn(true);
+
+    assertThrows(IllegalArgumentException.class,
+        () -> fiscalYearService.cloneFiscalYear(1L, 1L, "testuser", "FY 2025-2026"));
+  }
+
+  @Test
+  @DisplayName("cloneFiscalYear - Throws on null name")
+  void cloneFiscalYear_ThrowsOnNullName() {
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+
+    assertThrows(IllegalArgumentException.class,
+        () -> fiscalYearService.cloneFiscalYear(1L, 1L, "testuser", null));
+  }
+
+  @Test
+  @DisplayName("cloneFiscalYear - Throws on empty name")
+  void cloneFiscalYear_ThrowsOnEmptyName() {
+    when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
+
+    assertThrows(IllegalArgumentException.class,
+        () -> fiscalYearService.cloneFiscalYear(1L, 1L, "testuser", "   "));
   }
 }

@@ -210,7 +210,7 @@
       </div>
 
       <!-- FY Action Buttons - visible for all users, but disabled for read-only -->
-      <div class="fy-action-buttons" *ngIf="!showFYCreateForm && !showFYRenameForm && !showFYDeleteConfirm">
+      <div class="fy-action-buttons" *ngIf="!showFYCreateForm && !showFYRenameForm && !showFYDeleteConfirm && !showFYCloneForm">
         <button class="btn btn-action btn-sm" 
                 (click)="toggleFYCreateForm()" 
                 [disabled]="!selectedRCCanWrite"
@@ -238,6 +238,13 @@
                 [title]="selectedFY?.active ? ('fiscalYear.deactivate' | translate) : ('fiscalYear.activate' | translate)">
           <span class="action-icon">{{ selectedFY?.active ? '🔒' : '🔓' }}</span>
           <span class="action-label">{{ selectedFY?.active ? ('fiscalYear.deactivate' | translate) : ('fiscalYear.activate' | translate) }}</span>
+        </button>
+        <button class="btn btn-action btn-sm" 
+                (click)="toggleFYCloneForm()" 
+                [disabled]="selectedFYId === null || !selectedRCCanWrite"
+                [title]="'fiscalYear.clone' | translate">
+          <span class="action-icon">📋</span>
+          <span class="action-label">{{ 'fiscalYear.clone' | translate }}</span>
         </button>
       </div>
 
@@ -322,6 +329,32 @@
               {{ isDeletingFY ? ('fiscalYear.deleting' | translate) : ('common.delete' | translate) }}
             </button>
             <button class="btn btn-secondary" (click)="cancelDeleteFY()" [disabled]="isDeletingFY">
+              {{ 'common.cancel' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clone FY Form -->
+      <div class="create-fy-form" *ngIf="showFYCloneForm">
+        <div class="form-container">
+          <h3>📋 {{ 'fiscalYear.cloneTitle' | translate }}</h3>
+          <p class="form-info">{{ 'fiscalYear.cloning' | translate }}: <strong>{{ selectedFY?.name }}</strong></p>
+          <div class="form-group">
+            <label for="cloneFYName">{{ 'fiscalYear.name' | translate }} *</label>
+            <input
+              id="cloneFYName"
+              type="text"
+              [(ngModel)]="cloneFYNewName"
+              [placeholder]="'fiscalYear.enterName' | translate"
+              [disabled]="isCloningFY"
+            />
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-primary" (click)="cloneFY()" [disabled]="isCloningFY || !cloneFYNewName.trim()">
+              {{ isCloningFY ? ('fiscalYear.cloning' | translate) : ('fiscalYear.clone' | translate) }}
+            </button>
+            <button class="btn btn-secondary" (click)="closeFYForms()" [disabled]="isCloningFY">
               {{ 'common.cancel' | translate }}
             </button>
           </div>
