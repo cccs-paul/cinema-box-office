@@ -263,9 +263,9 @@ describe('HeaderComponent', () => {
   });
 
   describe('openPreferences', () => {
-    it('should navigate to /app/preferences', () => {
+    it('should navigate to /preferences', () => {
       component.openPreferences();
-      expect(router.navigate).toHaveBeenCalledWith(['/app/preferences']);
+      expect(router.navigate).toHaveBeenCalledWith(['/preferences']);
     });
 
     it('should close the user menu', () => {

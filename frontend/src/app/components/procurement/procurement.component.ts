@@ -19,6 +19,7 @@ import { ProcurementService, ProcurementItemCreateRequest, QuoteCreateRequest, T
 import { CurrencyService } from '../../services/currency.service';
 import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { CategoryService } from '../../services/category.service';
+import { UserPreferencesService, UserDisplayPreferences } from '../../services/user-preferences.service';
 import { CurrencyInputDirective } from '../../directives/currency-input.directive';
 import { DateInputDirective } from '../../directives/date-input.directive';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
@@ -254,6 +255,9 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private pendingExpandItemId: number | null = null;
 
+  // User display preferences
+  displayPreferences: UserDisplayPreferences = { showSearchBox: true, showCategoryFilter: true, groupByCategory: false };
+
   constructor(
     private authService: AuthService,
     private router: Router,
@@ -265,10 +269,16 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     private fuzzySearchService: FuzzySearchService,
     private categoryService: CategoryService,
     private sanitizer: DomSanitizer,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private userPreferencesService: UserPreferencesService
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to user display preferences
+    this.userPreferencesService.preferences$.pipe(takeUntil(this.destroy$)).subscribe(prefs => {
+      this.displayPreferences = prefs;
+    });
+
     this.loadCurrencies();
 
     // Check for expandItem query parameter

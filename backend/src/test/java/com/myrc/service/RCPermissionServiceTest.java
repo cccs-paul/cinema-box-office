@@ -556,8 +556,8 @@ class RCPermissionServiceTest {
 
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("anotherowner")).thenReturn(Optional.of(anotherOwner));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, anotherOwner))
-          .thenReturn(Optional.of(ownerAccess));
+      when(accessRepository.findAllAccessForUserInRC(eq(testRC), eq(anotherOwner), any()))
+          .thenReturn(List.of(ownerAccess));
 
       boolean result = permissionService.isOwner(1L, "anotherowner");
 
@@ -569,8 +569,8 @@ class RCPermissionServiceTest {
     void shouldReturnFalseWhenNonOwnerAccess() {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
-          .thenReturn(Optional.of(testAccess)); // READ_WRITE access
+      when(accessRepository.findAllAccessForUserInRC(eq(testRC), eq(testUser), any()))
+          .thenReturn(List.of(testAccess)); // READ_WRITE access
 
       boolean result = permissionService.isOwner(1L, "testuser");
 
@@ -592,9 +592,8 @@ class RCPermissionServiceTest {
     void shouldReturnFalseWhenUserNotFound() {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
-      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
-          eq(testRC), eq("nonexistent"), eq(PrincipalType.USER)))
-          .thenReturn(Optional.empty());
+      when(accessRepository.findByPrincipalIdentifierIn(any()))
+          .thenReturn(Collections.emptyList());
 
       boolean result = permissionService.isOwner(1L, "nonexistent");
 
@@ -612,11 +611,31 @@ class RCPermissionServiceTest {
 
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("ldapowner")).thenReturn(Optional.empty());
-      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
-          eq(testRC), eq("ldapowner"), eq(PrincipalType.USER)))
-          .thenReturn(Optional.of(ldapOwnerAccess));
+      when(accessRepository.findByPrincipalIdentifierIn(any()))
+          .thenReturn(List.of(ldapOwnerAccess));
 
       boolean result = permissionService.isOwner(1L, "ldapowner");
+
+      assertTrue(result);
+    }
+
+    @Test
+    @DisplayName("Should return true when user has OWNER access via group")
+    void shouldReturnTrueWhenGroupHasOwnerAccess() {
+      RCAccess groupOwnerAccess = new RCAccess();
+      groupOwnerAccess.setResponsibilityCentre(testRC);
+      groupOwnerAccess.setPrincipalIdentifier("cn=admins,ou=groups,dc=example,dc=com");
+      groupOwnerAccess.setPrincipalType(PrincipalType.GROUP);
+      groupOwnerAccess.setAccessLevel(AccessLevel.OWNER);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("ldapuser")).thenReturn(Optional.empty());
+      // SecurityContext has no auth in test, so group DNs are empty.
+      // But username is still added as an identifier.
+      when(accessRepository.findByPrincipalIdentifierIn(any()))
+          .thenReturn(List.of(groupOwnerAccess));
+
+      boolean result = permissionService.isOwner(1L, "ldapuser");
 
       assertTrue(result);
     }
@@ -820,8 +839,8 @@ class RCPermissionServiceTest {
     void shouldReturnFalseWhenNotOwner() {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
-          .thenReturn(Optional.of(testAccess)); // READ_WRITE access
+      when(accessRepository.findAllAccessForUserInRC(eq(testRC), eq(testUser), any()))
+          .thenReturn(List.of(testAccess)); // READ_WRITE access
 
       boolean result = permissionService.canManageRC(1L, "testuser");
 

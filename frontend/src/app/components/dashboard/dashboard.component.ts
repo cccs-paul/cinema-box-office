@@ -19,6 +19,7 @@ import { CurrencyService } from '../../services/currency.service';
 import { MoneyService } from '../../services/money.service';
 import { CategoryService } from '../../services/category.service';
 import { FuzzySearchService } from '../../services/fuzzy-search.service';
+import { UserPreferencesService, UserDisplayPreferences } from '../../services/user-preferences.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { FundingItem, FundingItemCreateRequest, FundingItemUpdateRequest, getSourceLabel, getSourceClass, FundingSource, MoneyAllocation } from '../../models/funding-item.model';
@@ -116,6 +117,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Category grouping interface
   groupedItems: { categoryName: string; categoryId: number | null; items: FundingItem[] }[] = [];
 
+  // User display preferences
+  displayPreferences: UserDisplayPreferences = { showSearchBox: true, showCategoryFilter: true, groupByCategory: false };
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -128,10 +132,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private moneyService: MoneyService,
     private categoryService: CategoryService,
     private fuzzySearchService: FuzzySearchService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private userPreferencesService: UserPreferencesService
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to user display preferences
+    this.userPreferencesService.preferences$.pipe(takeUntil(this.destroy$)).subscribe(prefs => {
+      this.displayPreferences = prefs;
+    });
+
     // Load currencies
     this.loadCurrencies();
 

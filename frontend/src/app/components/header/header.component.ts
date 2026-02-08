@@ -120,7 +120,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
    * Navigate to the preferences page.
    */
   openPreferences(): void {
-    this.router.navigate(['/app/preferences']);
+    this.router.navigate(['/preferences']);
     this.closeUserMenu();
   }
 

@@ -15,7 +15,7 @@
   </div>
 
   <!-- Search and Category Filter -->
-  <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateForm && selectedFY?.showSearchBox !== false">
+  <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateForm && displayPreferences.showSearchBox">
     <!-- Search Box - Always Visible -->
     <div class="search-box-always-visible">
       <input
@@ -41,7 +41,7 @@
     </div>
     <div class="filters-content" *ngIf="filtersExpanded">
       <!-- Category Filter -->
-      <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
+      <div class="category-filter" *ngIf="categories.length > 0 && displayPreferences.showCategoryFilter">
         <span class="filter-label">{{ 'common.category' | translate }}:</span>
         <button 
           class="filter-btn"
@@ -237,7 +237,7 @@
   </div>
 
   <!-- Spending Items List - Grouped by Category -->
-  <div class="items-list grouped" *ngIf="!isLoadingItems && filteredSpendingItems.length > 0 && selectedFY?.groupByCategory">
+  <div class="items-list grouped" *ngIf="!isLoadingItems && filteredSpendingItems.length > 0 && displayPreferences.groupByCategory">
     <ng-container *ngFor="let group of groupedSpendingItems; trackBy: trackByGroupName">
       <div class="category-group-header">
         <span class="category-group-name">{{ group.categoryName }}</span>
@@ -250,7 +250,7 @@
   </div>
 
   <!-- Spending Items List - Flat View (no grouping) -->
-  <div class="items-list" *ngIf="!isLoadingItems && filteredSpendingItems.length > 0 && !selectedFY?.groupByCategory">
+  <div class="items-list" *ngIf="!isLoadingItems && filteredSpendingItems.length > 0 && !displayPreferences.groupByCategory">
     <div class="item-card" *ngFor="let item of filteredSpendingItems; trackBy: trackByItemId" [class.expanded]="expandedItemId === item.id" [id]="'spending-item-' + item.id">
       <ng-container *ngTemplateOutlet="spendingItemCardTemplate; context: { item: item }"></ng-container>
     </div>
@@ -264,7 +264,7 @@
         <span class="item-name">{{ item.name }}</span>
         <span class="procurement-indicator" *ngIf="item.procurementItemId" [title]="('spending.linkedTo' | translate) + ': ' + (item.procurementItemName || ('spending.procurementItem' | translate))">📦</span>
         <span class="warning-indicator" *ngIf="item.procurementItemId && hasPriceMismatch(item)" [title]="'spending.priceMismatchWarning' | translate">⚠️</span>
-        <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">{{ getCategoryDisplayNameById(item.categoryId, item.categoryName) }}</span>
+        <span class="category-badge" *ngIf="item.categoryName && !displayPreferences.groupByCategory">{{ getCategoryDisplayNameById(item.categoryId, item.categoryName) }}</span>
         <!-- Tracking Status Badge - Shows procurement tracking for linked items, spending event for standalone -->
         <span class="tracking-badge" *ngIf="item.procurementItemId && item.procurementMostRecentEventType" 
               [ngClass]="getTrackingStatusClass(item.procurementMostRecentEventType)"

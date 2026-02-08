@@ -54,6 +54,10 @@ export const routes: Routes = [
         component: RCPermissionsComponent,
       },
       {
+        path: 'preferences',
+        component: PreferencesComponent,
+      },
+      {
         path: '',
         redirectTo: 'rc-selection',
         pathMatch: 'full',
@@ -94,12 +98,13 @@ export const routes: Routes = [
         component: DeveloperToolsComponent,
       },
       {
-        path: 'preferences',
-        component: PreferencesComponent,
+        path: 'accessibility',
+        redirectTo: '/preferences',
+        pathMatch: 'full',
       },
       {
-        path: 'accessibility',
-        redirectTo: 'preferences',
+        path: 'preferences',
+        redirectTo: '/preferences',
         pathMatch: 'full',
       },
       {

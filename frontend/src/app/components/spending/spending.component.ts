@@ -20,6 +20,7 @@ import { CategoryService } from '../../services/category.service';
 import { MoneyService } from '../../services/money.service';
 import { CurrencyService } from '../../services/currency.service';
 import { FuzzySearchService } from '../../services/fuzzy-search.service';
+import { UserPreferencesService, UserDisplayPreferences } from '../../services/user-preferences.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { SpendingItem, SpendingMoneyAllocation, SpendingItemStatus, SPENDING_STATUS_INFO } from '../../models/spending-item.model';
@@ -155,6 +156,9 @@ export class SpendingComponent implements OnInit, OnDestroy {
   // For navigation with query params (expand specific item)
   private pendingExpandItemId: number | null = null;
 
+  // User display preferences
+  displayPreferences: UserDisplayPreferences = { showSearchBox: true, showCategoryFilter: true, groupByCategory: false };
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -169,10 +173,16 @@ export class SpendingComponent implements OnInit, OnDestroy {
     private moneyService: MoneyService,
     private currencyService: CurrencyService,
     private fuzzySearchService: FuzzySearchService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private userPreferencesService: UserPreferencesService
   ) {}
 
   ngOnInit(): void {
+    // Subscribe to user display preferences
+    this.userPreferencesService.preferences$.pipe(takeUntil(this.destroy$)).subscribe(prefs => {
+      this.displayPreferences = prefs;
+    });
+
     // Check for query params (e.g., expandItem=123)
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
       if (params['expandItem']) {

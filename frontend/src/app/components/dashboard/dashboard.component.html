@@ -7,7 +7,7 @@
   <!-- Main Content -->
   <main class="dashboard-main">
     <!-- Search and Category Filter -->
-    <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateForm && selectedFY?.showSearchBox !== false">
+    <div class="filters-bar" [class.collapsed]="!filtersExpanded" *ngIf="!showCreateForm && displayPreferences.showSearchBox">
       <!-- Search Box - Always Visible -->
       <div class="search-box-always-visible">
         <input
@@ -33,7 +33,7 @@
       </div>
       <div class="filters-content" *ngIf="filtersExpanded">
         <!-- Category Filter -->
-        <div class="category-filter" *ngIf="categories.length > 0 && selectedFY?.showCategoryFilter !== false">
+        <div class="category-filter" *ngIf="categories.length > 0 && displayPreferences.showCategoryFilter">
           <span class="filter-label">{{ 'common.category' | translate }}:</span>
           <button 
             class="filter-btn"
@@ -197,7 +197,7 @@
     </div>
 
     <!-- Funding Items List - Grouped by Category -->
-    <div class="items-list grouped" *ngIf="!isLoadingItems && sortedFundingItems.length > 0 && selectedFY?.groupByCategory">
+    <div class="items-list grouped" *ngIf="!isLoadingItems && sortedFundingItems.length > 0 && displayPreferences.groupByCategory">
       <ng-container *ngFor="let group of groupedFundingItems; trackBy: trackByGroupName">
         <div class="category-group-header">
           <span class="category-group-name">{{ group.categoryName }}</span>
@@ -210,7 +210,7 @@
     </div>
 
     <!-- Funding Items List - Flat View (no grouping) -->
-    <div class="items-list" *ngIf="!isLoadingItems && sortedFundingItems.length > 0 && !selectedFY?.groupByCategory">
+    <div class="items-list" *ngIf="!isLoadingItems && sortedFundingItems.length > 0 && !displayPreferences.groupByCategory">
       <div class="item-card" *ngFor="let item of sortedFundingItems; trackBy: trackByItemId" [class.expanded]="expandedItemId === item.id">
         <ng-container *ngTemplateOutlet="itemCardTemplate; context: { item: item }"></ng-container>
       </div>
@@ -222,7 +222,7 @@
       <div class="item-summary" (click)="toggleItemDetails(item)">
         <div class="item-info">
           <span class="item-name">{{ item.name }}</span>
-          <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">{{ getCategoryDisplayNameById(item.categoryId, item.categoryName) }}</span>
+          <span class="category-badge" *ngIf="item.categoryName && !displayPreferences.groupByCategory">{{ getCategoryDisplayNameById(item.categoryId, item.categoryName) }}</span>
           <span class="source-badge" [ngClass]="getSourceClass(item.source)">
             {{ getSourceLabel(item.source) }}
           </span>

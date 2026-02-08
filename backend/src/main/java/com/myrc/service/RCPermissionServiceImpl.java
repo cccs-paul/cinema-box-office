@@ -352,34 +352,11 @@ public class RCPermissionServiceImpl implements RCPermissionService {
   @Override
   @Transactional(readOnly = true)
   public boolean isOwner(Long rcId, String username) {
-    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
-    if (rcOpt.isEmpty()) {
-      return false;
-    }
-
-    ResponsibilityCentre rc = rcOpt.get();
-    Optional<User> userOpt = userRepository.findByUsername(username);
-
-    if (userOpt.isPresent()) {
-      User user = userOpt.get();
-
-      // Check if user is the original owner
-      if (rc.getOwner().getId().equals(user.getId())) {
-        return true;
-      }
-
-      // Check if user has explicit OWNER access via User FK
-      Optional<RCAccess> access = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-      if (access.isPresent() && access.get().getAccessLevel() == AccessLevel.OWNER) {
-        return true;
-      }
-    }
-
-    // Check if user has OWNER access stored by principalIdentifier (LDAP users)
-    Optional<RCAccess> identifierAccess = accessRepository
-        .findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
-            rc, username, PrincipalType.USER);
-    return identifierAccess.isPresent() && identifierAccess.get().getAccessLevel() == AccessLevel.OWNER;
+    // Delegate to getEffectiveAccessLevel which correctly resolves access from all
+    // sources: original owner FK, direct User FK, principalIdentifier (USER and GROUP).
+    List<String> groupDns = extractGroupDnsFromSecurityContext();
+    Optional<AccessLevel> level = getEffectiveAccessLevel(rcId, username, groupDns);
+    return level.isPresent() && level.get() == AccessLevel.OWNER;
   }
 
   @Override
