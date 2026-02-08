@@ -80,6 +80,9 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   // Tracking Status Filter
   selectedTrackingStatus: TrackingStatus | null = null;
 
+  // Procurement Type Filter
+  selectedProcurementType: ProcurementType | null = null;
+
   // Selected Item for detail view
   selectedItem: ProcurementItem | null = null;
   quotes: ProcurementQuote[] = [];
@@ -454,6 +457,14 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     if (this.selectedTrackingStatus !== null) {
       items = items.filter(item => item.trackingStatus === this.selectedTrackingStatus);
     }
+
+    // Apply procurement type filter
+    if (this.selectedProcurementType !== null) {
+      items = items.filter(item => {
+        const itemType = item.procurementType || 'RC_INITIATED';
+        return itemType === this.selectedProcurementType;
+      });
+    }
     
     return items;
   }
@@ -548,6 +559,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.searchTerm = '';
     this.selectedCategoryId = null;
     this.selectedTrackingStatus = null;
+    this.selectedProcurementType = null;
   }
 
   /**
@@ -616,6 +628,19 @@ export class ProcurementComponent implements OnInit, OnDestroy {
       this.selectedTrackingStatus = null;
     } else {
       this.selectedTrackingStatus = status;
+    }
+  }
+
+  /**
+   * Filter procurement items by procurement type.
+   * Clicking the same type again will remove the filter (toggle behavior).
+   */
+  filterByProcurementType(type: ProcurementType | null): void {
+    // Toggle off if clicking the same type
+    if (this.selectedProcurementType === type) {
+      this.selectedProcurementType = null;
+    } else {
+      this.selectedProcurementType = type;
     }
   }
 

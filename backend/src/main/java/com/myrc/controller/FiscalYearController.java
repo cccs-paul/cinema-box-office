@@ -399,7 +399,7 @@ public class FiscalYearController {
     } catch (IllegalArgumentException e) {
       String message = e.getMessage();
       logger.warning("Fiscal year clone failed: " + message);
-      if (message != null && message.contains("write access")) {
+      if (message != null && message.contains("does not have access")) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(message));
       }
       return ResponseEntity.badRequest().body(new ErrorResponse(message));

@@ -286,10 +286,10 @@ public class FiscalYearServiceImpl implements FiscalYearService {
   @Override
   public FiscalYearDTO cloneFiscalYear(Long rcId, Long fiscalYearId, String username,
       String newName) {
-    // Verify user has write access to the RC
-    if (!hasWriteAccessToRC(rcId, username)) {
+    // Verify user has at least read access to the RC (cloning only requires read access)
+    if (!hasAccessToRC(rcId, username)) {
       throw new IllegalArgumentException(
-          "User does not have write access to this Responsibility Centre");
+          "User does not have access to this Responsibility Centre");
     }
 
     Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);

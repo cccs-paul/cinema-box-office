@@ -68,6 +68,17 @@
       </div>
     </div>
 
+    <!-- Procurement Type -->
+    <div class="chart-card">
+      <div class="chart-container">
+        <canvas #procurementTypeChart></canvas>
+      </div>
+      <div class="chart-empty" *ngIf="procurementItems.length === 0">
+        <span class="empty-icon">🏢</span>
+        <p>{{ 'insights.noProcurementData' | translate }}</p>
+      </div>
+    </div>
+
     <!-- Spending Status -->
     <div class="chart-card">
       <div class="chart-container">

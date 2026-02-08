@@ -691,10 +691,10 @@ describe('RCSelectionComponent', () => {
       expect(component.showFYCloneForm).toBeFalse();
     });
 
-    it('should not toggle clone FY form without write access', () => {
+    it('should toggle clone FY form even with read-only access', () => {
       component.selectedRCId = 2; // READ_ONLY
       component.toggleFYCloneForm();
-      expect(component.showFYCloneForm).toBeFalse();
+      expect(component.showFYCloneForm).toBeTrue();
     });
 
     it('should clone FY successfully', fakeAsync(() => {

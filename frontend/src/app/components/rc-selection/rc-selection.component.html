@@ -209,7 +209,7 @@
         <h2>📅 {{ 'fiscalYear.title' | translate }}</h2>
       </div>
 
-      <!-- FY Action Buttons - visible for all users, but disabled for read-only -->
+      <!-- FY Action Buttons - visible for all users, order matches RC buttons -->
       <div class="fy-action-buttons" *ngIf="!showFYCreateForm && !showFYRenameForm && !showFYDeleteConfirm && !showFYCloneForm">
         <button class="btn btn-action btn-sm" 
                 (click)="toggleFYCreateForm()" 
@@ -219,11 +219,11 @@
           <span class="action-label">{{ 'rcSelection.addFiscalYear' | translate }}</span>
         </button>
         <button class="btn btn-action btn-sm" 
-                (click)="toggleFYRenameForm()" 
-                [disabled]="selectedFYId === null || !selectedRCCanWrite" 
-                [title]="'fiscalYear.rename' | translate">
-          <span class="action-icon">✏️</span>
-          <span class="action-label">{{ 'fiscalYear.rename' | translate }}</span>
+                (click)="toggleFYCloneForm()" 
+                [disabled]="selectedFYId === null"
+                [title]="'fiscalYear.clone' | translate">
+          <span class="action-icon">📋</span>
+          <span class="action-label">{{ 'fiscalYear.clone' | translate }}</span>
         </button>
         <button class="btn btn-action btn-sm" 
                 (click)="confirmDeleteFY()" 
@@ -240,11 +240,11 @@
           <span class="action-label">{{ selectedFY?.active ? ('fiscalYear.deactivate' | translate) : ('fiscalYear.activate' | translate) }}</span>
         </button>
         <button class="btn btn-action btn-sm" 
-                (click)="toggleFYCloneForm()" 
-                [disabled]="selectedFYId === null || !selectedRCCanWrite"
-                [title]="'fiscalYear.clone' | translate">
-          <span class="action-icon">📋</span>
-          <span class="action-label">{{ 'fiscalYear.clone' | translate }}</span>
+                (click)="toggleFYRenameForm()" 
+                [disabled]="selectedFYId === null || !selectedRCCanWrite" 
+                [title]="'fiscalYear.rename' | translate">
+          <span class="action-icon">✏️</span>
+          <span class="action-label">{{ 'fiscalYear.rename' | translate }}</span>
         </button>
       </div>
 

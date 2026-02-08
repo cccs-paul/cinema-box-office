@@ -660,5 +660,40 @@ class ResponsibilityCentreServiceImplTest {
       assertTrue(exception.getMessage().contains("already exists"));
       assertTrue(exception.getMessage().contains("must be unique"));
     }
+
+    @Test
+    @DisplayName("Should allow cloning Demo RC even without explicit RCAccess record")
+    void testCloneDemoRcWithoutExplicitAccess() {
+      // Create Demo RC owned by a different user
+      User otherUser = new User();
+      otherUser.setId(99L);
+      otherUser.setUsername("otheruser");
+
+      ResponsibilityCentre demoRc = new ResponsibilityCentre();
+      demoRc.setId(42L);
+      demoRc.setName("Demo");
+      demoRc.setDescription("Demo RC");
+      demoRc.setOwner(otherUser);
+
+      ResponsibilityCentre clonedRc = new ResponsibilityCentre();
+      clonedRc.setId(43L);
+      clonedRc.setName("Demo (Copy)");
+      clonedRc.setOwner(testUser);
+
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findById(42L)).thenReturn(Optional.of(demoRc));
+      when(accessRepository.findByResponsibilityCentreAndUser(demoRc, testUser))
+          .thenReturn(Optional.empty());
+      when(rcRepository.existsByName("Demo (Copy)")).thenReturn(false);
+      when(rcRepository.save(any(ResponsibilityCentre.class))).thenReturn(clonedRc);
+      when(fiscalYearRepository.findByResponsibilityCentreId(42L))
+          .thenReturn(List.of());
+
+      ResponsibilityCentreDTO result = service.cloneResponsibilityCentre(
+          42L, "testuser", "Demo (Copy)");
+
+      assertNotNull(result);
+      assertEquals("Demo (Copy)", result.getName());
+    }
   }
 }

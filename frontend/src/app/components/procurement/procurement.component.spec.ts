@@ -92,6 +92,7 @@ describe('ProcurementComponent', () => {
       description: 'NVIDIA A100 GPUs',
       currentStatus: 'DRAFT',
       trackingStatus: 'ON_TRACK',
+      procurementType: 'RC_INITIATED',
       vendor: 'NVIDIA',
       finalPrice: 50000,
       finalPriceCurrency: 'CAD',
@@ -119,6 +120,7 @@ describe('ProcurementComponent', () => {
       description: 'Dell PowerEdge Servers',
       currentStatus: 'PENDING_QUOTES',
       trackingStatus: 'AT_RISK',
+      procurementType: 'CENTRALLY_MANAGED',
       vendor: 'Dell',
       finalPrice: 75000,
       finalPriceCurrency: 'USD',
@@ -377,6 +379,35 @@ describe('ProcurementComponent', () => {
     });
   });
 
+  describe('filterByProcurementType', () => {
+    it('should set selected procurement type', () => {
+      component.filterByProcurementType('RC_INITIATED');
+
+      expect(component.selectedProcurementType).toBe('RC_INITIATED');
+    });
+
+    it('should clear procurement type filter when null', () => {
+      component.selectedProcurementType = 'CENTRALLY_MANAGED';
+      component.filterByProcurementType(null);
+
+      expect(component.selectedProcurementType).toBeNull();
+    });
+
+    it('should toggle off when clicking the same type', () => {
+      component.selectedProcurementType = 'RC_INITIATED';
+      component.filterByProcurementType('RC_INITIATED');
+
+      expect(component.selectedProcurementType).toBeNull();
+    });
+
+    it('should switch to new type when clicking different type', () => {
+      component.selectedProcurementType = 'RC_INITIATED';
+      component.filterByProcurementType('CENTRALLY_MANAGED');
+
+      expect(component.selectedProcurementType).toBe('CENTRALLY_MANAGED');
+    });
+  });
+
   describe('clearSearch', () => {
     it('should clear search term', () => {
       component.searchTerm = 'test search';
@@ -397,6 +428,13 @@ describe('ProcurementComponent', () => {
       component.clearSearch();
 
       expect(component.selectedTrackingStatus).toBeNull();
+    });
+
+    it('should clear procurement type filter', () => {
+      component.selectedProcurementType = 'RC_INITIATED';
+      component.clearSearch();
+
+      expect(component.selectedProcurementType).toBeNull();
     });
   });
 
@@ -562,6 +600,30 @@ describe('ProcurementComponent', () => {
       const filtered = component.filteredProcurementItems;
       
       expect(filtered.length).toBe(0);
+    });
+
+    it('should filter by procurement type RC_INITIATED', () => {
+      component.searchTerm = '';
+      component.selectedCategoryId = null;
+      component.selectedTrackingStatus = null;
+      component.selectedProcurementType = 'RC_INITIATED';
+      
+      const filtered = component.filteredProcurementItems;
+      
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].procurementType).toBe('RC_INITIATED');
+    });
+
+    it('should filter by procurement type CENTRALLY_MANAGED', () => {
+      component.searchTerm = '';
+      component.selectedCategoryId = null;
+      component.selectedTrackingStatus = null;
+      component.selectedProcurementType = 'CENTRALLY_MANAGED';
+      
+      const filtered = component.filteredProcurementItems;
+      
+      expect(filtered.length).toBe(1);
+      expect(filtered[0].procurementType).toBe('CENTRALLY_MANAGED');
     });
   });
 

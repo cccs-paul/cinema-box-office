@@ -455,9 +455,9 @@ class FiscalYearServiceTest {
   }
 
   @Test
-  @DisplayName("cloneFiscalYear - Throws when user has no write access")
-  void cloneFiscalYear_ThrowsWhenNoWriteAccess() {
-    when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+  @DisplayName("cloneFiscalYear - Throws when user has no access")
+  void cloneFiscalYear_ThrowsWhenNoAccess() {
+    when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
 
     assertThrows(IllegalArgumentException.class,
         () -> fiscalYearService.cloneFiscalYear(1L, 1L, "testuser", "FY Copy"));

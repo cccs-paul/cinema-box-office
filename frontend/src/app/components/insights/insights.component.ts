@@ -22,7 +22,7 @@ import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.mode
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { FundingItem } from '../../models/funding-item.model';
 import { SpendingItem } from '../../models/spending-item.model';
-import { ProcurementItem, TRACKING_STATUS_INFO, TrackingStatus } from '../../models/procurement.model';
+import { ProcurementItem, TRACKING_STATUS_INFO, TrackingStatus, ProcurementType, PROCUREMENT_TYPE_INFO } from '../../models/procurement.model';
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
 
@@ -50,6 +50,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('fundingVsSpendingChart') fundingVsSpendingChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('capVsOmChart') capVsOmChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('procurementStatusChart') procurementStatusChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('procurementTypeChart') procurementTypeChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('spendingStatusChart') spendingStatusChartRef!: ElementRef<HTMLCanvasElement>;
 
   currentUser: User | null = null;
@@ -195,6 +196,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.createFundingVsSpendingChart();
     this.createCapVsOmChart();
     this.createProcurementStatusChart();
+    this.createProcurementTypeChart();
     this.createSpendingStatusChart();
   }
 
@@ -452,6 +454,47 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
+   * Create procurement type pie chart.
+   */
+  private createProcurementTypeChart(): void {
+    if (!this.procurementTypeChartRef?.nativeElement) return;
+
+    const typeCounts = this.countByProcurementType(this.procurementItems);
+    
+    const chart = new Chart(this.procurementTypeChartRef.nativeElement, {
+      type: 'pie',
+      data: {
+        labels: typeCounts.labels,
+        datasets: [{
+          data: typeCounts.values,
+          backgroundColor: [
+            '#2563eb', // RC_INITIATED - blue (matches status-blue badge)
+            '#7c3aed'  // CENTRALLY_MANAGED - purple (matches status-purple badge)
+          ],
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { padding: 15, usePointStyle: true }
+          },
+          title: {
+            display: true,
+            text: this.translate.instant('insights.procurementByType'),
+            font: { size: 16, weight: 'bold' }
+          }
+        }
+      }
+    });
+    this.charts.push(chart);
+  }
+
+  /**
    * Create spending status pie chart.
    */
   private createSpendingStatusChart(): void {
@@ -620,6 +663,38 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
       const count = statusCounts.get(status) || 0;
       if (count > 0) {
         labels.push(TRACKING_STATUS_INFO[status].label);
+        values.push(count);
+      }
+    }
+    
+    return { labels, values };
+  }
+
+  /**
+   * Count procurement items by procurement type.
+   */
+  private countByProcurementType(items: ProcurementItem[]): { labels: string[]; values: number[] } {
+    const procurementTypes: ProcurementType[] = ['RC_INITIATED', 'CENTRALLY_MANAGED'];
+    const typeCounts = new Map<ProcurementType, number>();
+    
+    // Initialize all types with 0
+    for (const ptype of procurementTypes) {
+      typeCounts.set(ptype, 0);
+    }
+    
+    for (const item of items) {
+      const procurementType = (item.procurementType as ProcurementType) || 'RC_INITIATED';
+      typeCounts.set(procurementType, (typeCounts.get(procurementType) || 0) + 1);
+    }
+    
+    // Build arrays in fixed order, only including types with counts > 0
+    const labels: string[] = [];
+    const values: number[] = [];
+    
+    for (const ptype of procurementTypes) {
+      const count = typeCounts.get(ptype) || 0;
+      if (count > 0) {
+        labels.push(PROCUREMENT_TYPE_INFO[ptype].label);
         values.push(count);
       }
     }

@@ -524,11 +524,15 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
     ResponsibilityCentre sourceRc = sourceRcOpt.get();
 
-    // Check if user has access to the source RC
+    // Check if user has access to the source RC (owner, direct access, or Demo RC)
     boolean hasAccess = sourceRc.getOwner().getId().equals(user.getId());
     if (!hasAccess) {
       Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(sourceRc, user);
       hasAccess = accessOpt.isPresent();
+    }
+    if (!hasAccess) {
+      // Demo RC is accessible to all authenticated users
+      hasAccess = DEMO_RC_NAME.equals(sourceRc.getName());
     }
 
     if (!hasAccess) {

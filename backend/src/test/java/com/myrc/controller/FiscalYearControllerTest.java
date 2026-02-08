@@ -328,7 +328,7 @@ class FiscalYearControllerTest {
   @DisplayName("cloneFiscalYear - Returns 403 on access denied")
   void cloneFiscalYear_ReturnsForbiddenOnAccessDenied() {
     when(fiscalYearService.cloneFiscalYear(anyLong(), anyLong(), anyString(), anyString()))
-        .thenThrow(new IllegalArgumentException("User does not have write access to this Responsibility Centre"));
+        .thenThrow(new IllegalArgumentException("User does not have access to this Responsibility Centre"));
 
     FiscalYearController.FiscalYearCloneRequest request =
         new FiscalYearController.FiscalYearCloneRequest("FY Copy");

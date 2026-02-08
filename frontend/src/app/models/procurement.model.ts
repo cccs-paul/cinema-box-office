@@ -81,8 +81,8 @@ export type ProcurementType = 'RC_INITIATED' | 'CENTRALLY_MANAGED';
  * Map of procurement type to display information.
  */
 export const PROCUREMENT_TYPE_INFO: Record<ProcurementType, ProcurementStatusInfo> = {
-  RC_INITIATED: { label: 'RC Initiated', color: 'blue', icon: '🏢' },
-  CENTRALLY_MANAGED: { label: 'Centrally Managed', color: 'purple', icon: '🏛️' }
+  RC_INITIATED: { label: 'RC managed', color: 'blue', icon: '🏢' },
+  CENTRALLY_MANAGED: { label: 'Centrally managed', color: 'purple', icon: '🏛️' }
 };
 
 /**

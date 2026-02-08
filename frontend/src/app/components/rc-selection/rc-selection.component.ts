@@ -710,7 +710,7 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
    * Toggle the clone FY form visibility.
    */
   toggleFYCloneForm(): void {
-    if (this.selectedFYId === null || !this.selectedRCCanWrite) return;
+    if (this.selectedFYId === null) return;
     this.closeFYForms();
     this.showFYCloneForm = true;
     const fy = this.selectedFY;
