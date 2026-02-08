@@ -99,13 +99,12 @@ export const routes: Routes = [
       },
       {
         path: 'accessibility',
-        redirectTo: '/preferences',
+        redirectTo: '/app/preferences',
         pathMatch: 'full',
       },
       {
         path: 'preferences',
-        redirectTo: '/preferences',
-        pathMatch: 'full',
+        component: PreferencesComponent,
       },
       {
         path: '',

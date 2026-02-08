@@ -67,6 +67,10 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   deleteConfirmId: number | null = null;
   isDeleting = false;
 
+  // Relinquish ownership confirmation
+  showRelinquishConfirm = false;
+  isRelinquishing = false;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -335,7 +339,11 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
   // Edit methods
   startEdit(permission: RCAccess): void {
-    if (!permission.id) return; // Can't edit the original owner
+    if (!permission.id) {
+      // Original owner: can't edit access level (it's implicit OWNER via FK).
+      // They should use the "Relinquish" button instead.
+      return;
+    }
     this.editingPermissionId = permission.id;
     this.editAccessLevel = permission.accessLevel;
     this.clearMessages();
@@ -365,7 +373,12 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
   // Delete methods
   confirmDelete(permission: RCAccess): void {
-    if (!permission.id) return; // Can't delete the original owner
+    if (!permission.id) {
+      // Original owner: use relinquish flow instead
+      this.showRelinquishConfirm = true;
+      this.clearMessages();
+      return;
+    }
     this.deleteConfirmId = permission.id;
     this.clearMessages();
   }
@@ -393,6 +406,36 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
     });
   }
 
+  /**
+   * Cancel the relinquish ownership confirmation dialog.
+   */
+  cancelRelinquish(): void {
+    this.showRelinquishConfirm = false;
+  }
+
+  /**
+   * Relinquish ownership of the RC.
+   * Transfers ownership to the next explicit OWNER user.
+   */
+  relinquishOwnership(): void {
+    if (!this.rcId) return;
+
+    this.isRelinquishing = true;
+    this.permissionService.relinquishOwnership(this.rcId).subscribe({
+      next: () => {
+        this.showRelinquishConfirm = false;
+        this.isRelinquishing = false;
+        // Reload the RC info and permissions (owner has changed)
+        this.loadRC();
+      },
+      error: (error) => {
+        this.errorMessage = error.message || this.translate.instant('rcPermissions.relinquishError');
+        this.showRelinquishConfirm = false;
+        this.isRelinquishing = false;
+      }
+    });
+  }
+
   // Helper methods
   getAccessLevelLabel(level: string): string {
     return this.permissionService.getAccessLevelLabel(level);
@@ -410,10 +453,32 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
     return this.permissionService.getAccessLevelIcon(level);
   }
 
+  /**
+   * Determine whether a permission entry can be edited or deleted.
+   *
+   * For the original owner (synthetic entry with id === null):
+   *   - Editable only when at least one other explicit OWNER access record exists
+   *     (direct user or group), so the RC always retains at least one owner.
+   *
+   * For all other entries:
+   *   - Always editable (the backend enforces the "last owner" constraint).
+   */
   canEditPermission(permission: RCAccess): boolean {
-    // Can't edit original owner (id is null) or if user is the RC's original owner
-    return permission.id !== null && 
-           !(this.rc && permission.principalIdentifier === this.rc.ownerUsername);
+    if (permission.id === null) {
+      // Original owner: allow editing only if another owner exists
+      return this.hasOtherOwner(permission);
+    }
+    return true;
+  }
+
+  /**
+   * Check whether at least one other OWNER access record exists in the
+   * permissions list, excluding the given permission.
+   */
+  private hasOtherOwner(excluded: RCAccess): boolean {
+    return this.permissions.some(
+      p => p !== excluded && p.accessLevel === 'OWNER' && p.id !== null
+    );
   }
 
   getFormTypeLabel(): string {

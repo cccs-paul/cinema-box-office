@@ -118,9 +118,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   /**
    * Navigate to the preferences page.
+   * Uses /app/preferences when the user is in the main app layout (sidebar visible),
+   * otherwise uses /preferences (no sidebar).
    */
   openPreferences(): void {
-    this.router.navigate(['/preferences']);
+    const currentUrl = this.router.url;
+    const target = currentUrl.startsWith('/app/') ? '/app/preferences' : '/preferences';
+    this.router.navigate([target]);
     this.closeUserMenu();
   }
 

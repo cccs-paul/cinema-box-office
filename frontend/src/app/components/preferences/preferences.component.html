@@ -8,6 +8,13 @@
   Version: 1.0.0
 -->
 <div class="preferences-container">
+  <!-- Back Link (shown in no-sidebar layout) -->
+  <div class="back-link" *ngIf="showBackLink">
+    <button class="btn-back" (click)="goBack()">
+      <span class="back-icon">←</span> {{ 'preferences.backToRcSelection' | translate }}
+    </button>
+  </div>
+
   <!-- Page Header -->
   <div class="page-header">
     <h2>⚙️ {{ 'preferences.title' | translate }}</h2>

@@ -14,6 +14,33 @@
   padding: 1.5rem;
 }
 
+/* ── Back Link ────────────────────────────────────────────────── */
+
+.back-link {
+  margin-bottom: 1rem;
+
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.25rem 0;
+    transition: color 0.2s;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    .back-icon {
+      font-size: 1.1rem;
+    }
+  }
+}
+
 /* ── Page Header ──────────────────────────────────────────────── */
 
 .page-header {

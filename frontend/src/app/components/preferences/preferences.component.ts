@@ -16,6 +16,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -45,6 +46,9 @@ import {
   styleUrls: ['./preferences.component.scss'],
 })
 export class PreferencesComponent implements OnInit, OnDestroy {
+  /** Whether the component is displayed without a sidebar (standalone layout). */
+  showBackLink = false;
+
   /** Active tab key. */
   activeTab: 'general' | 'accessibility' = 'general';
 
@@ -71,10 +75,14 @@ export class PreferencesComponent implements OnInit, OnDestroy {
   constructor(
     private userPreferencesService: UserPreferencesService,
     private accessibilityService: AccessibilityService,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
+    // Show back link when in no-sidebar layout (URL is /preferences, not /app/preferences)
+    this.showBackLink = !this.router.url.startsWith('/app/');
+
     // Subscribe to display preferences
     this.userPreferencesService.preferences$
       .pipe(takeUntil(this.destroy$))
@@ -148,6 +156,14 @@ export class PreferencesComponent implements OnInit, OnDestroy {
   restoreAccessibilityDefaults(): void {
     this.accessibilityService.restoreDefaults();
     this.showSuccess(this.translate.instant('preferences.accessibilityRestored'));
+  }
+
+  /**
+   * Navigate back to the RC selection page.
+   * Only available when in the no-sidebar layout.
+   */
+  goBack(): void {
+    this.router.navigate(['/rc-selection']);
   }
 
   // ── Helpers ───────────────────────────────────────────────────

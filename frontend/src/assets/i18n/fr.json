@@ -65,7 +65,8 @@
     "creating": "Création...",
     "deleting": "Suppression...",
     "showAll": "Tout afficher",
-    "hideAll": "Tout masquer"
+    "hideAll": "Tout masquer",
+    "processing": "Traitement en cours..."
   },
   "header": {
     "userMenu": "Menu utilisateur",
@@ -819,7 +820,11 @@
     "pressEnterToBrowse": "Appuyez sur Entrée ou ↓ pour parcourir toutes les entrées disponibles",
     "noSuggestionsFound": "Aucune entrée correspondante trouvée",
     "searching": "Recherche en cours...",
-    "addGroup": "Ajouter un groupe"
+    "addGroup": "Ajouter un groupe",
+    "relinquishOwnership": "Céder la propriété",
+    "confirmRelinquish": "Confirmer la cession de propriété",
+    "relinquishConfirmMessage": "Êtes-vous sûr de vouloir céder la propriété de ce CR ? La propriété sera transférée au prochain propriétaire disponible et vous obtiendrez un accès Lecture/Écriture à la place.",
+    "relinquishError": "Échec de la cession de propriété. Veuillez réessayer."
   },
   "accessibility": {
     "title": "Paramètres d'accessibilité",
@@ -892,6 +897,7 @@
     "groupByCategory": "Grouper les éléments par catégorie",
     "groupByCategoryDesc": "Regrouper les éléments de financement, d'approvisionnement et de dépenses par catégorie avec des en-têtes de section",
     "settingUpdated": "Paramètre mis à jour",
-    "accessibilityRestored": "Paramètres d'accessibilité rétablis par défaut"
+    "accessibilityRestored": "Paramètres d'accessibilité rétablis par défaut",
+    "backToRcSelection": "Retour à la sélection de CR"
   }
 }

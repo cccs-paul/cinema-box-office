@@ -62,11 +62,12 @@ describe('RCPermissionsComponent', () => {
     selectedRC$ = new BehaviorSubject<number | null>(1);
 
     permissionService = jasmine.createSpyObj('RCPermissionService', 
-      ['getPermissionsForRC', 'grantUserAccess', 'grantGroupAccess', 'updatePermission', 'revokeAccess', 'getPrincipalTypeIcon', 'getAccessLevelIcon']);
+      ['getPermissionsForRC', 'grantUserAccess', 'grantGroupAccess', 'updatePermission', 'revokeAccess', 'relinquishOwnership', 'getPrincipalTypeIcon', 'getAccessLevelIcon']);
     permissionService.getPermissionsForRC.and.returnValue(of(mockPermissions));
     permissionService.grantUserAccess.and.returnValue(of(mockPermissions[1]));
     permissionService.updatePermission.and.returnValue(of(mockPermissions[1]));
     permissionService.revokeAccess.and.returnValue(of(undefined));
+    permissionService.relinquishOwnership.and.returnValue(of(undefined));
     permissionService.getPrincipalTypeIcon.and.callFake((type: string) => type === 'USER' ? '👤' : '👥');
     permissionService.getAccessLevelIcon.and.callFake((level: string) => '📝');
 
@@ -602,5 +603,206 @@ describe('RCPermissionsComponent', () => {
       expect(component.showSuggestions).toBeTrue();
     }));
 
+  });
+
+  describe('canEditPermission', () => {
+    beforeEach(fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+    }));
+
+    it('should return true for non-original-owner permissions', () => {
+      const regularPermission: RCAccess = {
+        id: 5,
+        rcId: 1,
+        rcName: 'Test RC',
+        principalType: 'USER',
+        principalIdentifier: 'user1',
+        principalDisplayName: 'User One',
+        accessLevel: 'READ_WRITE',
+        grantedAt: '2026-01-01T00:00:00Z',
+        grantedBy: 'admin'
+      };
+      expect(component.canEditPermission(regularPermission)).toBeTrue();
+    });
+
+    it('should return false for original owner when no other owner exists', () => {
+      const originalOwner: RCAccess = {
+        id: null as unknown as number,
+        rcId: 1,
+        rcName: 'Test RC',
+        principalType: 'USER',
+        principalIdentifier: 'admin',
+        principalDisplayName: 'Admin User',
+        accessLevel: 'OWNER',
+        grantedAt: '2026-01-01T00:00:00Z',
+        grantedBy: null
+      };
+
+      // Only READ_WRITE permissions exist (no other OWNER)
+      component.permissions = [
+        originalOwner,
+        {
+          id: 2,
+          rcId: 1,
+          rcName: 'Test RC',
+          principalType: 'USER',
+          principalIdentifier: 'user1',
+          principalDisplayName: 'User One',
+          accessLevel: 'READ_WRITE',
+          grantedAt: '2026-01-01T00:00:00Z',
+          grantedBy: 'admin'
+        }
+      ];
+
+      expect(component.canEditPermission(originalOwner)).toBeFalse();
+    });
+
+    it('should return true for original owner when another explicit owner exists', () => {
+      const originalOwner: RCAccess = {
+        id: null as unknown as number,
+        rcId: 1,
+        rcName: 'Test RC',
+        principalType: 'USER',
+        principalIdentifier: 'admin',
+        principalDisplayName: 'Admin User',
+        accessLevel: 'OWNER',
+        grantedAt: '2026-01-01T00:00:00Z',
+        grantedBy: null
+      };
+
+      component.permissions = [
+        originalOwner,
+        {
+          id: 10,
+          rcId: 1,
+          rcName: 'Test RC',
+          principalType: 'USER',
+          principalIdentifier: 'otherowner',
+          principalDisplayName: 'Other Owner',
+          accessLevel: 'OWNER',
+          grantedAt: '2026-01-01T00:00:00Z',
+          grantedBy: 'admin'
+        }
+      ];
+
+      expect(component.canEditPermission(originalOwner)).toBeTrue();
+    });
+  });
+
+  describe('Relinquish Ownership', () => {
+    beforeEach(fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+    }));
+
+    it('should have showRelinquishConfirm as false initially', () => {
+      expect(component.showRelinquishConfirm).toBeFalse();
+    });
+
+    it('should have isRelinquishing as false initially', () => {
+      expect(component.isRelinquishing).toBeFalse();
+    });
+
+    it('should open relinquish confirmation when confirmDelete is called for original owner', () => {
+      const originalOwner: RCAccess = {
+        id: null as unknown as number,
+        rcId: 1,
+        rcName: 'Test RC',
+        principalType: 'USER',
+        principalIdentifier: 'admin',
+        principalDisplayName: 'Admin User',
+        accessLevel: 'OWNER',
+        grantedAt: '2026-01-01T00:00:00Z',
+        grantedBy: null
+      };
+
+      component.confirmDelete(originalOwner);
+
+      expect(component.showRelinquishConfirm).toBeTrue();
+      expect(component.deleteConfirmId).toBeNull();
+    });
+
+    it('should open delete confirmation when confirmDelete is called for normal permission', () => {
+      const normalPermission: RCAccess = {
+        id: 5,
+        rcId: 1,
+        rcName: 'Test RC',
+        principalType: 'USER',
+        principalIdentifier: 'user1',
+        principalDisplayName: 'User One',
+        accessLevel: 'READ_WRITE',
+        grantedAt: '2026-01-01T00:00:00Z',
+        grantedBy: 'admin'
+      };
+
+      component.confirmDelete(normalPermission);
+
+      expect(component.deleteConfirmId).toBe(5);
+      expect(component.showRelinquishConfirm).toBeFalse();
+    });
+
+    it('should cancel relinquish confirmation', () => {
+      component.showRelinquishConfirm = true;
+
+      component.cancelRelinquish();
+
+      expect(component.showRelinquishConfirm).toBeFalse();
+    });
+
+    it('should call relinquishOwnership on the service and reload RC', fakeAsync(() => {
+      component.rcId = 1;
+      permissionService.relinquishOwnership.and.returnValue(of(undefined));
+      component.showRelinquishConfirm = true;
+
+      component.relinquishOwnership();
+      tick();
+
+      expect(permissionService.relinquishOwnership).toHaveBeenCalledWith(1);
+      expect(component.showRelinquishConfirm).toBeFalse();
+      expect(component.isRelinquishing).toBeFalse();
+    }));
+
+    it('should handle relinquish error', fakeAsync(() => {
+      component.rcId = 1;
+      permissionService.relinquishOwnership.and.returnValue(
+        throwError(() => ({ message: 'Cannot relinquish' }))
+      );
+      component.showRelinquishConfirm = true;
+
+      component.relinquishOwnership();
+      tick();
+
+      expect(component.errorMessage).toBe('Cannot relinquish');
+      expect(component.showRelinquishConfirm).toBeFalse();
+      expect(component.isRelinquishing).toBeFalse();
+    }));
+
+    it('should not call service when rcId is null', fakeAsync(() => {
+      component.rcId = null;
+
+      component.relinquishOwnership();
+      tick();
+
+      expect(permissionService.relinquishOwnership).not.toHaveBeenCalled();
+    }));
+
+    it('should not allow editing original owner via startEdit', () => {
+      const originalOwner: RCAccess = {
+        id: null as unknown as number,
+        rcId: 1,
+        rcName: 'Test RC',
+        principalType: 'USER',
+        principalIdentifier: 'admin',
+        principalDisplayName: 'Admin User',
+        accessLevel: 'OWNER',
+        grantedAt: '2026-01-01T00:00:00Z',
+        grantedBy: null
+      };
+
+      component.startEdit(originalOwner);
+
+      expect(component.editingPermissionId).toBeNull();
+    });
   });
 });

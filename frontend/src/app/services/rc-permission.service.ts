@@ -146,6 +146,19 @@ export class RCPermissionService {
   }
 
   /**
+   * Relinquish ownership of an RC.
+   * Transfers ownership to the next explicit OWNER user and grants the
+   * former owner READ_WRITE access.
+   *
+   * @param rcId the RC ID
+   * @returns Observable<void>
+   */
+  relinquishOwnership(rcId: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/rc/${rcId}/relinquish-ownership`, null, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
    * Get human-readable label for access level.
    */
   getAccessLevelLabel(level: string): string {

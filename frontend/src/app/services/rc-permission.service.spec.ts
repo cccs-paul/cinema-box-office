@@ -369,6 +369,57 @@ describe('RCPermissionService', () => {
     });
   });
 
+  describe('relinquishOwnership', () => {
+    it('should call POST to relinquish ownership', () => {
+      service.relinquishOwnership(1).subscribe(() => {
+        // Success
+      });
+
+      const req = httpMock.expectOne('/api/rc-permissions/rc/1/relinquish-ownership');
+      expect(req.request.method).toBe('POST');
+      req.flush(null, { status: 204, statusText: 'No Content' });
+    });
+
+    it('should handle 403 error when not the original owner', () => {
+      service.relinquishOwnership(1).subscribe({
+        error: (error) => {
+          expect(error).toBeTruthy();
+        },
+      });
+
+      const req = httpMock.expectOne('/api/rc-permissions/rc/1/relinquish-ownership');
+      req.flush(
+        { message: 'Only the original owner can relinquish ownership' },
+        { status: 403, statusText: 'Forbidden' }
+      );
+    });
+
+    it('should handle 400 error when no other owner exists', () => {
+      service.relinquishOwnership(1).subscribe({
+        error: (error) => {
+          expect(error).toBeTruthy();
+        },
+      });
+
+      const req = httpMock.expectOne('/api/rc-permissions/rc/1/relinquish-ownership');
+      req.flush(
+        { message: 'Cannot relinquish ownership: no other user with OWNER access exists.' },
+        { status: 400, statusText: 'Bad Request' }
+      );
+    });
+
+    it('should handle 401 error when not authenticated', () => {
+      service.relinquishOwnership(1).subscribe({
+        error: (error) => {
+          expect(error).toBeTruthy();
+        },
+      });
+
+      const req = httpMock.expectOne('/api/rc-permissions/rc/1/relinquish-ownership');
+      req.flush(null, { status: 401, statusText: 'Unauthorized' });
+    });
+  });
+
   describe('error handling', () => {
     it('should handle server error', () => {
       service.getPermissionsForRC(1).subscribe({

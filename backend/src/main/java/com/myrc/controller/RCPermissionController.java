@@ -259,6 +259,44 @@ public class RCPermissionController {
     return ResponseEntity.ok(canEdit);
   }
 
+  /**
+   * Relinquish ownership of an RC.
+   * Transfers the RC's owner to the next explicit OWNER user and grants the
+   * former owner READ_WRITE access.
+   */
+  @PostMapping("/rc/{rcId}/relinquish-ownership")
+  @Operation(summary = "Relinquish ownership",
+      description = "Transfers ownership to the next explicit OWNER user. "
+          + "The former owner receives READ_WRITE access.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "204", description = "Ownership transferred successfully"),
+      @ApiResponse(responseCode = "400", description = "No other user owner available"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Forbidden - not the original owner")
+  })
+  public ResponseEntity<?> relinquishOwnership(
+      @Parameter(description = "RC ID") @PathVariable Long rcId,
+      Authentication authentication) {
+    if (authentication == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    try {
+      permissionService.relinquishOwnership(rcId, authentication.getName());
+      return ResponseEntity.noContent().build();
+    } catch (SecurityException e) {
+      logger.warning("Access denied for " + authentication.getName() + ": " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    } catch (IllegalArgumentException e) {
+      logger.warning("Bad request: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    } catch (Exception e) {
+      logger.severe("Error relinquishing ownership: " + e.getMessage());
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body("Failed to relinquish ownership");
+    }
+  }
+
   // Request DTOs
   public static class GrantUserAccessRequest {
     private String username;

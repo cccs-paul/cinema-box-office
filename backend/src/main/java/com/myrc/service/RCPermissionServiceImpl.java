@@ -45,15 +45,18 @@ public class RCPermissionServiceImpl implements RCPermissionService {
   private final ResponsibilityCentreRepository rcRepository;
   private final UserRepository userRepository;
   private final DirectorySearchService directorySearchService;
+  private final UserService userService;
 
   public RCPermissionServiceImpl(RCAccessRepository accessRepository,
                                   ResponsibilityCentreRepository rcRepository,
                                   UserRepository userRepository,
-                                  DirectorySearchService directorySearchService) {
+                                  DirectorySearchService directorySearchService,
+                                  UserService userService) {
     this.accessRepository = accessRepository;
     this.rcRepository = rcRepository;
     this.userRepository = userRepository;
     this.directorySearchService = directorySearchService;
+    this.userService = userService;
   }
 
   @Override
@@ -462,5 +465,85 @@ public class RCPermissionServiceImpl implements RCPermissionService {
       return List.of();
     }
     return LdapSecurityConfig.extractGroupDns(auth);
+  }
+
+  @Override
+  @Transactional
+  public void relinquishOwnership(Long rcId, String requestingUsername) {
+    ResponsibilityCentre rc = rcRepository.findById(rcId)
+        .orElseThrow(() -> new IllegalArgumentException("RC not found: " + rcId));
+
+    // Verify the requester is the current original owner (not just any owner via group/access)
+    User requestingUser = userRepository.findByUsername(requestingUsername)
+        .orElseThrow(() -> new SecurityException("User not found: " + requestingUsername));
+
+    if (!rc.getOwner().getId().equals(requestingUser.getId())) {
+      throw new SecurityException("Only the original owner can relinquish ownership");
+    }
+
+    // Prevent modifications to Demo RC
+    if (DEMO_RC_NAME.equals(rc.getName())) {
+      throw new IllegalArgumentException("Cannot modify ownership of Demo RC");
+    }
+
+    // Find another explicit OWNER user (FK-based or identifier-based USER type) to transfer to
+    List<RCAccess> owners = accessRepository.findOwnersByRC(rc);
+    User newOwner = owners.stream()
+        .filter(a -> a.getUser() != null && !a.getUser().getId().equals(requestingUser.getId()))
+        .map(RCAccess::getUser)
+        .findFirst()
+        .orElse(null);
+
+    // Also check identifier-based USER OWNER access (LDAP users with explicit OWNER)
+    if (newOwner == null) {
+      for (RCAccess access : owners) {
+        if (access.getPrincipalType() == PrincipalType.USER
+            && access.getPrincipalIdentifier() != null
+            && !access.getPrincipalIdentifier().equals(requestingUsername)) {
+          // Try to resolve as a local user, or create them if they're an LDAP user
+          newOwner = userRepository.findByUsername(access.getPrincipalIdentifier()).orElse(null);
+          if (newOwner == null) {
+            // LDAP user who hasn't logged in yet - create a local record
+            userService.createOrUpdateLdapUser(
+                access.getPrincipalIdentifier(), null, access.getPrincipalDisplayName(),
+                access.getPrincipalIdentifier());
+            newOwner = userRepository.findByUsername(access.getPrincipalIdentifier()).orElse(null);
+          }
+          if (newOwner != null) {
+            break;
+          }
+        }
+      }
+    }
+
+    if (newOwner == null) {
+      throw new IllegalArgumentException(
+          "Cannot relinquish ownership: no other user with OWNER access exists. "
+          + "Grant OWNER access to another user first.");
+    }
+
+    // Transfer ownership
+    User oldOwner = rc.getOwner();
+    final User transferTo = newOwner;
+    rc.setOwner(transferTo);
+    rcRepository.save(rc);
+
+    // Remove the new owner's explicit access record (they are now the implicit owner)
+    // Check both by user FK and by principal identifier (for LDAP users)
+    accessRepository.findByResponsibilityCentreAndUser(rc, transferTo)
+        .ifPresentOrElse(
+            fkAccess -> accessRepository.deleteAccessById(fkAccess.getId()),
+            () -> accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+                    rc, transferTo.getUsername(), PrincipalType.USER)
+                .ifPresent(idAccess -> accessRepository.deleteAccessById(idAccess.getId()))
+        );
+
+    // Create READ_WRITE access for the former owner
+    RCAccess formerOwnerAccess = new RCAccess(rc, oldOwner, AccessLevel.READ_WRITE);
+    formerOwnerAccess.setGrantedBy(oldOwner);
+    accessRepository.save(formerOwnerAccess);
+
+    logger.info("Ownership of RC '{}' transferred from {} to {}",
+        rc.getName(), requestingUsername, transferTo.getUsername());
   }
 }

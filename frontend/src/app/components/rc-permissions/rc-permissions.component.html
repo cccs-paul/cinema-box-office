@@ -217,10 +217,15 @@
               <td class="actions-cell">
                 <!-- Normal actions -->
                 <div *ngIf="editingPermissionId !== permission.id && canEditPermission(permission)" class="action-buttons">
-                  <button class="btn-action btn-edit" (click)="startEdit(permission)" [title]="'common.edit' | translate">
+                  <!-- For original owner (id === null), only show relinquish button -->
+                  <button *ngIf="!permission.id" class="btn-action btn-delete" (click)="confirmDelete(permission)" [title]="'rcPermissions.relinquishOwnership' | translate">
+                    🔄
+                  </button>
+                  <!-- For all other entries, show edit and delete buttons -->
+                  <button *ngIf="permission.id" class="btn-action btn-edit" (click)="startEdit(permission)" [title]="'common.edit' | translate">
                     ✏️
                   </button>
-                  <button class="btn-action btn-delete" (click)="confirmDelete(permission)" [title]="'rcPermissions.revokeAccess' | translate">
+                  <button *ngIf="permission.id" class="btn-action btn-delete" (click)="confirmDelete(permission)" [title]="'rcPermissions.revokeAccess' | translate">
                     🗑️
                   </button>
                 </div>
@@ -234,8 +239,8 @@
                     ❌
                   </button>
                 </div>
-                <!-- Original owner badge -->
-                <span *ngIf="!canEditPermission(permission)" class="original-badge">
+                <!-- Original owner badge (sole owner, no other owners exist) -->
+                <span *ngIf="editingPermissionId !== permission.id && !canEditPermission(permission) && !permission.id" class="original-badge">
                   {{ 'rcPermissions.originalOwner' | translate }}
                 </span>
               </td>
@@ -264,6 +269,26 @@
         <button class="btn-danger" (click)="deletePermission()" [disabled]="isDeleting">
           <span *ngIf="!isDeleting">{{ 'rcPermissions.revokeAccess' | translate }}</span>
           <span *ngIf="isDeleting">{{ 'common.deleting' | translate }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Relinquish Ownership Confirmation Modal -->
+  <div class="modal-overlay" *ngIf="showRelinquishConfirm" (click)="cancelRelinquish()">
+    <div class="modal modal-danger" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>⚠️ {{ 'rcPermissions.confirmRelinquish' | translate }}</h3>
+        <button class="btn-close" (click)="cancelRelinquish()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>{{ 'rcPermissions.relinquishConfirmMessage' | translate }}</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cancelRelinquish()" [disabled]="isRelinquishing">{{ 'common.cancel' | translate }}</button>
+        <button class="btn-danger" (click)="relinquishOwnership()" [disabled]="isRelinquishing">
+          <span *ngIf="!isRelinquishing">{{ 'rcPermissions.relinquishOwnership' | translate }}</span>
+          <span *ngIf="isRelinquishing">{{ 'common.processing' | translate }}</span>
         </button>
       </div>
     </div>

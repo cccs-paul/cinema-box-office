@@ -65,7 +65,8 @@
     "creating": "Creating...",
     "deleting": "Deleting...",
     "showAll": "Show All",
-    "hideAll": "Hide All"
+    "hideAll": "Hide All",
+    "processing": "Processing..."
   },
   "header": {
     "userMenu": "User menu",
@@ -857,7 +858,11 @@
     "pressEnterToBrowse": "Press Enter or ↓ to browse all available entries",
     "noSuggestionsFound": "No matching entries found",
     "searching": "Searching...",
-    "addGroup": "Add Group"
+    "addGroup": "Add Group",
+    "relinquishOwnership": "Relinquish Ownership",
+    "confirmRelinquish": "Confirm Relinquish Ownership",
+    "relinquishConfirmMessage": "Are you sure you want to relinquish ownership of this RC? Ownership will be transferred to the next available owner, and you will be granted Read/Write access instead.",
+    "relinquishError": "Failed to relinquish ownership. Please try again."
   },
   "accessibility": {
     "title": "Accessibility Settings",
@@ -930,6 +935,7 @@
     "groupByCategory": "Group Items by Category",
     "groupByCategoryDesc": "Group funding, procurement and spending items by their category with section headers",
     "settingUpdated": "Setting updated",
-    "accessibilityRestored": "Accessibility settings restored to defaults"
+    "accessibilityRestored": "Accessibility settings restored to defaults",
+    "backToRcSelection": "Back to RC Selection"
   }
 }

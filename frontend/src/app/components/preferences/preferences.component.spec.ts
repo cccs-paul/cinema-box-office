@@ -9,7 +9,8 @@
  */
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { BehaviorSubject } from 'rxjs';
+import { Router } from '@angular/router';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { TranslateModule } from '@ngx-translate/core';
 import { PreferencesComponent } from './preferences.component';
 import {
@@ -26,6 +27,7 @@ describe('PreferencesComponent', () => {
   let fixture: ComponentFixture<PreferencesComponent>;
   let userPrefsService: jasmine.SpyObj<UserPreferencesService>;
   let accessibilityService: jasmine.SpyObj<AccessibilityService>;
+  let router: jasmine.SpyObj<Router>;
 
   let preferences$: BehaviorSubject<UserDisplayPreferences>;
   let settings$: BehaviorSubject<Record<string, AccessibilitySetting>>;
@@ -71,11 +73,19 @@ describe('PreferencesComponent', () => {
     accessibilityService.hasCustomSettings.and.returnValue(false);
     accessibilityService.getGroupedSettings.and.returnValue({ Font: [mockSettings['fontSize']] });
 
+    router = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject(),
+      routerState: { root: {} },
+      url: '/preferences'
+    });
+    router.navigate.and.returnValue(Promise.resolve(true));
+
     await TestBed.configureTestingModule({
       imports: [PreferencesComponent, FormsModule, TranslateModule.forRoot()],
     })
       .overrideProvider(UserPreferencesService, { useValue: userPrefsService })
       .overrideProvider(AccessibilityService, { useValue: accessibilityService })
+      .overrideProvider(Router, { useValue: router })
       .compileComponents();
 
     fixture = TestBed.createComponent(PreferencesComponent);
@@ -105,6 +115,20 @@ describe('PreferencesComponent', () => {
 
     it('should set hasCustomAccessibility from service', () => {
       expect(component.hasCustomAccessibility).toBeFalse();
+    });
+
+    it('should show back link when in no-sidebar layout', () => {
+      // Default router.url is '/preferences' (no-sidebar)
+      expect(component.showBackLink).toBeTrue();
+    });
+
+    it('should hide back link when in app layout', async () => {
+      // Override router.url to simulate /app/preferences
+      Object.defineProperty(router, 'url', { value: '/app/preferences', writable: true });
+      const newFixture = TestBed.createComponent(PreferencesComponent);
+      const newComponent = newFixture.componentInstance;
+      newFixture.detectChanges();
+      expect(newComponent.showBackLink).toBeFalse();
     });
   });
 
@@ -192,6 +216,13 @@ describe('PreferencesComponent', () => {
 
       expect(nextSpy).toHaveBeenCalled();
       expect(completeSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('goBack', () => {
+    it('should navigate to /rc-selection', () => {
+      component.goBack();
+      expect(router.navigate).toHaveBeenCalledWith(['/rc-selection']);
     });
   });
 });

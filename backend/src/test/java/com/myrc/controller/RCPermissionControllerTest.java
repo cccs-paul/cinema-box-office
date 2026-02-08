@@ -523,4 +523,72 @@ class RCPermissionControllerTest {
       assertFalse(response.getBody());
     }
   }
+
+  @Nested
+  @DisplayName("POST /rc/{rcId}/relinquish-ownership - Relinquish Ownership Tests")
+  class RelinquishOwnershipTests {
+
+    @Test
+    @DisplayName("Should return 204 on successful relinquish")
+    void shouldReturn204OnSuccess() {
+      doNothing().when(permissionService).relinquishOwnership(1L, "testuser");
+
+      ResponseEntity<?> response = controller.relinquishOwnership(1L, authentication);
+
+      assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+      verify(permissionService).relinquishOwnership(1L, "testuser");
+    }
+
+    @Test
+    @DisplayName("Should return 401 when no authentication")
+    void shouldReturn401WhenNoAuth() {
+      ResponseEntity<?> response = controller.relinquishOwnership(1L, null);
+
+      assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Should return 403 when not the original owner")
+    void shouldReturn403WhenNotOriginalOwner() {
+      doThrow(new SecurityException("Only the original owner can relinquish ownership"))
+          .when(permissionService).relinquishOwnership(1L, "testuser");
+
+      ResponseEntity<?> response = controller.relinquishOwnership(1L, authentication);
+
+      assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Should return 400 when no other owner exists")
+    void shouldReturn400WhenNoOtherOwner() {
+      doThrow(new IllegalArgumentException("Cannot relinquish ownership: no other user with OWNER access exists."))
+          .when(permissionService).relinquishOwnership(1L, "testuser");
+
+      ResponseEntity<?> response = controller.relinquishOwnership(1L, authentication);
+
+      assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Should return 400 when trying to relinquish Demo RC")
+    void shouldReturn400ForDemoRC() {
+      doThrow(new IllegalArgumentException("Cannot modify ownership of Demo RC"))
+          .when(permissionService).relinquishOwnership(1L, "testuser");
+
+      ResponseEntity<?> response = controller.relinquishOwnership(1L, authentication);
+
+      assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Should return 500 on unexpected error")
+    void shouldReturn500OnUnexpectedError() {
+      doThrow(new RuntimeException("Unexpected error"))
+          .when(permissionService).relinquishOwnership(1L, "testuser");
+
+      ResponseEntity<?> response = controller.relinquishOwnership(1L, authentication);
+
+      assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+  }
 }

@@ -135,4 +135,18 @@ public interface RCPermissionService {
    * @return true if the user has OWNER or READ_WRITE access
    */
   boolean hasWriteAccess(Long rcId, String username);
+
+  /**
+   * Relinquish ownership of an RC.
+   * Transfers the RC's owner FK to the next explicit OWNER user and grants the
+   * former owner READ_WRITE access. Requires at least one other explicit OWNER
+   * user in the access records (group-only owners are not sufficient for the FK
+   * transfer since the FK must reference a User entity).
+   *
+   * @param rcId the RC ID
+   * @param requestingUsername the current owner requesting to step down
+   * @throws SecurityException if the requesting user is not the current owner
+   * @throws IllegalArgumentException if no other user-type owner exists to take over
+   */
+  void relinquishOwnership(Long rcId, String requestingUsername);
 }

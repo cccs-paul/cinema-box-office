@@ -51,7 +51,8 @@ describe('HeaderComponent', () => {
 
     router = jasmine.createSpyObj('Router', ['navigate'], {
       events: new Subject(),
-      routerState: { root: {} }
+      routerState: { root: {} },
+      url: '/rc-selection'
     });
     router.navigate.and.returnValue(Promise.resolve(true));
 
@@ -263,9 +264,17 @@ describe('HeaderComponent', () => {
   });
 
   describe('openPreferences', () => {
-    it('should navigate to /preferences', () => {
+    it('should navigate to /preferences when not in app layout', () => {
+      // Default router.url is '/rc-selection' (not /app/...)
       component.openPreferences();
       expect(router.navigate).toHaveBeenCalledWith(['/preferences']);
+    });
+
+    it('should navigate to /app/preferences when in app layout', () => {
+      // Override router.url to simulate being inside /app/ layout
+      Object.defineProperty(router, 'url', { value: '/app/dashboard', writable: true });
+      component.openPreferences();
+      expect(router.navigate).toHaveBeenCalledWith(['/app/preferences']);
     });
 
     it('should close the user menu', () => {

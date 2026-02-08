@@ -56,6 +56,9 @@ class RCPermissionServiceTest {
   @Mock
   private DirectorySearchService directorySearchService;
 
+  @Mock
+  private UserService userService;
+
   private RCPermissionServiceImpl permissionService;
   private User testUser;
   private User ownerUser;
@@ -64,7 +67,7 @@ class RCPermissionServiceTest {
 
   @BeforeEach
   void setUp() {
-    permissionService = new RCPermissionServiceImpl(accessRepository, rcRepository, userRepository, directorySearchService);
+    permissionService = new RCPermissionServiceImpl(accessRepository, rcRepository, userRepository, directorySearchService, userService);
 
     ownerUser = new User();
     ownerUser.setId(1L);
@@ -845,6 +848,187 @@ class RCPermissionServiceTest {
       boolean result = permissionService.canManageRC(1L, "testuser");
 
       assertFalse(result);
+    }
+  }
+
+  @Nested
+  @DisplayName("relinquishOwnership Tests")
+  class RelinquishOwnershipTests {
+
+    private User otherOwnerUser;
+
+    @BeforeEach
+    void setUpRelinquish() {
+      otherOwnerUser = new User();
+      otherOwnerUser.setId(3L);
+      otherOwnerUser.setUsername("otherowner");
+      otherOwnerUser.setEmail("other@example.com");
+      otherOwnerUser.setFullName("Other Owner");
+    }
+
+    @Test
+    @DisplayName("Should transfer ownership to another explicit OWNER user")
+    void shouldTransferOwnershipToAnotherOwner() {
+      // The other owner has an explicit OWNER access record
+      RCAccess otherOwnerAccess = new RCAccess();
+      otherOwnerAccess.setId(10L);
+      otherOwnerAccess.setResponsibilityCentre(testRC);
+      otherOwnerAccess.setUser(otherOwnerUser);
+      otherOwnerAccess.setPrincipalIdentifier("otherowner");
+      otherOwnerAccess.setPrincipalType(PrincipalType.USER);
+      otherOwnerAccess.setAccessLevel(AccessLevel.OWNER);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(accessRepository.findOwnersByRC(testRC)).thenReturn(List.of(otherOwnerAccess));
+      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherOwnerUser))
+          .thenReturn(Optional.of(otherOwnerAccess));
+
+      permissionService.relinquishOwnership(1L, "owner");
+
+      // Verify ownership was transferred
+      assertEquals(otherOwnerUser, testRC.getOwner());
+      verify(rcRepository).save(testRC);
+      // Verify the explicit access record of the new owner was removed (they are now the implicit owner)
+      verify(accessRepository).deleteAccessById(10L);
+      // Verify former owner got READ_WRITE access
+      verify(accessRepository).save(argThat(access ->
+          access.getUser().equals(ownerUser)
+          && access.getAccessLevel() == AccessLevel.READ_WRITE
+          && access.getResponsibilityCentre().equals(testRC)
+      ));
+    }
+
+    @Test
+    @DisplayName("Should throw SecurityException when requester is not the original owner")
+    void shouldThrowWhenNotOriginalOwner() {
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+
+      assertThrows(SecurityException.class,
+          () -> permissionService.relinquishOwnership(1L, "testuser"));
+    }
+
+    @Test
+    @DisplayName("Should throw SecurityException when user not found")
+    void shouldThrowWhenUserNotFound() {
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+
+      assertThrows(SecurityException.class,
+          () -> permissionService.relinquishOwnership(1L, "unknown"));
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when RC not found")
+    void shouldThrowWhenRCNotFound() {
+      when(rcRepository.findById(999L)).thenReturn(Optional.empty());
+
+      assertThrows(IllegalArgumentException.class,
+          () -> permissionService.relinquishOwnership(999L, "owner"));
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when trying to relinquish Demo RC")
+    void shouldThrowWhenRelinquishDemoRC() {
+      ResponsibilityCentre demoRC = new ResponsibilityCentre();
+      demoRC.setId(100L);
+      demoRC.setName("Demo");
+      demoRC.setOwner(ownerUser);
+
+      when(rcRepository.findById(100L)).thenReturn(Optional.of(demoRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+
+      assertThrows(IllegalArgumentException.class,
+          () -> permissionService.relinquishOwnership(100L, "owner"));
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when no other OWNER user exists")
+    void shouldThrowWhenNoOtherOwnerExists() {
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(accessRepository.findOwnersByRC(testRC)).thenReturn(Collections.emptyList());
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+          () -> permissionService.relinquishOwnership(1L, "owner"));
+      assertTrue(exception.getMessage().contains("no other user with OWNER access"));
+    }
+
+    @Test
+    @DisplayName("Should find owner via identifier-based access when no FK-based owner found")
+    void shouldFindOwnerViaIdentifierBasedAccess() {
+      // Owner access record without User FK but with principalIdentifier
+      RCAccess identifierOwnerAccess = new RCAccess();
+      identifierOwnerAccess.setId(20L);
+      identifierOwnerAccess.setResponsibilityCentre(testRC);
+      identifierOwnerAccess.setUser(null); // No FK link
+      identifierOwnerAccess.setPrincipalIdentifier("otherowner");
+      identifierOwnerAccess.setPrincipalType(PrincipalType.USER);
+      identifierOwnerAccess.setAccessLevel(AccessLevel.OWNER);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(accessRepository.findOwnersByRC(testRC)).thenReturn(List.of(identifierOwnerAccess));
+      when(userRepository.findByUsername("otherowner")).thenReturn(Optional.of(otherOwnerUser));
+      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherOwnerUser))
+          .thenReturn(Optional.empty());
+
+      permissionService.relinquishOwnership(1L, "owner");
+
+      assertEquals(otherOwnerUser, testRC.getOwner());
+      verify(rcRepository).save(testRC);
+    }
+
+    @Test
+    @DisplayName("Should skip own access records when looking for another owner")
+    void shouldSkipOwnAccessRecordsWhenLookingForOwner() {
+      // Only the current owner's own access record exists - no other owner
+      RCAccess ownOwnerAccess = new RCAccess();
+      ownOwnerAccess.setId(30L);
+      ownOwnerAccess.setResponsibilityCentre(testRC);
+      ownOwnerAccess.setUser(ownerUser); // Same as the requesting user
+      ownOwnerAccess.setPrincipalIdentifier("owner");
+      ownOwnerAccess.setPrincipalType(PrincipalType.USER);
+      ownOwnerAccess.setAccessLevel(AccessLevel.OWNER);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(accessRepository.findOwnersByRC(testRC)).thenReturn(List.of(ownOwnerAccess));
+
+      assertThrows(IllegalArgumentException.class,
+          () -> permissionService.relinquishOwnership(1L, "owner"));
+    }
+
+    @Test
+    @DisplayName("Should auto-create LDAP user when identifier-based owner not in local DB")
+    void shouldAutoCreateLdapUserWhenNotInLocalDb() {
+      // LDAP user with OWNER access but no local user record
+      RCAccess ldapOwnerAccess = new RCAccess();
+      ldapOwnerAccess.setId(40L);
+      ldapOwnerAccess.setResponsibilityCentre(testRC);
+      ldapOwnerAccess.setUser(null);
+      ldapOwnerAccess.setPrincipalIdentifier("ldapowner");
+      ldapOwnerAccess.setPrincipalDisplayName("LDAP Owner");
+      ldapOwnerAccess.setPrincipalType(PrincipalType.USER);
+      ldapOwnerAccess.setAccessLevel(AccessLevel.OWNER);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(accessRepository.findOwnersByRC(testRC)).thenReturn(List.of(ldapOwnerAccess));
+      // First call returns empty (user not in DB), second call returns the newly created user
+      when(userRepository.findByUsername("ldapowner"))
+          .thenReturn(Optional.empty())
+          .thenReturn(Optional.of(otherOwnerUser));
+      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherOwnerUser))
+          .thenReturn(Optional.empty());
+
+      permissionService.relinquishOwnership(1L, "owner");
+
+      // Verify LDAP user was created
+      verify(userService).createOrUpdateLdapUser("ldapowner", null, "LDAP Owner", "ldapowner");
+      assertEquals(otherOwnerUser, testRC.getOwner());
+      verify(rcRepository).save(testRC);
     }
   }
 }
