@@ -104,4 +104,15 @@ public interface ProcurementQuoteFileRepository extends JpaRepository<Procuremen
     @Modifying
     @Query("DELETE FROM ProcurementQuoteFile f WHERE f.quote.id = :quoteId")
     void deleteByQuoteId(@Param("quoteId") Long quoteId);
+
+    /**
+     * Delete all quote files for all quotes belonging to a procurement item.
+     * Used during cascade deletion of a responsibility centre.
+     *
+     * @param procurementItemId the procurement item ID
+     */
+    @Modifying
+    @Query("DELETE FROM ProcurementQuoteFile f WHERE f.quote.id IN "
+         + "(SELECT q.id FROM ProcurementQuote q WHERE q.procurementItem.id = :procurementItemId)")
+    void deleteByProcurementItemId(@Param("procurementItemId") Long procurementItemId);
 }

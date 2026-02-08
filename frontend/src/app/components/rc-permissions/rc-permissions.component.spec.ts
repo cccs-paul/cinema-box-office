@@ -667,7 +667,7 @@ describe('RCPermissionsComponent', () => {
       expect(component.canEditPermission(originalOwner)).toBeFalse();
     });
 
-    it('should return true for original owner when another explicit owner exists', () => {
+    it('should return false for original owner even when another explicit owner exists', () => {
       const originalOwner: RCAccess = {
         id: null as unknown as number,
         rcId: 1,
@@ -695,7 +695,7 @@ describe('RCPermissionsComponent', () => {
         }
       ];
 
-      expect(component.canEditPermission(originalOwner)).toBeTrue();
+      expect(component.canEditPermission(originalOwner)).toBeFalse();
     });
   });
 

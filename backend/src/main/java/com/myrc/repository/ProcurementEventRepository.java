@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -151,4 +152,14 @@ public interface ProcurementEventRepository extends JpaRepository<ProcurementEve
            "AND e.newStatus IS NOT NULL AND e.active = true " +
            "ORDER BY e.eventDate DESC, e.createdAt DESC LIMIT 1")
     Optional<String> findCurrentStatusByProcurementItemId(@Param("procurementItemId") Long procurementItemId);
+
+    /**
+     * Delete all events for a procurement item.
+     * Used during cascade deletion of a responsibility centre.
+     *
+     * @param procurementItemId the procurement item ID
+     */
+    @Modifying
+    @Query("DELETE FROM ProcurementEvent e WHERE e.procurementItem.id = :procurementItemId")
+    void deleteByProcurementItemId(@Param("procurementItemId") Long procurementItemId);
 }

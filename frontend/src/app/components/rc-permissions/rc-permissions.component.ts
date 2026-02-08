@@ -474,8 +474,9 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
    */
   canEditPermission(permission: RCAccess): boolean {
     if (permission.id === null) {
-      // Original owner: allow editing only if another owner exists
-      return this.hasOtherOwner(permission);
+      // Original owner: never editable from the permissions table.
+      // Ownership is managed via the RC itself, not via access records.
+      return false;
     }
     return true;
   }

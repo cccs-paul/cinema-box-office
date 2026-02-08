@@ -9,7 +9,6 @@ import com.myrc.dto.ResponsibilityCentreDTO;
 import com.myrc.model.FiscalYear;
 import com.myrc.model.FundingItem;
 import com.myrc.model.ProcurementItem;
-import com.myrc.model.ProcurementQuote;
 import com.myrc.model.RCAccess;
 import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.SpendingItem;
@@ -19,12 +18,15 @@ import com.myrc.repository.FiscalYearRepository;
 import com.myrc.repository.FundingItemRepository;
 import com.myrc.repository.MoneyAllocationRepository;
 import com.myrc.repository.MoneyRepository;
+import com.myrc.repository.ProcurementEventFileRepository;
+import com.myrc.repository.ProcurementEventRepository;
 import com.myrc.repository.ProcurementItemRepository;
 import com.myrc.repository.ProcurementQuoteFileRepository;
 import com.myrc.repository.ProcurementQuoteRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.SpendingCategoryRepository;
+import com.myrc.repository.SpendingEventRepository;
 import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.SpendingMoneyAllocationRepository;
 import com.myrc.repository.UserRepository;
@@ -67,9 +69,12 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
   private final CategoryRepository fundingCategoryRepository;
   private final MoneyAllocationRepository moneyAllocationRepository;
   private final SpendingMoneyAllocationRepository spendingMoneyAllocationRepository;
+  private final SpendingEventRepository spendingEventRepository;
   private final ProcurementItemRepository procurementItemRepository;
   private final ProcurementQuoteRepository procurementQuoteRepository;
   private final ProcurementQuoteFileRepository procurementQuoteFileRepository;
+  private final ProcurementEventRepository procurementEventRepository;
+  private final ProcurementEventFileRepository procurementEventFileRepository;
   private final FiscalYearCloneService fiscalYearCloneService;
 
   public ResponsibilityCentreServiceImpl(
@@ -85,9 +90,12 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       CategoryRepository fundingCategoryRepository,
       MoneyAllocationRepository moneyAllocationRepository,
       SpendingMoneyAllocationRepository spendingMoneyAllocationRepository,
+      SpendingEventRepository spendingEventRepository,
       ProcurementItemRepository procurementItemRepository,
       ProcurementQuoteRepository procurementQuoteRepository,
       ProcurementQuoteFileRepository procurementQuoteFileRepository,
+      ProcurementEventRepository procurementEventRepository,
+      ProcurementEventFileRepository procurementEventFileRepository,
       FiscalYearCloneService fiscalYearCloneService) {
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
@@ -101,9 +109,12 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     this.fundingCategoryRepository = fundingCategoryRepository;
     this.moneyAllocationRepository = moneyAllocationRepository;
     this.spendingMoneyAllocationRepository = spendingMoneyAllocationRepository;
+    this.spendingEventRepository = spendingEventRepository;
     this.procurementItemRepository = procurementItemRepository;
     this.procurementQuoteRepository = procurementQuoteRepository;
     this.procurementQuoteFileRepository = procurementQuoteFileRepository;
+    this.procurementEventRepository = procurementEventRepository;
+    this.procurementEventFileRepository = procurementEventFileRepository;
     this.fiscalYearCloneService = fiscalYearCloneService;
   }
 
@@ -357,31 +368,34 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       Long fyId = fiscalYear.getId();
       logger.debug("Deleting data for fiscal year {} (ID: {})", fiscalYear.getName(), fyId);
       
-      // Delete procurement data (deepest level first: files -> quotes -> items)
-      List<ProcurementItem> procurementItems = procurementItemRepository.findByFiscalYearIdAndActiveTrueOrderByPurchaseRequisitionAsc(fyId);
-      for (ProcurementItem item : procurementItems) {
-        List<ProcurementQuote> quotes = procurementQuoteRepository.findByProcurementItemIdAndActiveTrueOrderByVendorNameAsc(item.getId());
-        for (ProcurementQuote quote : quotes) {
-          procurementQuoteFileRepository.deleteByQuoteId(quote.getId());
-        }
-        procurementQuoteRepository.deleteByProcurementItemId(item.getId());
-      }
-      procurementItemRepository.deleteByFiscalYearId(fyId);
-      
-      // Delete spending money allocations for all spending items in this fiscal year
+      // Delete spending events, allocations, and spending items first
+      // (spending items may reference procurement items via FK, so they must go first)
       List<SpendingItem> spendingItems = spendingItemRepository.findByFiscalYearIdOrderByNameAsc(fyId);
       for (SpendingItem spendingItem : spendingItems) {
+        spendingEventRepository.deleteBySpendingItemId(spendingItem.getId());
         spendingMoneyAllocationRepository.deleteBySpendingItemId(spendingItem.getId());
       }
+      spendingItemRepository.deleteByFiscalYearId(fyId);
+      
+      // Delete procurement data using bulk JPQL deletes per item
+      // (deepest level first: event files -> events -> quote files -> quotes -> items)
+      List<ProcurementItem> procurementItems = procurementItemRepository.findByFiscalYearIdAndActiveTrueOrderByPurchaseRequisitionAsc(fyId);
+      for (ProcurementItem item : procurementItems) {
+        Long itemId = item.getId();
+        // Delete event files and events
+        procurementEventFileRepository.deleteByProcurementItemId(itemId);
+        procurementEventRepository.deleteByProcurementItemId(itemId);
+        // Delete quote files and quotes
+        procurementQuoteFileRepository.deleteByProcurementItemId(itemId);
+        procurementQuoteRepository.deleteByProcurementItemId(itemId);
+      }
+      procurementItemRepository.deleteByFiscalYearId(fyId);
       
       // Delete funding money allocations for all funding items in this fiscal year
       List<FundingItem> fundingItems = fundingItemRepository.findByFiscalYearId(fyId);
       for (FundingItem fundingItem : fundingItems) {
         moneyAllocationRepository.deleteByFundingItemId(fundingItem.getId());
       }
-      
-      // Delete spending items (must be before categories due to FK)
-      spendingItemRepository.deleteByFiscalYearId(fyId);
       
       // Delete funding items
       fundingItemRepository.deleteByFiscalYearId(fyId);

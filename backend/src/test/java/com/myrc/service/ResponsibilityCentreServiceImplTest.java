@@ -23,11 +23,14 @@ import com.myrc.repository.FundingItemRepository;
 import com.myrc.repository.MoneyAllocationRepository;
 import com.myrc.repository.MoneyRepository;
 import com.myrc.repository.ProcurementItemRepository;
+import com.myrc.repository.ProcurementEventRepository;
+import com.myrc.repository.ProcurementEventFileRepository;
 import com.myrc.repository.ProcurementQuoteFileRepository;
 import com.myrc.repository.ProcurementQuoteRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.SpendingCategoryRepository;
+import com.myrc.repository.SpendingEventRepository;
 import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.SpendingMoneyAllocationRepository;
 import com.myrc.repository.UserRepository;
@@ -92,6 +95,9 @@ class ResponsibilityCentreServiceImplTest {
   private SpendingMoneyAllocationRepository spendingMoneyAllocationRepository;
 
   @Mock
+  private SpendingEventRepository spendingEventRepository;
+
+  @Mock
   private ProcurementItemRepository procurementItemRepository;
 
   @Mock
@@ -99,6 +105,12 @@ class ResponsibilityCentreServiceImplTest {
 
   @Mock
   private ProcurementQuoteFileRepository procurementQuoteFileRepository;
+
+  @Mock
+  private ProcurementEventRepository procurementEventRepository;
+
+  @Mock
+  private ProcurementEventFileRepository procurementEventFileRepository;
 
   @Mock
   private FiscalYearCloneService fiscalYearCloneService;
@@ -123,9 +135,12 @@ class ResponsibilityCentreServiceImplTest {
         fundingCategoryRepository,
         moneyAllocationRepository,
         spendingMoneyAllocationRepository,
+        spendingEventRepository,
         procurementItemRepository,
         procurementQuoteRepository,
         procurementQuoteFileRepository,
+        procurementEventRepository,
+        procurementEventFileRepository,
         fiscalYearCloneService
     );
 

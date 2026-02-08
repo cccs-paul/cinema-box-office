@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -78,4 +79,14 @@ public interface SpendingEventRepository extends JpaRepository<SpendingEvent, Lo
     @Query("SELECT e FROM SpendingEvent e WHERE e.spendingItem.id = :spendingItemId " +
            "AND e.active = true ORDER BY e.eventDate DESC, e.createdAt DESC LIMIT 1")
     Optional<SpendingEvent> findMostRecentBySpendingItemId(@Param("spendingItemId") Long spendingItemId);
+
+    /**
+     * Delete all spending events for a spending item.
+     * Used during cascade deletion of a responsibility centre.
+     *
+     * @param spendingItemId the spending item ID
+     */
+    @Modifying
+    @Query("DELETE FROM SpendingEvent e WHERE e.spendingItem.id = :spendingItemId")
+    void deleteBySpendingItemId(@Param("spendingItemId") Long spendingItemId);
 }
