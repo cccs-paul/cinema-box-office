@@ -82,6 +82,9 @@ class MoneyServiceTest {
   @Mock
   private UserRepository userRepository;
 
+  @Mock
+  private RCPermissionService permissionService;
+
   @InjectMocks
   private MoneyServiceImpl moneyService;
 
@@ -112,6 +115,11 @@ class MoneyServiceTest {
     customMoney = new Money("OA", "Operating Allotment", "Custom money", testFY, false);
     customMoney.setId(2L);
     customMoney.setDisplayOrder(1);
+
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
   }
 
   @Nested
@@ -122,8 +130,6 @@ class MoneyServiceTest {
     @DisplayName("Returns monies for RC owner")
     void returnsMoniesForOwner() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyRepository.findByFiscalYearId(1L))
           .thenReturn(Arrays.asList(defaultMoney, customMoney));
       when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
@@ -140,8 +146,6 @@ class MoneyServiceTest {
     @DisplayName("Returns canDelete=false for default money")
     void canDeleteFalseForDefault() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyRepository.findByFiscalYearId(1L))
           .thenReturn(Arrays.asList(defaultMoney));
 
@@ -154,8 +158,6 @@ class MoneyServiceTest {
     @DisplayName("Returns canDelete=true for custom money with zero allocations")
     void canDeleteTrueForUnusedCustomMoney() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyRepository.findByFiscalYearId(1L))
           .thenReturn(Arrays.asList(customMoney));
       when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
@@ -170,8 +172,6 @@ class MoneyServiceTest {
     @DisplayName("Returns canDelete=false for custom money with non-zero allocations")
     void canDeleteFalseForInUseCustomMoney() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyRepository.findByFiscalYearId(1L))
           .thenReturn(Arrays.asList(customMoney));
       when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(true);
@@ -193,15 +193,9 @@ class MoneyServiceTest {
     @Test
     @DisplayName("Throws exception when user has no access")
     void throwsWhenNoAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
+      when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
 
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
-          .thenReturn(Optional.empty());
 
       assertThrows(IllegalArgumentException.class,
           () -> moneyService.getMoniesByFiscalYearId(1L, "otheruser"));
@@ -216,8 +210,6 @@ class MoneyServiceTest {
     @DisplayName("Creates money successfully")
     void createsMoney() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyRepository.existsByCodeAndFiscalYear("WCF", testFY)).thenReturn(false);
       when(moneyRepository.findMaxDisplayOrderByFiscalYearId(1L)).thenReturn(1);
 
@@ -240,8 +232,6 @@ class MoneyServiceTest {
     @DisplayName("Throws when code already exists")
     void throwsWhenCodeExists() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyRepository.existsByCodeAndFiscalYear("AB", testFY)).thenReturn(true);
 
       assertThrows(IllegalArgumentException.class,
@@ -252,8 +242,6 @@ class MoneyServiceTest {
     @DisplayName("Throws when code is empty")
     void throwsWhenCodeEmpty() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
       assertThrows(IllegalArgumentException.class,
           () -> moneyService.createMoney(1L, "testuser", "", "Test", null));
@@ -263,8 +251,6 @@ class MoneyServiceTest {
     @DisplayName("Throws when name is empty")
     void throwsWhenNameEmpty() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
       assertThrows(IllegalArgumentException.class,
           () -> moneyService.createMoney(1L, "testuser", "WCF", "", null));
@@ -279,8 +265,6 @@ class MoneyServiceTest {
     @DisplayName("Updates money successfully")
     void updatesMoney() {
       when(moneyRepository.findById(2L)).thenReturn(Optional.of(customMoney));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyRepository.existsByCodeAndFiscalYear("WCF", testFY)).thenReturn(false);
       when(moneyRepository.save(any(Money.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -294,8 +278,6 @@ class MoneyServiceTest {
     @DisplayName("Cannot change default money code")
     void cannotChangeDefaultCode() {
       when(moneyRepository.findById(1L)).thenReturn(Optional.of(defaultMoney));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
       assertThrows(IllegalArgumentException.class,
           () -> moneyService.updateMoney(1L, "testuser", "XX", "Changed", null));
@@ -305,8 +287,6 @@ class MoneyServiceTest {
     @DisplayName("Can update default money name")
     void canUpdateDefaultName() {
       when(moneyRepository.findById(1L)).thenReturn(Optional.of(defaultMoney));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyRepository.save(any(Money.class))).thenAnswer(inv -> inv.getArgument(0));
 
       MoneyDTO result = moneyService.updateMoney(1L, "testuser", null, "Updated A-Base", "New description");
@@ -324,8 +304,6 @@ class MoneyServiceTest {
     @DisplayName("Deletes custom money successfully when no allocations in use")
     void deletesCustomMoney() {
       when(moneyRepository.findById(2L)).thenReturn(Optional.of(customMoney));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
       when(spendingMoneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
 
@@ -340,8 +318,6 @@ class MoneyServiceTest {
     @DisplayName("Cannot delete default money")
     void cannotDeleteDefault() {
       when(moneyRepository.findById(1L)).thenReturn(Optional.of(defaultMoney));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
       assertThrows(IllegalArgumentException.class,
           () -> moneyService.deleteMoney(1L, "testuser"));
@@ -362,8 +338,6 @@ class MoneyServiceTest {
     @DisplayName("Cannot delete money with non-zero funding allocations")
     void cannotDeleteWithNonZeroFundingAllocations() {
       when(moneyRepository.findById(2L)).thenReturn(Optional.of(customMoney));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(true);
 
       IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -377,8 +351,6 @@ class MoneyServiceTest {
     @DisplayName("Cannot delete money with non-zero spending allocations")
     void cannotDeleteWithNonZeroSpendingAllocations() {
       when(moneyRepository.findById(2L)).thenReturn(Optional.of(customMoney));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(false);
       when(spendingMoneyAllocationRepository.hasNonZeroAllocationsByMoneyId(2L)).thenReturn(true);
 
@@ -448,8 +420,6 @@ class MoneyServiceTest {
     @DisplayName("Reorders monies successfully")
     void reordersMonies() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(moneyRepository.findById(1L)).thenReturn(Optional.of(defaultMoney));
       when(moneyRepository.findById(2L)).thenReturn(Optional.of(customMoney));
       when(moneyRepository.save(any(Money.class))).thenAnswer(inv -> inv.getArgument(0));

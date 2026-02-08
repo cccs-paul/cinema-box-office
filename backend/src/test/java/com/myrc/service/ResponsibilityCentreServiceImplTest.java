@@ -31,6 +31,7 @@ import com.myrc.repository.SpendingCategoryRepository;
 import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.SpendingMoneyAllocationRepository;
 import com.myrc.repository.UserRepository;
+import com.myrc.service.UserService;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,9 @@ class ResponsibilityCentreServiceImplTest {
 
   @Mock
   private UserRepository userRepository;
+
+  @Mock
+  private UserService userService;
 
   @Mock
   private FiscalYearRepository fiscalYearRepository;
@@ -106,6 +110,7 @@ class ResponsibilityCentreServiceImplTest {
         rcRepository,
         accessRepository,
         userRepository,
+        userService,
         fiscalYearRepository,
         fundingItemRepository,
         spendingItemRepository,
@@ -241,6 +246,37 @@ class ResponsibilityCentreServiceImplTest {
       assertTrue(exception.getMessage().contains("already exists"));
       assertTrue(exception.getMessage().contains("must be unique"));
     }
+
+    @Test
+    @DisplayName("Should auto-provision LDAP user and create RC when user not found locally")
+    void testCreateResponsibilityCentreAutoProvisionLdapUser() {
+      // First call: user not found; second call (after provisioning): user found
+      when(userRepository.findByUsername("fry"))
+          .thenReturn(Optional.empty())
+          .thenReturn(Optional.of(testUser));
+
+      // Set up security context with LDAP group authority
+      org.springframework.security.core.context.SecurityContext secCtx =
+          org.springframework.security.core.context.SecurityContextHolder.createEmptyContext();
+      secCtx.setAuthentication(
+          new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+              "fry", null,
+              List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                  "LDAP_GROUP_DN_cn=ship_crew,ou=people,dc=planetexpress,dc=com"))));
+      org.springframework.security.core.context.SecurityContextHolder.setContext(secCtx);
+
+      try {
+        when(rcRepository.existsByName("Fry RC")).thenReturn(false);
+        when(rcRepository.save(any(ResponsibilityCentre.class))).thenReturn(testRC);
+
+        ResponsibilityCentreDTO result = service.createResponsibilityCentre("fry", "Fry RC", "Fry's RC");
+
+        assertNotNull(result);
+        verify(userService).createOrUpdateLdapUser("fry", null, null, "fry");
+      } finally {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+      }
+    }
   }
 
   @Nested
@@ -253,12 +289,120 @@ class ResponsibilityCentreServiceImplTest {
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
       when(rcRepository.findByOwner(testUser)).thenReturn(List.of(testRC));
       when(accessRepository.findByUser(testUser)).thenReturn(new ArrayList<>());
+      when(rcRepository.findByName("Demo")).thenReturn(Optional.empty());
 
-      List<ResponsibilityCentreDTO> result = service.getUserResponsibilityCentres("testuser");
+      List<ResponsibilityCentreDTO> result = service.getUserResponsibilityCentres("testuser", List.of());
 
       assertNotNull(result);
       assertEquals(1, result.size());
       assertEquals("Test RC", result.get(0).getName());
+    }
+
+    @Test
+    @DisplayName("Should return RCs accessible via group membership")
+    void testGetUserResponsibilityCentresViaGroup() {
+      // LDAP user with no local User entity
+      when(userRepository.findByUsername("ldapuser")).thenReturn(Optional.empty());
+
+      // Group-based access
+      ResponsibilityCentre groupRC = new ResponsibilityCentre("Group RC", "Accessible via group", testUser);
+      groupRC.setId(2L);
+      RCAccess groupAccess = new RCAccess();
+      groupAccess.setResponsibilityCentre(groupRC);
+      groupAccess.setPrincipalIdentifier("cn=ship_crew,ou=people,dc=planetexpress,dc=com");
+      groupAccess.setPrincipalType(RCAccess.PrincipalType.GROUP);
+      groupAccess.setAccessLevel(RCAccess.AccessLevel.READ_WRITE);
+
+      List<String> groupDns = List.of("cn=ship_crew,ou=people,dc=planetexpress,dc=com");
+      when(accessRepository.findByPrincipalIdentifierIn(anyList()))
+          .thenReturn(List.of(groupAccess));
+      when(rcRepository.findByName("Demo")).thenReturn(Optional.empty());
+
+      List<ResponsibilityCentreDTO> result = service.getUserResponsibilityCentres("ldapuser", groupDns);
+
+      assertNotNull(result);
+      assertEquals(1, result.size());
+      assertEquals("Group RC", result.get(0).getName());
+    }
+
+    @Test
+    @DisplayName("Should not duplicate RCs when user has both FK and group access")
+    void testGetUserResponsibilityCentresNoDuplicates() {
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+      when(rcRepository.findByOwner(testUser)).thenReturn(List.of(testRC));
+      when(accessRepository.findByUser(testUser)).thenReturn(new ArrayList<>());
+
+      // Same RC also accessible via group
+      RCAccess groupAccess = new RCAccess();
+      groupAccess.setResponsibilityCentre(testRC);
+      groupAccess.setPrincipalIdentifier("cn=group1,ou=groups,dc=example,dc=com");
+      groupAccess.setPrincipalType(RCAccess.PrincipalType.GROUP);
+      groupAccess.setAccessLevel(RCAccess.AccessLevel.READ_ONLY);
+
+      when(accessRepository.findByPrincipalIdentifierIn(anyList()))
+          .thenReturn(List.of(groupAccess));
+      when(rcRepository.findByName("Demo")).thenReturn(Optional.empty());
+
+      List<ResponsibilityCentreDTO> result = service.getUserResponsibilityCentres("testuser",
+          List.of("cn=group1,ou=groups,dc=example,dc=com"));
+
+      assertNotNull(result);
+      assertEquals(1, result.size(), "Should not have duplicate entries for the same RC");
+    }
+
+    @Test
+    @DisplayName("Should return empty list for unknown user with no group access and no Demo RC")
+    void testGetUserResponsibilityCentresNoAccess() {
+      when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+      when(accessRepository.findByPrincipalIdentifierIn(anyList())).thenReturn(List.of());
+      when(rcRepository.findByName("Demo")).thenReturn(Optional.empty());
+
+      List<ResponsibilityCentreDTO> result = service.getUserResponsibilityCentres("unknown", List.of());
+
+      assertNotNull(result);
+      assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should always include Demo RC with READ_ONLY access for any authenticated user")
+    void testGetUserResponsibilityCentresDemoRCAlwaysVisible() {
+      // LDAP user with no local entity and no explicit access
+      when(userRepository.findByUsername("ldapuser")).thenReturn(Optional.empty());
+      when(accessRepository.findByPrincipalIdentifierIn(anyList())).thenReturn(List.of());
+
+      // Demo RC exists
+      ResponsibilityCentre demoRC = new ResponsibilityCentre("Demo",
+          "Demo responsibility centre", testUser);
+      demoRC.setId(99L);
+      when(rcRepository.findByName("Demo")).thenReturn(Optional.of(demoRC));
+
+      List<ResponsibilityCentreDTO> result = service.getUserResponsibilityCentres("ldapuser", List.of());
+
+      assertNotNull(result);
+      assertEquals(1, result.size());
+      assertEquals("Demo", result.get(0).getName());
+      assertEquals("READ_ONLY", result.get(0).getAccessLevel());
+    }
+
+    @Test
+    @DisplayName("Should not duplicate Demo RC when user already has explicit access")
+    void testGetUserResponsibilityCentresDemoRCNoDuplicate() {
+      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+
+      // User owns the Demo RC
+      ResponsibilityCentre demoRC = new ResponsibilityCentre("Demo",
+          "Demo responsibility centre", testUser);
+      demoRC.setId(99L);
+      when(rcRepository.findByOwner(testUser)).thenReturn(List.of(demoRC));
+      when(accessRepository.findByUser(testUser)).thenReturn(new ArrayList<>());
+      when(rcRepository.findByName("Demo")).thenReturn(Optional.of(demoRC));
+
+      List<ResponsibilityCentreDTO> result = service.getUserResponsibilityCentres("testuser", List.of());
+
+      assertNotNull(result);
+      assertEquals(1, result.size(), "Demo RC should not appear twice");
+      assertEquals("Demo", result.get(0).getName());
+      assertEquals("READ_ONLY", result.get(0).getAccessLevel());
     }
   }
 
@@ -272,7 +416,7 @@ class ResponsibilityCentreServiceImplTest {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
 
-      Optional<ResponsibilityCentreDTO> result = service.getResponsibilityCentre(1L, "testuser");
+      Optional<ResponsibilityCentreDTO> result = service.getResponsibilityCentre(1L, "testuser", List.of());
 
       assertTrue(result.isPresent());
       assertEquals("Test RC", result.get().getName());
@@ -283,9 +427,63 @@ class ResponsibilityCentreServiceImplTest {
     void testGetResponsibilityCentreNotFound() {
       when(rcRepository.findById(999L)).thenReturn(Optional.empty());
 
-      Optional<ResponsibilityCentreDTO> result = service.getResponsibilityCentre(999L, "testuser");
+      Optional<ResponsibilityCentreDTO> result = service.getResponsibilityCentre(999L, "testuser", List.of());
 
       assertFalse(result.isPresent());
+    }
+
+    @Test
+    @DisplayName("Should return RC when LDAP user has group-based access")
+    void testGetResponsibilityCentreViaGroup() {
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("ldapuser")).thenReturn(Optional.empty());
+
+      RCAccess groupAccess = new RCAccess();
+      groupAccess.setResponsibilityCentre(testRC);
+      groupAccess.setPrincipalIdentifier("cn=ship_crew,ou=people,dc=planetexpress,dc=com");
+      groupAccess.setPrincipalType(RCAccess.PrincipalType.GROUP);
+      groupAccess.setAccessLevel(RCAccess.AccessLevel.READ_WRITE);
+
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierIn(eq(testRC), anyList()))
+          .thenReturn(List.of(groupAccess));
+
+      List<String> groupDns = List.of("cn=ship_crew,ou=people,dc=planetexpress,dc=com");
+      Optional<ResponsibilityCentreDTO> result = service.getResponsibilityCentre(1L, "ldapuser", groupDns);
+
+      assertTrue(result.isPresent());
+      assertEquals("Test RC", result.get().getName());
+    }
+
+    @Test
+    @DisplayName("Should return empty when LDAP user has no group-based access")
+    void testGetResponsibilityCentreNoGroupAccess() {
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("ldapuser")).thenReturn(Optional.empty());
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierIn(eq(testRC), anyList()))
+          .thenReturn(List.of());
+
+      Optional<ResponsibilityCentreDTO> result = service.getResponsibilityCentre(1L, "ldapuser", List.of());
+
+      assertFalse(result.isPresent());
+    }
+
+    @Test
+    @DisplayName("Should return Demo RC with READ_ONLY access for any authenticated user")
+    void testGetResponsibilityCentreDemoRCAlwaysAccessible() {
+      ResponsibilityCentre demoRC = new ResponsibilityCentre("Demo",
+          "Demo responsibility centre", testUser);
+      demoRC.setId(99L);
+
+      when(rcRepository.findById(99L)).thenReturn(Optional.of(demoRC));
+      when(userRepository.findByUsername("ldapuser")).thenReturn(Optional.empty());
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierIn(eq(demoRC), anyList()))
+          .thenReturn(List.of());
+
+      Optional<ResponsibilityCentreDTO> result = service.getResponsibilityCentre(99L, "ldapuser", List.of());
+
+      assertTrue(result.isPresent());
+      assertEquals("Demo", result.get().getName());
+      assertEquals("READ_ONLY", result.get().getAccessLevel());
     }
   }
 

@@ -85,6 +85,9 @@ class ProcurementItemServiceTest {
   @Mock
   private SpendingCategoryRepository spendingCategoryRepository;
 
+  @Mock
+  private RCPermissionService permissionService;
+
   private ProcurementItemServiceImpl service;
   private User testUser;
   private User ownerUser;
@@ -105,7 +108,8 @@ class ProcurementItemServiceTest {
         userRepository,
         categoryRepository,
         spendingItemRepository,
-        spendingCategoryRepository
+        spendingCategoryRepository,
+        permissionService
     );
 
     ownerUser = new User();
@@ -135,44 +139,11 @@ class ProcurementItemServiceTest {
     testProcurementItem.setDescription("Test Description");
     testProcurementItem.setFiscalYear(testFiscalYear);
     testProcurementItem.setActive(true);
-  }
 
-  /**
-   * Helper method to set up owner access mocking.
-   */
-  private void setupOwnerAccess() {
-    when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
-    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-  }
-
-  /**
-   * Helper method to set up READ_WRITE user access mocking.
-   */
-  private void setupReadWriteAccess() {
-    RCAccess access = new RCAccess();
-    access.setUser(testUser);
-    access.setResponsibilityCentre(testRC);
-    access.setAccessLevel(RCAccess.AccessLevel.READ_WRITE);
-
-    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-    when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
-        .thenReturn(Optional.of(access));
-  }
-
-  /**
-   * Helper method to set up READ_ONLY user access mocking.
-   */
-  private void setupReadOnlyAccess() {
-    RCAccess access = new RCAccess();
-    access.setUser(testUser);
-    access.setResponsibilityCentre(testRC);
-    access.setAccessLevel(RCAccess.AccessLevel.READ_ONLY);
-
-    when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-    when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-    when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
-        .thenReturn(Optional.of(access));
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
   }
 
   @Test
@@ -188,7 +159,6 @@ class ProcurementItemServiceTest {
     @Test
     @DisplayName("Should return procurement items when user is owner")
     void shouldReturnProcurementItemsWhenOwner() {
-      setupOwnerAccess();
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
       when(procurementItemRepository.findByFiscalYearIdAndActiveTrueOrderByPurchaseRequisitionAsc(1L))
           .thenReturn(Arrays.asList(testProcurementItem));
@@ -203,7 +173,6 @@ class ProcurementItemServiceTest {
     @Test
     @DisplayName("Should return procurement items when user has read access")
     void shouldReturnProcurementItemsWhenReadAccess() {
-      setupReadOnlyAccess();
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
       when(procurementItemRepository.findByFiscalYearIdAndActiveTrueOrderByPurchaseRequisitionAsc(1L))
           .thenReturn(Arrays.asList(testProcurementItem));
@@ -217,15 +186,8 @@ class ProcurementItemServiceTest {
     @Test
     @DisplayName("Should throw exception when user has no access")
     void shouldThrowExceptionWhenNoAccess() {
-      User noAccessUser = new User();
-      noAccessUser.setId(99L);
-      noAccessUser.setUsername("noaccess");
-
+      when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
-      when(userRepository.findByUsername("noaccess")).thenReturn(Optional.of(noAccessUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, noAccessUser))
-          .thenReturn(Optional.empty());
 
       assertThrows(IllegalArgumentException.class, () ->
           service.getProcurementItemsByFiscalYearId(1L, "noaccess"));
@@ -243,7 +205,6 @@ class ProcurementItemServiceTest {
     @Test
     @DisplayName("Should return empty list when no items exist")
     void shouldReturnEmptyListWhenNoItems() {
-      setupOwnerAccess();
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFiscalYear));
       when(procurementItemRepository.findByFiscalYearIdAndActiveTrueOrderByPurchaseRequisitionAsc(1L))
           .thenReturn(Collections.emptyList());
@@ -262,7 +223,6 @@ class ProcurementItemServiceTest {
     @Test
     @DisplayName("Should return procurement item when found and user has access")
     void shouldReturnProcurementItemWhenFoundAndHasAccess() {
-      setupOwnerAccess();
       when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
 
       Optional<ProcurementItemDTO> result = service.getProcurementItemById(1L, "owner");
@@ -284,15 +244,8 @@ class ProcurementItemServiceTest {
     @Test
     @DisplayName("Should return empty when user has no access")
     void shouldReturnEmptyWhenNoAccess() {
-      User noAccessUser = new User();
-      noAccessUser.setId(99L);
-      noAccessUser.setUsername("noaccess");
-
+      when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
       when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-      when(userRepository.findByUsername("noaccess")).thenReturn(Optional.of(noAccessUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, noAccessUser))
-          .thenReturn(Optional.empty());
 
       // getProcurementItemById returns empty optional when no access, doesn't throw
       Optional<ProcurementItemDTO> result = service.getProcurementItemById(1L, "noaccess");
@@ -307,7 +260,6 @@ class ProcurementItemServiceTest {
     @Test
     @DisplayName("Should delete (soft) procurement item successfully when owner")
     void shouldDeleteProcurementItemSuccessfully() {
-      setupOwnerAccess();
       when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
       when(procurementItemRepository.save(any(ProcurementItem.class))).thenReturn(testProcurementItem);
       when(eventRepository.findByProcurementItemIdAndActiveTrue(1L)).thenReturn(Collections.emptyList());
@@ -319,7 +271,6 @@ class ProcurementItemServiceTest {
     @Test
     @DisplayName("Should cascade soft delete to events and spending items")
     void shouldCascadeDeleteToEventsAndSpendingItems() {
-      setupOwnerAccess();
       
       // Setup linked spending items
       com.myrc.model.SpendingItem spendingItem = new com.myrc.model.SpendingItem();
@@ -360,7 +311,7 @@ class ProcurementItemServiceTest {
     @Test
     @DisplayName("Should throw exception when user has no write access")
     void shouldThrowExceptionWhenNoWriteAccess() {
-      setupReadOnlyAccess();
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
       when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
 
       assertThrows(IllegalArgumentException.class, () ->

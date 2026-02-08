@@ -97,12 +97,14 @@ public interface RCPermissionService {
 
   /**
    * Check if a user can edit content (funding, spending, procurement).
+   * Takes into account direct access and group membership.
    *
    * @param rcId the RC ID
    * @param username the username
+   * @param groupIdentifiers list of LDAP group DNs the user belongs to (may be empty)
    * @return true if user has OWNER or READ_WRITE access
    */
-  boolean canEditContent(Long rcId, String username);
+  boolean canEditContent(Long rcId, String username, List<String> groupIdentifiers);
 
   /**
    * Check if a user can manage the RC (rename, delete, create FYs, manage permissions).
@@ -112,4 +114,25 @@ public interface RCPermissionService {
    * @return true if user has OWNER access
    */
   boolean canManageRC(Long rcId, String username);
+
+  /**
+   * Check if a user has any level of access to an RC.
+   * Extracts LDAP group DNs from the current security context automatically.
+   * Also grants access to the Demo RC for all authenticated users.
+   *
+   * @param rcId the RC ID
+   * @param username the username
+   * @return true if the user has any access (READ_ONLY, READ_WRITE, or OWNER)
+   */
+  boolean hasAccess(Long rcId, String username);
+
+  /**
+   * Check if a user has write-level access to an RC.
+   * Extracts LDAP group DNs from the current security context automatically.
+   *
+   * @param rcId the RC ID
+   * @param username the username
+   * @return true if the user has OWNER or READ_WRITE access
+   */
+  boolean hasWriteAccess(Long rcId, String username);
 }

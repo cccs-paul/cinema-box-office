@@ -36,6 +36,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 /**
  * Unit tests for CategoryServiceImpl.
@@ -45,6 +47,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * @since 2026-01-17
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class CategoryServiceTest {
 
   @Mock
@@ -62,6 +65,9 @@ class CategoryServiceTest {
   @Mock
   private UserRepository userRepository;
 
+  @Mock
+  private RCPermissionService permissionService;
+
   private CategoryServiceImpl categoryService;
   private User testUser;
   private ResponsibilityCentre testRC;
@@ -75,7 +81,8 @@ class CategoryServiceTest {
         fiscalYearRepository,
         rcRepository,
         accessRepository,
-        userRepository
+        userRepository,
+        permissionService
     );
 
     // Set up test user
@@ -107,6 +114,13 @@ class CategoryServiceTest {
     testCategory.setDisplayOrder(0);
     testCategory.setFundingType(FundingType.BOTH);
     testCategory.setActive(true);
+
+    // By default, grant full access for happy-path tests.
+    // Denied-access tests override these with thenReturn(false).
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
   }
 
   @Test
@@ -257,6 +271,8 @@ class CategoryServiceTest {
     @Test
     @DisplayName("Should throw exception when user has no access")
     void shouldThrowExceptionWhenNoAccess() {
+      when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
+
       User otherUser = new User();
       otherUser.setId(2L);
       otherUser.setUsername("otheruser");
@@ -311,6 +327,8 @@ class CategoryServiceTest {
     @Test
     @DisplayName("Should return empty when user has no access")
     void shouldReturnEmptyWhenNoAccess() {
+      when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
+
       User otherUser = new User();
       otherUser.setId(2L);
       otherUser.setUsername("otheruser");
@@ -424,6 +442,8 @@ class CategoryServiceTest {
       when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
           .thenReturn(Optional.empty());
 
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+
       assertThrows(IllegalArgumentException.class, () ->
           categoryService.createCategory(1L, "otheruser", "New Category", "Description"));
     }
@@ -488,6 +508,8 @@ class CategoryServiceTest {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
           .thenReturn(Optional.empty());
+
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
 
       assertThrows(IllegalArgumentException.class, () ->
           categoryService.updateCategory(1L, "otheruser", "Updated Name", "Description"));
@@ -596,6 +618,8 @@ class CategoryServiceTest {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
           .thenReturn(Optional.empty());
+
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
 
       assertThrows(IllegalArgumentException.class, () ->
           categoryService.deleteCategory(1L, "otheruser"));
@@ -706,6 +730,8 @@ class CategoryServiceTest {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
           .thenReturn(Optional.empty());
+
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
 
       assertThrows(IllegalArgumentException.class, () ->
           categoryService.reorderCategories(1L, "otheruser", Arrays.asList(1L, 2L)));

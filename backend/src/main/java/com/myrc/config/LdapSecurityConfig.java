@@ -189,73 +189,154 @@ public class LdapSecurityConfig {
 
     /**
      * Custom LDAP authorities populator that maps LDAP groups to application roles.
-     * In addition to creating ROLE_xxx authorities, this populator also creates
-     * LDAP_GROUP_DN_xxx authorities carrying the full group DN so that downstream
-     * code (e.g. RC access checks) can match against group-based access records.
+     * <p>
+     * In addition to creating ROLE_xxx authorities via the standard group search,
+     * this populator also creates LDAP_GROUP_DN_xxx authorities carrying the full
+     * group DN so that downstream code (e.g. RC access checks) can match against
+     * group-based access records.
+     * </p>
+     * <p>
+     * Group DNs are captured by overriding {@link #getGroupMembershipRoles} to
+     * extract the {@code spring.security.ldap.dn} key from each search result,
+     * rather than relying on the {@code memberOf} user attribute which may not
+     * be returned by all LDAP servers.
+     * </p>
      */
     public static class GroupMappingLdapAuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
-        
+
         private final LdapProperties ldapProperties;
-        
+
+        /**
+         * Thread-local storage for group DNs discovered during the group membership
+         * search. Populated by {@link #getGroupMembershipRoles} and consumed by
+         * {@link #getAdditionalRoles}.
+         */
+        private final ThreadLocal<Set<String>> discoveredGroupDns = ThreadLocal.withInitial(HashSet::new);
+
         public GroupMappingLdapAuthoritiesPopulator(
-                ContextSource contextSource, 
+                ContextSource contextSource,
                 String groupSearchBase,
                 LdapProperties ldapProperties) {
             super(contextSource, groupSearchBase);
             this.ldapProperties = ldapProperties;
         }
-        
+
+        /**
+         * Overrides the default group membership search to capture full group DNs
+         * from the search results. The DNs are stored in a thread-local set and
+         * later consumed by {@link #getAdditionalRoles} to create
+         * {@code LDAP_GROUP_DN_xxx} authorities.
+         *
+         * @param userDn   the user's distinguished name
+         * @param username the user's login name
+         * @return the set of role authorities from the standard group search
+         */
         @Override
-        protected Set<GrantedAuthority> getAdditionalRoles(DirContextOperations userData, String username) {
-            Set<GrantedAuthority> additionalRoles = new HashSet<>();
-            
-            // Get the user's groups from LDAP
-            String[] groups = userData.getStringAttributes("memberOf");
-            
-            if (groups != null) {
-                // Add authorities carrying the full group DN for each memberOf entry
-                for (String groupDn : groups) {
-                    additionalRoles.add(new SimpleGrantedAuthority(LDAP_GROUP_DN_PREFIX + groupDn));
-                    logger.debug("Added group DN authority for user {}: {}", username, groupDn);
+        public Set<GrantedAuthority> getGroupMembershipRoles(String userDn, String username) {
+            // Clear any leftover state from a previous invocation on this thread
+            discoveredGroupDns.get().clear();
+
+            // Perform the standard group search
+            String base = getGroupSearchBase();
+            if (base != null) {
+                try {
+                    org.springframework.security.ldap.SpringSecurityLdapTemplate template = getLdapTemplate();
+                    Set<java.util.Map<String, java.util.List<String>>> userRoles =
+                        template.searchForMultipleAttributeValues(
+                            base,
+                            getGroupSearchFilter(),
+                            new String[]{userDn, username},
+                            new String[]{getGroupRoleAttribute()});
+
+                    for (java.util.Map<String, java.util.List<String>> role : userRoles) {
+                        java.util.List<String> dns = role.get(
+                            org.springframework.security.ldap.SpringSecurityLdapTemplate.DN_KEY);
+                        if (dns != null) {
+                            for (String dn : dns) {
+                                discoveredGroupDns.get().add(dn);
+                                logger.debug("Discovered group DN for user {}: {}", username, dn);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.warn("Error capturing group DNs for user {}: {}", username, e.getMessage());
                 }
             }
 
+            // Delegate to super for standard role authority creation
+            return super.getGroupMembershipRoles(userDn, username);
+        }
+
+        /**
+         * Creates additional authorities beyond those produced by the standard
+         * group search. This method:
+         * <ol>
+         *   <li>Creates {@code LDAP_GROUP_DN_xxx} authorities for every group DN
+         *       discovered during the group membership search.</li>
+         *   <li>Maps configured group DNs to application roles (e.g. ADMIN, USER).</li>
+         *   <li>Ensures at least a USER role is assigned.</li>
+         * </ol>
+         *
+         * @param userData the user's LDAP directory context
+         * @param username the user's login name
+         * @return the set of additional authorities
+         */
+        @Override
+        protected Set<GrantedAuthority> getAdditionalRoles(DirContextOperations userData, String username) {
+            Set<GrantedAuthority> additionalRoles = new HashSet<>();
+
+            // Retrieve group DNs captured during getGroupMembershipRoles
+            Set<String> groupDns = discoveredGroupDns.get();
+
+            // Also try the memberOf attribute on the user entry as a fallback
+            String[] memberOfValues = userData.getStringAttributes("memberOf");
+            if (memberOfValues != null) {
+                for (String memberOf : memberOfValues) {
+                    groupDns.add(memberOf);
+                }
+            }
+
+            // Create LDAP_GROUP_DN_xxx authorities for each discovered group DN
+            for (String groupDn : groupDns) {
+                additionalRoles.add(new SimpleGrantedAuthority(LDAP_GROUP_DN_PREFIX + groupDn));
+                logger.debug("Added group DN authority for user {}: {}", username, groupDn);
+            }
+
             // Map LDAP groups to application roles based on configuration
-            if (!ldapProperties.isSkipOrgRoleSync() && ldapProperties.getGroupMappings() != null && groups != null) {
+            if (!ldapProperties.isSkipOrgRoleSync() && ldapProperties.getGroupMappings() != null) {
                 for (LdapProperties.GroupMapping mapping : ldapProperties.getGroupMappings()) {
-                    String groupDn = mapping.getGroupDn();
-                    
-                    for (String userGroup : groups) {
-                        // Check if user is member of this group
-                        if (userGroup.equalsIgnoreCase(groupDn)) {
-                            // Add the mapped role
+                    String configuredDn = mapping.getGroupDn();
+
+                    for (String userGroupDn : groupDns) {
+                        if (userGroupDn.equalsIgnoreCase(configuredDn)) {
                             if (mapping.getRole() != null && !mapping.getRole().isEmpty()) {
                                 additionalRoles.add(new SimpleGrantedAuthority("ROLE_" + mapping.getRole()));
-                                logger.debug("Mapped group {} to role {} for user {}", 
-                                    groupDn, mapping.getRole(), username);
+                                logger.debug("Mapped group {} to role {} for user {}",
+                                    configuredDn, mapping.getRole(), username);
                             }
-                            
-                            // Add admin role if specified
                             if (mapping.isAdmin()) {
                                 additionalRoles.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-                                logger.debug("Granted ADMIN role to user {} via group {}", 
-                                    username, groupDn);
+                                logger.debug("Granted ADMIN role to user {} via group {}",
+                                    username, configuredDn);
                             }
                         }
                     }
                 }
             }
-            
+
             // Ensure at least USER role is assigned
             boolean hasApplicationRole = additionalRoles.stream()
                 .anyMatch(a -> a.getAuthority().startsWith("ROLE_"));
             if (!hasApplicationRole) {
                 additionalRoles.add(new SimpleGrantedAuthority("ROLE_USER"));
             }
-            
+
+            // Clean up thread-local
+            discoveredGroupDns.remove();
+
             return additionalRoles;
         }
-        
+
         private static final Logger logger = LoggerFactory.getLogger(GroupMappingLdapAuthoritiesPopulator.class);
     }
 

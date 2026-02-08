@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,6 +58,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
   private final ResponsibilityCentreRepository rcRepository;
   private final RCAccessRepository accessRepository;
   private final UserRepository userRepository;
+  private final UserService userService;
   private final FiscalYearRepository fiscalYearRepository;
   private final FundingItemRepository fundingItemRepository;
   private final SpendingItemRepository spendingItemRepository;
@@ -72,6 +75,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       ResponsibilityCentreRepository rcRepository,
       RCAccessRepository accessRepository,
       UserRepository userRepository,
+      UserService userService,
       FiscalYearRepository fiscalYearRepository,
       FundingItemRepository fundingItemRepository,
       SpendingItemRepository spendingItemRepository,
@@ -86,6 +90,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
     this.userRepository = userRepository;
+    this.userService = userService;
     this.fiscalYearRepository = fiscalYearRepository;
     this.fundingItemRepository = fundingItemRepository;
     this.spendingItemRepository = spendingItemRepository;
@@ -101,42 +106,100 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
   private static final String DEMO_RC_NAME = "Demo";
 
-  @Override
-  @Transactional(readOnly = true)
-  public List<ResponsibilityCentreDTO> getUserResponsibilityCentres(String username) {
+  /**
+   * Find a local User entity by username, or auto-provision a lightweight LDAP
+   * user entity on demand. LDAP users are not persisted during login, but when
+   * they perform write operations (creating or cloning an RC) they need a local
+   * entity to serve as the FK owner.
+   *
+   * @param username the username to look up
+   * @return the existing or newly created User entity
+   * @throws IllegalArgumentException if the user cannot be found or provisioned
+   */
+  private User findOrProvisionUser(String username) {
     Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      return List.of();
+    if (userOpt.isPresent()) {
+      return userOpt.get();
     }
 
-    User user = userOpt.get();
-    List<ResponsibilityCentreDTO> result = new java.util.ArrayList<>();
-    java.util.Set<Long> addedRcIds = new java.util.HashSet<>();
+    // Check if the current security context indicates this is an LDAP user.
+    // LDAP users carry authorities prefixed with LDAP_GROUP_DN_ so any such
+    // authority proves the caller authenticated via LDAP.
+    Authentication auth = org.springframework.security.core.context.SecurityContextHolder
+        .getContext().getAuthentication();
+    if (auth != null && auth.getName().equals(username)) {
+      boolean isLdapUser = auth.getAuthorities().stream()
+          .map(GrantedAuthority::getAuthority)
+          .anyMatch(a -> a.startsWith(
+              com.myrc.config.LdapSecurityConfig.LDAP_GROUP_DN_PREFIX));
 
-    // Get RCs owned by the user
-    List<ResponsibilityCentre> ownedRCs = rcRepository.findByOwner(user);
-    for (ResponsibilityCentre rc : ownedRCs) {
-      // Demo RC is always read-only for all users, otherwise owner has OWNER access
-      String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "OWNER";
-      result.add(ResponsibilityCentreDTO.fromEntity(rc, username, accessLevel));
-      addedRcIds.add(rc.getId());
-    }
-
-    // Get RCs shared with the user
-    List<RCAccess> accessRecords = accessRepository.findByUser(user);
-    for (RCAccess access : accessRecords) {
-      ResponsibilityCentre rc = access.getResponsibilityCentre();
-      if (!addedRcIds.contains(rc.getId())) {
-        result.add(ResponsibilityCentreDTO.fromEntityWithAccess(rc, username, access));
-        addedRcIds.add(rc.getId());
+      if (isLdapUser) {
+        logger.info("Auto-provisioning local User entity for LDAP user: {}", username);
+        userService.createOrUpdateLdapUser(username, null, null, username);
+        return userRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException(
+                "Failed to provision LDAP user: " + username));
       }
     }
 
-    // Always include Demo RC for all users (read-only) even if they don't have an explicit access record
+    throw new IllegalArgumentException("User not found: " + username);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<ResponsibilityCentreDTO> getUserResponsibilityCentres(String username,
+      List<String> groupIdentifiers) {
+    List<ResponsibilityCentreDTO> result = new java.util.ArrayList<>();
+    java.util.Set<Long> addedRcIds = new java.util.HashSet<>();
+
+    Optional<User> userOpt = userRepository.findByUsername(username);
+
+    if (userOpt.isPresent()) {
+      User user = userOpt.get();
+
+      // Get RCs owned by the user
+      List<ResponsibilityCentre> ownedRCs = rcRepository.findByOwner(user);
+      for (ResponsibilityCentre rc : ownedRCs) {
+        // Demo RC is always read-only for all users, otherwise owner has OWNER access
+        String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "OWNER";
+        result.add(ResponsibilityCentreDTO.fromEntity(rc, username, accessLevel));
+        addedRcIds.add(rc.getId());
+      }
+
+      // Get RCs shared with the user via direct User FK
+      List<RCAccess> accessRecords = accessRepository.findByUser(user);
+      for (RCAccess access : accessRecords) {
+        ResponsibilityCentre rc = access.getResponsibilityCentre();
+        if (addedRcIds.add(rc.getId())) {
+          result.add(ResponsibilityCentreDTO.fromEntityWithAccess(rc, username, access));
+        }
+      }
+    }
+
+    // Get RCs accessible via principalIdentifier (group DNs, distribution lists,
+    // or LDAP USER-type access stored by identifier)
+    List<String> identifiers = groupIdentifiers != null
+        ? new java.util.ArrayList<>(groupIdentifiers) : new java.util.ArrayList<>();
+    identifiers.add(username);
+
+    if (!identifiers.isEmpty()) {
+      List<RCAccess> identifierAccess = accessRepository.findByPrincipalIdentifierIn(identifiers);
+      for (RCAccess access : identifierAccess) {
+        ResponsibilityCentre rc = access.getResponsibilityCentre();
+        if (addedRcIds.add(rc.getId())) {
+          result.add(ResponsibilityCentreDTO.fromEntityWithAccess(rc, username, access));
+        }
+      }
+    }
+
+    // Demo RC is always visible to every authenticated user with READ_ONLY access,
+    // regardless of whether they have a local User entity or explicit access grants.
     Optional<ResponsibilityCentre> demoRcOpt = rcRepository.findByName(DEMO_RC_NAME);
-    if (demoRcOpt.isPresent() && !addedRcIds.contains(demoRcOpt.get().getId())) {
+    if (demoRcOpt.isPresent()) {
       ResponsibilityCentre demoRc = demoRcOpt.get();
-      result.add(ResponsibilityCentreDTO.fromEntity(demoRc, username, "READ_ONLY"));
+      if (addedRcIds.add(demoRc.getId())) {
+        result.add(ResponsibilityCentreDTO.fromEntity(demoRc, username, "READ_ONLY"));
+      }
     }
 
     return result;
@@ -145,12 +208,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
   @Override
   public ResponsibilityCentreDTO createResponsibilityCentre(String username, String name,
       String description) {
-    Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      throw new IllegalArgumentException("User not found: " + username);
-    }
-
-    User user = userOpt.get();
+    User user = findOrProvisionUser(username);
 
     // Check if name already exists globally (RC names must be unique across all users)
     if (rcRepository.existsByName(name)) {
@@ -166,7 +224,8 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
   @Override
   @Transactional(readOnly = true)
-  public Optional<ResponsibilityCentreDTO> getResponsibilityCentre(Long rcId, String username) {
+  public Optional<ResponsibilityCentreDTO> getResponsibilityCentre(Long rcId, String username,
+      List<String> groupIdentifiers) {
     Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
     if (rcOpt.isEmpty()) {
       return Optional.empty();
@@ -174,30 +233,57 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
     ResponsibilityCentre rc = rcOpt.get();
     Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      return Optional.empty();
+
+    if (userOpt.isPresent()) {
+      User user = userOpt.get();
+
+      // Check if user is the owner
+      if (rc.getOwner().getId().equals(user.getId())) {
+        // Demo RC is always read-only for all users, otherwise owner has OWNER access
+        String accessLevel = DEMO_RC_NAME.equals(rc.getName()) ? "READ_ONLY" : "OWNER";
+        return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, accessLevel));
+      }
+
+      // Check if user has direct access via User FK
+      Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
+      if (accessOpt.isPresent()) {
+        return Optional.of(
+            ResponsibilityCentreDTO.fromEntityWithAccess(rc, username, accessOpt.get()));
+      }
     }
 
-    User user = userOpt.get();
+    // Check access via principalIdentifier (group DNs, distribution lists,
+    // or LDAP USER-type access stored by identifier)
+    List<String> identifiers = groupIdentifiers != null
+        ? new java.util.ArrayList<>(groupIdentifiers) : new java.util.ArrayList<>();
+    identifiers.add(username);
 
-    // Demo RC is always accessible to all users in read-only mode
+    List<RCAccess> identifierAccess = accessRepository
+        .findByResponsibilityCentreAndPrincipalIdentifierIn(rc, identifiers);
+    if (!identifierAccess.isEmpty()) {
+      // Use the highest access level found
+      RCAccess bestAccess = identifierAccess.stream()
+          .max((a, b) -> Integer.compare(
+              getAccessRank(a.getAccessLevel()), getAccessRank(b.getAccessLevel())))
+          .orElse(identifierAccess.getFirst());
+      return Optional.of(
+          ResponsibilityCentreDTO.fromEntityWithAccess(rc, username, bestAccess));
+    }
+
+    // Demo RC is always accessible to every authenticated user with READ_ONLY access
     if (DEMO_RC_NAME.equals(rc.getName())) {
       return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, "READ_ONLY"));
     }
 
-    // Check if user is the owner
-    if (rc.getOwner().getId().equals(user.getId())) {
-      return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, "OWNER"));
-    }
-
-    // Check if user has access
-    Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-    if (accessOpt.isPresent()) {
-      return Optional.of(
-          ResponsibilityCentreDTO.fromEntityWithAccess(rc, username, accessOpt.get()));
-    }
-
     return Optional.empty();
+  }
+
+  private int getAccessRank(RCAccess.AccessLevel level) {
+    return switch (level) {
+      case OWNER -> 3;
+      case READ_WRITE -> 2;
+      case READ_ONLY -> 1;
+    };
   }
 
   @Override
@@ -426,12 +512,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
   @Override
   public ResponsibilityCentreDTO cloneResponsibilityCentre(Long sourceRcId, String username, String newName) {
-    Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      throw new IllegalArgumentException("User not found: " + username);
-    }
-
-    User user = userOpt.get();
+    User user = findOrProvisionUser(username);
 
     Optional<ResponsibilityCentre> sourceRcOpt = rcRepository.findById(sourceRcId);
     if (sourceRcOpt.isEmpty()) {

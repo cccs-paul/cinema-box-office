@@ -495,7 +495,7 @@ class RCPermissionControllerTest {
     @Test
     @DisplayName("Should return true when user can edit")
     void shouldReturnTrueWhenCanEdit() {
-      when(permissionService.canEditContent(1L, "testuser")).thenReturn(true);
+      when(permissionService.canEditContent(eq(1L), eq("testuser"), any())).thenReturn(true);
 
       ResponseEntity<Boolean> response = controller.canEdit(1L, authentication);
 
@@ -506,7 +506,7 @@ class RCPermissionControllerTest {
     @Test
     @DisplayName("Should return false when user cannot edit")
     void shouldReturnFalseWhenCannotEdit() {
-      when(permissionService.canEditContent(1L, "testuser")).thenReturn(false);
+      when(permissionService.canEditContent(eq(1L), eq("testuser"), any())).thenReturn(false);
 
       ResponseEntity<Boolean> response = controller.canEdit(1L, authentication);
 

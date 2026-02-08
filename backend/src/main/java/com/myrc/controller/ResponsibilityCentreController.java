@@ -15,6 +15,7 @@
 
 package com.myrc.controller;
 
+import com.myrc.config.LdapSecurityConfig;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.ResponsibilityCentreDTO;
 import com.myrc.dto.RCAccessDTO;
@@ -66,7 +67,9 @@ public class ResponsibilityCentreController {
     }
     logger.info("GET /responsibility-centres - Fetching RCs for user: " + authentication.getName());
     try {
-      List<ResponsibilityCentreDTO> rcs = rcService.getUserResponsibilityCentres(authentication.getName());
+      List<String> groupDns = LdapSecurityConfig.extractGroupDns(authentication);
+      List<ResponsibilityCentreDTO> rcs = rcService.getUserResponsibilityCentres(
+          authentication.getName(), groupDns);
       return ResponseEntity.ok(rcs);
     } catch (Exception e) {
       logger.severe("Failed to fetch responsibility centres: " + e.getMessage());
@@ -156,7 +159,8 @@ public class ResponsibilityCentreController {
     }
     logger.info("GET /responsibility-centres/{" + id + "} - Fetching RC for user: " + username);
     try {
-      Optional<ResponsibilityCentreDTO> rc = rcService.getResponsibilityCentre(id, username);
+      List<String> groupDns = LdapSecurityConfig.extractGroupDns(authentication);
+      Optional<ResponsibilityCentreDTO> rc = rcService.getResponsibilityCentre(id, username, groupDns);
       return rc.map(ResponseEntity::ok)
           .orElseGet(() -> ResponseEntity.notFound().build());
     } catch (Exception e) {

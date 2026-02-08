@@ -22,11 +22,15 @@ public interface ResponsibilityCentreService {
 
   /**
    * Get all responsibility centres accessible to a user.
+   * Includes RCs owned by the user, RCs with direct user access, and RCs
+   * accessible via group membership (LDAP group DNs).
    *
    * @param username the username of the user
+   * @param groupIdentifiers list of LDAP group DNs the user belongs to (may be empty)
    * @return list of responsibility centres the user owns or has access to
    */
-  List<ResponsibilityCentreDTO> getUserResponsibilityCentres(String username);
+  List<ResponsibilityCentreDTO> getUserResponsibilityCentres(String username,
+      List<String> groupIdentifiers);
 
   /**
    * Create a new responsibility centre.
@@ -41,12 +45,15 @@ public interface ResponsibilityCentreService {
 
   /**
    * Get a specific responsibility centre by ID.
+   * Checks ownership, direct user access, and group-based access.
    *
    * @param rcId the ID of the responsibility centre
    * @param username the username of the requesting user
+   * @param groupIdentifiers list of LDAP group DNs the user belongs to (may be empty)
    * @return optional containing the responsibility centre if found and user has access
    */
-  Optional<ResponsibilityCentreDTO> getResponsibilityCentre(Long rcId, String username);
+  Optional<ResponsibilityCentreDTO> getResponsibilityCentre(Long rcId, String username,
+      List<String> groupIdentifiers);
 
   /**
    * Update a responsibility centre.

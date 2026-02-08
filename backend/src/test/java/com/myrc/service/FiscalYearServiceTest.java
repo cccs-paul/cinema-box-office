@@ -39,6 +39,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 /**
  * Unit tests for FiscalYearServiceImpl.
@@ -48,6 +50,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  * @since 2026-01-22
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("FiscalYearService Tests")
 class FiscalYearServiceTest {
 
@@ -71,6 +74,9 @@ class FiscalYearServiceTest {
 
   @Mock
   private CategoryService categoryService;
+
+  @Mock
+  private RCPermissionService permissionService;
 
   @InjectMocks
   private FiscalYearServiceImpl fiscalYearService;
@@ -96,6 +102,13 @@ class FiscalYearServiceTest {
         testRC
     );
     testFiscalYear.setId(1L);
+
+    // By default, grant full access for happy-path tests.
+    // Denied-access tests override these with thenReturn(false).
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
   }
 
   @Test
@@ -139,6 +152,8 @@ class FiscalYearServiceTest {
   @Test
   @DisplayName("getFiscalYearsByRCId - Throws exception when user has no access")
   void getFiscalYearsByRCId_ThrowsWhenNoAccess() {
+    when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
+
     User anotherUser = new User();
     anotherUser.setId(2L);
     anotherUser.setUsername("anotheruser");
@@ -168,6 +183,8 @@ class FiscalYearServiceTest {
   @Test
   @DisplayName("getFiscalYearById - Returns empty for unauthorized user")
   void getFiscalYearById_ReturnsEmptyForUnauthorizedUser() {
+    when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
+
     User anotherUser = new User();
     anotherUser.setId(2L);
     anotherUser.setUsername("anotheruser");
@@ -225,6 +242,8 @@ class FiscalYearServiceTest {
   @Test
   @DisplayName("createFiscalYear - Throws exception for user without write access")
   void createFiscalYear_ThrowsForReadOnlyUser() {
+    when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+
     User anotherUser = new User();
     anotherUser.setId(2L);
     anotherUser.setUsername("anotheruser");
@@ -331,6 +350,8 @@ class FiscalYearServiceTest {
   @Test
   @DisplayName("updateDisplaySettings - Throws exception when user has no write access")
   void updateDisplaySettings_ThrowsWhenNoWriteAccess() {
+    when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+
     User anotherUser = new User();
     anotherUser.setId(2L);
     anotherUser.setUsername("anotheruser");

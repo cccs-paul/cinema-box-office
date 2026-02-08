@@ -79,6 +79,9 @@ class FundingItemServiceTest {
   @Mock
   private CategoryRepository categoryRepository;
 
+  @Mock
+  private RCPermissionService permissionService;
+
   private FundingItemServiceImpl fundingItemService;
   private User testUser;
   private ResponsibilityCentre testRC;
@@ -97,7 +100,8 @@ class FundingItemServiceTest {
         userRepository,
         moneyRepository,
         moneyAllocationRepository,
-        categoryRepository
+        categoryRepository,
+        permissionService
     );
 
     // Set up valid money allocations (required for creating funding items)
@@ -142,6 +146,11 @@ class FundingItemServiceTest {
     testFundingItem.setSource(FundingSource.BUSINESS_PLAN);
     testFundingItem.setCurrency(Currency.CAD);
     testFundingItem.setExchangeRate(BigDecimal.ONE);
+
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
   }
 
   @Test
@@ -158,8 +167,6 @@ class FundingItemServiceTest {
     @DisplayName("Should return funding items for fiscal year when user is owner")
     void shouldReturnFundingItemsForFiscalYearWhenOwner() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(fundingItemRepository.findByFiscalYearIdOrderByNameAsc(1L))
           .thenReturn(Arrays.asList(testFundingItem));
 
@@ -183,8 +190,6 @@ class FundingItemServiceTest {
     @DisplayName("Should return empty list when no funding items exist")
     void shouldReturnEmptyListWhenNoItems() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(fundingItemRepository.findByFiscalYearIdOrderByNameAsc(1L))
           .thenReturn(Arrays.asList());
 
@@ -197,20 +202,8 @@ class FundingItemServiceTest {
     @Test
     @DisplayName("Should throw exception when user has no access")
     void shouldThrowExceptionWhenNoAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
+      when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
-          .thenReturn(Optional.empty());
 
       assertThrows(IllegalArgumentException.class, () ->
           fundingItemService.getFundingItemsByFiscalYearId(1L, "otheruser"));
@@ -225,8 +218,6 @@ class FundingItemServiceTest {
     @DisplayName("Should return funding item by ID when user is owner")
     void shouldReturnFundingItemByIdWhenOwner() {
       when(fundingItemRepository.findById(1L)).thenReturn(Optional.of(testFundingItem));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
       Optional<FundingItemDTO> result = fundingItemService.getFundingItemById(1L, "testuser");
 
@@ -247,20 +238,8 @@ class FundingItemServiceTest {
     @Test
     @DisplayName("Should return empty when user has no access")
     void shouldReturnEmptyWhenNoAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
+      when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
       when(fundingItemRepository.findById(1L)).thenReturn(Optional.of(testFundingItem));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
-          .thenReturn(Optional.empty());
 
       Optional<FundingItemDTO> result = fundingItemService.getFundingItemById(1L, "otheruser");
 
@@ -276,8 +255,6 @@ class FundingItemServiceTest {
     @DisplayName("Should create funding item successfully when user is owner")
     void shouldCreateFundingItemSuccessfullyWhenOwner() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(fundingItemRepository.existsByNameAndFiscalYear("New Funding Item", testFY)).thenReturn(false);
       when(fundingItemRepository.save(any(FundingItem.class))).thenReturn(testFundingItem);
 
@@ -305,8 +282,6 @@ class FundingItemServiceTest {
     @DisplayName("Should throw exception when duplicate name")
     void shouldThrowExceptionWhenDuplicateName() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(fundingItemRepository.existsByNameAndFiscalYear("Test Funding Item", testFY)).thenReturn(true);
 
       assertThrows(IllegalArgumentException.class, () ->
@@ -318,20 +293,8 @@ class FundingItemServiceTest {
     @Test
     @DisplayName("Should throw exception when user has no write access")
     void shouldThrowExceptionWhenNoWriteAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
-          .thenReturn(Optional.empty());
 
       assertThrows(IllegalArgumentException.class, () ->
           fundingItemService.createFundingItem(
@@ -343,8 +306,6 @@ class FundingItemServiceTest {
     @DisplayName("Should create with category when provided")
     void shouldCreateWithCategory() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(fundingItemRepository.existsByNameAndFiscalYear("New Funding Item", testFY)).thenReturn(false);
       testCategory.setFiscalYear(testFY); // Category must belong to the same fiscal year
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
@@ -368,8 +329,6 @@ class FundingItemServiceTest {
     void shouldUpdateFundingItemSuccessfullyWhenOwner() {
       testCategory.setFiscalYear(testFY); // Category must belong to the same fiscal year
       when(fundingItemRepository.findById(1L)).thenReturn(Optional.of(testFundingItem));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
       when(fundingItemRepository.save(any(FundingItem.class))).thenReturn(testFundingItem);
 
@@ -396,20 +355,8 @@ class FundingItemServiceTest {
     @Test
     @DisplayName("Should throw exception when user has no write access")
     void shouldThrowExceptionWhenNoWriteAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
       when(fundingItemRepository.findById(1L)).thenReturn(Optional.of(testFundingItem));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
-          .thenReturn(Optional.empty());
 
       assertThrows(IllegalArgumentException.class, () ->
           fundingItemService.updateFundingItem(
@@ -426,8 +373,6 @@ class FundingItemServiceTest {
     @DisplayName("Should delete funding item successfully when user is owner")
     void shouldDeleteFundingItemSuccessfullyWhenOwner() {
       when(fundingItemRepository.findById(1L)).thenReturn(Optional.of(testFundingItem));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       doNothing().when(fundingItemRepository).delete(testFundingItem);
 
       assertDoesNotThrow(() -> fundingItemService.deleteFundingItem(1L, "testuser"));
@@ -446,20 +391,8 @@ class FundingItemServiceTest {
     @Test
     @DisplayName("Should throw exception when user has no write access")
     void shouldThrowExceptionWhenNoWriteAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
       when(fundingItemRepository.findById(1L)).thenReturn(Optional.of(testFundingItem));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
-          .thenReturn(Optional.empty());
 
       assertThrows(IllegalArgumentException.class, () ->
           fundingItemService.deleteFundingItem(1L, "otheruser"));
@@ -473,25 +406,7 @@ class FundingItemServiceTest {
     @Test
     @DisplayName("User with READ_WRITE access should be able to create funding item")
     void userWithReadWriteAccessShouldCreate() {
-      User accessUser = new User();
-      accessUser.setId(2L);
-      accessUser.setUsername("accessuser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
-      RCAccess access = new RCAccess();
-      access.setUser(accessUser);
-      access.setResponsibilityCentre(testRC);
-      access.setAccessLevel(RCAccess.AccessLevel.READ_WRITE);
-
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("accessuser")).thenReturn(Optional.of(accessUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, accessUser))
-          .thenReturn(Optional.of(access));
       when(fundingItemRepository.existsByNameAndFiscalYear("New Item", testFY)).thenReturn(false);
       when(fundingItemRepository.save(any(FundingItem.class))).thenReturn(testFundingItem);
 
@@ -505,25 +420,8 @@ class FundingItemServiceTest {
     @Test
     @DisplayName("User with READ_ONLY access should not be able to create funding item")
     void userWithReadOnlyAccessShouldNotCreate() {
-      User accessUser = new User();
-      accessUser.setId(2L);
-      accessUser.setUsername("accessuser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
-      RCAccess access = new RCAccess();
-      access.setUser(accessUser);
-      access.setResponsibilityCentre(testRC);
-      access.setAccessLevel(RCAccess.AccessLevel.READ_ONLY);
-
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("accessuser")).thenReturn(Optional.of(accessUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, accessUser))
-          .thenReturn(Optional.of(access));
 
       assertThrows(IllegalArgumentException.class, () ->
           fundingItemService.createFundingItem(

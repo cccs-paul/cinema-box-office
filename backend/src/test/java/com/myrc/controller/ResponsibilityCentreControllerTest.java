@@ -103,10 +103,10 @@ public class ResponsibilityCentreControllerTest {
   void testGetAllResponsibilityCentresReturnsListFromService() {
     // Arrange
     List<ResponsibilityCentreDTO> rcs = Arrays.asList(testRC, testRC2);
-    when(rcService.getUserResponsibilityCentres("testuser")).thenReturn(rcs);
+    when(rcService.getUserResponsibilityCentres(eq("testuser"), any())).thenReturn(rcs);
 
     // Act
-    List<ResponsibilityCentreDTO> result = rcService.getUserResponsibilityCentres("testuser");
+    List<ResponsibilityCentreDTO> result = rcService.getUserResponsibilityCentres("testuser", List.of());
 
     // Assert
     assertNotNull(result);
@@ -117,10 +117,10 @@ public class ResponsibilityCentreControllerTest {
   @DisplayName("Should retrieve RC by ID from service")
   void testGetResponsibilityCentreByIdReturnsFromService() {
     // Arrange
-    when(rcService.getResponsibilityCentre(1L, "testuser")).thenReturn(Optional.of(testRC));
+    when(rcService.getResponsibilityCentre(eq(1L), eq("testuser"), any())).thenReturn(Optional.of(testRC));
 
     // Act
-    Optional<ResponsibilityCentreDTO> result = rcService.getResponsibilityCentre(1L, "testuser");
+    Optional<ResponsibilityCentreDTO> result = rcService.getResponsibilityCentre(1L, "testuser", List.of());
 
     // Assert
     assertTrue(result.isPresent());
@@ -131,10 +131,10 @@ public class ResponsibilityCentreControllerTest {
   @DisplayName("Should handle not found case when RC doesn't exist")
   void testGetResponsibilityCentreReturnsEmptyWhenNotFound() {
     // Arrange
-    when(rcService.getResponsibilityCentre(999L, "testuser")).thenReturn(Optional.empty());
+    when(rcService.getResponsibilityCentre(eq(999L), eq("testuser"), any())).thenReturn(Optional.empty());
 
     // Act
-    Optional<ResponsibilityCentreDTO> result = rcService.getResponsibilityCentre(999L, "testuser");
+    Optional<ResponsibilityCentreDTO> result = rcService.getResponsibilityCentre(999L, "testuser", List.of());
 
     // Assert
     assertTrue(result.isEmpty());
@@ -231,9 +231,9 @@ public class ResponsibilityCentreControllerTest {
   @Test
   @DisplayName("Should handle null values gracefully")
   void testNullHandling() {
-    when(rcService.getResponsibilityCentre(1L, "testuser")).thenReturn(Optional.empty());
+    when(rcService.getResponsibilityCentre(eq(1L), eq("testuser"), any())).thenReturn(Optional.empty());
     
-    Optional<ResponsibilityCentreDTO> result = rcService.getResponsibilityCentre(1L, "testuser");
+    Optional<ResponsibilityCentreDTO> result = rcService.getResponsibilityCentre(1L, "testuser", List.of());
     
     assertFalse(result.isPresent());
   }

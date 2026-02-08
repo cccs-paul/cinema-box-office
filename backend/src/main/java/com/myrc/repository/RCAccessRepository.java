@@ -115,6 +115,21 @@ public interface RCAccessRepository extends JpaRepository<RCAccess, Long> {
   List<RCAccess> findByPrincipalIdentifierIn(@Param("identifiers") List<String> identifiers);
 
   /**
+   * Find all access records matching a list of principal identifiers for a specific RC.
+   * Used to check group-based or principalIdentifier-based access when the user
+   * has no local User entity (e.g. LDAP users without auto-provisioning).
+   *
+   * @param rc the responsibility centre
+   * @param identifiers list of identifiers (username + group DNs)
+   * @return list of access records matching the identifiers in the given RC
+   */
+  @Query("SELECT a FROM RCAccess a WHERE a.responsibilityCentre = :rc " +
+      "AND a.principalIdentifier IN :identifiers " +
+      "AND a.principalType IN ('USER', 'GROUP', 'DISTRIBUTION_LIST')")
+  List<RCAccess> findByResponsibilityCentreAndPrincipalIdentifierIn(
+      @Param("rc") ResponsibilityCentre rc, @Param("identifiers") List<String> identifiers);
+
+  /**
    * Find all access records for a user in a specific RC.
    * Matches direct User FK access, and access by principalIdentifier for users, groups,
    * and distribution lists (covers LDAP users stored without a local User entity).

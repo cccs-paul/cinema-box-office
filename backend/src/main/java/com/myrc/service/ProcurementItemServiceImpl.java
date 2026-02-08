@@ -38,6 +38,7 @@ import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.SpendingCategoryRepository;
 import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.UserRepository;
+import com.myrc.service.RCPermissionService;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -85,6 +86,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
     private final CategoryRepository categoryRepository;
     private final SpendingItemRepository spendingItemRepository;
     private final SpendingCategoryRepository spendingCategoryRepository;
+    private final RCPermissionService permissionService;
 
     public ProcurementItemServiceImpl(ProcurementItemRepository procurementItemRepository,
                                        ProcurementQuoteRepository quoteRepository,
@@ -96,7 +98,8 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
                                        UserRepository userRepository,
                                        CategoryRepository categoryRepository,
                                        SpendingItemRepository spendingItemRepository,
-                                       SpendingCategoryRepository spendingCategoryRepository) {
+                                       SpendingCategoryRepository spendingCategoryRepository,
+                                       RCPermissionService permissionService) {
         this.procurementItemRepository = procurementItemRepository;
         this.quoteRepository = quoteRepository;
         this.fileRepository = fileRepository;
@@ -108,6 +111,7 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         this.categoryRepository = categoryRepository;
         this.spendingItemRepository = spendingItemRepository;
         this.spendingCategoryRepository = spendingCategoryRepository;
+        this.permissionService = permissionService;
     }
 
     // ==========================
@@ -964,70 +968,27 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
 
     /**
      * Check if a user has any access (read or write) to a Responsibility Centre.
+     * Delegates to the centralized RCPermissionService which handles
+     * local users, LDAP group-based access, and Demo RC visibility.
      *
      * @param rcId the RC ID
      * @param username the username
      * @return true if user has access
      */
     private boolean hasAccessToRC(Long rcId, String username) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        if (userOpt.isEmpty()) {
-            return false;
-        }
-        User user = userOpt.get();
-
-        Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
-        if (rcOpt.isEmpty()) {
-            return false;
-        }
-        ResponsibilityCentre rc = rcOpt.get();
-
-        // Demo RC is accessible to all users in read-only mode
-        if ("Demo".equals(rc.getName())) {
-            return true;
-        }
-
-        // Check if owner
-        if (rc.getOwner() != null && rc.getOwner().getId().equals(user.getId())) {
-            return true;
-        }
-
-        // Check for explicit access
-        Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-        return accessOpt.isPresent();
+        return permissionService.hasAccess(rcId, username);
     }
 
     /**
      * Check if a user has write access to a Responsibility Centre.
+     * Delegates to the centralized RCPermissionService.
      *
      * @param rcId the RC ID
      * @param username the username
      * @return true if user has write access
      */
     private boolean hasWriteAccessToRC(Long rcId, String username) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        if (userOpt.isEmpty()) {
-            return false;
-        }
-        User user = userOpt.get();
-
-        Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
-        if (rcOpt.isEmpty()) {
-            return false;
-        }
-        ResponsibilityCentre rc = rcOpt.get();
-
-        // Check if owner
-        if (rc.getOwner() != null && rc.getOwner().getId().equals(user.getId())) {
-            return true;
-        }
-
-        // Check for explicit write access
-        Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-        if (accessOpt.isEmpty()) {
-            return false;
-        }
-        return accessOpt.get().getAccessLevel() == RCAccess.AccessLevel.READ_WRITE;
+        return permissionService.hasWriteAccess(rcId, username);
     }
 
     @Override

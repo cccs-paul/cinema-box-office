@@ -26,6 +26,7 @@ import com.myrc.repository.ProcurementItemRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.UserRepository;
+import com.myrc.service.RCPermissionService;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
@@ -58,19 +59,22 @@ public class ProcurementEventServiceImpl implements ProcurementEventService {
     private final ResponsibilityCentreRepository rcRepository;
     private final RCAccessRepository accessRepository;
     private final UserRepository userRepository;
+    private final RCPermissionService permissionService;
 
     public ProcurementEventServiceImpl(ProcurementEventRepository eventRepository,
                                         ProcurementEventFileRepository eventFileRepository,
                                         ProcurementItemRepository procurementItemRepository,
                                         ResponsibilityCentreRepository rcRepository,
                                         RCAccessRepository accessRepository,
-                                        UserRepository userRepository) {
+                                        UserRepository userRepository,
+                                        RCPermissionService permissionService) {
         this.eventRepository = eventRepository;
         this.eventFileRepository = eventFileRepository;
         this.procurementItemRepository = procurementItemRepository;
         this.rcRepository = rcRepository;
         this.accessRepository = accessRepository;
         this.userRepository = userRepository;
+        this.permissionService = permissionService;
     }
 
     // ==========================
@@ -79,87 +83,27 @@ public class ProcurementEventServiceImpl implements ProcurementEventService {
 
     /**
      * Check if a user has any access (read or write) to a responsibility centre.
+     * Delegates to the centralized RCPermissionService which handles
+     * local users, LDAP group-based access, and Demo RC visibility.
      *
      * @param rcId the responsibility centre ID
      * @param username the username
      * @return true if the user has access
      */
     private boolean hasAccessToRC(Long rcId, String username) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        if (userOpt.isEmpty()) {
-            return false;
-        }
-
-        User user = userOpt.get();
-
-        // Admin users have access to all RCs
-        if (user.getRoles() != null && user.getRoles().contains("ADMIN")) {
-            return true;
-        }
-
-        Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
-        if (rcOpt.isEmpty()) {
-            return false;
-        }
-
-        ResponsibilityCentre rc = rcOpt.get();
-
-        // Demo RC is accessible to all users in read-only mode
-        if ("Demo".equals(rc.getName())) {
-            return true;
-        }
-
-        // Check if owner
-        if (rc.getOwner().getId().equals(user.getId())) {
-            return true;
-        }
-
-        // Check if has access record
-        Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-        return accessOpt.isPresent();
+        return permissionService.hasAccess(rcId, username);
     }
 
     /**
      * Check if a user has write access to a responsibility centre.
+     * Delegates to the centralized RCPermissionService.
      *
      * @param rcId the responsibility centre ID
      * @param username the username
      * @return true if the user has write access
      */
     private boolean hasWriteAccessToRC(Long rcId, String username) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        if (userOpt.isEmpty()) {
-            return false;
-        }
-
-        User user = userOpt.get();
-
-        // Admin users have write access to all RCs
-        if (user.getRoles() != null && user.getRoles().contains("ADMIN")) {
-            return true;
-        }
-
-        Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
-        if (rcOpt.isEmpty()) {
-            return false;
-        }
-
-        ResponsibilityCentre rc = rcOpt.get();
-
-        // Owner always has write access
-        if (rc.getOwner().getId().equals(user.getId())) {
-            return true;
-        }
-
-        // Check for write access
-        Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-        if (accessOpt.isEmpty()) {
-            return false;
-        }
-
-        RCAccess access = accessOpt.get();
-        return access.getAccessLevel() == RCAccess.AccessLevel.READ_WRITE ||
-               access.getAccessLevel() == RCAccess.AccessLevel.OWNER;
+        return permissionService.hasWriteAccess(rcId, username);
     }
 
     /**

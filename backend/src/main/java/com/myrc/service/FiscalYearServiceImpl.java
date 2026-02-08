@@ -40,17 +40,19 @@ public class FiscalYearServiceImpl implements FiscalYearService {
   private final UserRepository userRepository;
   private final MoneyService moneyService;
   private final CategoryService categoryService;
+  private final RCPermissionService permissionService;
 
   public FiscalYearServiceImpl(FiscalYearRepository fiscalYearRepository,
       ResponsibilityCentreRepository rcRepository, RCAccessRepository accessRepository,
       UserRepository userRepository, MoneyService moneyService,
-      CategoryService categoryService) {
+      CategoryService categoryService, RCPermissionService permissionService) {
     this.fiscalYearRepository = fiscalYearRepository;
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
     this.userRepository = userRepository;
     this.moneyService = moneyService;
     this.categoryService = categoryService;
+    this.permissionService = permissionService;
   }
 
   @Override
@@ -231,80 +233,27 @@ public class FiscalYearServiceImpl implements FiscalYearService {
 
   /**
    * Check if user has any access to the RC.
+   * Delegates to the centralized RCPermissionService which handles
+   * local users, LDAP group-based access, and Demo RC visibility.
    */
   private boolean hasAccessToRC(Long rcId, String username) {
-    Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      return false;
-    }
-
-    User user = userOpt.get();
-    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
-    if (rcOpt.isEmpty()) {
-      return false;
-    }
-
-    ResponsibilityCentre rc = rcOpt.get();
-
-    // Demo RC is accessible to all users in read-only mode
-    if ("Demo".equals(rc.getName())) {
-      return true;
-    }
-
-    // Check if owner
-    if (rc.getOwner().getId().equals(user.getId())) {
-      return true;
-    }
-
-    // Check if has access record
-    Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-    return accessOpt.isPresent();
+    return permissionService.hasAccess(rcId, username);
   }
 
   /**
    * Check if user has write access to the RC.
+   * Delegates to the centralized RCPermissionService.
    */
   private boolean hasWriteAccessToRC(Long rcId, String username) {
-    Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      return false;
-    }
-
-    User user = userOpt.get();
-    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
-    if (rcOpt.isEmpty()) {
-      return false;
-    }
-
-    ResponsibilityCentre rc = rcOpt.get();
-
-    // Owner always has write access
-    if (rc.getOwner().getId().equals(user.getId())) {
-      return true;
-    }
-
-    // Check if has READ_WRITE access record
-    Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-    return accessOpt.isPresent() && RCAccess.AccessLevel.READ_WRITE.equals(accessOpt.get().getAccessLevel());
+    return permissionService.hasWriteAccess(rcId, username);
   }
 
   /**
    * Check if user is the owner of the RC.
+   * Delegates to the centralized RCPermissionService.
    */
   private boolean isRCOwner(Long rcId, String username) {
-    Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      return false;
-    }
-
-    User user = userOpt.get();
-    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
-    if (rcOpt.isEmpty()) {
-      return false;
-    }
-
-    ResponsibilityCentre rc = rcOpt.get();
-    return rc.getOwner().getId().equals(user.getId());
+    return permissionService.isOwner(rcId, username);
   }
 
   @Override

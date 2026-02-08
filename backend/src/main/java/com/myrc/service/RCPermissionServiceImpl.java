@@ -5,6 +5,7 @@
  */
 package com.myrc.service;
 
+import com.myrc.config.LdapSecurityConfig;
 import com.myrc.dto.RCAccessDTO;
 import com.myrc.model.RCAccess;
 import com.myrc.model.RCAccess.AccessLevel;
@@ -20,6 +21,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -437,8 +440,8 @@ public class RCPermissionServiceImpl implements RCPermissionService {
 
   @Override
   @Transactional(readOnly = true)
-  public boolean canEditContent(Long rcId, String username) {
-    Optional<AccessLevel> level = getEffectiveAccessLevel(rcId, username, List.of());
+  public boolean canEditContent(Long rcId, String username, List<String> groupIdentifiers) {
+    Optional<AccessLevel> level = getEffectiveAccessLevel(rcId, username, groupIdentifiers);
     return level.isPresent() && 
            (level.get() == AccessLevel.OWNER || level.get() == AccessLevel.READ_WRITE);
   }
@@ -447,5 +450,40 @@ public class RCPermissionServiceImpl implements RCPermissionService {
   @Transactional(readOnly = true)
   public boolean canManageRC(Long rcId, String username) {
     return isOwner(rcId, username);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public boolean hasAccess(Long rcId, String username) {
+    // Demo RC is accessible to all authenticated users
+    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
+    if (rcOpt.isPresent() && DEMO_RC_NAME.equals(rcOpt.get().getName())) {
+      return true;
+    }
+
+    List<String> groupDns = extractGroupDnsFromSecurityContext();
+    Optional<AccessLevel> level = getEffectiveAccessLevel(rcId, username, groupDns);
+    return level.isPresent();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public boolean hasWriteAccess(Long rcId, String username) {
+    List<String> groupDns = extractGroupDnsFromSecurityContext();
+    Optional<AccessLevel> level = getEffectiveAccessLevel(rcId, username, groupDns);
+    return level.isPresent()
+        && (level.get() == AccessLevel.OWNER || level.get() == AccessLevel.READ_WRITE);
+  }
+
+  /**
+   * Extract LDAP group DNs from the current security context.
+   * Returns an empty list if no authentication or no LDAP group authorities are present.
+   */
+  private List<String> extractGroupDnsFromSecurityContext() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null) {
+      return List.of();
+    }
+    return LdapSecurityConfig.extractGroupDns(auth);
   }
 }

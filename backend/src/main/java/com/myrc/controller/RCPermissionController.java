@@ -5,6 +5,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.config.LdapSecurityConfig;
 import com.myrc.dto.RCAccessDTO;
 import com.myrc.model.RCAccess.AccessLevel;
 import com.myrc.model.RCAccess.PrincipalType;
@@ -253,7 +254,8 @@ public class RCPermissionController {
       return ResponseEntity.ok(false);
     }
 
-    boolean canEdit = permissionService.canEditContent(rcId, authentication.getName());
+    boolean canEdit = permissionService.canEditContent(rcId, authentication.getName(),
+        LdapSecurityConfig.extractGroupDns(authentication));
     return ResponseEntity.ok(canEdit);
   }
 

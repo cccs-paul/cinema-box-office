@@ -32,6 +32,7 @@ import com.myrc.repository.MoneyRepository;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.UserRepository;
+import com.myrc.service.RCPermissionService;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -61,6 +62,7 @@ public class FundingItemServiceImpl implements FundingItemService {
   private final MoneyRepository moneyRepository;
   private final MoneyAllocationRepository moneyAllocationRepository;
   private final CategoryRepository categoryRepository;
+  private final RCPermissionService permissionService;
 
   public FundingItemServiceImpl(FundingItemRepository fundingItemRepository,
       FiscalYearRepository fiscalYearRepository,
@@ -69,7 +71,8 @@ public class FundingItemServiceImpl implements FundingItemService {
       UserRepository userRepository,
       MoneyRepository moneyRepository,
       MoneyAllocationRepository moneyAllocationRepository,
-      CategoryRepository categoryRepository) {
+      CategoryRepository categoryRepository,
+      RCPermissionService permissionService) {
     this.fundingItemRepository = fundingItemRepository;
     this.fiscalYearRepository = fiscalYearRepository;
     this.rcRepository = rcRepository;
@@ -78,6 +81,7 @@ public class FundingItemServiceImpl implements FundingItemService {
     this.moneyRepository = moneyRepository;
     this.moneyAllocationRepository = moneyAllocationRepository;
     this.categoryRepository = categoryRepository;
+    this.permissionService = permissionService;
   }
 
   @Override
@@ -403,61 +407,19 @@ public class FundingItemServiceImpl implements FundingItemService {
 
   /**
    * Check if user has any access to the RC.
+   * Delegates to the centralized RCPermissionService which handles
+   * local users, LDAP group-based access, and Demo RC visibility.
    */
   private boolean hasAccessToRC(Long rcId, String username) {
-    Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      return false;
-    }
-
-    User user = userOpt.get();
-    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
-    if (rcOpt.isEmpty()) {
-      return false;
-    }
-
-    ResponsibilityCentre rc = rcOpt.get();
-
-    // Demo RC is accessible to all users in read-only mode
-    if ("Demo".equals(rc.getName())) {
-      return true;
-    }
-
-    // Check if owner
-    if (rc.getOwner().getId().equals(user.getId())) {
-      return true;
-    }
-
-    // Check if has access record
-    Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-    return accessOpt.isPresent();
+    return permissionService.hasAccess(rcId, username);
   }
 
   /**
    * Check if user has write access to the RC.
+   * Delegates to the centralized RCPermissionService.
    */
   private boolean hasWriteAccessToRC(Long rcId, String username) {
-    Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      return false;
-    }
-
-    User user = userOpt.get();
-    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
-    if (rcOpt.isEmpty()) {
-      return false;
-    }
-
-    ResponsibilityCentre rc = rcOpt.get();
-
-    // Owner always has write access
-    if (rc.getOwner().getId().equals(user.getId())) {
-      return true;
-    }
-
-    // Check if has READ_WRITE access record
-    Optional<RCAccess> accessOpt = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-    return accessOpt.isPresent() && RCAccess.AccessLevel.READ_WRITE.equals(accessOpt.get().getAccessLevel());
+    return permissionService.hasWriteAccess(rcId, username);
   }
 
   /**

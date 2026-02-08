@@ -77,6 +77,9 @@ class SpendingCategoryServiceTest {
   @Mock
   private UserRepository userRepository;
 
+  @Mock
+  private RCPermissionService permissionService;
+
   @InjectMocks
   private SpendingCategoryServiceImpl categoryService;
 
@@ -117,6 +120,11 @@ class SpendingCategoryServiceTest {
     customCategory = new SpendingCategory("Custom Category", "A custom spending category", testFY, false);
     customCategory.setId(3L);
     customCategory.setDisplayOrder(2);
+
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
   }
 
   @Nested
@@ -127,8 +135,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Returns categories for RC owner")
     void returnsCategoriesForOwner() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
           .thenReturn(Arrays.asList(computeCategory, gpuCategory, customCategory));
 
@@ -144,14 +150,7 @@ class SpendingCategoryServiceTest {
     @Test
     @DisplayName("Returns categories for user with access")
     void returnsCategoriesForUserWithAccess() {
-      testRC.setOwner(otherUser);
-      RCAccess access = new RCAccess(testRC, testUser, RCAccess.AccessLevel.READ_ONLY);
-
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
-          .thenReturn(Optional.of(access));
       when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
           .thenReturn(Arrays.asList(computeCategory, gpuCategory));
 
@@ -175,13 +174,9 @@ class SpendingCategoryServiceTest {
     @Test
     @DisplayName("Throws exception when user has no access")
     void throwsWhenUserHasNoAccess() {
-      testRC.setOwner(otherUser);
+      when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
 
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
-          .thenReturn(Optional.empty());
 
       IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
           () -> categoryService.getCategoriesByFiscalYearId(1L, "testuser"));
@@ -198,8 +193,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Returns category for RC owner")
     void returnsCategoryForOwner() {
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(computeCategory));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
       Optional<SpendingCategoryDTO> result = categoryService.getCategoryById(1L, "testuser");
 
@@ -221,13 +214,9 @@ class SpendingCategoryServiceTest {
     @Test
     @DisplayName("Returns empty when user has no access")
     void returnsEmptyWhenNoAccess() {
-      testRC.setOwner(otherUser);
+      when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
 
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(computeCategory));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
-          .thenReturn(Optional.empty());
 
       Optional<SpendingCategoryDTO> result = categoryService.getCategoryById(1L, "testuser");
 
@@ -243,8 +232,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Creates category successfully for RC owner")
     void createsCategorySuccessfully() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.existsByNameAndFiscalYear("New Category", testFY)).thenReturn(false);
       when(categoryRepository.getMaxDisplayOrderByFiscalYearId(1L)).thenReturn(2);
       when(categoryRepository.save(any(SpendingCategory.class))).thenAnswer(invocation -> {
@@ -269,8 +256,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Throws exception when category name already exists")
     void throwsWhenNameExists() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.existsByNameAndFiscalYear("Compute", testFY)).thenReturn(true);
 
       IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
@@ -283,8 +268,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Throws exception when name is empty")
     void throwsWhenNameEmpty() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
       IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
           () -> categoryService.createCategory(1L, "testuser", "", "Description"));
@@ -295,14 +278,9 @@ class SpendingCategoryServiceTest {
     @Test
     @DisplayName("Throws exception when user has no write access")
     void throwsWhenNoWriteAccess() {
-      testRC.setOwner(otherUser);
-      RCAccess readOnlyAccess = new RCAccess(testRC, testUser, RCAccess.AccessLevel.READ_ONLY);
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
 
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
-          .thenReturn(Optional.of(readOnlyAccess));
 
       IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
           () -> categoryService.createCategory(1L, "testuser", "New Category", "Description"));
@@ -319,8 +297,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Updates custom category name and description")
     void updatesCustomCategory() {
       when(categoryRepository.findById(3L)).thenReturn(Optional.of(customCategory));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.existsByNameAndFiscalYear("Updated Name", testFY)).thenReturn(false);
       when(categoryRepository.save(any(SpendingCategory.class))).thenReturn(customCategory);
 
@@ -334,8 +310,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Cannot change name of default category")
     void cannotChangeDefaultCategoryName() {
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(computeCategory));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
       IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
           () -> categoryService.updateCategory(1L, "testuser", "New Name", null));
@@ -347,8 +321,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Can update description of default category")
     void canUpdateDefaultCategoryDescription() {
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(computeCategory));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.save(any(SpendingCategory.class))).thenReturn(computeCategory);
 
       SpendingCategoryDTO result = categoryService.updateCategory(1L, "testuser", null, "Updated description");
@@ -377,8 +349,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Deletes custom category successfully")
     void deletesCustomCategory() {
       when(categoryRepository.findById(3L)).thenReturn(Optional.of(customCategory));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
       categoryService.deleteCategory(3L, "testuser");
 
@@ -389,8 +359,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Cannot delete default category")
     void cannotDeleteDefaultCategory() {
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(computeCategory));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
       IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
           () -> categoryService.deleteCategory(1L, "testuser"));
@@ -419,8 +387,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Creates default categories when none exist")
     void createsDefaultCategoriesWhenNoneExist() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.findDefaultCategoriesByFiscalYearId(1L)).thenReturn(Collections.emptyList());
       when(categoryRepository.existsByNameAndFiscalYear(anyString(), eq(testFY))).thenReturn(false);
       when(categoryRepository.save(any(SpendingCategory.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -437,8 +403,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Does not create categories when defaults already exist")
     void doesNotCreateWhenDefaultsExist() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.findDefaultCategoriesByFiscalYearId(1L))
           .thenReturn(Arrays.asList(computeCategory, gpuCategory));
       when(categoryRepository.findByFiscalYearIdOrderByDisplayOrderAscNameAsc(1L))
@@ -499,8 +463,6 @@ class SpendingCategoryServiceTest {
     @DisplayName("Reorders categories successfully")
     void reordersCategoriesSuccessfully() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(computeCategory));
       when(categoryRepository.findById(2L)).thenReturn(Optional.of(gpuCategory));
       when(categoryRepository.findById(3L)).thenReturn(Optional.of(customCategory));
@@ -518,14 +480,9 @@ class SpendingCategoryServiceTest {
     @Test
     @DisplayName("Throws exception when user has no write access")
     void throwsWhenNoWriteAccess() {
-      testRC.setOwner(otherUser);
-      RCAccess readOnlyAccess = new RCAccess(testRC, testUser, RCAccess.AccessLevel.READ_ONLY);
+      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
 
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, testUser))
-          .thenReturn(Optional.of(readOnlyAccess));
 
       IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
           () -> categoryService.reorderCategories(1L, "testuser", Arrays.asList(1L, 2L)));

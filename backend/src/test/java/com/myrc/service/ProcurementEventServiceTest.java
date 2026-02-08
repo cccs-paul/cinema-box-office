@@ -11,6 +11,8 @@ package com.myrc.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.myrc.dto.ProcurementEventDTO;
@@ -60,6 +62,9 @@ class ProcurementEventServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private RCPermissionService permissionService;
+
     private ProcurementEventServiceImpl eventService;
 
     private User testUser;
@@ -80,7 +85,8 @@ class ProcurementEventServiceTest {
             procurementItemRepository,
             rcRepository,
             accessRepository,
-            userRepository
+            userRepository,
+            permissionService
         );
 
         // Set up test user
@@ -143,6 +149,11 @@ class ProcurementEventServiceTest {
         testAccess.setUser(testUser);
         testAccess.setResponsibilityCentre(testRC);
         testAccess.setAccessLevel(RCAccess.AccessLevel.READ_WRITE);
+
+        org.mockito.Mockito.lenient()
+            .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
+        org.mockito.Mockito.lenient()
+            .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
     }
 
     @Nested
@@ -153,9 +164,7 @@ class ProcurementEventServiceTest {
         @DisplayName("Should return events for procurement item with access")
         void shouldReturnEventsWithAccess() {
             // Given
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventRepository.findByProcurementItemIdAndActiveTrue(1L))
                 .thenReturn(List.of(testEvent));
 
@@ -184,7 +193,6 @@ class ProcurementEventServiceTest {
         @DisplayName("Admin should have access to all procurement items")
         void adminShouldHaveAccess() {
             // Given
-            when(userRepository.findByUsername("admin")).thenReturn(Optional.of(adminUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
             when(eventRepository.findByProcurementItemIdAndActiveTrue(1L))
                 .thenReturn(List.of(testEvent));
@@ -211,9 +219,7 @@ class ProcurementEventServiceTest {
             dto.setEventDate(LocalDate.now());
             dto.setComment("New test comment");
 
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventRepository.save(any(ProcurementEvent.class))).thenAnswer(invocation -> {
                 ProcurementEvent event = invocation.getArgument(0);
                 event.setId(2L);
@@ -242,9 +248,7 @@ class ProcurementEventServiceTest {
             dto.setEventType("INVALID_TYPE");
             dto.setComment("Test comment");
 
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
             // When/Then
             assertThrows(IllegalArgumentException.class,
@@ -254,33 +258,13 @@ class ProcurementEventServiceTest {
         @Test
         @DisplayName("Should throw exception without write access")
         void shouldThrowExceptionWithoutWriteAccess() {
+            when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+
             // Given
             ProcurementEventDTO dto = new ProcurementEventDTO();
             dto.setEventType("NOT_STARTED");
-            
-            // Create a different user who is not the owner
-            User otherUser = new User();
-            otherUser.setId(99L);
-            otherUser.setUsername("otheruser");
-            otherUser.setRoles(Set.of("USER"));
-            
-            // Create a different RC with different owner
-            ResponsibilityCentre otherRC = new ResponsibilityCentre();
-            otherRC.setId(99L);
-            otherRC.setName("Other RC");
-            otherRC.setOwner(adminUser);  // admin is owner, not otherUser
-            
-            // Update the fiscal year to use the other RC
-            testFY.setResponsibilityCentre(otherRC);
 
-            RCAccess readOnlyAccess = new RCAccess();
-            readOnlyAccess.setAccessLevel(RCAccess.AccessLevel.READ_ONLY);
-
-            when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(99L)).thenReturn(Optional.of(otherRC));
-            when(accessRepository.findByResponsibilityCentreAndUser(otherRC, otherUser))
-                .thenReturn(Optional.of(readOnlyAccess));
 
             // When/Then
             assertThrows(IllegalArgumentException.class,
@@ -301,9 +285,7 @@ class ProcurementEventServiceTest {
             dto.setEventDate(LocalDate.now().plusDays(1));
 
             when(eventRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(testEvent));
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventRepository.save(any(ProcurementEvent.class))).thenReturn(testEvent);
 
             // When
@@ -338,9 +320,7 @@ class ProcurementEventServiceTest {
         void shouldSoftDeleteEventSuccessfully() {
             // Given
             when(eventRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(testEvent));
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventRepository.save(any(ProcurementEvent.class))).thenReturn(testEvent);
 
             // When
@@ -361,9 +341,7 @@ class ProcurementEventServiceTest {
         @DisplayName("Should return event count")
         void shouldReturnEventCount() {
             // Given
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventRepository.countByProcurementItemId(1L)).thenReturn(5L);
 
             // When
@@ -382,9 +360,7 @@ class ProcurementEventServiceTest {
         @DisplayName("Should return most recent event")
         void shouldReturnMostRecentEvent() {
             // Given
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventRepository.findMostRecentByProcurementItemId(1L))
                 .thenReturn(Optional.of(testEvent));
 
@@ -400,9 +376,7 @@ class ProcurementEventServiceTest {
         @DisplayName("Should return null when no events")
         void shouldReturnNullWhenNoEvents() {
             // Given
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventRepository.findMostRecentByProcurementItemId(1L))
                 .thenReturn(Optional.empty());
 
@@ -425,9 +399,7 @@ class ProcurementEventServiceTest {
             LocalDate startDate = LocalDate.now().minusDays(7);
             LocalDate endDate = LocalDate.now();
 
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventRepository.findByProcurementItemIdAndDateRange(1L, startDate, endDate))
                 .thenReturn(List.of(testEvent));
 
@@ -447,9 +419,7 @@ class ProcurementEventServiceTest {
             LocalDate startDate = LocalDate.now();
             LocalDate endDate = LocalDate.now().minusDays(7);
 
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
             // When/Then
             assertThrows(IllegalArgumentException.class,
@@ -473,9 +443,7 @@ class ProcurementEventServiceTest {
                 "file", "test-document.pdf", "application/pdf", "test content".getBytes());
 
             when(eventRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(testEvent));
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventFileRepository.save(any(ProcurementEventFile.class))).thenAnswer(invocation -> {
                 ProcurementEventFile file = invocation.getArgument(0);
                 file.setId(1L);
@@ -536,9 +504,7 @@ class ProcurementEventServiceTest {
         void shouldReturnFilesForEvent() {
             // Given
             when(eventRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(testEvent));
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventFileRepository.findByEventIdAndActiveTrue(1L)).thenReturn(List.of(testEventFile));
 
             // When
@@ -555,9 +521,7 @@ class ProcurementEventServiceTest {
         void shouldReturnEmptyListWhenNoFiles() {
             // Given
             when(eventRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(testEvent));
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventFileRepository.findByEventIdAndActiveTrue(1L)).thenReturn(List.of());
 
             // When
@@ -589,9 +553,7 @@ class ProcurementEventServiceTest {
         void shouldReturnFileWithContent() {
             // Given
             when(eventFileRepository.findById(1L)).thenReturn(Optional.of(testEventFile));
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
 
             // When
             ProcurementEventFile result = eventService.getEventFile(1L, "testuser");
@@ -635,9 +597,7 @@ class ProcurementEventServiceTest {
         void shouldUpdateFileDescription() {
             // Given
             when(eventFileRepository.findById(1L)).thenReturn(Optional.of(testEventFile));
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventFileRepository.save(any(ProcurementEventFile.class))).thenReturn(testEventFile);
 
             // When
@@ -669,9 +629,7 @@ class ProcurementEventServiceTest {
         void shouldSoftDeleteFile() {
             // Given
             when(eventFileRepository.findById(1L)).thenReturn(Optional.of(testEventFile));
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
             when(procurementItemRepository.findById(1L)).thenReturn(Optional.of(testProcurementItem));
-            when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
             when(eventFileRepository.save(any(ProcurementEventFile.class))).thenReturn(testEventFile);
 
             // When

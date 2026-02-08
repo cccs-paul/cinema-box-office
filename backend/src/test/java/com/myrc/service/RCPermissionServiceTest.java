@@ -634,7 +634,7 @@ class RCPermissionServiceTest {
       when(accessRepository.findAllAccessForUserInRC(eq(testRC), eq(testUser), any()))
           .thenReturn(Arrays.asList(testAccess)); // READ_WRITE access
 
-      boolean result = permissionService.canEditContent(1L, "testuser");
+      boolean result = permissionService.canEditContent(1L, "testuser", Collections.emptyList());
 
       assertTrue(result);
     }
@@ -646,7 +646,7 @@ class RCPermissionServiceTest {
       when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
       // Owner via RC.owner, not via explicit access
 
-      boolean result = permissionService.canEditContent(1L, "owner");
+      boolean result = permissionService.canEditContent(1L, "owner", Collections.emptyList());
 
       assertTrue(result);
     }
@@ -664,7 +664,7 @@ class RCPermissionServiceTest {
       when(accessRepository.findAllAccessForUserInRC(eq(testRC), eq(testUser), any()))
           .thenReturn(Arrays.asList(readOnlyAccess));
 
-      boolean result = permissionService.canEditContent(1L, "testuser");
+      boolean result = permissionService.canEditContent(1L, "testuser", Collections.emptyList());
 
       assertFalse(result);
     }
@@ -681,7 +681,7 @@ class RCPermissionServiceTest {
       when(accessRepository.findAllAccessForUserInRC(eq(testRC), eq(noAccessUser), any()))
           .thenReturn(Collections.emptyList());
 
-      boolean result = permissionService.canEditContent(1L, "noaccess");
+      boolean result = permissionService.canEditContent(1L, "noaccess", Collections.emptyList());
 
       assertFalse(result);
     }

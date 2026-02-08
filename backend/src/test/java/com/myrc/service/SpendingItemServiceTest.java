@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -98,6 +99,9 @@ class SpendingItemServiceTest {
   @Mock
   private ProcurementEventRepository procurementEventRepository;
 
+  @Mock
+  private RCPermissionService permissionService;
+
   private SpendingItemServiceImpl spendingItemService;
 
   private User testUser;
@@ -120,7 +124,8 @@ class SpendingItemServiceTest {
         moneyRepository,
         allocationRepository,
         spendingEventRepository,
-        procurementEventRepository
+        procurementEventRepository,
+        permissionService
     );
 
     // Setup test user
@@ -187,6 +192,11 @@ class SpendingItemServiceTest {
     org.mockito.Mockito.lenient()
         .when(procurementEventRepository.findMostRecentByProcurementItemId(anyLong()))
         .thenReturn(Optional.empty());
+
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
+    org.mockito.Mockito.lenient()
+        .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
   }
 
   @Nested
@@ -197,8 +207,6 @@ class SpendingItemServiceTest {
     @DisplayName("Returns items for owner")
     void returnsItemsForOwner() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
       when(spendingItemRepository.findByFiscalYearIdOrderByNameAsc(1L))
           .thenReturn(Arrays.asList(gpuPurchase));
 
@@ -211,19 +219,11 @@ class SpendingItemServiceTest {
     @Test
     @DisplayName("Returns items for user with access")
     void returnsItemsForUserWithAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
-      when(accessRepository.findByResponsibilityCentreAndUser(rc, otherUser))
-          .thenReturn(Optional.of(rcAccess));
       when(spendingItemRepository.findByFiscalYearIdOrderByNameAsc(1L))
           .thenReturn(Arrays.asList(gpuPurchase));
 
-      List<SpendingItemDTO> result = spendingItemService.getSpendingItemsByFiscalYearId(1L, "otheruser");
+      List<SpendingItemDTO> result = spendingItemService.getSpendingItemsByFiscalYearId(1L, "testuser");
 
       assertEquals(1, result.size());
     }
@@ -231,15 +231,8 @@ class SpendingItemServiceTest {
     @Test
     @DisplayName("Throws exception when no access")
     void throwsExceptionWhenNoAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
+      when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(false);
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
-      when(accessRepository.findByResponsibilityCentreAndUser(rc, otherUser))
-          .thenReturn(Optional.empty());
 
       assertThrows(IllegalArgumentException.class, () ->
           spendingItemService.getSpendingItemsByFiscalYearId(1L, "otheruser"));
@@ -263,8 +256,6 @@ class SpendingItemServiceTest {
     @DisplayName("Returns item when found")
     void returnsItemWhenFound() {
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
 
       Optional<SpendingItemDTO> result = spendingItemService.getSpendingItemById(1L, "testuser");
 
@@ -305,8 +296,6 @@ class SpendingItemServiceTest {
       dto.setMoneyAllocations(Arrays.asList(allocationDTO));
 
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
       when(categoryRepository.findById(2L)).thenReturn(Optional.of(gpuCategory));
       when(moneyRepository.findByFiscalYearId(1L)).thenReturn(Arrays.asList(aBaseMoney));
       when(spendingItemRepository.save(any(SpendingItem.class))).thenAnswer(i -> {
@@ -354,8 +343,6 @@ class SpendingItemServiceTest {
     @DisplayName("Updates PLANNING to COMMITTED")
     void updatesPlanningToCommitted() {
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
       when(spendingItemRepository.save(any(SpendingItem.class))).thenAnswer(i -> i.getArgument(0));
 
       SpendingItemDTO result = spendingItemService.updateSpendingItemStatus(1L, "COMMITTED", "testuser");
@@ -368,8 +355,6 @@ class SpendingItemServiceTest {
     @DisplayName("Updates PLANNING to CANCELLED")
     void updatesPlanningToCancelled() {
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
       when(spendingItemRepository.save(any(SpendingItem.class))).thenAnswer(i -> i.getArgument(0));
 
       SpendingItemDTO result = spendingItemService.updateSpendingItemStatus(1L, "CANCELLED", "testuser");
@@ -382,8 +367,6 @@ class SpendingItemServiceTest {
     @DisplayName("Throws exception on invalid status")
     void throwsExceptionOnInvalidStatus() {
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
 
       assertThrows(IllegalArgumentException.class, () ->
           spendingItemService.updateSpendingItemStatus(1L, "INVALID", "testuser"));
@@ -398,8 +381,6 @@ class SpendingItemServiceTest {
     @DisplayName("Deletes DRAFT item")
     void deletesDraftItem() {
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
 
       spendingItemService.deleteSpendingItem(1L, "testuser");
 
@@ -411,8 +392,6 @@ class SpendingItemServiceTest {
     void deletesCancelledItem() {
       gpuPurchase.setStatus(SpendingItem.Status.CANCELLED);
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
 
       spendingItemService.deleteSpendingItem(1L, "testuser");
 
@@ -424,8 +403,6 @@ class SpendingItemServiceTest {
     void deletesApprovedItem() {
       gpuPurchase.setStatus(SpendingItem.Status.COMMITTED);
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
 
       spendingItemService.deleteSpendingItem(1L, "testuser");
 
@@ -455,8 +432,6 @@ class SpendingItemServiceTest {
       allocationDTO.setOmAmount(new BigDecimal("10000"));
 
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
       when(moneyRepository.findById(1L)).thenReturn(Optional.of(aBaseMoney));
       when(spendingItemRepository.save(any(SpendingItem.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -476,8 +451,6 @@ class SpendingItemServiceTest {
       zeroAllocation.setOmAmount(BigDecimal.ZERO);
 
       when(spendingItemRepository.findById(1L)).thenReturn(Optional.of(gpuPurchase));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
       // Note: moneyRepository.findById is not called because validation fails before processing allocations
 
       assertThrows(IllegalArgumentException.class, () ->
@@ -501,8 +474,6 @@ class SpendingItemServiceTest {
       mockEvent.setCreatedBy("admin");
 
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
       when(spendingItemRepository.findByFiscalYearIdOrderByNameAsc(1L))
           .thenReturn(Arrays.asList(gpuPurchase));
       when(spendingEventRepository.countBySpendingItemIdAndActiveTrue(1L)).thenReturn(3L);
@@ -522,8 +493,6 @@ class SpendingItemServiceTest {
     @DisplayName("Event count is zero for items with no events")
     void eventCountZeroForNoEvents() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));
-      when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(rc));
       when(spendingItemRepository.findByFiscalYearIdOrderByNameAsc(1L))
           .thenReturn(Arrays.asList(gpuPurchase));
       when(spendingEventRepository.countBySpendingItemIdAndActiveTrue(1L)).thenReturn(0L);
