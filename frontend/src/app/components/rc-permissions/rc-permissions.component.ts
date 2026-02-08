@@ -4,12 +4,12 @@
  * Licensed under MIT License
  */
 
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, Subscription } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Subject, Subscription, of } from 'rxjs';
+import { takeUntil, debounceTime, switchMap } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { RCPermissionService, RCAccess, GrantUserAccessRequest, GrantGroupAccessRequest } from '../../services/rc-permission.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
@@ -55,7 +55,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   showSuggestions = false;
   isSearching = false;
   activeSuggestionIndex = -1;
-  private searchSubject$ = new Subject<string>();
+  private searchSubject$ = new Subject<{ query: string; type: 'USER' | 'GROUP' }>();
   private searchSubscription: Subscription | null = null;
 
   // Edit form
@@ -170,20 +170,22 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
   /**
    * Initialize the debounced search pipeline for autocomplete.
+   * Emits objects containing both the query and form type so that
+   * switchMap uses the correct search method based on the active form.
+   * Uses debounceTime to avoid rapid API calls during typing.
    */
   private initSearchPipeline(): void {
     this.searchSubscription = this.searchSubject$.pipe(
       debounceTime(300),
-      distinctUntilChanged(),
-      switchMap(query => {
+      switchMap(({ query, type }) => {
         this.isSearching = true;
         const trimmedQuery = query != null ? query.trim() : '';
-        if (this.grantFormType === 'USER') {
+        if (type === 'USER') {
           return this.directorySearchService.searchUsers(trimmedQuery);
-        } else if (this.grantFormType === 'GROUP') {
+        } else if (type === 'GROUP') {
           return this.directorySearchService.searchAllGroups(trimmedQuery);
         }
-        return [];
+        return of([]);
       })
     ).subscribe(results => {
       this.suggestions = results;
@@ -198,7 +200,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
    * Triggers the debounced autocomplete search.
    */
   onIdentifierInput(): void {
-    this.searchSubject$.next(this.newPrincipalIdentifier);
+    this.searchSubject$.next({ query: this.newPrincipalIdentifier, type: this.grantFormType });
   }
 
   /**
@@ -267,7 +269,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
    * Called when the user presses Enter or ArrowDown with no suggestions showing.
    */
   triggerBrowseAll(): void {
-    this.searchSubject$.next(this.newPrincipalIdentifier);
+    this.searchSubject$.next({ query: this.newPrincipalIdentifier, type: this.grantFormType });
   }
 
   /**

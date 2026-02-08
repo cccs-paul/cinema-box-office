@@ -105,25 +105,27 @@ public interface RCAccessRepository extends JpaRepository<RCAccess, Long> {
   List<RCAccess> findByResponsibilityCentreAndPrincipalType(ResponsibilityCentre rc, PrincipalType principalType);
 
   /**
-   * Find all access records for a user based on group membership.
-   * This is used to check if a user has access via a group or distribution list.
+   * Find all access records matching a list of principal identifiers.
+   * Covers group membership, distribution lists, and LDAP users stored without a User FK.
    *
-   * @param groupIdentifiers list of group identifiers the user belongs to
-   * @return list of access records matching the groups
+   * @param identifiers list of principal identifiers (group DNs, distribution lists, or usernames)
+   * @return list of access records matching the identifiers
    */
-  @Query("SELECT a FROM RCAccess a WHERE a.principalIdentifier IN :identifiers AND a.principalType IN ('GROUP', 'DISTRIBUTION_LIST')")
+  @Query("SELECT a FROM RCAccess a WHERE a.principalIdentifier IN :identifiers AND a.principalType IN ('USER', 'GROUP', 'DISTRIBUTION_LIST')")
   List<RCAccess> findByPrincipalIdentifierIn(@Param("identifiers") List<String> identifiers);
 
   /**
-   * Find the highest access level for a user in a specific RC (direct or via groups).
+   * Find all access records for a user in a specific RC.
+   * Matches direct User FK access, and access by principalIdentifier for users, groups,
+   * and distribution lists (covers LDAP users stored without a local User entity).
    *
    * @param rc the responsibility centre
    * @param user the user
-   * @param groupIdentifiers list of group identifiers the user belongs to
-   * @return list of access records matching either direct user access or group membership
+   * @param identifiers list of identifiers (username + group DNs)
+   * @return list of access records matching either direct user access or identifier match
    */
   @Query("SELECT a FROM RCAccess a WHERE a.responsibilityCentre = :rc AND " +
-      "(a.user = :user OR (a.principalIdentifier IN :identifiers AND a.principalType IN ('GROUP', 'DISTRIBUTION_LIST')))")
+      "(a.user = :user OR (a.principalIdentifier IN :identifiers AND a.principalType IN ('USER', 'GROUP', 'DISTRIBUTION_LIST')))")
   List<RCAccess> findAllAccessForUserInRC(@Param("rc") ResponsibilityCentre rc, 
       @Param("user") User user, @Param("identifiers") List<String> identifiers);
 

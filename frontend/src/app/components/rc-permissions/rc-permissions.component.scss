@@ -418,7 +418,8 @@
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
-  overflow-y: auto;
+  overflow-y: visible;
+  overflow-x: visible;
 
   &.modal-danger {
     .modal-header {

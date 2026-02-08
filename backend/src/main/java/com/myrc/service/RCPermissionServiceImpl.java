@@ -11,7 +11,6 @@ import com.myrc.model.RCAccess.AccessLevel;
 import com.myrc.model.RCAccess.PrincipalType;
 import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.User;
-import com.myrc.model.User.AuthProvider;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.UserRepository;
@@ -116,38 +115,70 @@ public class RCPermissionServiceImpl implements RCPermissionService {
       throw new IllegalArgumentException("Cannot modify permissions for Demo RC");
     }
 
-    // Find the target user, or auto-provision from LDAP if not found locally
-    User targetUser = userRepository.findByUsername(principalIdentifier)
-        .orElseGet(() -> provisionLdapUser(principalIdentifier));
-
-    // Check if access already exists
-    Optional<RCAccess> existingAccess = accessRepository.findByResponsibilityCentreAndUser(rc, targetUser);
-    if (existingAccess.isPresent()) {
-      RCAccess existing = existingAccess.get();
-      if (existing.getAccessLevel() == accessLevel) {
-        throw new IllegalArgumentException("User '" + principalIdentifier + 
-            "' already has " + accessLevel.name() + " access to this RC.");
-      }
-      throw new IllegalArgumentException("User '" + principalIdentifier + 
-          "' already has " + existing.getAccessLevel().name() + 
-          " access to this RC. Use update to change the access level.");
-    }
-
-    // Don't allow granting access to the original owner (they already have implicit OWNER)
-    if (rc.getOwner().getId().equals(targetUser.getId()) && accessLevel != AccessLevel.OWNER) {
-      throw new IllegalArgumentException("Cannot change access level for the original RC owner");
-    }
-
     // Get the requesting user for audit trail
     User grantingUser = userRepository.findByUsername(requestingUsername).orElse(null);
 
-    RCAccess access = new RCAccess(rc, targetUser, accessLevel);
-    access.setGrantedBy(grantingUser);
-    
-    RCAccess saved = accessRepository.save(access);
-    logger.info("Granted {} access to user {} on RC {} by {}", 
-        accessLevel, principalIdentifier, rc.getName(), requestingUsername);
+    // Try to find the target user in the local database
+    Optional<User> localUser = userRepository.findByUsername(principalIdentifier);
 
+    if (localUser.isPresent()) {
+      // Local user: use FK-based access (preserves existing behavior)
+      User targetUser = localUser.get();
+
+      Optional<RCAccess> existingAccess = accessRepository.findByResponsibilityCentreAndUser(rc, targetUser);
+      if (existingAccess.isPresent()) {
+        RCAccess existing = existingAccess.get();
+        if (existing.getAccessLevel() == accessLevel) {
+          throw new IllegalArgumentException("User '" + principalIdentifier + 
+              "' already has " + accessLevel.name() + " access to this RC.");
+        }
+        throw new IllegalArgumentException("User '" + principalIdentifier + 
+            "' already has " + existing.getAccessLevel().name() + 
+            " access to this RC. Use update to change the access level.");
+      }
+
+      if (rc.getOwner().getId().equals(targetUser.getId()) && accessLevel != AccessLevel.OWNER) {
+        throw new IllegalArgumentException("Cannot change access level for the original RC owner");
+      }
+
+      RCAccess access = new RCAccess(rc, targetUser, accessLevel);
+      access.setGrantedBy(grantingUser);
+      RCAccess saved = accessRepository.save(access);
+      logger.info("Granted {} access to local user {} on RC {} by {}",
+          accessLevel, principalIdentifier, rc.getName(), requestingUsername);
+      return RCAccessDTO.fromEntity(saved);
+    }
+
+    // User not in local DB: look up in directory (LDAP) for validation and display name
+    List<DirectorySearchService.SearchResult> results =
+        directorySearchService.searchUsers(principalIdentifier, 50);
+    DirectorySearchService.SearchResult match = results.stream()
+        .filter(r -> r.identifier().equalsIgnoreCase(principalIdentifier))
+        .findFirst()
+        .orElseThrow(() -> new IllegalArgumentException("User not found: " + principalIdentifier));
+
+    // Check if access already exists by principalIdentifier
+    Optional<RCAccess> existingAccess = accessRepository
+        .findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+            rc, match.identifier(), PrincipalType.USER);
+    if (existingAccess.isPresent()) {
+      RCAccess existing = existingAccess.get();
+      if (existing.getAccessLevel() == accessLevel) {
+        throw new IllegalArgumentException("User '" + principalIdentifier +
+            "' already has " + accessLevel.name() + " access to this RC.");
+      }
+      throw new IllegalArgumentException("User '" + principalIdentifier +
+          "' already has " + existing.getAccessLevel().name() +
+          " access to this RC. Use update to change the access level.");
+    }
+
+    // Store as string-only access (no User FK) — same pattern as groups
+    String displayName = match.displayName() != null ? match.displayName() : match.identifier();
+    RCAccess access = new RCAccess(rc, match.identifier(), displayName, PrincipalType.USER, accessLevel);
+    access.setGrantedBy(grantingUser);
+    RCAccess saved = accessRepository.save(access);
+    logger.info("Granted {} access to directory user {} on RC {} by {}",
+        accessLevel, principalIdentifier, rc.getName(), requestingUsername);
     return RCAccessDTO.fromEntity(saved);
   }
 
@@ -325,20 +356,27 @@ public class RCPermissionServiceImpl implements RCPermissionService {
 
     ResponsibilityCentre rc = rcOpt.get();
     Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      return false;
+
+    if (userOpt.isPresent()) {
+      User user = userOpt.get();
+
+      // Check if user is the original owner
+      if (rc.getOwner().getId().equals(user.getId())) {
+        return true;
+      }
+
+      // Check if user has explicit OWNER access via User FK
+      Optional<RCAccess> access = accessRepository.findByResponsibilityCentreAndUser(rc, user);
+      if (access.isPresent() && access.get().getAccessLevel() == AccessLevel.OWNER) {
+        return true;
+      }
     }
 
-    User user = userOpt.get();
-
-    // Check if user is the original owner
-    if (rc.getOwner().getId().equals(user.getId())) {
-      return true;
-    }
-
-    // Check if user has explicit OWNER access
-    Optional<RCAccess> access = accessRepository.findByResponsibilityCentreAndUser(rc, user);
-    return access.isPresent() && access.get().getAccessLevel() == AccessLevel.OWNER;
+    // Check if user has OWNER access stored by principalIdentifier (LDAP users)
+    Optional<RCAccess> identifierAccess = accessRepository
+        .findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+            rc, username, PrincipalType.USER);
+    return identifierAccess.isPresent() && identifierAccess.get().getAccessLevel() == AccessLevel.OWNER;
   }
 
   @Override
@@ -350,34 +388,43 @@ public class RCPermissionServiceImpl implements RCPermissionService {
     }
 
     ResponsibilityCentre rc = rcOpt.get();
-    Optional<User> userOpt = userRepository.findByUsername(username);
-    if (userOpt.isEmpty()) {
-      return Optional.empty();
-    }
-
-    User user = userOpt.get();
-
-    // Check if user is the original owner (highest priority)
-    if (rc.getOwner().getId().equals(user.getId())) {
-      return Optional.of(AccessLevel.OWNER);
-    }
-
-    // Get all access records (direct and via groups)
     List<String> identifiers = groupIdentifiers != null ? new ArrayList<>(groupIdentifiers) : new ArrayList<>();
-    List<RCAccess> allAccess = accessRepository.findAllAccessForUserInRC(rc, user, identifiers);
 
-    if (allAccess.isEmpty()) {
+    // Also include the username as an identifier so LDAP USER-type access records
+    // stored by principalIdentifier are matched
+    identifiers.add(username);
+
+    Optional<User> userOpt = userRepository.findByUsername(username);
+    if (userOpt.isPresent()) {
+      User user = userOpt.get();
+
+      // Check if user is the original owner (highest priority)
+      if (rc.getOwner().getId().equals(user.getId())) {
+        return Optional.of(AccessLevel.OWNER);
+      }
+
+      // Get all access records (direct User FK, principalIdentifier, and via groups)
+      List<RCAccess> allAccess = accessRepository.findAllAccessForUserInRC(rc, user, identifiers);
+      if (!allAccess.isEmpty()) {
+        return allAccess.stream()
+            .map(RCAccess::getAccessLevel)
+            .max((a, b) -> Integer.compare(getAccessRank(a), getAccessRank(b)));
+      }
       return Optional.empty();
     }
 
-    // Find the highest access level (OWNER > READ_WRITE > READ_ONLY)
-    return allAccess.stream()
+    // User not in local DB (LDAP user): check by principalIdentifier only
+    List<RCAccess> identifierAccess = accessRepository
+        .findByPrincipalIdentifierIn(identifiers);
+    List<RCAccess> rcAccess = identifierAccess.stream()
+        .filter(a -> a.getResponsibilityCentre().getId().equals(rcId))
+        .collect(Collectors.toList());
+    if (rcAccess.isEmpty()) {
+      return Optional.empty();
+    }
+    return rcAccess.stream()
         .map(RCAccess::getAccessLevel)
-        .max((a, b) -> {
-          int aRank = getAccessRank(a);
-          int bRank = getAccessRank(b);
-          return Integer.compare(aRank, bRank);
-        });
+        .max((a, b) -> Integer.compare(getAccessRank(a), getAccessRank(b)));
   }
 
   private int getAccessRank(AccessLevel level) {
@@ -386,39 +433,6 @@ public class RCPermissionServiceImpl implements RCPermissionService {
       case READ_WRITE -> 2;
       case READ_ONLY -> 1;
     };
-  }
-
-  /**
-   * Provision a user from LDAP directory when they don't exist in the local database.
-   * Searches the directory for a matching username and creates a minimal User entity
-   * so that permissions can be granted to LDAP users who haven't logged in yet.
-   *
-   * @param username the LDAP username to provision
-   * @return the newly created User entity
-   * @throws IllegalArgumentException if the user is not found in any directory
-   */
-  private User provisionLdapUser(String username) {
-    List<DirectorySearchService.SearchResult> results =
-        directorySearchService.searchUsers(username, 50);
-
-    DirectorySearchService.SearchResult match = results.stream()
-        .filter(r -> r.identifier().equalsIgnoreCase(username))
-        .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
-
-    User user = new User();
-    user.setUsername(match.identifier());
-    user.setFullName(match.displayName());
-    user.setEmail(match.email() != null ? match.email() : match.identifier() + "@provisioned.local");
-    user.setAuthProvider("LDAP".equals(match.source()) ? AuthProvider.LDAP : AuthProvider.LOCAL);
-    user.setEnabled(true);
-    user.setAccountLocked(false);
-    user.setEmailVerified(false);
-    user.setFailedLoginAttempts(0);
-
-    User saved = userRepository.save(user);
-    logger.info("Auto-provisioned {} user {} for permission grant", match.source(), username);
-    return saved;
   }
 
   @Override

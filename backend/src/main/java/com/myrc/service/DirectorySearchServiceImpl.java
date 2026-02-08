@@ -248,7 +248,7 @@ public class DirectorySearchServiceImpl implements DirectorySearchService {
                 String groupNameAttr = ldapProperties.getGroupNameAttribute() != null
                         ? ldapProperties.getGroupNameAttribute() : "cn";
 
-                controls.setReturningAttributes(new String[]{groupNameAttr, "description"});
+                controls.setReturningAttributes(new String[]{groupNameAttr, "description", "member"});
 
                 // Build the objectClass filter from configuration
                 String objectClassFilter = buildGroupObjectClassFilter();
@@ -267,8 +267,10 @@ public class DirectorySearchServiceImpl implements DirectorySearchService {
                 }
 
                 String searchBase = ldapProperties.getGroupSearchBase();
+                logger.debug("Searching LDAP groups - base: {}, filter: {}", searchBase, filter);
                 NamingEnumeration<javax.naming.directory.SearchResult> searchResults = ctx.search(searchBase, filter, controls);
 
+                int count = 0;
                 while (searchResults.hasMore()) {
                     javax.naming.directory.SearchResult sr = searchResults.next();
                     Attributes attrs = sr.getAttributes();
@@ -277,6 +279,8 @@ public class DirectorySearchServiceImpl implements DirectorySearchService {
                     String groupName = getAttributeValue(attrs, groupNameAttr);
                     String description = getAttributeValue(attrs, "description");
 
+                    logger.debug("Found LDAP group: cn={}, dn={}", groupName, nameInDir);
+
                     if (groupName != null) {
                         results.add(new DirectorySearchService.SearchResult(
                                 nameInDir,
@@ -284,13 +288,15 @@ public class DirectorySearchServiceImpl implements DirectorySearchService {
                                 "LDAP",
                                 null
                         ));
+                        count++;
                     }
                 }
+                logger.debug("LDAP group search returned {} results", count);
             } finally {
                 ctx.close();
             }
         } catch (Exception e) {
-            logger.warn("Error searching LDAP groups: {}", e.getMessage());
+            logger.warn("Error searching LDAP groups: {}", e.getMessage(), e);
         }
     }
 

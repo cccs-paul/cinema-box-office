@@ -19,7 +19,6 @@ import com.myrc.model.RCAccess.AccessLevel;
 import com.myrc.model.RCAccess.PrincipalType;
 import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.User;
-import com.myrc.model.User.AuthProvider;
 import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.UserRepository;
@@ -207,15 +206,8 @@ class RCPermissionServiceTest {
     }
 
     @Test
-    @DisplayName("Should auto-provision LDAP user when not found in local DB")
-    void shouldAutoProvisionLdapUserWhenNotInLocalDb() {
-      User ldapUser = new User();
-      ldapUser.setId(10L);
-      ldapUser.setUsername("amy");
-      ldapUser.setFullName("Amy Wong");
-      ldapUser.setEmail("amy@planetexpress.com");
-      ldapUser.setAuthProvider(AuthProvider.LDAP);
-
+    @DisplayName("Should grant access to LDAP user without creating local User entity")
+    void shouldGrantAccessToLdapUserWithoutLocalUser() {
       DirectorySearchService.SearchResult ldapResult =
           new DirectorySearchService.SearchResult("amy", "Amy Wong", "LDAP", "amy@planetexpress.com");
 
@@ -223,8 +215,8 @@ class RCPermissionServiceTest {
       when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
       when(userRepository.findByUsername("amy")).thenReturn(Optional.empty());
       when(directorySearchService.searchUsers("amy", 50)).thenReturn(List.of(ldapResult));
-      when(userRepository.save(any(User.class))).thenReturn(ldapUser);
-      when(accessRepository.findByResponsibilityCentreAndUser(eq(testRC), eq(ldapUser)))
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+          eq(testRC), eq("amy"), eq(PrincipalType.USER)))
           .thenReturn(Optional.empty());
       when(accessRepository.save(any(RCAccess.class))).thenAnswer(invocation -> {
         RCAccess saved = invocation.getArgument(0);
@@ -235,33 +227,29 @@ class RCPermissionServiceTest {
       RCAccessDTO result = permissionService.grantUserAccess(1L, "amy", AccessLevel.READ_WRITE, "owner");
 
       assertNotNull(result);
-      verify(userRepository).save(any(User.class));
-      verify(accessRepository).save(any(RCAccess.class));
+      // Must NOT create a local User entity
+      verify(userRepository, never()).save(any(User.class));
+      // Must save the access record
+      verify(accessRepository).save(argThat(access ->
+          access.getUser() == null &&
+          "amy".equals(access.getPrincipalIdentifier()) &&
+          PrincipalType.USER == access.getPrincipalType() &&
+          "Amy Wong".equals(access.getPrincipalDisplayName())
+      ));
     }
 
     @Test
-    @DisplayName("Should auto-provision user with fallback email when directory has no email")
-    void shouldAutoProvisionWithFallbackEmail() {
-      User provisionedUser = new User();
-      provisionedUser.setId(11L);
-      provisionedUser.setUsername("bender");
-      provisionedUser.setFullName("Bender Rodriguez");
-      provisionedUser.setEmail("bender@provisioned.local");
-
-      DirectorySearchService.SearchResult noEmailResult =
-          new DirectorySearchService.SearchResult("bender", "Bender Rodriguez", "LDAP", null);
+    @DisplayName("Should grant access to LDAP user using identifier as display name when directory has no display name")
+    void shouldGrantAccessToLdapUserWithFallbackDisplayName() {
+      DirectorySearchService.SearchResult noDisplayResult =
+          new DirectorySearchService.SearchResult("bender", null, "LDAP", null);
 
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
       when(userRepository.findByUsername("bender")).thenReturn(Optional.empty());
-      when(directorySearchService.searchUsers("bender", 50)).thenReturn(List.of(noEmailResult));
-      when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-        User saved = invocation.getArgument(0);
-        saved.setId(11L);
-        assertEquals("bender@provisioned.local", saved.getEmail());
-        return saved;
-      });
-      when(accessRepository.findByResponsibilityCentreAndUser(eq(testRC), any(User.class)))
+      when(directorySearchService.searchUsers("bender", 50)).thenReturn(List.of(noDisplayResult));
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+          eq(testRC), eq("bender"), eq(PrincipalType.USER)))
           .thenReturn(Optional.empty());
       when(accessRepository.save(any(RCAccess.class))).thenAnswer(invocation -> {
         RCAccess saved = invocation.getArgument(0);
@@ -272,7 +260,40 @@ class RCPermissionServiceTest {
       RCAccessDTO result = permissionService.grantUserAccess(1L, "bender", AccessLevel.READ_ONLY, "owner");
 
       assertNotNull(result);
-      verify(userRepository).save(argThat(user -> "bender@provisioned.local".equals(user.getEmail())));
+      // Must NOT create a local User entity
+      verify(userRepository, never()).save(any(User.class));
+      // Must use identifier as fallback display name
+      verify(accessRepository).save(argThat(access ->
+          "bender".equals(access.getPrincipalIdentifier()) &&
+          "bender".equals(access.getPrincipalDisplayName())
+      ));
+    }
+
+    @Test
+    @DisplayName("Should throw exception when LDAP user already has access by principalIdentifier")
+    void shouldThrowExceptionWhenLdapUserAlreadyHasAccess() {
+      DirectorySearchService.SearchResult ldapResult =
+          new DirectorySearchService.SearchResult("amy", "Amy Wong", "LDAP", "amy@planetexpress.com");
+
+      RCAccess existingAccess = new RCAccess();
+      existingAccess.setId(10L);
+      existingAccess.setResponsibilityCentre(testRC);
+      existingAccess.setPrincipalIdentifier("amy");
+      existingAccess.setPrincipalType(PrincipalType.USER);
+      existingAccess.setAccessLevel(AccessLevel.READ_WRITE);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("owner")).thenReturn(Optional.of(ownerUser));
+      when(userRepository.findByUsername("amy")).thenReturn(Optional.empty());
+      when(directorySearchService.searchUsers("amy", 50)).thenReturn(List.of(ldapResult));
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+          eq(testRC), eq("amy"), eq(PrincipalType.USER)))
+          .thenReturn(Optional.of(existingAccess));
+
+      IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+          permissionService.grantUserAccess(1L, "amy", AccessLevel.READ_ONLY, "owner"));
+      assertTrue(exception.getMessage().contains("already has READ_WRITE access"));
+      assertTrue(exception.getMessage().contains("Use update to change the access level"));
     }
 
     @Test
@@ -567,14 +588,37 @@ class RCPermissionServiceTest {
     }
 
     @Test
-    @DisplayName("Should return false when user not found")
+    @DisplayName("Should return false when user not found in local DB or as principalIdentifier")
     void shouldReturnFalseWhenUserNotFound() {
       when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
       when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+          eq(testRC), eq("nonexistent"), eq(PrincipalType.USER)))
+          .thenReturn(Optional.empty());
 
       boolean result = permissionService.isOwner(1L, "nonexistent");
 
       assertFalse(result);
+    }
+
+    @Test
+    @DisplayName("Should return true when LDAP user has OWNER access via principalIdentifier")
+    void shouldReturnTrueWhenLdapUserHasOwnerAccessByIdentifier() {
+      RCAccess ldapOwnerAccess = new RCAccess();
+      ldapOwnerAccess.setResponsibilityCentre(testRC);
+      ldapOwnerAccess.setPrincipalIdentifier("ldapowner");
+      ldapOwnerAccess.setPrincipalType(PrincipalType.USER);
+      ldapOwnerAccess.setAccessLevel(AccessLevel.OWNER);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("ldapowner")).thenReturn(Optional.empty());
+      when(accessRepository.findByResponsibilityCentreAndPrincipalIdentifierAndPrincipalType(
+          eq(testRC), eq("ldapowner"), eq(PrincipalType.USER)))
+          .thenReturn(Optional.of(ldapOwnerAccess));
+
+      boolean result = permissionService.isOwner(1L, "ldapowner");
+
+      assertTrue(result);
     }
   }
 
@@ -716,6 +760,41 @@ class RCPermissionServiceTest {
       when(rcRepository.findById(999L)).thenReturn(Optional.empty());
 
       Optional<AccessLevel> result = permissionService.getEffectiveAccessLevel(999L, "owner", Collections.emptyList());
+
+      assertFalse(result.isPresent());
+    }
+
+    @Test
+    @DisplayName("Should return access level for LDAP user not in local DB")
+    void shouldReturnAccessLevelForLdapUserNotInLocalDb() {
+      RCAccess ldapUserAccess = new RCAccess();
+      ldapUserAccess.setResponsibilityCentre(testRC);
+      ldapUserAccess.setPrincipalIdentifier("ldapuser");
+      ldapUserAccess.setPrincipalType(PrincipalType.USER);
+      ldapUserAccess.setAccessLevel(AccessLevel.READ_WRITE);
+
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("ldapuser")).thenReturn(Optional.empty());
+      when(accessRepository.findByPrincipalIdentifierIn(argThat(list ->
+          list.contains("ldapuser"))))
+          .thenReturn(List.of(ldapUserAccess));
+
+      Optional<AccessLevel> result = permissionService.getEffectiveAccessLevel(1L, "ldapuser", Collections.emptyList());
+
+      assertTrue(result.isPresent());
+      assertEquals(AccessLevel.READ_WRITE, result.get());
+    }
+
+    @Test
+    @DisplayName("Should return empty when LDAP user has no access")
+    void shouldReturnEmptyWhenLdapUserHasNoAccess() {
+      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
+      when(userRepository.findByUsername("ldapnoaccess")).thenReturn(Optional.empty());
+      when(accessRepository.findByPrincipalIdentifierIn(argThat(list ->
+          list.contains("ldapnoaccess"))))
+          .thenReturn(Collections.emptyList());
+
+      Optional<AccessLevel> result = permissionService.getEffectiveAccessLevel(1L, "ldapnoaccess", Collections.emptyList());
 
       assertFalse(result.isPresent());
     }

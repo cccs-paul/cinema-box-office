@@ -1,0 +1,208 @@
+<!--
+  myRC - Preferences Component Template
+  Copyright (c) 2026 myRC Team
+  Licensed under MIT License
+
+  Author: myRC Team
+  Date: 2026-02-11
+  Version: 1.0.0
+-->
+<div class="preferences-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h2>⚙️ {{ 'preferences.title' | translate }}</h2>
+    <p class="page-description">{{ 'preferences.description' | translate }}</p>
+  </div>
+
+  <!-- Success Message -->
+  <div class="success-message" *ngIf="successMessage">
+    <span class="success-icon">✓</span>
+    {{ successMessage }}
+  </div>
+
+  <!-- Tabs -->
+  <div class="preferences-tabs">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'general'"
+      (click)="setActiveTab('general')">
+      <span class="tab-icon">⚙️</span>
+      <span class="tab-label">{{ 'preferences.generalTab' | translate }}</span>
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab === 'accessibility'"
+      (click)="setActiveTab('accessibility')">
+      <span class="tab-icon">♿</span>
+      <span class="tab-label">{{ 'preferences.accessibilityTab' | translate }}</span>
+    </button>
+  </div>
+
+  <!-- ═══ General Settings Tab ═══ -->
+  <div class="tab-content" *ngIf="activeTab === 'general'">
+    <div class="section-header">
+      <h3>{{ 'preferences.displaySettings' | translate }}</h3>
+      <p class="section-description">{{ 'preferences.displaySettingsDesc' | translate }}</p>
+    </div>
+
+    <div class="settings-section">
+      <div class="setting-card">
+        <div class="setting-info">
+          <span class="setting-label">{{ 'preferences.showSearchBox' | translate }}</span>
+          <span class="setting-description">{{ 'preferences.showSearchBoxDesc' | translate }}</span>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              [checked]="preferences.showSearchBox"
+              (change)="updateDisplayPreference('showSearchBox', $any($event.target).checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-card">
+        <div class="setting-info">
+          <span class="setting-label">{{ 'preferences.showCategoryFilter' | translate }}</span>
+          <span class="setting-description">{{ 'preferences.showCategoryFilterDesc' | translate }}</span>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              [checked]="preferences.showCategoryFilter"
+              (change)="updateDisplayPreference('showCategoryFilter', $any($event.target).checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-card">
+        <div class="setting-info">
+          <span class="setting-label">{{ 'preferences.groupByCategory' | translate }}</span>
+          <span class="setting-description">{{ 'preferences.groupByCategoryDesc' | translate }}</span>
+        </div>
+        <div class="setting-control">
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              [checked]="preferences.groupByCategory"
+              (change)="updateDisplayPreference('groupByCategory', $any($event.target).checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Accessibility Tab ═══ -->
+  <div class="tab-content" *ngIf="activeTab === 'accessibility'">
+    <div class="section-header">
+      <div class="section-title-row">
+        <h3>♿ {{ 'accessibility.title' | translate }}</h3>
+        <div class="header-actions">
+          <button
+            class="btn btn-secondary"
+            (click)="restoreAccessibilityDefaults()"
+            [disabled]="!hasCustomAccessibility"
+            [title]="'accessibility.restoreDefaultsTooltip' | translate">
+            🔄 {{ 'accessibility.restoreDefaults' | translate }}
+          </button>
+        </div>
+      </div>
+      <p class="section-description">{{ 'accessibility.description' | translate }}</p>
+    </div>
+
+    <!-- Live Preview -->
+    <div class="preview-section">
+      <h4>{{ 'accessibility.preview' | translate }}</h4>
+      <div class="preview-card">
+        <div class="preview-item-summary">
+          <div class="preview-item-info">
+            <span class="preview-item-name">{{ 'accessibility.previewItemName' | translate }}</span>
+            <span class="preview-category-badge">{{ 'accessibility.previewCategory' | translate }}</span>
+            <span class="preview-tracking-badge status-approved">✅ {{ 'accessibility.previewTracking' | translate }}</span>
+            <span class="preview-currency-badge">🇨🇦 CAD</span>
+            <span class="preview-total-amount">$12,500.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Groups -->
+    <div class="settings-groups">
+      <!-- Font Sizes -->
+      <div class="settings-group" *ngIf="groupedSettings['fontSizes']">
+        <h4>🔤 {{ 'accessibility.fontSizes' | translate }}</h4>
+        <div class="settings-list">
+          <div class="setting-row" *ngFor="let setting of groupedSettings['fontSizes']">
+            <div class="setting-info">
+              <label [for]="'setting-' + setting.key">{{ setting.labelKey | translate }}</label>
+              <span class="setting-description">{{ setting.descriptionKey | translate }}</span>
+            </div>
+            <div class="setting-control">
+              <input
+                type="range"
+                [id]="'setting-' + setting.key"
+                [min]="setting.min"
+                [max]="setting.max"
+                [step]="setting.step"
+                [ngModel]="setting.value"
+                (ngModelChange)="onAccessibilitySettingChange(setting.key, $event)"
+                class="setting-slider"
+                [attr.aria-label]="setting.labelKey | translate"
+              />
+              <div class="setting-value-row">
+                <span class="setting-value">{{ setting.value | number:'1.2-2' }}{{ setting.unit }}</span>
+                <button
+                  class="btn-reset-single"
+                  *ngIf="setting.value !== setting.defaultValue"
+                  (click)="resetAccessibilitySetting(setting.key)"
+                  [title]="'accessibility.resetSingle' | translate">
+                  ↩
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Element Sizes -->
+      <div class="settings-group" *ngIf="groupedSettings['elementSizes']">
+        <h4>📐 {{ 'accessibility.elementSizes' | translate }}</h4>
+        <div class="settings-list">
+          <div class="setting-row" *ngFor="let setting of groupedSettings['elementSizes']">
+            <div class="setting-info">
+              <label [for]="'setting-' + setting.key">{{ setting.labelKey | translate }}</label>
+              <span class="setting-description">{{ setting.descriptionKey | translate }}</span>
+            </div>
+            <div class="setting-control">
+              <input
+                type="range"
+                [id]="'setting-' + setting.key"
+                [min]="setting.min"
+                [max]="setting.max"
+                [step]="setting.step"
+                [ngModel]="setting.value"
+                (ngModelChange)="onAccessibilitySettingChange(setting.key, $event)"
+                class="setting-slider"
+                [attr.aria-label]="setting.labelKey | translate"
+              />
+              <div class="setting-value-row">
+                <span class="setting-value">{{ setting.value | number:'1.2-2' }}{{ setting.unit }}</span>
+                <button
+                  class="btn-reset-single"
+                  *ngIf="setting.value !== setting.defaultValue"
+                  (click)="resetAccessibilitySetting(setting.key)"
+                  [title]="'accessibility.resetSingle' | translate">
+                  ↩
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

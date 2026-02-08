@@ -457,9 +457,11 @@ public class UserController {
     }
 
     /**
-     * Authenticate user via LDAP and create/update the local user record.
-     * Uses Spring Security's LdapAuthenticationProvider for LDAP bind authentication,
-     * then creates or updates the user in the local database.
+     * Authenticate user via LDAP.
+     * Uses Spring Security's LdapAuthenticationProvider for LDAP bind authentication.
+     * LDAP users are NOT auto-provisioned in the local database; instead, a synthetic
+     * UserDTO is returned for the frontend. Group DNs are carried as granted authorities
+     * prefixed with {@link com.myrc.config.LdapSecurityConfig#LDAP_GROUP_DN_PREFIX}.
      *
      * @param username the LDAP username
      * @param password the LDAP password
@@ -468,7 +470,7 @@ public class UserController {
      * @return authenticated user information or 401 if authentication fails
      */
     @PostMapping("/authenticate/ldap")
-    @Operation(summary = "Authenticate via LDAP", description = "Authenticates a user against the LDAP server and creates/updates a local user record")
+    @Operation(summary = "Authenticate via LDAP", description = "Authenticates a user against the LDAP server")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "User authenticated successfully via LDAP"),
         @ApiResponse(responseCode = "401", description = "LDAP authentication failed - invalid credentials"),
@@ -494,26 +496,21 @@ public class UserController {
             Authentication authResult = ldapAuthenticationProvider.authenticate(authRequest);
 
             if (authResult != null && authResult.isAuthenticated()) {
-                // Extract LDAP attributes for user creation/update
-                String email = null;
-                String fullName = null;
+                // Extract LDAP user DN
                 String externalId = username;
-
                 Object principal = authResult.getPrincipal();
                 if (principal instanceof org.springframework.security.ldap.userdetails.LdapUserDetails ldapUser) {
                     externalId = ldapUser.getDn();
                 }
 
-                // Extract roles from LDAP authentication result
+                // Build role list for logging (exclude group DN authorities)
                 Collection<? extends GrantedAuthority> authorities = authResult.getAuthorities();
                 String roles = authorities.stream()
                     .map(GrantedAuthority::getAuthority)
+                    .filter(a -> !a.startsWith(com.myrc.config.LdapSecurityConfig.LDAP_GROUP_DN_PREFIX))
                     .collect(Collectors.joining(","));
 
-                // Create or update the local user record
-                UserDTO user = userService.createOrUpdateLdapUser(username, email, fullName, externalId);
-
-                // Establish security context with LDAP-assigned roles
+                // Establish security context with all LDAP-assigned authorities (roles + group DNs)
                 UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(username, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
@@ -525,7 +522,22 @@ public class UserController {
 
                 logger.info("LDAP user authenticated with session: " + username
                     + " (Session ID: " + session.getId() + ", Roles: " + roles + ")");
-                return ResponseEntity.ok(user);
+
+                // Return a synthetic UserDTO without persisting to the local database.
+                // LDAP users are directory-only; they do not need a local User entity.
+                UserDTO syntheticUser = new UserDTO();
+                syntheticUser.setUsername(username);
+                syntheticUser.setAuthProvider("LDAP");
+                syntheticUser.setEnabled(true);
+                syntheticUser.setAccountLocked(false);
+                syntheticUser.setEmailVerified(false);
+                syntheticUser.setRoles(authorities.stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .filter(a -> a.startsWith("ROLE_"))
+                    .map(a -> a.substring(5))
+                    .collect(Collectors.toSet()));
+
+                return ResponseEntity.ok(syntheticUser);
             }
 
             logger.warning("LDAP authentication returned non-authenticated result for user: " + username);

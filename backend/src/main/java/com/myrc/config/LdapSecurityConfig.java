@@ -24,8 +24,10 @@ import org.springframework.security.ldap.userdetails.LdapUserDetailsMapper;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * LDAP authentication configuration for the application.
@@ -161,7 +163,35 @@ public class LdapSecurityConfig {
     }
 
     /**
+     * Prefix used for granted authorities that carry full LDAP group DNs.
+     * These authorities allow downstream code to extract group DNs from the
+     * authentication context without an additional LDAP lookup.
+     */
+    public static final String LDAP_GROUP_DN_PREFIX = "LDAP_GROUP_DN_";
+
+    /**
+     * Extracts LDAP group DNs from an Authentication object's granted authorities.
+     * Looks for authorities prefixed with {@link #LDAP_GROUP_DN_PREFIX} and strips the prefix.
+     *
+     * @param authentication the Spring Security authentication (may be null)
+     * @return list of group DNs (empty list if no LDAP group authorities found or auth is null)
+     */
+    public static List<String> extractGroupDns(org.springframework.security.core.Authentication authentication) {
+        if (authentication == null) {
+            return List.of();
+        }
+        return authentication.getAuthorities().stream()
+            .map(org.springframework.security.core.GrantedAuthority::getAuthority)
+            .filter(a -> a.startsWith(LDAP_GROUP_DN_PREFIX))
+            .map(a -> a.substring(LDAP_GROUP_DN_PREFIX.length()))
+            .collect(Collectors.toList());
+    }
+
+    /**
      * Custom LDAP authorities populator that maps LDAP groups to application roles.
+     * In addition to creating ROLE_xxx authorities, this populator also creates
+     * LDAP_GROUP_DN_xxx authorities carrying the full group DN so that downstream
+     * code (e.g. RC access checks) can match against group-based access records.
      */
     public static class GroupMappingLdapAuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
         
@@ -182,6 +212,14 @@ public class LdapSecurityConfig {
             // Get the user's groups from LDAP
             String[] groups = userData.getStringAttributes("memberOf");
             
+            if (groups != null) {
+                // Add authorities carrying the full group DN for each memberOf entry
+                for (String groupDn : groups) {
+                    additionalRoles.add(new SimpleGrantedAuthority(LDAP_GROUP_DN_PREFIX + groupDn));
+                    logger.debug("Added group DN authority for user {}: {}", username, groupDn);
+                }
+            }
+
             // Map LDAP groups to application roles based on configuration
             if (!ldapProperties.isSkipOrgRoleSync() && ldapProperties.getGroupMappings() != null && groups != null) {
                 for (LdapProperties.GroupMapping mapping : ldapProperties.getGroupMappings()) {
@@ -209,7 +247,9 @@ public class LdapSecurityConfig {
             }
             
             // Ensure at least USER role is assigned
-            if (additionalRoles.isEmpty()) {
+            boolean hasApplicationRole = additionalRoles.stream()
+                .anyMatch(a -> a.getAuthority().startsWith("ROLE_"));
+            if (!hasApplicationRole) {
                 additionalRoles.add(new SimpleGrantedAuthority("ROLE_USER"));
             }
             
