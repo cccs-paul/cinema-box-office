@@ -1,0 +1,157 @@
+/**
+ * myRC - RC Configuration Component Styles
+ * Copyright (c) 2026 myRC Team
+ * Licensed under MIT License
+ */
+
+.rc-configuration-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Page Header
+.page-header {
+  margin-bottom: 24px;
+
+  .header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: transparent;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 6px;
+    color: var(--text-secondary, #6b7280);
+    cursor: pointer;
+    font-size: 14px;
+    width: fit-content;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: var(--bg-hover, #f9fafb);
+      color: var(--text-primary, #1f2937);
+    }
+
+    .back-icon {
+      font-size: 16px;
+    }
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-primary, #1f2937);
+    margin: 0;
+  }
+
+  .subtitle {
+    font-size: 16px;
+    color: var(--text-secondary, #6b7280);
+    margin: 0;
+  }
+}
+
+// Alert Messages
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &.alert-error {
+    background-color: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+  }
+}
+
+// Loading State
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+  gap: 16px;
+  color: var(--text-secondary, #6b7280);
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color, #e5e7eb);
+    border-top-color: var(--primary-color, #3b82f6);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Configuration Tabs
+.config-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--border-color, #e5e7eb);
+  margin-bottom: 24px;
+  padding: 0;
+
+  .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary, #6b7280);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+
+    &:hover {
+      color: var(--text-primary, #1f2937);
+      background-color: var(--bg-hover, #f9fafb);
+    }
+
+    &.active {
+      color: var(--primary-color, #3b82f6);
+      border-bottom-color: var(--primary-color, #3b82f6);
+      font-weight: 600;
+    }
+
+    .tab-icon {
+      font-size: 16px;
+    }
+
+    .tab-label {
+      white-space: nowrap;
+    }
+  }
+}
+
+// Tab Content
+.tab-content {
+  min-height: 200px;
+}
+
+// Dark mode
+:host-context(.dark-theme) {
+  .alert.alert-error {
+    background-color: #451a1a;
+    color: #fca5a5;
+    border-color: #7f1d1d;
+  }
+}

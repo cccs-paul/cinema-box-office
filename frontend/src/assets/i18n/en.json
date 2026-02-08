@@ -180,7 +180,8 @@
     "continue": "Continue",
     "owner": "Owner",
     "readOnly": "Read Only",
-    "readWrite": "Read/Write"
+    "readWrite": "Read/Write",
+    "configuration": "Configuration"
   },
   "fiscalYear": {
     "title": "Fiscal Years",
@@ -738,7 +739,7 @@
     "importLineItemsDesc": "Import line items from a CSV file. This feature is currently under development.",
     "exportCompleted": "Export completed successfully!",
     "cannotDeleteCategoryInUse": "This category cannot be deleted because it is in use by funding, procurement, or spending items",
-    "readOnlyNotice": "You have read-only access to this Responsibility Centre. Configuration changes are disabled."
+    "readOnlyNotice": "Only owners can manage money types, categories, and summary settings. Configuration changes are disabled."
   },
   "developerTools": {
     "title": "Developer Tools",
@@ -937,5 +938,11 @@
     "settingUpdated": "Setting updated",
     "accessibilityRestored": "Accessibility settings restored to defaults",
     "backToRcSelection": "Back to RC Selection"
+  },
+  "rcConfiguration": {
+    "title": "RC Configuration",
+    "backToRcSelection": "Back to RC Selection",
+    "permissionsTab": "Permissions",
+    "loadError": "Failed to load Responsibility Centre details."
   }
 }

@@ -25,9 +25,9 @@
       <span class="action-icon">✏️</span>
       <span class="action-label">{{ 'rcSelection.renameRc' | translate }}</span>
     </button>
-    <button class="btn btn-action btn-permissions" (click)="managePermissions()" [disabled]="selectedRCId === null || !selectedRCIsOwner" [title]="'rcSelection.permissions' | translate">
-      <span class="action-icon">🔐</span>
-      <span class="action-label">{{ 'rcSelection.permissions' | translate }}</span>
+    <button class="btn btn-action btn-permissions" (click)="managePermissions()" [disabled]="selectedRCId === null || !selectedRCIsOwner" [title]="'rcSelection.configuration' | translate">
+      <span class="action-icon">⚙️</span>
+      <span class="action-label">{{ 'rcSelection.configuration' | translate }}</span>
     </button>
   </div>
 

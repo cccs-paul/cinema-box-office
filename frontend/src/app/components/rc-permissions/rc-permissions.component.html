@@ -4,8 +4,8 @@
   Licensed under MIT License
 -->
 <div class="permissions-container">
-  <!-- Header -->
-  <div class="page-header">
+  <!-- Header (only when standalone, not embedded) -->
+  <div class="page-header" *ngIf="!embedded">
     <div class="header-left">
       <button class="btn-back" (click)="goBack()">
         <span class="back-icon">←</span> {{ 'rcPermissions.backToRcSelection' | translate }}
@@ -299,6 +299,6 @@
     <div class="message-icon">🔒</div>
     <h2>{{ 'rcPermissions.accessDenied' | translate }}</h2>
     <p>{{ 'rcPermissions.accessDeniedMessage' | translate }}</p>
-    <button class="btn-primary" (click)="goBack()">{{ 'rcPermissions.returnToRcSelection' | translate }}</button>
+    <button *ngIf="!embedded" class="btn-primary" (click)="goBack()">{{ 'rcPermissions.returnToRcSelection' | translate }}</button>
   </div>
 </div>

@@ -377,17 +377,17 @@ describe('ConfigurationComponent', () => {
       expect(component.isReadOnly).toBeFalse();
     }));
 
-    it('should return false for isReadOnly when access level is READ_WRITE', fakeAsync(() => {
+    it('should return true for isReadOnly when access level is READ_WRITE', fakeAsync(() => {
       rcService.getResponsibilityCentre.and.returnValue(of(readWriteRC as any));
       fixture.detectChanges();
       tick();
 
-      expect(component.isReadOnly).toBeFalse();
+      expect(component.isReadOnly).toBeTrue();
     }));
 
-    it('should return false for isReadOnly when selectedRC is null', () => {
+    it('should return true for isReadOnly when selectedRC is null', () => {
       component.selectedRC = null;
-      expect(component.isReadOnly).toBeFalse();
+      expect(component.isReadOnly).toBeTrue();
     });
 
     describe('Money Management - Read Only', () => {

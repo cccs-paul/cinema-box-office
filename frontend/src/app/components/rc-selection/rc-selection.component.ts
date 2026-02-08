@@ -309,11 +309,11 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Navigate to the RC Permissions page.
+   * Navigate to the RC Configuration page.
    */
   managePermissions(): void {
     if (this.selectedRCId === null || !this.selectedRCIsOwner) return;
-    this.router.navigate(['/rc-permissions', this.selectedRCId]);
+    this.router.navigate(['/rc-configuration', this.selectedRCId]);
   }
 
   /**

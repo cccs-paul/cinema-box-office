@@ -120,6 +120,8 @@ class MoneyServiceTest {
         .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
     org.mockito.Mockito.lenient()
         .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
+    org.mockito.Mockito.lenient()
+        .when(permissionService.isOwner(anyLong(), anyString())).thenReturn(true);
   }
 
   @Nested
@@ -463,6 +465,81 @@ class MoneyServiceTest {
 
       dto.setCanDelete(false);
       assertFalse(dto.getCanDelete());
+    }
+  }
+
+  @Nested
+  @DisplayName("Owner-Only Access Control Tests")
+  class OwnerOnlyAccessTests {
+
+    @Test
+    @DisplayName("READ_WRITE user cannot create money type")
+    void readWriteUserCannotCreateMoney() {
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+
+      IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+          () -> moneyService.createMoney(1L, "rwuser", "WCF", "Working Capital Fund", null));
+
+      assertTrue(ex.getMessage().contains("Only owners"));
+      verify(moneyRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("READ_WRITE user cannot update money type")
+    void readWriteUserCannotUpdateMoney() {
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
+      when(moneyRepository.findById(2L)).thenReturn(Optional.of(customMoney));
+
+      IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+          () -> moneyService.updateMoney(2L, "rwuser", "WCF", "Working Capital Fund", null));
+
+      assertTrue(ex.getMessage().contains("Only owners"));
+      verify(moneyRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("READ_WRITE user cannot delete money type")
+    void readWriteUserCannotDeleteMoney() {
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
+      when(moneyRepository.findById(2L)).thenReturn(Optional.of(customMoney));
+
+      IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+          () -> moneyService.deleteMoney(2L, "rwuser"));
+
+      assertTrue(ex.getMessage().contains("Only owners"));
+      verify(moneyRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("READ_WRITE user cannot reorder money types")
+    void readWriteUserCannotReorderMonies() {
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+
+      IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+          () -> moneyService.reorderMonies(1L, "rwuser", List.of(2L, 1L)));
+
+      assertTrue(ex.getMessage().contains("Only owners"));
+    }
+
+    @Test
+    @DisplayName("Owner can still create money type")
+    void ownerCanCreateMoney() {
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(true);
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+      when(moneyRepository.existsByCodeAndFiscalYear("WCF", testFY)).thenReturn(false);
+      when(moneyRepository.findMaxDisplayOrderByFiscalYearId(1L)).thenReturn(1);
+      when(moneyRepository.save(any(Money.class))).thenAnswer(inv -> {
+        Money saved = inv.getArgument(0);
+        saved.setId(3L);
+        return saved;
+      });
+
+      MoneyDTO result = moneyService.createMoney(1L, "testuser", "WCF", "Working Capital Fund", null);
+
+      assertNotNull(result);
+      assertEquals("WCF", result.getCode());
     }
   }
 }

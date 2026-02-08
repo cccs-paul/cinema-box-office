@@ -155,9 +155,9 @@ public class CategoryServiceImpl implements CategoryService {
     FiscalYear fy = fyOpt.get();
     Long rcId = fy.getResponsibilityCentre().getId();
 
-    // Verify user has write access to the RC
-    if (!hasWriteAccessToRC(rcId, username)) {
-      throw new IllegalArgumentException("User does not have write access to this Responsibility Centre");
+    // Verify user has owner access to the RC (categories are configuration-level)
+    if (!hasOwnerAccessToRC(rcId, username)) {
+      throw new IllegalArgumentException("Only owners can manage categories for this Responsibility Centre");
     }
 
     // Validate name
@@ -199,9 +199,9 @@ public class CategoryServiceImpl implements CategoryService {
     Category category = categoryOpt.get();
     Long rcId = category.getFiscalYear().getResponsibilityCentre().getId();
 
-    // Verify user has write access to the RC
-    if (!hasWriteAccessToRC(rcId, username)) {
-      throw new IllegalArgumentException("User does not have write access to this Responsibility Centre");
+    // Verify user has owner access to the RC (categories are configuration-level)
+    if (!hasOwnerAccessToRC(rcId, username)) {
+      throw new IllegalArgumentException("Only owners can manage categories for this Responsibility Centre");
     }
 
     // Cannot modify default categories
@@ -241,9 +241,9 @@ public class CategoryServiceImpl implements CategoryService {
     Category category = categoryOpt.get();
     Long rcId = category.getFiscalYear().getResponsibilityCentre().getId();
 
-    // Verify user has write access to the RC
-    if (!hasWriteAccessToRC(rcId, username)) {
-      throw new IllegalArgumentException("User does not have write access to this Responsibility Centre");
+    // Verify user has owner access to the RC (categories are configuration-level)
+    if (!hasOwnerAccessToRC(rcId, username)) {
+      throw new IllegalArgumentException("Only owners can manage categories for this Responsibility Centre");
     }
 
     // Cannot delete default categories
@@ -313,9 +313,9 @@ public class CategoryServiceImpl implements CategoryService {
     FiscalYear fy = fyOpt.get();
     Long rcId = fy.getResponsibilityCentre().getId();
 
-    // Verify user has write access to the RC
-    if (!hasWriteAccessToRC(rcId, username)) {
-      throw new IllegalArgumentException("User does not have write access to this Responsibility Centre");
+    // Verify user has owner access to the RC (categories are configuration-level)
+    if (!hasOwnerAccessToRC(rcId, username)) {
+      throw new IllegalArgumentException("Only owners can manage categories for this Responsibility Centre");
     }
 
     // Update display order for each category
@@ -383,6 +383,15 @@ public class CategoryServiceImpl implements CategoryService {
    */
   private boolean hasWriteAccessToRC(Long rcId, String username) {
     return permissionService.hasWriteAccess(rcId, username);
+  }
+
+  /**
+   * Check if user has owner access to the RC.
+   * Category management is a configuration-level operation that requires OWNER access.
+   * Delegates to the centralized RCPermissionService.
+   */
+  private boolean hasOwnerAccessToRC(Long rcId, String username) {
+    return permissionService.isOwner(rcId, username);
   }
 
   /**

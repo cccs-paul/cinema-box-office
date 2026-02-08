@@ -118,6 +118,15 @@ describe('RCPermissionsComponent', () => {
       expect(component.grantFormType).toBe('USER');
       expect(component.newAccessLevel).toBe('READ_WRITE');
     });
+
+    it('should default embedded to false', () => {
+      expect(component.embedded).toBeFalse();
+    });
+
+    it('should accept embedded input', () => {
+      component.embedded = true;
+      expect(component.embedded).toBeTrue();
+    });
   });
 
   describe('Route Parameter Handling', () => {

@@ -121,6 +121,8 @@ class CategoryServiceTest {
         .when(permissionService.hasAccess(anyLong(), anyString())).thenReturn(true);
     org.mockito.Mockito.lenient()
         .when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(true);
+    org.mockito.Mockito.lenient()
+        .when(permissionService.isOwner(anyLong(), anyString())).thenReturn(true);
   }
 
   @Test
@@ -425,24 +427,10 @@ class CategoryServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when user has no write access")
-    void shouldThrowExceptionWhenNoWriteAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
+    @DisplayName("Should throw exception when user is not owner")
+    void shouldThrowExceptionWhenNotOwner() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
-          .thenReturn(Optional.empty());
-
-      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
 
       assertThrows(IllegalArgumentException.class, () ->
           categoryService.createCategory(1L, "otheruser", "New Category", "Description"));
@@ -492,24 +480,10 @@ class CategoryServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when user has no write access")
-    void shouldThrowExceptionWhenNoWriteAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
+    @DisplayName("Should throw exception when user is not owner")
+    void shouldThrowExceptionWhenNotOwner() {
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
-          .thenReturn(Optional.empty());
-
-      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
 
       assertThrows(IllegalArgumentException.class, () ->
           categoryService.updateCategory(1L, "otheruser", "Updated Name", "Description"));
@@ -602,24 +576,10 @@ class CategoryServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when user has no write access")
-    void shouldThrowExceptionWhenNoWriteAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
+    @DisplayName("Should throw exception when user is not owner")
+    void shouldThrowExceptionWhenNotOwner() {
       when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
-          .thenReturn(Optional.empty());
-
-      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
 
       assertThrows(IllegalArgumentException.class, () ->
           categoryService.deleteCategory(1L, "otheruser"));
@@ -714,27 +674,76 @@ class CategoryServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when user has no write access")
-    void shouldThrowExceptionWhenNoWriteAccess() {
-      User otherUser = new User();
-      otherUser.setId(2L);
-      otherUser.setUsername("otheruser");
-
-      User rcOwner = new User();
-      rcOwner.setId(3L);
-      rcOwner.setUsername("owner");
-      testRC.setOwner(rcOwner);
-
+    @DisplayName("Should throw exception when user is not owner")
+    void shouldThrowExceptionWhenNotOwner() {
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
-      when(userRepository.findByUsername("otheruser")).thenReturn(Optional.of(otherUser));
-      when(rcRepository.findById(1L)).thenReturn(Optional.of(testRC));
-      when(accessRepository.findByResponsibilityCentreAndUser(testRC, otherUser))
-          .thenReturn(Optional.empty());
-
-      when(permissionService.hasWriteAccess(anyLong(), anyString())).thenReturn(false);
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
 
       assertThrows(IllegalArgumentException.class, () ->
-          categoryService.reorderCategories(1L, "otheruser", Arrays.asList(1L, 2L)));
+          categoryService.reorderCategories(1L, "rwuser", Arrays.asList(1L, 2L)));
+    }
+  }
+
+  @Nested
+  @DisplayName("Owner-Only Access Control Tests")
+  class OwnerOnlyAccessTests {
+
+    @Test
+    @DisplayName("READ_WRITE user cannot create category")
+    void readWriteUserCannotCreateCategory() {
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+
+      IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+          () -> categoryService.createCategory(1L, "rwuser", "NewCat", "Description"));
+
+      assertTrue(ex.getMessage().contains("Only owners"));
+      verify(categoryRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("READ_WRITE user cannot update category")
+    void readWriteUserCannotUpdateCategory() {
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
+      when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+
+      IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+          () -> categoryService.updateCategory(1L, "rwuser", "Updated", "Updated desc"));
+
+      assertTrue(ex.getMessage().contains("Only owners"));
+      verify(categoryRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("READ_WRITE user cannot delete category")
+    void readWriteUserCannotDeleteCategory() {
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(false);
+      when(categoryRepository.findById(1L)).thenReturn(Optional.of(testCategory));
+
+      IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+          () -> categoryService.deleteCategory(1L, "rwuser"));
+
+      assertTrue(ex.getMessage().contains("Only owners"));
+      verify(categoryRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("Owner can still create category")
+    void ownerCanCreateCategory() {
+      when(permissionService.isOwner(anyLong(), anyString())).thenReturn(true);
+      when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(testFY));
+      when(categoryRepository.existsByNameAndFiscalYear(anyString(), any())).thenReturn(false);
+      when(categoryRepository.getMaxDisplayOrderByFiscalYearId(1L)).thenReturn(0);
+      when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> {
+        Category saved = inv.getArgument(0);
+        saved.setId(10L);
+        return saved;
+      });
+
+      CategoryDTO result = categoryService.createCategory(1L, "testuser", "NewCat", "Description");
+
+      assertNotNull(result);
+      assertEquals("NewCat", result.getName());
     }
   }
 }

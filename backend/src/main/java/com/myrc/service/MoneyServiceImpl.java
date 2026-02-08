@@ -134,10 +134,10 @@ public class MoneyServiceImpl implements MoneyService {
     FiscalYear fy = fyOpt.get();
     Long rcId = fy.getResponsibilityCentre().getId();
 
-    // Verify user has write access to the RC
-    if (!hasWriteAccessToRC(rcId, username)) {
+    // Verify user has owner access to the RC (money types are configuration-level)
+    if (!hasOwnerAccessToRC(rcId, username)) {
       throw new IllegalArgumentException(
-          "User does not have write access to this Responsibility Centre");
+          "Only owners can manage money types for this Responsibility Centre");
     }
 
     // Validate code
@@ -181,10 +181,10 @@ public class MoneyServiceImpl implements MoneyService {
     Money money = moneyOpt.get();
     Long rcId = money.getFiscalYear().getResponsibilityCentre().getId();
 
-    // Verify user has write access to the RC
-    if (!hasWriteAccessToRC(rcId, username)) {
+    // Verify user has owner access to the RC (money types are configuration-level)
+    if (!hasOwnerAccessToRC(rcId, username)) {
       throw new IllegalArgumentException(
-          "User does not have write access to this Responsibility Centre");
+          "Only owners can manage money types for this Responsibility Centre");
     }
 
     // Cannot modify default money code
@@ -225,10 +225,10 @@ public class MoneyServiceImpl implements MoneyService {
     Money money = moneyOpt.get();
     Long rcId = money.getFiscalYear().getResponsibilityCentre().getId();
 
-    // Verify user has write access to the RC
-    if (!hasWriteAccessToRC(rcId, username)) {
+    // Verify user has owner access to the RC (money types are configuration-level)
+    if (!hasOwnerAccessToRC(rcId, username)) {
       throw new IllegalArgumentException(
-          "User does not have write access to this Responsibility Centre");
+          "Only owners can manage money types for this Responsibility Centre");
     }
 
     // Cannot delete default money
@@ -296,10 +296,10 @@ public class MoneyServiceImpl implements MoneyService {
     FiscalYear fy = fyOpt.get();
     Long rcId = fy.getResponsibilityCentre().getId();
 
-    // Verify user has write access to the RC
-    if (!hasWriteAccessToRC(rcId, username)) {
+    // Verify user has owner access to the RC (money types are configuration-level)
+    if (!hasOwnerAccessToRC(rcId, username)) {
       throw new IllegalArgumentException(
-          "User does not have write access to this Responsibility Centre");
+          "Only owners can manage money types for this Responsibility Centre");
     }
 
     // Update display order for each money
@@ -350,5 +350,14 @@ public class MoneyServiceImpl implements MoneyService {
    */
   private boolean hasWriteAccessToRC(Long rcId, String username) {
     return permissionService.hasWriteAccess(rcId, username);
+  }
+
+  /**
+   * Check if user has owner access to the RC.
+   * Money type management is a configuration-level operation that requires OWNER access.
+   * Delegates to the centralized RCPermissionService.
+   */
+  private boolean hasOwnerAccessToRC(Long rcId, String username) {
+    return permissionService.isOwner(rcId, username);
   }
 }

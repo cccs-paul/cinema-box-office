@@ -1,0 +1,47 @@
+<!--
+  myRC - RC Configuration Component Template
+  Copyright (c) 2026 myRC Team
+  Licensed under MIT License
+-->
+<div class="rc-configuration-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <button class="btn-back" (click)="goBack()">
+        <span class="back-icon">←</span> {{ 'rcConfiguration.backToRcSelection' | translate }}
+      </button>
+      <h1>⚙️ {{ 'rcConfiguration.title' | translate }}</h1>
+      <p class="subtitle" *ngIf="rc">{{ rc.name }}</p>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <span>❌</span> {{ errorMessage }}
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>{{ 'common.loading' | translate }}</p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content" *ngIf="!isLoading && rc">
+    <!-- Configuration Tabs -->
+    <div class="config-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'permissions'"
+        (click)="setActiveTab('permissions')">
+        <span class="tab-icon">🔐</span>
+        <span class="tab-label">{{ 'rcConfiguration.permissionsTab' | translate }}</span>
+      </button>
+    </div>
+
+    <!-- Permissions Tab Content -->
+    <div class="tab-content" *ngIf="activeTab === 'permissions'">
+      <app-rc-permissions [embedded]="true"></app-rc-permissions>
+    </div>
+  </div>
+</div>

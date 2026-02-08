@@ -91,9 +91,11 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    * Checks whether the current user has read-only access to the RC.
    * When true, editing operations (add/edit/delete money types and categories,
    * changing on-target settings) should be disabled in the UI.
+   * Money types and categories are configuration-level settings that require
+   * OWNER access. Both READ_ONLY and READ_WRITE users are restricted.
    */
   get isReadOnly(): boolean {
-    return this.selectedRC?.accessLevel === 'READ_ONLY';
+    return this.selectedRC?.accessLevel !== 'OWNER';
   }
 
   constructor(

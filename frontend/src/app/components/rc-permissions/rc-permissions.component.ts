@@ -4,7 +4,7 @@
  * Licensed under MIT License
  */
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -35,6 +35,12 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   // RC Info
   rcId: number | null = null;
   rc: ResponsibilityCentreDTO | null = null;
+
+  /**
+   * When true, the component is embedded inside another page (e.g. RC Configuration)
+   * and should not render its own header, back button, or loading wrapper.
+   */
+  @Input() embedded = false;
 
   // Permissions
   permissions: RCAccess[] = [];
@@ -86,7 +92,10 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
     // Set up autocomplete search pipeline
     this.initSearchPipeline();
 
-    // Get RC ID from route params
+    // Get RC ID from route params.
+    // When embedded in another component (e.g. RC Configuration), the
+    // ActivatedRoute resolves to the parent routed component which
+    // carries the :rcId param.
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       const id = params['rcId'];
       if (id) {
@@ -98,7 +107,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
           if (selectedId) {
             this.rcId = selectedId;
             this.loadRC();
-          } else {
+          } else if (!this.embedded) {
             this.router.navigate(['/rc-selection']);
           }
         });

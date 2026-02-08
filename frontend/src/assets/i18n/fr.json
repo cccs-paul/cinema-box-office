@@ -180,7 +180,8 @@
     "continue": "Continuer",
     "owner": "Propriétaire",
     "readOnly": "Lecture seule",
-    "readWrite": "Lecture/Écriture"
+    "readWrite": "Lecture/Écriture",
+    "configuration": "Configuration"
   },
   "fiscalYear": {
     "title": "Exercices financiers",
@@ -709,7 +710,7 @@
     "importLineItemsDesc": "Importer des éléments depuis un fichier CSV. Cette fonctionnalité est en cours de développement.",
     "exportCompleted": "Exportation terminée avec succès!",
     "cannotDeleteCategoryInUse": "Cette catégorie ne peut pas être supprimée car elle est utilisée par des éléments de financement, d'approvisionnement ou de dépenses",
-    "readOnlyNotice": "Vous avez un accès en lecture seule à ce Centre de responsabilité. Les modifications de configuration sont désactivées."
+    "readOnlyNotice": "Seuls les propriétaires peuvent gérer les types de fonds, les catégories et les paramètres du sommaire. Les modifications de configuration sont désactivées."
   },
   "developerTools": {
     "title": "Outils développeur",
@@ -899,5 +900,11 @@
     "settingUpdated": "Paramètre mis à jour",
     "accessibilityRestored": "Paramètres d'accessibilité rétablis par défaut",
     "backToRcSelection": "Retour à la sélection de CR"
+  },
+  "rcConfiguration": {
+    "title": "Configuration du CR",
+    "backToRcSelection": "Retour à la sélection du CR",
+    "permissionsTab": "Permissions",
+    "loadError": "Échec du chargement des détails du centre de responsabilité."
   }
 }
