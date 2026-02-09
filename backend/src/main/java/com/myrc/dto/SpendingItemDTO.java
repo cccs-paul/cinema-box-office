@@ -64,10 +64,15 @@ public class SpendingItemDTO {
   private LocalDateTime updatedAt;
   private Boolean active;
   private List<SpendingMoneyAllocationDTO> moneyAllocations;
+  private List<SpendingInvoiceDTO> invoices;
+  private Integer invoiceCount;
+  private java.math.BigDecimal invoiceTotalCad;
+  private java.math.BigDecimal moneyAllocationTotalCad;
 
   // Constructors
   public SpendingItemDTO() {
     this.moneyAllocations = new ArrayList<>();
+    this.invoices = new ArrayList<>();
   }
 
   public SpendingItemDTO(Long id, String name, String description, String vendor, String referenceNumber,
@@ -138,6 +143,39 @@ public class SpendingItemDTO {
     );
     // Set ECO amount for standalone items
     dto.setEcoAmount(spendingItem.getEcoAmount());
+    // Set invoice data
+    if (spendingItem.getInvoices() != null) {
+      List<SpendingInvoiceDTO> invoiceDTOs = spendingItem.getInvoices().stream()
+          .filter(inv -> inv.getActive())
+          .map(SpendingInvoiceDTO::fromEntityWithoutFiles)
+          .collect(Collectors.toList());
+      dto.setInvoices(invoiceDTOs);
+      dto.setInvoiceCount(invoiceDTOs.size());
+      // Calculate invoice total in CAD
+      BigDecimal invoiceTotalCad = spendingItem.getInvoices().stream()
+          .filter(inv -> inv.getActive())
+          .map(inv -> inv.getAmountInCAD())
+          .reduce(BigDecimal.ZERO, BigDecimal::add);
+      dto.setInvoiceTotalCad(invoiceTotalCad);
+    } else {
+      dto.setInvoices(new ArrayList<>());
+      dto.setInvoiceCount(0);
+      dto.setInvoiceTotalCad(BigDecimal.ZERO);
+    }
+    // Calculate money allocation total in CAD
+    BigDecimal moneyAllocationTotal = BigDecimal.ZERO;
+    if (spendingItem.getMoneyAllocations() != null) {
+      for (var alloc : spendingItem.getMoneyAllocations()) {
+        BigDecimal cap = alloc.getCapAmount() != null ? alloc.getCapAmount() : BigDecimal.ZERO;
+        BigDecimal om = alloc.getOmAmount() != null ? alloc.getOmAmount() : BigDecimal.ZERO;
+        moneyAllocationTotal = moneyAllocationTotal.add(cap).add(om);
+      }
+      // Convert to CAD if foreign currency
+      if (spendingItem.getCurrency() != com.myrc.model.Currency.CAD && spendingItem.getExchangeRate() != null) {
+        moneyAllocationTotal = moneyAllocationTotal.multiply(spendingItem.getExchangeRate());
+      }
+    }
+    dto.setMoneyAllocationTotalCad(moneyAllocationTotal);
     // Set procurement item details if linked
     if (spendingItem.getProcurementItem() != null) {
       var procItem = spendingItem.getProcurementItem();
@@ -423,5 +461,38 @@ public class SpendingItemDTO {
 
   public void setMoneyAllocations(List<SpendingMoneyAllocationDTO> moneyAllocations) {
     this.moneyAllocations = moneyAllocations;
+  }
+
+  public List<SpendingInvoiceDTO> getInvoices() {
+    return invoices;
+  }
+
+  public void setInvoices(List<SpendingInvoiceDTO> invoices) {
+    this.invoices = invoices;
+    this.invoiceCount = invoices != null ? invoices.size() : 0;
+  }
+
+  public Integer getInvoiceCount() {
+    return invoiceCount;
+  }
+
+  public void setInvoiceCount(Integer invoiceCount) {
+    this.invoiceCount = invoiceCount;
+  }
+
+  public java.math.BigDecimal getInvoiceTotalCad() {
+    return invoiceTotalCad;
+  }
+
+  public void setInvoiceTotalCad(java.math.BigDecimal invoiceTotalCad) {
+    this.invoiceTotalCad = invoiceTotalCad;
+  }
+
+  public java.math.BigDecimal getMoneyAllocationTotalCad() {
+    return moneyAllocationTotalCad;
+  }
+
+  public void setMoneyAllocationTotalCad(java.math.BigDecimal moneyAllocationTotalCad) {
+    this.moneyAllocationTotalCad = moneyAllocationTotalCad;
   }
 }

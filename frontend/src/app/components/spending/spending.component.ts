@@ -24,6 +24,7 @@ import { UserPreferencesService, UserDisplayPreferences } from '../../services/u
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
 import { SpendingItem, SpendingMoneyAllocation, SpendingItemStatus, SPENDING_STATUS_INFO } from '../../models/spending-item.model';
+import { SpendingInvoice, SpendingInvoiceFile } from '../../models/spending-item.model';
 import { SpendingEvent, SpendingEventType, SPENDING_EVENT_TYPE_INFO, SpendingEventRequest } from '../../models/spending-event.model';
 import { Category, categoryAllowsCap, categoryAllowsOm } from '../../models/category.model';
 import { Money } from '../../models/money.model';
@@ -152,6 +153,32 @@ export class SpendingComponent implements OnInit, OnDestroy {
     'SECTION_32_PROVIDED', 'RECEIVED_GOODS_SERVICES', 'SECTION_34_PROVIDED',
     'CREDIT_CARD_CLEARED', 'CANCELLED', 'ON_HOLD'
   ];
+
+  // Invoice/Receipt Management
+  selectedItemInvoices: SpendingInvoice[] = [];
+  invoiceItemId: number | null = null;
+  isLoadingInvoices = false;
+  showAddInvoiceForm = false;
+  addInvoiceItemId: number | null = null;
+  newInvoiceAmount: number | null = null;
+  newInvoiceCurrency = DEFAULT_CURRENCY;
+  newInvoiceExchangeRate: number | null = null;
+  newInvoiceDateReceived = '';
+  newInvoiceDateProcessed = '';
+  newInvoiceComments = '';
+  isCreatingInvoice = false;
+  editingInvoiceId: number | null = null;
+  editInvoiceAmount: number | null = null;
+  editInvoiceCurrency = DEFAULT_CURRENCY;
+  editInvoiceExchangeRate: number | null = null;
+  editInvoiceDateReceived = '';
+  editInvoiceDateProcessed = '';
+  editInvoiceComments = '';
+  isUpdatingInvoice = false;
+  // Invoice File Upload
+  invoiceFileUploadId: number | null = null;
+  invoiceFileDescription = '';
+  isUploadingInvoiceFile = false;
 
   // For navigation with query params (expand specific item)
   private pendingExpandItemId: number | null = null;
@@ -1366,5 +1393,257 @@ export class SpendingComponent implements OnInit, OnDestroy {
   getTrackingStatusClass(eventType: string): string {
     const info = EVENT_TYPE_INFO[eventType as ProcurementEventType];
     return info ? `status-${info.color}` : 'status-gray';
+  }
+
+  // ==========================
+  // Invoice/Receipt Methods
+  // ==========================
+
+  /**
+   * Load invoices for a spending item.
+   */
+  loadInvoicesForItem(item: SpendingItem): void {
+    if (!this.selectedRC || !this.selectedFY || !item.id) return;
+    this.isLoadingInvoices = true;
+    this.invoiceItemId = item.id;
+    this.spendingItemService.getInvoices(this.selectedRC.id, this.selectedFY.id, item.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (invoices) => {
+          this.selectedItemInvoices = invoices;
+          this.isLoadingInvoices = false;
+        },
+        error: (err) => {
+          this.errorMessage = err.message || 'Failed to load invoices';
+          this.isLoadingInvoices = false;
+        }
+      });
+  }
+
+  /**
+   * Collapse the invoices list.
+   */
+  collapseInvoices(): void {
+    this.selectedItemInvoices = [];
+    this.invoiceItemId = null;
+  }
+
+  /**
+   * Open the add invoice form for a spending item.
+   */
+  openAddInvoiceForm(item: SpendingItem): void {
+    this.addInvoiceItemId = item.id;
+    this.showAddInvoiceForm = true;
+    this.newInvoiceAmount = null;
+    this.newInvoiceCurrency = item.currency || DEFAULT_CURRENCY;
+    this.newInvoiceExchangeRate = item.exchangeRate || null;
+    this.newInvoiceDateReceived = '';
+    this.newInvoiceDateProcessed = '';
+    this.newInvoiceComments = '';
+  }
+
+  /**
+   * Close the add invoice form.
+   */
+  closeAddInvoiceForm(): void {
+    this.addInvoiceItemId = null;
+    this.showAddInvoiceForm = false;
+  }
+
+  /**
+   * Create a new invoice.
+   */
+  createInvoice(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.addInvoiceItemId || !this.newInvoiceAmount) return;
+    this.isCreatingInvoice = true;
+    const invoice: Partial<SpendingInvoice> = {
+      amount: this.newInvoiceAmount,
+      currency: this.newInvoiceCurrency,
+      exchangeRate: this.newInvoiceCurrency !== 'CAD' ? this.newInvoiceExchangeRate : null,
+      dateReceived: this.newInvoiceDateReceived || null,
+      dateProcessed: this.newInvoiceDateProcessed || null,
+      comments: this.newInvoiceComments || null,
+    };
+    this.spendingItemService.createInvoice(
+      this.selectedRC.id, this.selectedFY.id, this.addInvoiceItemId, invoice
+    ).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.successMessage = this.translate.instant('spending.invoiceCreated');
+        this.closeAddInvoiceForm();
+        this.isCreatingInvoice = false;
+        // Reload spending items to update totals
+        this.loadSpendingItems();
+        // Reload invoices if viewing
+        if (this.invoiceItemId === this.addInvoiceItemId) {
+          const item = this.spendingItems.find(i => i.id === this.invoiceItemId);
+          if (item) this.loadInvoicesForItem(item);
+        }
+      },
+      error: (err) => {
+        this.errorMessage = err.message || 'Failed to create invoice';
+        this.isCreatingInvoice = false;
+      }
+    });
+  }
+
+  /**
+   * Start editing an invoice.
+   */
+  editInvoice(invoice: SpendingInvoice): void {
+    this.editingInvoiceId = invoice.id || null;
+    this.editInvoiceAmount = invoice.amount;
+    this.editInvoiceCurrency = invoice.currency || DEFAULT_CURRENCY;
+    this.editInvoiceExchangeRate = invoice.exchangeRate || null;
+    this.editInvoiceDateReceived = invoice.dateReceived || '';
+    this.editInvoiceDateProcessed = invoice.dateProcessed || '';
+    this.editInvoiceComments = invoice.comments || '';
+  }
+
+  /**
+   * Cancel editing an invoice.
+   */
+  cancelEditInvoice(): void {
+    this.editingInvoiceId = null;
+  }
+
+  /**
+   * Update an existing invoice.
+   */
+  updateInvoice(): void {
+    if (!this.selectedRC || !this.selectedFY || !this.editingInvoiceId || !this.invoiceItemId || !this.editInvoiceAmount) return;
+    this.isUpdatingInvoice = true;
+    const invoice: Partial<SpendingInvoice> = {
+      amount: this.editInvoiceAmount,
+      currency: this.editInvoiceCurrency,
+      exchangeRate: this.editInvoiceCurrency !== 'CAD' ? this.editInvoiceExchangeRate : null,
+      dateReceived: this.editInvoiceDateReceived || null,
+      dateProcessed: this.editInvoiceDateProcessed || null,
+      comments: this.editInvoiceComments || null,
+    };
+    this.spendingItemService.updateInvoice(
+      this.selectedRC.id, this.selectedFY.id, this.invoiceItemId, this.editingInvoiceId, invoice
+    ).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.successMessage = this.translate.instant('spending.invoiceUpdated');
+        this.cancelEditInvoice();
+        this.isUpdatingInvoice = false;
+        this.loadSpendingItems();
+        const item = this.spendingItems.find(i => i.id === this.invoiceItemId);
+        if (item) this.loadInvoicesForItem(item);
+      },
+      error: (err) => {
+        this.errorMessage = err.message || 'Failed to update invoice';
+        this.isUpdatingInvoice = false;
+      }
+    });
+  }
+
+  /**
+   * Delete an invoice.
+   */
+  deleteInvoice(invoice: SpendingInvoice): void {
+    if (!this.selectedRC || !this.selectedFY || !this.invoiceItemId || !invoice.id) return;
+    if (!confirm(this.translate.instant('spending.confirmDeleteInvoice'))) return;
+    this.spendingItemService.deleteInvoice(
+      this.selectedRC.id, this.selectedFY.id, this.invoiceItemId, invoice.id
+    ).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.successMessage = this.translate.instant('spending.invoiceDeleted');
+        this.loadSpendingItems();
+        const item = this.spendingItems.find(i => i.id === this.invoiceItemId);
+        if (item) this.loadInvoicesForItem(item);
+      },
+      error: (err) => {
+        this.errorMessage = err.message || 'Failed to delete invoice';
+      }
+    });
+  }
+
+  /**
+   * Check if invoice totals match money allocation totals.
+   */
+  hasInvoiceMismatch(item: SpendingItem): boolean {
+    if (!item.invoiceCount || item.invoiceCount === 0) return false;
+    if (item.invoiceTotalCad == null || item.moneyAllocationTotalCad == null) return false;
+    // Compare with 0.01 tolerance for rounding
+    return Math.abs(item.invoiceTotalCad - item.moneyAllocationTotalCad) > 0.01;
+  }
+
+  /**
+   * Get invoice total for display in the item's currency.
+   */
+  getInvoiceTotalDisplay(item: SpendingItem): number {
+    if (!item.invoices || item.invoices.length === 0) return 0;
+    return item.invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+  }
+
+  /**
+   * Handle invoice file upload via file input.
+   */
+  onInvoiceFileSelected(event: Event, invoice: SpendingInvoice): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files[0] || !this.selectedRC || !this.selectedFY || !this.invoiceItemId || !invoice.id) return;
+    this.isUploadingInvoiceFile = true;
+    this.invoiceFileUploadId = invoice.id;
+    const file = input.files[0];
+    this.spendingItemService.uploadInvoiceFile(
+      this.selectedRC.id, this.selectedFY.id, this.invoiceItemId, invoice.id, file, this.invoiceFileDescription || undefined
+    ).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.successMessage = this.translate.instant('spending.invoiceFileUploaded');
+        this.isUploadingInvoiceFile = false;
+        this.invoiceFileUploadId = null;
+        this.invoiceFileDescription = '';
+        const item = this.spendingItems.find(i => i.id === this.invoiceItemId);
+        if (item) this.loadInvoicesForItem(item);
+      },
+      error: (err) => {
+        this.errorMessage = err.message || 'Failed to upload file';
+        this.isUploadingInvoiceFile = false;
+        this.invoiceFileUploadId = null;
+      }
+    });
+    // Reset input
+    input.value = '';
+  }
+
+  /**
+   * Delete an invoice file.
+   */
+  deleteInvoiceFile(invoice: SpendingInvoice, file: SpendingInvoiceFile): void {
+    if (!this.selectedRC || !this.selectedFY || !this.invoiceItemId || !invoice.id || !file.id) return;
+    if (!confirm(this.translate.instant('spending.confirmDeleteInvoiceFile'))) return;
+    this.spendingItemService.deleteInvoiceFile(
+      this.selectedRC.id, this.selectedFY.id, this.invoiceItemId, invoice.id, file.id
+    ).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.successMessage = this.translate.instant('spending.invoiceFileDeleted');
+        const item = this.spendingItems.find(i => i.id === this.invoiceItemId);
+        if (item) this.loadInvoicesForItem(item);
+      },
+      error: (err) => {
+        this.errorMessage = err.message || 'Failed to delete file';
+      }
+    });
+  }
+
+  /**
+   * Get download URL for an invoice file.
+   */
+  getInvoiceFileDownloadUrl(invoice: SpendingInvoice, file: SpendingInvoiceFile): string {
+    if (!this.selectedRC || !this.selectedFY || !this.invoiceItemId || !invoice.id || !file.id) return '#';
+    return this.spendingItemService.getInvoiceFileDownloadUrl(
+      this.selectedRC.id, this.selectedFY.id, this.invoiceItemId, invoice.id, file.id
+    );
+  }
+
+  /**
+   * Get view URL for an invoice file.
+   */
+  getInvoiceFileViewUrl(invoice: SpendingInvoice, file: SpendingInvoiceFile): string {
+    if (!this.selectedRC || !this.selectedFY || !this.invoiceItemId || !invoice.id || !file.id) return '#';
+    return this.spendingItemService.getInvoiceFileViewUrl(
+      this.selectedRC.id, this.selectedFY.id, this.invoiceItemId, invoice.id, file.id
+    );
   }
 }

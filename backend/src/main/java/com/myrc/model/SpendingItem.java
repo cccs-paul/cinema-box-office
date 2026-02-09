@@ -141,6 +141,13 @@ public class SpendingItem {
   private List<SpendingMoneyAllocation> moneyAllocations = new ArrayList<>();
 
   /**
+   * Invoices/receipts for this spending item.
+   * Each spending item can have 0..n invoices/receipts.
+   */
+  @OneToMany(mappedBy = "spendingItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<SpendingInvoice> invoices = new ArrayList<>();
+
+  /**
    * Tracking events for this spending item.
    * Only used when the item is NOT linked to a procurement item.
    */
@@ -323,6 +330,30 @@ public class SpendingItem {
   public void removeMoneyAllocation(SpendingMoneyAllocation allocation) {
     moneyAllocations.remove(allocation);
     allocation.setSpendingItem(null);
+  }
+
+  public List<SpendingInvoice> getInvoices() {
+    return invoices;
+  }
+
+  public void setInvoices(List<SpendingInvoice> invoices) {
+    this.invoices = invoices;
+  }
+
+  /**
+   * Add an invoice to this spending item.
+   */
+  public void addInvoice(SpendingInvoice invoice) {
+    invoices.add(invoice);
+    invoice.setSpendingItem(this);
+  }
+
+  /**
+   * Remove an invoice from this spending item.
+   */
+  public void removeInvoice(SpendingInvoice invoice) {
+    invoices.remove(invoice);
+    invoice.setSpendingItem(null);
   }
 
   public List<SpendingEvent> getEvents() {

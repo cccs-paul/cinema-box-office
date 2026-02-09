@@ -8,6 +8,46 @@
  */
 
 /**
+ * File attached to a spending invoice.
+ */
+export interface SpendingInvoiceFile {
+  id: number;
+  fileName: string;
+  contentType: string;
+  fileSize: number;
+  formattedFileSize?: string;
+  description?: string;
+  invoiceId: number;
+  createdAt?: string;
+  updatedAt?: string;
+  active: boolean;
+  downloadUrl?: string;
+}
+
+/**
+ * Invoice/receipt attached to a spending item.
+ */
+export interface SpendingInvoice {
+  id?: number;
+  spendingItemId?: number;
+  spendingItemName?: string;
+  dateReceived?: string | null;
+  dateProcessed?: string | null;
+  comments?: string | null;
+  amount: number;
+  currency: string;
+  exchangeRate?: number | null;
+  amountCad?: number | null;
+  createdAt?: string;
+  updatedAt?: string;
+  active?: boolean;
+  createdBy?: string;
+  modifiedBy?: string;
+  files?: SpendingInvoiceFile[];
+  fileCount?: number;
+}
+
+/**
  * Money allocation for a spending item.
  * Represents the CAP and OM amounts for a specific money type.
  */
@@ -145,6 +185,18 @@ export interface SpendingItem {
 
   /** Money allocations for this spending item */
   moneyAllocations?: SpendingMoneyAllocation[];
+
+  /** Invoices/receipts for this spending item */
+  invoices?: SpendingInvoice[];
+
+  /** Count of invoices */
+  invoiceCount?: number;
+
+  /** Total of all invoice amounts in CAD */
+  invoiceTotalCad?: number | null;
+
+  /** Total of all money allocation amounts in CAD */
+  moneyAllocationTotalCad?: number | null;
 
   /** Creation timestamp */
   createdAt?: string;

@@ -11,7 +11,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { SpendingItem, SpendingMoneyAllocation } from '../models/spending-item.model';
+import { SpendingItem, SpendingMoneyAllocation, SpendingInvoice, SpendingInvoiceFile } from '../models/spending-item.model';
 
 /**
  * Request body for creating a spending item.
@@ -169,6 +169,114 @@ export class SpendingItemService {
   updateMoneyAllocations(rcId: number, fyId: number, spendingItemId: number, allocations: SpendingMoneyAllocation[]): Observable<SpendingItem> {
     return this.http.put<SpendingItem>(`${this.baseUrl(rcId, fyId)}/${spendingItemId}/allocations`, allocations, { withCredentials: true })
       .pipe(catchError(this.handleError));
+  }
+
+  // ==========================
+  // Invoice/Receipt Methods
+  // ==========================
+
+  private invoiceUrl(rcId: number, fyId: number, spendingItemId: number): string {
+    return `${this.baseUrl(rcId, fyId)}/${spendingItemId}/invoices`;
+  }
+
+  /**
+   * Get all invoices for a spending item.
+   */
+  getInvoices(rcId: number, fyId: number, spendingItemId: number): Observable<SpendingInvoice[]> {
+    return this.http.get<SpendingInvoice[]>(this.invoiceUrl(rcId, fyId, spendingItemId), { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Get a specific invoice by ID.
+   */
+  getInvoice(rcId: number, fyId: number, spendingItemId: number, invoiceId: number): Observable<SpendingInvoice> {
+    return this.http.get<SpendingInvoice>(`${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}`, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Create a new invoice for a spending item.
+   */
+  createInvoice(rcId: number, fyId: number, spendingItemId: number, invoice: Partial<SpendingInvoice>): Observable<SpendingInvoice> {
+    return this.http.post<SpendingInvoice>(this.invoiceUrl(rcId, fyId, spendingItemId), invoice, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Update an existing invoice.
+   */
+  updateInvoice(rcId: number, fyId: number, spendingItemId: number, invoiceId: number, invoice: Partial<SpendingInvoice>): Observable<SpendingInvoice> {
+    return this.http.put<SpendingInvoice>(`${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}`, invoice, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Delete an invoice.
+   */
+  deleteInvoice(rcId: number, fyId: number, spendingItemId: number, invoiceId: number): Observable<void> {
+    return this.http.delete<void>(`${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}`, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ==========================
+  // Invoice File Methods
+  // ==========================
+
+  /**
+   * Upload a file to an invoice.
+   */
+  uploadInvoiceFile(rcId: number, fyId: number, spendingItemId: number, invoiceId: number, file: File, description?: string): Observable<SpendingInvoiceFile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) {
+      formData.append('description', description);
+    }
+    return this.http.post<SpendingInvoiceFile>(
+      `${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}/files`,
+      formData,
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Delete an invoice file.
+   */
+  deleteInvoiceFile(rcId: number, fyId: number, spendingItemId: number, invoiceId: number, fileId: number): Observable<void> {
+    return this.http.delete<void>(
+      `${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}/files/${fileId}`,
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Replace an invoice file.
+   */
+  replaceInvoiceFile(rcId: number, fyId: number, spendingItemId: number, invoiceId: number, fileId: number, file: File, description?: string): Observable<SpendingInvoiceFile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) {
+      formData.append('description', description);
+    }
+    return this.http.put<SpendingInvoiceFile>(
+      `${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}/files/${fileId}`,
+      formData,
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Get the download URL for an invoice file.
+   */
+  getInvoiceFileDownloadUrl(rcId: number, fyId: number, spendingItemId: number, invoiceId: number, fileId: number): string {
+    return `/api${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}/files/${fileId}/download`;
+  }
+
+  /**
+   * Get the view URL for an invoice file.
+   */
+  getInvoiceFileViewUrl(rcId: number, fyId: number, spendingItemId: number, invoiceId: number, fileId: number): string {
+    return `/api${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}/files/${fileId}/view`;
   }
 
   /**
