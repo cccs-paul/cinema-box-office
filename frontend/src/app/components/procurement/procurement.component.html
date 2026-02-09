@@ -81,6 +81,26 @@
               {{ getTrackingStatusLabel(status) }}
             </button>
           </div>
+
+          <!-- Procurement Type Filter -->
+          <div class="procurement-type-filter">
+            <span class="filter-label">{{ 'procurement.procurementType' | translate }}:</span>
+            <button 
+              class="filter-btn"
+              [class.active]="selectedProcurementType === null"
+              (click)="filterByProcurementType(null)">
+              {{ 'common.all' | translate }}
+            </button>
+            <button 
+              *ngFor="let pt of procurementTypeOptions"
+              class="filter-btn"
+              [class.active]="selectedProcurementType === pt"
+              [ngClass]="getProcurementTypeClass(pt)"
+              (click)="filterByProcurementType(pt)">
+              <span class="type-icon">{{ getProcurementTypeIcon(pt) }}</span>
+              {{ getProcurementTypeLabel(pt) }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -90,7 +110,7 @@
         <form (ngSubmit)="createProcurementItem()">
           <div class="form-row">
             <div class="form-group">
-              <label for="newItemPR">{{ 'procurement.purchaseRequisition' | translate }}</label>
+              <label for="newItemPR">{{ 'procurement.pr' | translate }}</label>
               <input
                 type="text"
                 id="newItemPR"
@@ -100,7 +120,7 @@
               />
             </div>
             <div class="form-group">
-              <label for="newItemPO">{{ 'procurement.purchaseOrder' | translate }}</label>
+              <label for="newItemPO">{{ 'procurement.po' | translate }}</label>
               <input
                 type="text"
                 id="newItemPO"
@@ -108,6 +128,14 @@
                 name="newItemPO"
                 [placeholder]="'procurement.enterPoPlaceholder' | translate"
               />
+            </div>
+            <div class="form-group">
+              <label for="newItemProcurementType">{{ 'procurement.procurementType' | translate }}</label>
+              <select id="newItemProcurementType" [(ngModel)]="newItemProcurementType" name="newItemProcurementType">
+                <option *ngFor="let pt of procurementTypeOptions" [value]="pt">
+                  {{ getProcurementTypeIcon(pt) }} {{ getProcurementTypeLabel(pt) }}
+                </option>
+              </select>
             </div>
           </div>
           <div class="form-group">
@@ -340,6 +368,9 @@
               <span class="status-badge" [ngClass]="getTrackingStatusClass(item.trackingStatus)">
                 {{ getTrackingStatusIcon(item.trackingStatus) }} {{ getTrackingStatusLabel(item.trackingStatus) }}
               </span>
+              <span class="procurement-type-badge" [ngClass]="getProcurementTypeClass(item.procurementType)">
+                {{ getProcurementTypeIcon(item.procurementType) }} {{ getProcurementTypeLabel(item.procurementType) }}
+              </span>
               <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">📁 {{ item.categoryName }}</span>
               <span class="quotes-count">📋 {{ item.quoteCount || 0 }}</span>
             </div>
@@ -391,6 +422,12 @@
                     <div class="info-item">
                       <label>{{ 'procurement.purchaseOrder' | translate }}</label>
                       <span>{{ item.purchaseOrder || '-' }}</span>
+                    </div>
+                    <div class="info-item">
+                      <label>{{ 'procurement.procurementType' | translate }}</label>
+                      <span class="procurement-type-badge" [ngClass]="getProcurementTypeClass(item.procurementType)">
+                        {{ getProcurementTypeIcon(item.procurementType) }} {{ getProcurementTypeLabel(item.procurementType) }}
+                      </span>
                     </div>
                     <div class="info-item">
                       <label>{{ 'procurement.trackingStatus' | translate }}</label>
@@ -503,10 +540,10 @@
                       </button>
                     </div>
                   </div>
-                  
+
                   <div class="form-row">
                     <div class="form-group">
-                      <label for="editItemPR">{{ 'procurement.purchaseRequisition' | translate }}</label>
+                      <label for="editItemPR">{{ 'procurement.pr' | translate }}</label>
                       <input
                         id="editItemPR"
                         type="text"
@@ -516,7 +553,7 @@
                       />
                     </div>
                     <div class="form-group">
-                      <label for="editItemPO">{{ 'procurement.purchaseOrder' | translate }}</label>
+                      <label for="editItemPO">{{ 'procurement.po' | translate }}</label>
                       <input
                         id="editItemPO"
                         type="text"
@@ -524,6 +561,14 @@
                         [placeholder]="'procurement.enterPoPlaceholder' | translate"
                         [disabled]="isUpdatingItem"
                       />
+                    </div>
+                    <div class="form-group">
+                      <label for="editItemProcurementType">{{ 'procurement.procurementType' | translate }}</label>
+                      <select id="editItemProcurementType" [(ngModel)]="editItemProcurementType" [disabled]="isUpdatingItem">
+                        <option *ngFor="let pt of procurementTypeOptions" [value]="pt">
+                          {{ getProcurementTypeIcon(pt) }} {{ getProcurementTypeLabel(pt) }}
+                        </option>
+                      </select>
                     </div>
                   </div>
                   <div class="form-group">

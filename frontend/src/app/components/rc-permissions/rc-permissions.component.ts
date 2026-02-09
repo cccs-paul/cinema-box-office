@@ -468,15 +468,16 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
    * For the original owner (synthetic entry with id === null):
    *   - Editable only when at least one other explicit OWNER access record exists
    *     (direct user or group), so the RC always retains at least one owner.
+   *   - When no other owner exists, returns false so the UI hides action buttons
+   *     and shows an "Original Owner" badge instead.
    *
    * For all other entries:
    *   - Always editable (the backend enforces the "last owner" constraint).
    */
   canEditPermission(permission: RCAccess): boolean {
     if (permission.id === null) {
-      // Original owner: never editable from the permissions table.
-      // Ownership is managed via the RC itself, not via access records.
-      return false;
+      // Original owner: only allow relinquish when another owner exists.
+      return this.hasOtherOwner(permission);
     }
     return true;
   }

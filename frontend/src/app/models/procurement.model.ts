@@ -2,24 +2,13 @@
  * Procurement Item model for myRC application.
  *
  * @author myRC Team
- * @version 1.1.0
+ * @version 1.0.0
  * @since 2026-01-28
  * @license MIT
  */
 
 /**
  * Enum for procurement item status values.
- * Status is now tracked via ProcurementEvent records, not stored directly on the item.
- * 
- * Status Flow:
- * - DRAFT: Procurement item created, requirements being finalized.
- * - PENDING_QUOTES: Waiting for quotes from vendors.
- * - QUOTES_RECEIVED: Quotes received from vendors.
- * - UNDER_REVIEW: Quotes under review.
- * - APPROVED: Quote approved, preparing PO.
- * - PO_ISSUED: Purchase Order issued to vendor.
- * - COMPLETED: Goods/services received and paid.
- * - CANCELLED: Procurement cancelled.
  */
 export type ProcurementItemStatus =
   | 'DRAFT'
@@ -45,9 +34,9 @@ export interface ProcurementStatusInfo {
  */
 export const PROCUREMENT_STATUS_INFO: Record<ProcurementItemStatus, ProcurementStatusInfo> = {
   DRAFT: { label: 'Draft', color: 'gray', icon: '📝' },
-  PENDING_QUOTES: { label: 'Pending Quotes', color: 'blue', icon: '📄' },
-  QUOTES_RECEIVED: { label: 'Quotes Received', color: 'cyan', icon: '📬' },
-  UNDER_REVIEW: { label: 'Under Review', color: 'yellow', icon: '🔍' },
+  PENDING_QUOTES: { label: 'Pending Quotes', color: 'yellow', icon: '⏳' },
+  QUOTES_RECEIVED: { label: 'Quotes Received', color: 'blue', icon: '📥' },
+  UNDER_REVIEW: { label: 'Under Review', color: 'orange', icon: '🔍' },
   APPROVED: { label: 'Approved', color: 'green', icon: '✅' },
   PO_ISSUED: { label: 'PO Issued', color: 'purple', icon: '📋' },
   COMPLETED: { label: 'Completed', color: 'success', icon: '✔️' },
@@ -55,10 +44,15 @@ export const PROCUREMENT_STATUS_INFO: Record<ProcurementItemStatus, ProcurementS
 };
 
 /**
- * Enum for tracking status values.
- * Used to indicate the overall health/risk of the procurement.
+ * Tracking status type for procurement items.
+ * Indicates the overall health/risk of the procurement.
  */
-export type TrackingStatus = 'PLANNING' | 'ON_TRACK' | 'AT_RISK' | 'COMPLETED' | 'CANCELLED';
+export type TrackingStatus =
+  | 'PLANNING'
+  | 'ON_TRACK'
+  | 'AT_RISK'
+  | 'COMPLETED'
+  | 'CANCELLED';
 
 /**
  * Map of tracking status to display information.
@@ -66,23 +60,25 @@ export type TrackingStatus = 'PLANNING' | 'ON_TRACK' | 'AT_RISK' | 'COMPLETED' |
 export const TRACKING_STATUS_INFO: Record<TrackingStatus, ProcurementStatusInfo> = {
   PLANNING: { label: 'Planning', color: 'gray', icon: '📋' },
   ON_TRACK: { label: 'On Track', color: 'green', icon: '✅' },
-  AT_RISK: { label: 'At Risk', color: 'yellow', icon: '⚠️' },
-  COMPLETED: { label: 'Completed', color: 'blue', icon: '🏁' },
+  AT_RISK: { label: 'At Risk', color: 'orange', icon: '⚠️' },
+  COMPLETED: { label: 'Completed', color: 'success', icon: '✔️' },
   CANCELLED: { label: 'Cancelled', color: 'red', icon: '❌' }
 };
 
 /**
- * Enum for procurement type values.
- * Indicates whether the procurement is initiated by the RC or centrally managed.
+ * Procurement type for procurement items.
+ * Indicates whether the procurement was RC-initiated or centrally managed.
  */
-export type ProcurementType = 'RC_INITIATED' | 'CENTRALLY_MANAGED';
+export type ProcurementType =
+  | 'RC_INITIATED'
+  | 'CENTRALLY_MANAGED';
 
 /**
  * Map of procurement type to display information.
  */
 export const PROCUREMENT_TYPE_INFO: Record<ProcurementType, ProcurementStatusInfo> = {
-  RC_INITIATED: { label: 'RC managed', color: 'blue', icon: '🏢' },
-  CENTRALLY_MANAGED: { label: 'Centrally managed', color: 'purple', icon: '🏛️' }
+  RC_INITIATED: { label: 'RC Initiated', color: 'blue', icon: '🏢' },
+  CENTRALLY_MANAGED: { label: 'Centrally Managed', color: 'purple', icon: '🏛️' }
 };
 
 /**
@@ -131,41 +127,6 @@ export interface ProcurementQuoteFile {
 
   /** Vendor name of the parent quote */
   quoteVendorName?: string;
-
-  /** Creation timestamp */
-  createdAt?: string;
-
-  /** Last update timestamp */
-  updatedAt?: string;
-
-  /** Download URL for the file */
-  downloadUrl?: string;
-}
-
-/**
- * Event file interface representing an uploaded file attached to a tracking event.
- */
-export interface ProcurementEventFile {
-  /** Unique identifier for the file */
-  id: number;
-
-  /** Original filename */
-  fileName: string;
-
-  /** MIME content type */
-  contentType: string;
-
-  /** File size in bytes */
-  fileSize: number;
-
-  /** Human-readable file size */
-  formattedFileSize?: string;
-
-  /** Optional description */
-  description?: string;
-
-  /** ID of the parent event */
-  eventId: number;
 
   /** Creation timestamp */
   createdAt?: string;
@@ -241,10 +202,10 @@ export interface ProcurementQuote {
   /** Last update timestamp */
   updatedAt?: string;
 
-  /** Username of the user who created this quote */
+  /** User who created the quote */
   createdBy?: string;
 
-  /** Username of the user who last modified this quote */
+  /** User who last modified the quote */
   modifiedBy?: string;
 
   /** Attached files */
@@ -256,14 +217,14 @@ export interface ProcurementQuote {
 
 /**
  * Procurement item interface.
- * Note: Status is now tracked via ProcurementEvent records.
- * Use currentStatus to get the most recent status from events.
+ * Note: Status is now tracked via ProcurementEvent records - use the most recent
+ * event's newStatus to get the current status.
  */
 export interface ProcurementItem {
   /** Unique identifier for the procurement item */
   id: number;
 
-  /** Purchase Requisition number */
+  /** Purchase Requisition number (optional) */
   purchaseRequisition?: string;
 
   /** Purchase Order number */
@@ -275,9 +236,6 @@ export interface ProcurementItem {
   /** Description */
   description?: string;
 
-  /** Current status (derived from most recent tracking event) */
-  currentStatus?: ProcurementItemStatus;
-
   /** Vendor name */
   vendor?: string;
 
@@ -287,22 +245,22 @@ export interface ProcurementItem {
   /** Currency code for the final price (defaults to CAD) */
   finalPriceCurrency?: string;
 
-  /** Exchange rate to convert final price to CAD */
+  /** Exchange rate to convert final price to CAD (required when finalPriceCurrency is not CAD) */
   finalPriceExchangeRate?: number;
 
-  /** Final price converted to CAD (calculated when finalPriceCurrency is not CAD) */
+  /** Final price converted to CAD (required when finalPriceCurrency is not CAD) */
   finalPriceCad?: number;
 
-  /** Quoted/estimated price in the specified currency */
+  /** Quoted or estimated price in the specified currency */
   quotedPrice?: number;
 
   /** Currency code for the quoted price (defaults to CAD) */
   quotedPriceCurrency?: string;
 
-  /** Exchange rate to convert quoted price to CAD */
+  /** Exchange rate to convert quoted price to CAD (required when quotedPriceCurrency is not CAD) */
   quotedPriceExchangeRate?: number;
 
-  /** Quoted price converted to CAD (calculated when quotedPriceCurrency is not CAD) */
+  /** Quoted price converted to CAD (required when quotedPriceCurrency is not CAD) */
   quotedPriceCad?: number;
 
   /** Contract number */
@@ -356,91 +314,153 @@ export interface ProcurementItem {
   /** Number of events */
   eventCount?: number;
 
+  /** Current status derived from most recent procurement event */
+  currentStatus?: ProcurementItemStatus;
+
+  /** Tracking status indicating overall health/risk */
+  trackingStatus?: TrackingStatus;
+
+  /** Procurement type (RC Initiated or Centrally Managed) */
+  procurementType?: ProcurementType;
+
   /** IDs of linked spending items */
   linkedSpendingItemIds?: number[];
 
   /** Names of linked spending items for display */
   linkedSpendingItemNames?: string[];
-
-  /** Tracking status indicating the overall health/risk of the procurement */
-  trackingStatus?: TrackingStatus;
-
-  /** Procurement type indicating whether the item is RC initiated or centrally managed */
-  procurementType?: ProcurementType;
 }
 
 /**
  * Enum for procurement event types.
  */
 export type ProcurementEventType =
-  | 'NOT_STARTED'
-  | 'QUOTE'
-  | 'SAM_ACKNOWLEDGEMENT_REQUESTED'
-  | 'SAM_ACKNOWLEDGEMENT_RECEIVED'
-  | 'PACKAGE_SENT_TO_PROCUREMENT'
   | 'ACKNOWLEDGED_BY_PROCUREMENT'
-  | 'PAUSED'
-  | 'CANCELLED'
-  | 'CONTRACT_AWARDED'
-  | 'GOODS_RECEIVED'
-  | 'FULL_INVOICE_RECEIVED'
-  | 'PARTIAL_INVOICE_RECEIVED'
-  | 'MONTHLY_INVOICE_RECEIVED'
-  | 'FULL_INVOICE_SIGNED'
-  | 'PARTIAL_INVOICE_SIGNED'
-  | 'MONTHLY_INVOICE_SIGNED'
-  | 'CONTRACT_AMENDED'
   | 'ADDITIONAL_DOCUMENT_REQUESTED'
   | 'ADDITIONAL_SECTION_32_REQUESTED'
-  | 'REJECTED_INVOICE'
-  | 'RECEIVED_NEW_INVOICE'
-  | 'RETROACTIVE_AWARD_LETTER'
-  | 'STILL_IN_PROCUREMENT'
-  | 'WITH_SECURITY'
+  | 'CANCELLED'
+  | 'COMPLETED'
+  | 'CONTRACT_AMENDED'
+  | 'CONTRACT_AWARDED'
+  | 'CREATED'
+  | 'DELIVERED'
   | 'EXERCISED_OPTION'
-  | 'UPDATE';
+  | 'FULL_INVOICE_RECEIVED'
+  | 'FULL_INVOICE_SIGNED'
+  | 'GOODS_RECEIVED'
+  | 'INVOICED'
+  | 'MONTHLY_INVOICE_RECEIVED'
+  | 'MONTHLY_INVOICE_SIGNED'
+  | 'NOT_STARTED'
+  | 'NOTE_ADDED'
+  | 'OTHER'
+  | 'PACKAGE_SENT_TO_PROCUREMENT'
+  | 'PARTIAL_INVOICE_RECEIVED'
+  | 'PARTIAL_INVOICE_SIGNED'
+  | 'PAUSED'
+  | 'PAYMENT_MADE'
+  | 'PO_ISSUED'
+  | 'QUOTE'
+  | 'QUOTE_RECEIVED'
+  | 'QUOTE_REJECTED'
+  | 'QUOTE_SELECTED'
+  | 'RECEIVED_NEW_INVOICE'
+  | 'REJECTED_INVOICE'
+  | 'RETROACTIVE_AWARD_LETTER'
+  | 'SAM_ACKNOWLEDGEMENT_RECEIVED'
+  | 'SAM_ACKNOWLEDGEMENT_REQUESTED'
+  | 'STATUS_CHANGE'
+  | 'STILL_IN_PROCUREMENT'
+  | 'UPDATE'
+  | 'WITH_SECURITY';
 
 /**
  * Event type display information.
  */
 export interface EventTypeInfo {
   label: string;
-  description: string;
   color: string;
   icon: string;
+  description?: string;
 }
 
 /**
  * Map of event type to display information.
  */
 export const EVENT_TYPE_INFO: Record<ProcurementEventType, EventTypeInfo> = {
-  NOT_STARTED: { label: 'Not Started', description: 'Procurement process has not yet started.', color: 'gray', icon: '⏸️' },
-  QUOTE: { label: 'Quote', description: 'Quote/estimate obtained from vendor.', color: 'blue', icon: '💬' },
-  SAM_ACKNOWLEDGEMENT_REQUESTED: { label: 'SAM Acknowledgement requested', description: 'Requested acknowledgement from Software Asset Management team.', color: 'orange', icon: '📤' },
-  SAM_ACKNOWLEDGEMENT_RECEIVED: { label: 'SAM Acknowledgement received', description: 'Received acknowledgement from Software Asset Management team.', color: 'green', icon: '📥' },
-  PACKAGE_SENT_TO_PROCUREMENT: { label: 'Package sent to Procurement', description: 'Documentation package sent to Procurement.', color: 'blue', icon: '📦' },
-  ACKNOWLEDGED_BY_PROCUREMENT: { label: 'Acknowledged by Procurement / In Progress', description: 'Procurement has accepted the package and provided a Purchase Order.', color: 'purple', icon: '✅' },
-  PAUSED: { label: 'Paused', description: 'Procurement process put on pause. Reason should be detailed in comments.', color: 'yellow', icon: '⏸️' },
-  CANCELLED: { label: 'Cancelled', description: 'Procurement process cancelled. Reason should be detailed in comments.', color: 'red', icon: '🚫' },
-  CONTRACT_AWARDED: { label: 'Contract Awarded', description: 'Procurement process completed and contract awarded, awaiting delivery if applicable.', color: 'green', icon: '🏆' },
-  GOODS_RECEIVED: { label: 'Goods received', description: 'The goods of the procurement has been received at the receiving building.', color: 'green', icon: '📦' },
-  FULL_INVOICE_RECEIVED: { label: 'Full Invoice received', description: 'Invoice for all goods received.', color: 'blue', icon: '🧾' },
-  PARTIAL_INVOICE_RECEIVED: { label: 'Partial Invoice received', description: 'Invoice for some, but not all goods received.', color: 'orange', icon: '🧾' },
-  MONTHLY_INVOICE_RECEIVED: { label: 'Monthly Invoice received', description: 'Invoice for last delivery period of services received.', color: 'blue', icon: '📅' },
-  FULL_INVOICE_SIGNED: { label: 'Full Invoice signed', description: 'Invoice for all goods/services received signed for Section 34 and submitted to Accounts Payable.', color: 'green', icon: '✍️' },
-  PARTIAL_INVOICE_SIGNED: { label: 'Partial Invoice signed', description: 'Invoice for some, but not all goods signed for Section 34 and submitted to Accounts Payable.', color: 'orange', icon: '✍️' },
-  MONTHLY_INVOICE_SIGNED: { label: 'Monthly Invoice signed', description: 'Invoice for last delivery period of services signed for Section 34 and submitted to Accounts Payable.', color: 'green', icon: '📅' },
-  CONTRACT_AMENDED: { label: 'Contract Amended', description: 'Procurement process completed and existing contract amended, awaiting delivery if applicable.', color: 'purple', icon: '📝' },
-  ADDITIONAL_DOCUMENT_REQUESTED: { label: 'Additional Document Requested', description: 'Additional documentation has been requested for the procurement.', color: 'orange', icon: '📄' },
-  ADDITIONAL_SECTION_32_REQUESTED: { label: 'Additional Section 32 Requested', description: 'Additional Section 32 authorization has been requested.', color: 'orange', icon: '📋' },
-  REJECTED_INVOICE: { label: 'Rejected Invoice', description: 'Invoice has been rejected and returned for correction.', color: 'red', icon: '❌' },
-  RECEIVED_NEW_INVOICE: { label: 'Received New Invoice', description: 'A new or corrected invoice has been received.', color: 'blue', icon: '🧾' },
-  RETROACTIVE_AWARD_LETTER: { label: 'Retroactive Award Letter', description: 'A retroactive award letter has been issued.', color: 'purple', icon: '📜' },
-  STILL_IN_PROCUREMENT: { label: 'Still in Procurement', description: 'Item is still being processed by Procurement.', color: 'yellow', icon: '⏳' },
-  WITH_SECURITY: { label: 'With Security', description: 'Procurement is currently with Security for review.', color: 'orange', icon: '🔒' },
-  EXERCISED_OPTION: { label: 'Exercised Option', description: 'A contract option has been exercised.', color: 'green', icon: '✔️' },
-  UPDATE: { label: 'Update', description: 'General update or note on the procurement.', color: 'blue', icon: '📝' }
+  ACKNOWLEDGED_BY_PROCUREMENT: { label: 'Acknowledged by Procurement', color: 'blue', icon: '✅', description: 'Procurement has acknowledged receipt of the request' },
+  ADDITIONAL_DOCUMENT_REQUESTED: { label: 'Additional Document Requested', color: 'orange', icon: '📄', description: 'Additional documentation has been requested' },
+  ADDITIONAL_SECTION_32_REQUESTED: { label: 'Additional Section 32 Requested', color: 'orange', icon: '📋', description: 'An additional Section 32 approval has been requested' },
+  CANCELLED: { label: 'Cancelled', color: 'red', icon: '🚫', description: 'The procurement has been cancelled' },
+  COMPLETED: { label: 'Completed', color: 'success', icon: '✔️', description: 'The procurement has been completed' },
+  CONTRACT_AMENDED: { label: 'Contract Amended', color: 'purple', icon: '📝', description: 'The contract has been amended' },
+  CONTRACT_AWARDED: { label: 'Contract Awarded', color: 'green', icon: '🏆', description: 'A contract has been awarded' },
+  CREATED: { label: 'Created', color: 'blue', icon: '🆕', description: 'The procurement item was created' },
+  DELIVERED: { label: 'Delivered', color: 'green', icon: '📦', description: 'Goods or services have been delivered' },
+  EXERCISED_OPTION: { label: 'Exercised Option', color: 'purple', icon: '🔄', description: 'A contract option has been exercised' },
+  FULL_INVOICE_RECEIVED: { label: 'Full Invoice Received', color: 'yellow', icon: '🧾', description: 'A full invoice has been received' },
+  FULL_INVOICE_SIGNED: { label: 'Full Invoice Signed', color: 'green', icon: '✍️', description: 'A full invoice has been signed' },
+  GOODS_RECEIVED: { label: 'Goods Received', color: 'green', icon: '📦', description: 'Goods have been received' },
+  INVOICED: { label: 'Invoiced', color: 'yellow', icon: '🧾', description: 'An invoice has been issued' },
+  MONTHLY_INVOICE_RECEIVED: { label: 'Monthly Invoice Received', color: 'yellow', icon: '📅', description: 'A monthly invoice has been received' },
+  MONTHLY_INVOICE_SIGNED: { label: 'Monthly Invoice Signed', color: 'green', icon: '✍️', description: 'A monthly invoice has been signed' },
+  NOT_STARTED: { label: 'Not Started', color: 'gray', icon: '⏸️', description: 'The procurement has not yet started' },
+  NOTE_ADDED: { label: 'Note Added', color: 'gray', icon: '📝', description: 'A note has been added' },
+  OTHER: { label: 'Other', color: 'gray', icon: '📌', description: 'Other event type' },
+  PACKAGE_SENT_TO_PROCUREMENT: { label: 'Package Sent to Procurement', color: 'blue', icon: '📤', description: 'The procurement package has been sent' },
+  PARTIAL_INVOICE_RECEIVED: { label: 'Partial Invoice Received', color: 'yellow', icon: '🧾', description: 'A partial invoice has been received' },
+  PARTIAL_INVOICE_SIGNED: { label: 'Partial Invoice Signed', color: 'green', icon: '✍️', description: 'A partial invoice has been signed' },
+  PAUSED: { label: 'Paused', color: 'orange', icon: '⏸️', description: 'The procurement has been paused' },
+  PAYMENT_MADE: { label: 'Payment Made', color: 'green', icon: '💰', description: 'A payment has been made' },
+  PO_ISSUED: { label: 'PO Issued', color: 'purple', icon: '📋', description: 'A purchase order has been issued' },
+  QUOTE: { label: 'Quote', color: 'blue', icon: '💬', description: 'A quote has been provided' },
+  QUOTE_RECEIVED: { label: 'Quote Received', color: 'blue', icon: '📥', description: 'A quote has been received' },
+  QUOTE_REJECTED: { label: 'Quote Rejected', color: 'red', icon: '❌', description: 'A quote has been rejected' },
+  QUOTE_SELECTED: { label: 'Quote Selected', color: 'green', icon: '✅', description: 'A quote has been selected' },
+  RECEIVED_NEW_INVOICE: { label: 'Received New Invoice', color: 'yellow', icon: '🧾', description: 'A new invoice has been received' },
+  REJECTED_INVOICE: { label: 'Rejected Invoice', color: 'red', icon: '❌', description: 'An invoice has been rejected' },
+  RETROACTIVE_AWARD_LETTER: { label: 'Retroactive Award Letter', color: 'purple', icon: '📜', description: 'A retroactive award letter has been issued' },
+  SAM_ACKNOWLEDGEMENT_RECEIVED: { label: 'SAM Acknowledgement Received', color: 'green', icon: '✅', description: 'SAM acknowledgement has been received' },
+  SAM_ACKNOWLEDGEMENT_REQUESTED: { label: 'SAM Acknowledgement Requested', color: 'blue', icon: '📨', description: 'SAM acknowledgement has been requested' },
+  STATUS_CHANGE: { label: 'Status Change', color: 'orange', icon: '🔄', description: 'The status has changed' },
+  STILL_IN_PROCUREMENT: { label: 'Still in Procurement', color: 'blue', icon: '⏳', description: 'The item is still in the procurement process' },
+  UPDATE: { label: 'Update', color: 'blue', icon: '🔄', description: 'An update has been made' },
+  WITH_SECURITY: { label: 'With Security', color: 'orange', icon: '🔒', description: 'The item is with security for review' }
 };
+
+/**
+ * Procurement event file interface.
+ */
+export interface ProcurementEventFile {
+  /** Unique identifier for the file */
+  id: number;
+
+  /** Original filename */
+  fileName: string;
+
+  /** MIME content type */
+  contentType: string;
+
+  /** File size in bytes */
+  fileSize: number;
+
+  /** Human-readable file size */
+  formattedFileSize: string;
+
+  /** Optional description */
+  description?: string;
+
+  /** ID of the parent event */
+  eventId: number;
+
+  /** Creation timestamp */
+  createdAt?: string;
+
+  /** Last update timestamp */
+  updatedAt?: string;
+
+  /** Download URL for the file */
+  downloadUrl?: string;
+}
 
 /**
  * Procurement event interface.
@@ -473,6 +493,12 @@ export interface ProcurementEvent {
   /** Username who created the event */
   createdBy?: string;
 
+  /** Files attached to this event */
+  files?: ProcurementEventFile[];
+
+  /** Number of files attached */
+  fileCount?: number;
+
   /** Creation timestamp */
   createdAt?: string;
 
@@ -481,12 +507,6 @@ export interface ProcurementEvent {
 
   /** Whether the event is active */
   active?: boolean;
-
-  /** Files attached to this event */
-  files?: ProcurementEventFile[];
-
-  /** Number of attached files */
-  fileCount?: number;
 }
 
 /**

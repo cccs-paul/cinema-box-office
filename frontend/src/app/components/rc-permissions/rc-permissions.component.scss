@@ -388,6 +388,41 @@
       color: var(--text-secondary, #6b7280);
       font-style: italic;
     }
+
+    .original-owner-protected {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+
+      .protected-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: #fef3c7;
+        border: 1px solid #fbbf24;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #92400e;
+        cursor: help;
+        white-space: nowrap;
+      }
+
+      .protected-hint {
+        font-size: 11px;
+        color: var(--text-secondary, #9ca3af);
+        font-style: italic;
+        line-height: 1.3;
+        max-width: 200px;
+      }
+    }
+
+    .owner-unlocked-hint {
+      cursor: help;
+      font-size: 16px;
+    }
   }
 }
 

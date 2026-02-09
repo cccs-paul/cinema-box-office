@@ -127,6 +127,23 @@ export class FiscalYearService {
   }
 
   /**
+   * Clone a fiscal year to a different responsibility centre.
+   * The user must have at least read access to the source RC and write access to the target RC.
+   *
+   * @param sourceRcId The source responsibility centre ID
+   * @param fyId The fiscal year ID to clone
+   * @param targetRcId The target responsibility centre ID
+   * @param newName The name for the cloned fiscal year
+   * @returns Observable of the cloned fiscal year
+   */
+  cloneFiscalYearToRC(sourceRcId: number, fyId: number, targetRcId: number, newName: string): Observable<FiscalYear> {
+    return this.http.post<FiscalYear>(
+      `${this.baseUrl}/${sourceRcId}/fiscal-years/${fyId}/clone-to-rc`,
+      { newName, targetRcId }
+    ).pipe(catchError(this.handleError));
+  }
+
+  /**
    * Handle HTTP errors.
    *
    * @param error The HTTP error response

@@ -340,6 +340,54 @@
         <div class="form-container">
           <h3>📋 {{ 'fiscalYear.cloneTitle' | translate }}</h3>
           <p class="form-info">{{ 'fiscalYear.cloning' | translate }}: <strong>{{ selectedFY?.name }}</strong></p>
+
+          <!-- Read-only notice and target RC selection -->
+          <div class="clone-target-section" *ngIf="!selectedRCCanWrite">
+            <div class="info-banner">
+              <span class="info-icon">ℹ️</span>
+              <span>{{ 'fiscalYear.readOnlyCloneNotice' | translate }}</span>
+            </div>
+
+            <!-- Target RC selection -->
+            <div class="form-group" *ngIf="!cloneFYShowNewRCForm">
+              <label>{{ 'fiscalYear.selectTargetRc' | translate }} *</label>
+              <select [(ngModel)]="cloneFYTargetRcId" [disabled]="isCloningFY">
+                <option [ngValue]="null">-- {{ 'fiscalYear.chooseRc' | translate }} --</option>
+                <option *ngFor="let rc of writableRCs" [ngValue]="rc.id">
+                  {{ rc.name }} ({{ getAccessLevelLabel(rc.accessLevel) }})
+                </option>
+              </select>
+              <div class="clone-target-actions">
+                <button type="button" class="btn btn-link btn-create-rc" (click)="showCloneFYNewRCForm()" [disabled]="isCloningFY">
+                  ➕ {{ 'fiscalYear.createNewRcForClone' | translate }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Inline new RC creation form -->
+            <div class="inline-create-rc" *ngIf="cloneFYShowNewRCForm">
+              <label>{{ 'fiscalYear.newRcNameForClone' | translate }} *</label>
+              <div class="inline-form-row">
+                <input
+                  type="text"
+                  [(ngModel)]="cloneFYNewRCName"
+                  [placeholder]="'rcSelection.enterRcName' | translate"
+                  [disabled]="isCreatingCloneTargetRC"
+                />
+                <button class="btn btn-primary btn-sm" 
+                        (click)="createRCForCloneFY()" 
+                        [disabled]="isCreatingCloneTargetRC || !cloneFYNewRCName.trim()">
+                  {{ isCreatingCloneTargetRC ? ('rcSelection.creating' | translate) : ('rcSelection.createRc' | translate) }}
+                </button>
+                <button class="btn btn-secondary btn-sm" 
+                        (click)="cancelCloneFYNewRC()" 
+                        [disabled]="isCreatingCloneTargetRC">
+                  {{ 'common.cancel' | translate }}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="form-group">
             <label for="cloneFYName">{{ 'fiscalYear.name' | translate }} *</label>
             <input
@@ -351,7 +399,9 @@
             />
           </div>
           <div class="form-actions">
-            <button class="btn btn-primary" (click)="cloneFY()" [disabled]="isCloningFY || !cloneFYNewName.trim()">
+            <button class="btn btn-primary" 
+                    (click)="cloneFY()" 
+                    [disabled]="isCloningFY || !cloneFYNewName.trim() || (!selectedRCCanWrite && !cloneFYTargetRcId)">
               {{ isCloningFY ? ('fiscalYear.cloning' | translate) : ('fiscalYear.clone' | translate) }}
             </button>
             <button class="btn btn-secondary" (click)="closeFYForms()" [disabled]="isCloningFY">

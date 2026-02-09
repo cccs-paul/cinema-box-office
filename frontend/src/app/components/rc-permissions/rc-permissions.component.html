@@ -217,7 +217,10 @@
               <td class="actions-cell">
                 <!-- Normal actions -->
                 <div *ngIf="editingPermissionId !== permission.id && canEditPermission(permission)" class="action-buttons">
-                  <!-- For original owner (id === null), only show relinquish button -->
+                  <!-- For original owner (id === null), only show relinquish button with warning -->
+                  <span *ngIf="!permission.id" class="owner-unlocked-hint" [title]="'rcPermissions.ownerUnlockedHint' | translate">
+                    🔓
+                  </span>
                   <button *ngIf="!permission.id" class="btn-action btn-delete" (click)="confirmDelete(permission)" [title]="'rcPermissions.relinquishOwnership' | translate">
                     🔄
                   </button>
@@ -240,9 +243,12 @@
                   </button>
                 </div>
                 <!-- Original owner badge (sole owner, no other owners exist) -->
-                <span *ngIf="editingPermissionId !== permission.id && !canEditPermission(permission) && !permission.id" class="original-badge">
-                  {{ 'rcPermissions.originalOwner' | translate }}
-                </span>
+                <div *ngIf="editingPermissionId !== permission.id && !canEditPermission(permission) && !permission.id" class="original-owner-protected">
+                  <span class="protected-badge" [title]="'rcPermissions.originalOwnerProtectedHint' | translate">
+                    🔒 {{ 'rcPermissions.originalOwner' | translate }}
+                  </span>
+                  <span class="protected-hint">{{ 'rcPermissions.addAnotherOwnerHint' | translate }}</span>
+                </div>
               </td>
             </tr>
           </tbody>

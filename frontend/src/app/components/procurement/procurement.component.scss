@@ -630,8 +630,11 @@
     }
   }
 
+  > .form-group {
+    margin-bottom: 1rem;
+  }
+
   .form-group {
-    margin-bottom: 0;
 
     label {
       display: block;
@@ -1074,6 +1077,75 @@
   background: var(--background-tertiary, #f8fafc);
   color: var(--text-secondary, #64748b);
   border: 1px solid var(--border-color, #e2e8f0);
+}
+
+/* Procurement Type Toggle (edit form) */
+.procurement-type-toggle {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+
+  .type-toggle-btn {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--background-tertiary);
+    color: var(--text-secondary);
+
+    &:hover {
+      opacity: 0.9;
+    }
+
+    &.active {
+      border-color: currentColor;
+    }
+
+    &.status-blue {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    &.status-purple {
+      background: #ede9fe;
+      color: #7c3aed;
+    }
+  }
+}
+
+/* Procurement Type Badge (list and detail view) */
+.procurement-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: var(--a11y-badge-padding-vertical, 0.2rem) var(--a11y-badge-padding-horizontal, 0.5rem);
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &.status-blue {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+
+  &.status-purple {
+    background: #ede9fe;
+    color: #7c3aed;
+  }
+}
+
+/* Procurement Type Filter */
+.procurement-type-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
 /* Loading */

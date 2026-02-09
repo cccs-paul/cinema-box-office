@@ -411,6 +411,57 @@ public class FiscalYearController {
     }
   }
 
+  @PostMapping("/{fyId}/clone-to-rc")
+  @Operation(summary = "Clone a fiscal year to a different RC",
+      description = "Creates a deep copy of a fiscal year and all its child data into a different Responsibility Centre. "
+          + "The user must have at least read access to the source RC and write access to the target RC.")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "201", description = "Fiscal year cloned successfully"),
+      @ApiResponse(responseCode = "400", description = "Invalid request data or duplicate name"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Access denied"),
+      @ApiResponse(responseCode = "404", description = "Fiscal year or target RC not found"),
+      @ApiResponse(responseCode = "500", description = "Internal server error")
+  })
+  public ResponseEntity<?> cloneFiscalYearToRC(
+      @PathVariable Long rcId,
+      @PathVariable Long fyId,
+      @RequestBody FiscalYearCloneToRCRequest request,
+      Authentication authentication) {
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
+    }
+    logger.info("POST /responsibility-centres/" + rcId + "/fiscal-years/" + fyId
+        + "/clone-to-rc - Cloning fiscal year as '" + request.getNewName()
+        + "' to RC ID " + request.getTargetRcId() + " for user: " + username);
+
+    try {
+      if (request.getNewName() == null || request.getNewName().trim().isEmpty()) {
+        return ResponseEntity.badRequest().body(new ErrorResponse("New name is required"));
+      }
+      if (request.getTargetRcId() == null) {
+        return ResponseEntity.badRequest().body(new ErrorResponse("Target RC ID is required"));
+      }
+
+      FiscalYearDTO clonedFY = fiscalYearService.cloneFiscalYearToRC(
+          rcId, fyId, request.getTargetRcId(), username, request.getNewName().trim());
+      return ResponseEntity.status(HttpStatus.CREATED).body(clonedFY);
+    } catch (IllegalArgumentException e) {
+      String message = e.getMessage();
+      logger.warning("Fiscal year clone-to-rc failed: " + message);
+      if (message != null && message.contains("does not have access")) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ErrorResponse(message));
+      }
+      return ResponseEntity.badRequest().body(new ErrorResponse(message));
+    } catch (Exception e) {
+      logger.severe("Fiscal year clone-to-rc failed: " + e.getMessage());
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ErrorResponse("An unexpected error occurred"));
+    }
+  }
+
   // Request DTOs
   public static class FiscalYearCreateRequest {
     private static final String INVALID_FILENAME_CHARS = "<>:\"/\\|?*";
@@ -531,6 +582,37 @@ public class FiscalYearController {
 
     public void setNewName(String newName) {
       this.newName = newName;
+    }
+  }
+
+  /**
+   * Request DTO for cloning a fiscal year to a different RC.
+   */
+  public static class FiscalYearCloneToRCRequest {
+    private String newName;
+    private Long targetRcId;
+
+    public FiscalYearCloneToRCRequest() {}
+
+    public FiscalYearCloneToRCRequest(String newName, Long targetRcId) {
+      this.newName = newName;
+      this.targetRcId = targetRcId;
+    }
+
+    public String getNewName() {
+      return newName;
+    }
+
+    public void setNewName(String newName) {
+      this.newName = newName;
+    }
+
+    public Long getTargetRcId() {
+      return targetRcId;
+    }
+
+    public void setTargetRcId(Long targetRcId) {
+      this.targetRcId = targetRcId;
     }
   }
 }

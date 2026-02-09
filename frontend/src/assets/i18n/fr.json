@@ -199,7 +199,13 @@
     "rename": "Renommer l'exercice",
     "renaming": "Renommage...",
     "activate": "Activer",
-    "deactivate": "Désactiver"
+    "deactivate": "Désactiver",
+    "readOnlyCloneNotice": "Vous avez un accès en lecture seule à ce CR. Choisissez un CR accessible en écriture ou créez-en un nouveau pour cloner cet exercice financier.",
+    "selectTargetRc": "Centre de responsabilité cible",
+    "chooseRc": "Sélectionner un CR",
+    "createNewRcForClone": "Créer un nouveau CR",
+    "newRcNameForClone": "Nom du nouveau CR",
+    "targetRc": "CR cible"
   },
   "funding": {
     "title": "Financement",
@@ -308,6 +314,8 @@
     "trackingStatusError": "Échec de la mise à jour du statut de suivi",
     "cannotLinkCancelled": "Impossible de lier un approvisionnement annulé aux dépenses",
     "purchaseRequisition": "Demande d'achat (DA)",
+    "pr": "DA",
+    "po": "BC",
     "purchaseOrder": "Bon de commande (BC)",
     "enterPrPlaceholder": "ex: DA-2026-001",
     "enterPoPlaceholder": "ex: BC-2026-001",
@@ -806,6 +814,9 @@
     "distList": "Liste dist.",
     "by": "par",
     "originalOwner": "Propriétaire original",
+    "originalOwnerProtectedHint": "Ceci est le propriétaire original. Ses permissions ne peuvent pas être modifiées tant qu'un autre propriétaire n'est pas ajouté à ce CR.",
+    "addAnotherOwnerHint": "Ajoutez un autre propriétaire pour déverrouiller",
+    "ownerUnlockedHint": "Un autre propriétaire existe. Vous pouvez maintenant renoncer à la propriété.",
     "noPermissions": "Aucune permission configurée. Utilisez les boutons ci-dessus pour accorder l'accès.",
     "confirmRevokeAccess": "Confirmer la révocation de l'accès",
     "revokeConfirmMessage": "Êtes-vous sûr de vouloir révoquer cet accès? L'utilisateur/groupe ne pourra plus accéder à ce CR.",

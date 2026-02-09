@@ -5,9 +5,10 @@
  */
 package com.myrc.service;
 
-import com.myrc.dto.FiscalYearDTO;
 import java.util.List;
 import java.util.Optional;
+
+import com.myrc.dto.FiscalYearDTO;
 
 /**
  * Service interface for FiscalYear operations.
@@ -111,4 +112,20 @@ public interface FiscalYearService {
    * @throws IllegalArgumentException if user lacks write access or name already exists
    */
   FiscalYearDTO cloneFiscalYear(Long rcId, Long fiscalYearId, String username, String newName);
+
+  /**
+   * Clone a fiscal year to a different responsibility centre.
+   * The user must have at least read access to the source RC and write access
+   * to the target RC. Creates a deep copy of the fiscal year and all its child data.
+   *
+   * @param sourceRcId the source responsibility centre ID
+   * @param fiscalYearId the fiscal year ID to clone
+   * @param targetRcId the target responsibility centre ID
+   * @param username the username
+   * @param newName the name for the cloned fiscal year
+   * @return the cloned fiscal year DTO
+   * @throws IllegalArgumentException if user lacks required access or name already exists
+   */
+  FiscalYearDTO cloneFiscalYearToRC(Long sourceRcId, Long fiscalYearId, Long targetRcId,
+                                     String username, String newName);
 }

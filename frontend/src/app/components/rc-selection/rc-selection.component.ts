@@ -73,6 +73,12 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
   renameFYNewDescription = '';
   cloneFYNewName = '';
 
+  // Clone FY to different RC (for read-only users)
+  cloneFYTargetRcId: number | null = null;
+  cloneFYShowNewRCForm = false;
+  cloneFYNewRCName = '';
+  isCreatingCloneTargetRC = false;
+
   // Messages
   errorMessage: string | null = null;
   successMessage: string | null = null;
@@ -708,6 +714,7 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
 
   /**
    * Toggle the clone FY form visibility.
+   * For read-only users, the form will include an RC selector for the target RC.
    */
   toggleFYCloneForm(): void {
     if (this.selectedFYId === null) return;
@@ -715,10 +722,73 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
     this.showFYCloneForm = true;
     const fy = this.selectedFY;
     this.cloneFYNewName = fy ? fy.name + ' (Copy)' : '';
+    // Reset target RC selection for clone-to-rc flow
+    this.cloneFYTargetRcId = this.selectedRCCanWrite ? this.selectedRCId : null;
+    this.cloneFYShowNewRCForm = false;
+    this.cloneFYNewRCName = '';
+  }
+
+  /**
+   * Get the list of RCs the user can write to (for clone target selection).
+   */
+  get writableRCs(): ResponsibilityCentreDTO[] {
+    return this.responsibilityCentres.filter(
+      rc => rc.isOwner || rc.accessLevel === 'READ_WRITE'
+    );
+  }
+
+  /**
+   * Show the inline new RC creation form within the clone FY dialog.
+   */
+  showCloneFYNewRCForm(): void {
+    this.cloneFYShowNewRCForm = true;
+    this.cloneFYTargetRcId = null;
+    this.cloneFYNewRCName = '';
+  }
+
+  /**
+   * Cancel inline new RC creation within clone FY dialog.
+   */
+  cancelCloneFYNewRC(): void {
+    this.cloneFYShowNewRCForm = false;
+    this.cloneFYNewRCName = '';
+  }
+
+  /**
+   * Create a new RC from the clone FY dialog and set it as the clone target.
+   */
+  createRCForCloneFY(): void {
+    if (!this.cloneFYNewRCName.trim()) {
+      this.errorMessage = 'RC name is required';
+      return;
+    }
+
+    this.isCreatingCloneTargetRC = true;
+    this.errorMessage = null;
+
+    this.rcService.createResponsibilityCentre(this.cloneFYNewRCName.trim(), '')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (newRC: ResponsibilityCentreDTO) => {
+          this.responsibilityCentres.push(newRC);
+          this.cloneFYTargetRcId = newRC.id;
+          this.cloneFYShowNewRCForm = false;
+          this.cloneFYNewRCName = '';
+          this.isCreatingCloneTargetRC = false;
+          this.successMessage = `RC "${newRC.name}" created. Now click Clone to add the fiscal year.`;
+          setTimeout(() => this.clearSuccess(), 5000);
+        },
+        error: (error: unknown) => {
+          this.isCreatingCloneTargetRC = false;
+          const err = error as Error;
+          this.errorMessage = err.message || 'Failed to create RC. The name may already be taken.';
+        }
+      });
   }
 
   /**
    * Clone the selected fiscal year with a deep copy of all child data.
+   * If the user is read-only on the current RC, clones to the selected target RC instead.
    */
   cloneFY(): void {
     if (this.selectedRCId === null || this.selectedFYId === null || !this.cloneFYNewName.trim()) {
@@ -726,35 +796,87 @@ export class RCSelectionComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Determine if we need cross-RC clone
+    const needsCrossRCClone = !this.selectedRCCanWrite;
+    if (needsCrossRCClone && !this.cloneFYTargetRcId) {
+      this.errorMessage = 'Please select a target RC or create a new one';
+      return;
+    }
+
     this.isCloningFY = true;
     this.errorMessage = null;
     this.successMessage = null;
 
-    this.fyService.cloneFiscalYear(this.selectedRCId, this.selectedFYId, this.cloneFYNewName.trim())
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (clonedFY: FiscalYear) => {
-          this.fiscalYears.push(clonedFY);
-          this.showFYCloneForm = false;
-          this.isCloningFY = false;
-          this.cloneFYNewName = '';
-          this.successMessage = `Fiscal Year "${clonedFY.name}" cloned successfully.`;
-          // Select the newly cloned FY
-          this.selectFY(clonedFY);
-          setTimeout(() => this.clearSuccess(), 5000);
-        },
-        error: (error: unknown) => {
-          this.isCloningFY = false;
-          const httpError = error as { status?: number; error?: { message?: string } };
-          if (httpError.status === 400) {
-            this.errorMessage = `A Fiscal Year named "${this.cloneFYNewName}" already exists. Please choose a different name.`;
-          } else if (httpError.status === 403) {
-            this.errorMessage = 'You do not have permission to clone this fiscal year.';
-          } else {
-            this.errorMessage = 'Failed to clone fiscal year. Please try again.';
+    if (needsCrossRCClone && this.cloneFYTargetRcId) {
+      // Clone to a different RC
+      this.fyService.cloneFiscalYearToRC(
+        this.selectedRCId,
+        this.selectedFYId,
+        this.cloneFYTargetRcId,
+        this.cloneFYNewName.trim()
+      ).pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (clonedFY: FiscalYear) => {
+            this.showFYCloneForm = false;
+            this.isCloningFY = false;
+            this.cloneFYNewName = '';
+            const targetRC = this.responsibilityCentres.find(r => r.id === this.cloneFYTargetRcId);
+            this.successMessage = `Fiscal Year "${clonedFY.name}" cloned to RC "${targetRC?.name || 'target RC'}" successfully.`;
+            // Switch to the target RC and select the cloned FY
+            this.selectRCWithoutNavigate(targetRC!);
+            // Load the fiscal years for the target RC and select the cloned FY
+            this.fyService.getFiscalYearsByRC(this.cloneFYTargetRcId!).pipe(takeUntil(this.destroy$)).subscribe({
+              next: (fys: FiscalYear[]) => {
+                this.fiscalYears = fys;
+                const cloned = fys.find(f => f.name === clonedFY.name);
+                if (cloned) {
+                  this.selectFY(cloned);
+                }
+              }
+            });
+            this.cloneFYTargetRcId = null;
+            setTimeout(() => this.clearSuccess(), 5000);
+          },
+          error: (error: unknown) => {
+            this.isCloningFY = false;
+            const httpError = error as { status?: number; error?: { message?: string } };
+            if (httpError.status === 400) {
+              this.errorMessage = `A Fiscal Year named "${this.cloneFYNewName}" already exists in the target RC. Please choose a different name.`;
+            } else if (httpError.status === 403) {
+              this.errorMessage = 'You do not have write access to the target RC.';
+            } else {
+              this.errorMessage = 'Failed to clone fiscal year. Please try again.';
+            }
           }
-        }
-      });
+        });
+    } else {
+      // Clone within the same RC (original behavior)
+      this.fyService.cloneFiscalYear(this.selectedRCId, this.selectedFYId, this.cloneFYNewName.trim())
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (clonedFY: FiscalYear) => {
+            this.fiscalYears.push(clonedFY);
+            this.showFYCloneForm = false;
+            this.isCloningFY = false;
+            this.cloneFYNewName = '';
+            this.successMessage = `Fiscal Year "${clonedFY.name}" cloned successfully.`;
+            // Select the newly cloned FY
+            this.selectFY(clonedFY);
+            setTimeout(() => this.clearSuccess(), 5000);
+          },
+          error: (error: unknown) => {
+            this.isCloningFY = false;
+            const httpError = error as { status?: number; error?: { message?: string } };
+            if (httpError.status === 400) {
+              this.errorMessage = `A Fiscal Year named "${this.cloneFYNewName}" already exists. Please choose a different name.`;
+            } else if (httpError.status === 403) {
+              this.errorMessage = 'You do not have permission to clone this fiscal year.';
+            } else {
+              this.errorMessage = 'Failed to clone fiscal year. Please try again.';
+            }
+          }
+        });
+    }
   }
 
   /**

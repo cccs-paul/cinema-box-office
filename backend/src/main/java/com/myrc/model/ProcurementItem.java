@@ -5,7 +5,7 @@
  *
  * Author: myRC Team
  * Date: 2026-01-28
- * Version: 1.1.0
+ * Version: 1.0.0
  *
  * Description:
  * Entity representing a Procurement Item associated with a Fiscal Year.
@@ -67,20 +67,9 @@ public class ProcurementItem {
         CANCELLED
     }
 
-
-    /**
-     * Enumeration of procurement type values.
-     * Indicates whether the procurement was initiated by the RC or centrally managed.
-     */
-    public enum ProcurementType {
-        /** Procurement initiated by the Responsibility Centre */
-        RC_INITIATED,
-        /** Procurement centrally managed by the organization */
-        CENTRALLY_MANAGED
-    }
     /**
      * Enumeration of tracking status values.
-     * Used to indicate the overall health/risk of the procurement.
+     * Indicates the overall health/risk of the procurement.
      */
     public enum TrackingStatus {
         PLANNING,
@@ -88,6 +77,15 @@ public class ProcurementItem {
         AT_RISK,
         COMPLETED,
         CANCELLED
+    }
+
+    /**
+     * Enumeration of procurement type values.
+     * Indicates whether the procurement was initiated by the RC or centrally managed.
+     */
+    public enum ProcurementType {
+        RC_INITIATED,
+        CENTRALLY_MANAGED
     }
 
     @Id
@@ -205,6 +203,22 @@ public class ProcurementItem {
     @Column(name = "procurement_completed_date")
     private LocalDate procurementCompletedDate;
 
+    /**
+     * Tracking status indicating the overall health/risk of the procurement.
+     * Defaults to PLANNING.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tracking_status", length = 20)
+    private TrackingStatus trackingStatus = TrackingStatus.PLANNING;
+
+    /**
+     * Procurement type indicating whether the procurement was RC-initiated or centrally managed.
+     * Defaults to RC_INITIATED.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "procurement_type", length = 20)
+    private ProcurementType procurementType = ProcurementType.RC_INITIATED;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "fiscal_year_id", nullable = false)
     private FiscalYear fiscalYear;
@@ -250,23 +264,6 @@ public class ProcurementItem {
     @Column(nullable = false)
     private Boolean active = true;
 
-    /**
-     * Tracking status indicating the overall health/risk of the procurement.
-     * - ON_TRACK: Procurement is proceeding normally.
-     * - AT_RISK: Procurement has issues or delays.
-     * - CANCELLED: Procurement has been cancelled.
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tracking_status", length = 20)
-    private TrackingStatus trackingStatus = TrackingStatus.PLANNING;
-
-
-    /**
-     * Procurement type indicating whether the procurement was RC-initiated or centrally managed.
-     */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "procurement_type", length = 20)
-    private ProcurementType procurementType = ProcurementType.RC_INITIATED;
     // Constructors
     public ProcurementItem() {
     }
@@ -460,6 +457,14 @@ public class ProcurementItem {
         this.quotes = quotes;
     }
 
+    public List<SpendingItem> getSpendingItems() {
+        return spendingItems;
+    }
+
+    public void setSpendingItems(List<SpendingItem> spendingItems) {
+        this.spendingItems = spendingItems;
+    }
+
     /**
      * Add a quote to this procurement item.
      *
@@ -478,6 +483,22 @@ public class ProcurementItem {
     public void removeQuote(ProcurementQuote quote) {
         quotes.remove(quote);
         quote.setProcurementItem(null);
+    }
+
+    public TrackingStatus getTrackingStatus() {
+        return trackingStatus;
+    }
+
+    public void setTrackingStatus(TrackingStatus trackingStatus) {
+        this.trackingStatus = trackingStatus != null ? trackingStatus : TrackingStatus.PLANNING;
+    }
+
+    public ProcurementType getProcurementType() {
+        return procurementType;
+    }
+
+    public void setProcurementType(ProcurementType procurementType) {
+        this.procurementType = procurementType != null ? procurementType : ProcurementType.RC_INITIATED;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -505,42 +526,6 @@ public class ProcurementItem {
     }
 
     /**
-     * Get the tracking status for this procurement.
-     *
-     * @return the tracking status
-     */
-    public TrackingStatus getTrackingStatus() {
-        return trackingStatus;
-    }
-
-    /**
-     * Set the tracking status for this procurement.
-     *
-     * @param trackingStatus the tracking status
-     */
-    public void setTrackingStatus(TrackingStatus trackingStatus) {
-        this.trackingStatus = trackingStatus;
-    }
-
-
-    /**
-     * Get the procurement type for this procurement.
-     *
-     * @return the procurement type
-     */
-    public ProcurementType getProcurementType() {
-        return procurementType;
-    }
-
-    /**
-     * Set the procurement type for this procurement.
-     *
-     * @param procurementType the procurement type
-     */
-    public void setProcurementType(ProcurementType procurementType) {
-        this.procurementType = procurementType;
-    }
-    /**
      * Get the version for optimistic locking.
      *
      * @return the version number
@@ -556,24 +541,6 @@ public class ProcurementItem {
      */
     public void setVersion(Long version) {
         this.version = version;
-    }
-
-    /**
-     * Gets the spending items linked to this procurement item.
-     *
-     * @return the list of linked spending items
-     */
-    public List<SpendingItem> getSpendingItems() {
-        return spendingItems;
-    }
-
-    /**
-     * Sets the spending items linked to this procurement item.
-     *
-     * @param spendingItems the list of linked spending items
-     */
-    public void setSpendingItems(List<SpendingItem> spendingItems) {
-        this.spendingItems = spendingItems;
     }
 
     @Override

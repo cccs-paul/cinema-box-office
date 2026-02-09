@@ -324,4 +324,60 @@ public class FiscalYearServiceImpl implements FiscalYearService {
 
     return FiscalYearDTO.fromEntity(clonedFY);
   }
+
+  @Override
+  public FiscalYearDTO cloneFiscalYearToRC(Long sourceRcId, Long fiscalYearId, Long targetRcId,
+      String username, String newName) {
+    // Verify user has at least read access to the source RC
+    if (!hasAccessToRC(sourceRcId, username)) {
+      throw new IllegalArgumentException(
+          "User does not have access to the source Responsibility Centre");
+    }
+
+    // Verify user has write access to the target RC
+    if (!hasWriteAccessToRC(targetRcId, username)) {
+      throw new IllegalArgumentException(
+          "User does not have write access to the target Responsibility Centre");
+    }
+
+    Optional<FiscalYear> fyOpt = fiscalYearRepository.findById(fiscalYearId);
+    if (fyOpt.isEmpty()) {
+      throw new IllegalArgumentException("Fiscal Year not found");
+    }
+
+    FiscalYear sourceFY = fyOpt.get();
+
+    // Verify the FY belongs to the specified source RC
+    if (!sourceFY.getResponsibilityCentre().getId().equals(sourceRcId)) {
+      throw new IllegalArgumentException(
+          "Fiscal Year does not belong to the source Responsibility Centre");
+    }
+
+    Optional<ResponsibilityCentre> targetRcOpt = rcRepository.findById(targetRcId);
+    if (targetRcOpt.isEmpty()) {
+      throw new IllegalArgumentException("Target Responsibility Centre not found");
+    }
+
+    ResponsibilityCentre targetRC = targetRcOpt.get();
+
+    // Validate new name
+    if (newName == null || newName.trim().isEmpty()) {
+      throw new IllegalArgumentException("Name is required");
+    }
+
+    // Check if name already exists for the target RC
+    if (fiscalYearRepository.existsByNameAndResponsibilityCentre(newName, targetRC)) {
+      throw new IllegalArgumentException(
+          "A Fiscal Year with this name already exists for the target Responsibility Centre");
+    }
+
+    // Perform the deep clone to the target RC
+    FiscalYear clonedFY = fiscalYearCloneService.deepCloneFiscalYear(sourceFY, newName, targetRC);
+
+    logger.info("Cloned fiscal year '" + sourceFY.getName() + "' as '" + newName
+        + "' from RC '" + sourceFY.getResponsibilityCentre().getName()
+        + "' to RC '" + targetRC.getName() + "' by user " + username);
+
+    return FiscalYearDTO.fromEntity(clonedFY);
+  }
 }
