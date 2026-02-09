@@ -34,6 +34,50 @@ import { DateInputDirective } from '../../directives/date-input.directive';
 import { EVENT_TYPE_INFO, ProcurementEventType } from '../../models/procurement.model';
 
 /**
+ * Maps ProcurementEventType enum values to i18n key suffixes under 'procurement.'.
+ */
+const EVENT_TYPE_I18N_KEYS: Record<string, string> = {
+  ACKNOWLEDGED_BY_PROCUREMENT: 'eventTypeAcknowledgedByProcurement',
+  ADDITIONAL_DOCUMENT_REQUESTED: 'eventTypeAdditionalDocumentRequested',
+  ADDITIONAL_SECTION_32_REQUESTED: 'eventTypeAdditionalSection32Requested',
+  CANCELLED: 'eventTypeCancelled',
+  COMPLETED: 'eventTypeCompleted',
+  CONTRACT_AMENDED: 'eventTypeContractAmended',
+  CONTRACT_AWARDED: 'eventTypeContractAwarded',
+  CREATED: 'eventTypeCreated',
+  DELIVERED: 'eventTypeDelivered',
+  EXERCISED_OPTION: 'eventTypeExercisedOption',
+  FULL_INVOICE_RECEIVED: 'eventTypeFullInvoiceReceived',
+  FULL_INVOICE_SIGNED: 'eventTypeFullInvoiceSigned',
+  GOODS_RECEIVED: 'eventTypeGoodsReceived',
+  INVOICED: 'eventTypeInvoiced',
+  MONTHLY_INVOICE_RECEIVED: 'eventTypeMonthlyInvoiceReceived',
+  MONTHLY_INVOICE_SIGNED: 'eventTypeMonthlyInvoiceSigned',
+  NOT_STARTED: 'eventTypeNotStarted',
+  NOTE_ADDED: 'eventTypeNoteAdded',
+  OTHER: 'eventTypeOther',
+  PACKAGE_SENT_TO_PROCUREMENT: 'eventTypePackageSentToProcurement',
+  PARTIAL_INVOICE_RECEIVED: 'eventTypePartialInvoiceReceived',
+  PARTIAL_INVOICE_SIGNED: 'eventTypePartialInvoiceSigned',
+  PAUSED: 'eventTypePaused',
+  PAYMENT_MADE: 'eventTypePaymentMade',
+  PO_ISSUED: 'eventTypePoIssued',
+  QUOTE: 'eventTypeQuote',
+  QUOTE_RECEIVED: 'eventTypeQuoteReceived',
+  QUOTE_REJECTED: 'eventTypeQuoteRejected',
+  QUOTE_SELECTED: 'eventTypeQuoteSelected',
+  RECEIVED_NEW_INVOICE: 'eventTypeReceivedNewInvoice',
+  REJECTED_INVOICE: 'eventTypeRejectedInvoice',
+  RETROACTIVE_AWARD_LETTER: 'eventTypeRetroactiveAwardLetter',
+  SAM_ACKNOWLEDGEMENT_RECEIVED: 'eventTypeSamAcknowledgementReceived',
+  SAM_ACKNOWLEDGEMENT_REQUESTED: 'eventTypeSamAcknowledgementRequested',
+  STATUS_CHANGE: 'eventTypeStatusChange',
+  STILL_IN_PROCUREMENT: 'eventTypeStillInProcurement',
+  UPDATE: 'eventTypeUpdate',
+  WITH_SECURITY: 'eventTypeWithSecurity'
+};
+
+/**
  * Spending component showing spending items for the selected RC and FY.
  *
  * @author myRC Team
@@ -1124,6 +1168,21 @@ export class SpendingComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Collect all warning messages for a spending item into a single list.
+   * Used to display a consolidated warning indicator with a multi-line tooltip.
+   */
+  getItemWarnings(item: SpendingItem): string[] {
+    const warnings: string[] = [];
+    if (item.procurementItemId && this.hasPriceMismatch(item)) {
+      warnings.push(this.translate.instant('spending.priceMismatchWarning'));
+    }
+    if (this.hasInvoiceMismatch(item)) {
+      warnings.push(this.translate.instant('spending.invoiceMismatchTooltip'));
+    }
+    return warnings;
+  }
+
+  /**
    * Navigate to the procurement page to view the linked procurement item.
    */
   viewLinkedProcurement(): void {
@@ -1378,11 +1437,18 @@ export class SpendingComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get label for a procurement event type.
+   * Get label for a procurement event type, using i18n translations.
    */
   getEventTypeLabel(eventType: string): string {
     const info = EVENT_TYPE_INFO[eventType as ProcurementEventType];
-    return info?.label || eventType;
+    if (!info) return eventType;
+    const keySuffix = EVENT_TYPE_I18N_KEYS[eventType];
+    if (keySuffix) {
+      const fullKey = 'procurement.' + keySuffix;
+      const translated = this.translate.instant(fullKey);
+      if (translated !== fullKey) return translated;
+    }
+    return info.label;
   }
 
   /**

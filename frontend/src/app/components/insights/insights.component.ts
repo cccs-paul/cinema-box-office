@@ -52,6 +52,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('procurementStatusChart') procurementStatusChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('procurementTypeChart') procurementTypeChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('spendingStatusChart') spendingStatusChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('invoiceCoverageChart') invoiceCoverageChartRef!: ElementRef<HTMLCanvasElement>;
 
   currentUser: User | null = null;
 
@@ -198,6 +199,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.createProcurementStatusChart();
     this.createProcurementTypeChart();
     this.createSpendingStatusChart();
+    this.createInvoiceCoverageChart();
   }
 
   /**
@@ -545,6 +547,120 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
+   * Calculate the total number of invoices across all spending items.
+   */
+  getTotalInvoiceCount(): number {
+    return this.spendingItems.reduce((sum, item) => sum + (item.invoiceCount || 0), 0);
+  }
+
+  /**
+   * Calculate the total invoiced amount in CAD across all spending items.
+   */
+  getTotalInvoicedAmount(): number {
+    return this.spendingItems.reduce((sum, item) => sum + (item.invoiceTotalCad || 0), 0);
+  }
+
+  /**
+   * Calculate the total allocated amount in CAD across all spending items.
+   */
+  getTotalAllocatedAmount(): number {
+    return this.spendingItems.reduce((sum, item) => sum + (item.moneyAllocationTotalCad || 0), 0);
+  }
+
+  /**
+   * Calculate the percentage of allocated spending covered by invoices.
+   */
+  getInvoiceCoveragePercent(): number {
+    const allocated = this.getTotalAllocatedAmount();
+    if (allocated <= 0) return 0;
+    return Math.min(100, (this.getTotalInvoicedAmount() / allocated) * 100);
+  }
+
+  /**
+   * Count spending items that have at least one invoice.
+   */
+  getItemsWithInvoiceCount(): number {
+    return this.spendingItems.filter(item => (item.invoiceCount || 0) > 0).length;
+  }
+
+  /**
+   * Create invoice coverage horizontal bar chart comparing allocated vs invoiced
+   * amounts per category.
+   */
+  private createInvoiceCoverageChart(): void {
+    if (!this.invoiceCoverageChartRef?.nativeElement) return;
+
+    const categoryMap = new Map<string, { allocated: number; invoiced: number }>();
+    const uncategorizedLabel = this.getUncategorizedLabel();
+
+    for (const item of this.spendingItems) {
+      const categoryName = this.getCategoryDisplayNameById(
+        item.categoryId || null,
+        item.categoryName || uncategorizedLabel
+      );
+      const existing = categoryMap.get(categoryName) || { allocated: 0, invoiced: 0 };
+      existing.allocated += item.moneyAllocationTotalCad || 0;
+      existing.invoiced += item.invoiceTotalCad || 0;
+      categoryMap.set(categoryName, existing);
+    }
+
+    // Sort by allocated amount descending
+    const sorted = Array.from(categoryMap.entries())
+      .sort((a, b) => b[1].allocated - a[1].allocated);
+
+    const labels = sorted.map(([name]) => name);
+    const allocatedValues = sorted.map(([, data]) => data.allocated);
+    const invoicedValues = sorted.map(([, data]) => data.invoiced);
+
+    const chart = new Chart(this.invoiceCoverageChartRef.nativeElement, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: this.translate.instant('insights.allocatedAmount'),
+            data: allocatedValues,
+            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+            borderColor: '#3b82f6',
+            borderWidth: 1
+          },
+          {
+            label: this.translate.instant('insights.invoicedAmount'),
+            data: invoicedValues,
+            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+            borderColor: '#10b981',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top'
+          },
+          title: {
+            display: true,
+            text: this.translate.instant('insights.invoiceCoverage'),
+            font: { size: 16, weight: 'bold' }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: {
+              callback: (value: string | number) => '$' + this.formatNumber(value as number)
+            }
+          }
+        }
+      }
+    });
+    this.charts.push(chart);
+  }
+
+  /**
    * Aggregate items by category, using translated category names.
    */
   private aggregateByCategory(items: any[], type: 'funding' | 'spending'): { labels: string[]; values: number[] } {
@@ -662,7 +778,9 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     for (const status of trackingStatuses) {
       const count = statusCounts.get(status) || 0;
       if (count > 0) {
-        labels.push(TRACKING_STATUS_INFO[status].label);
+        const key = 'procurement.status' + status.split('_').map(p => p.charAt(0) + p.slice(1).toLowerCase()).join('');
+        const translated = this.translate.instant(key);
+        labels.push(translated !== key ? translated : TRACKING_STATUS_INFO[status].label);
         values.push(count);
       }
     }
@@ -694,7 +812,13 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     for (const ptype of procurementTypes) {
       const count = typeCounts.get(ptype) || 0;
       if (count > 0) {
-        labels.push(PROCUREMENT_TYPE_INFO[ptype].label);
+        const keyMap: Record<ProcurementType, string> = {
+          RC_INITIATED: 'procurement.procurementTypeRcInitiated',
+          CENTRALLY_MANAGED: 'procurement.procurementTypeCentrallyManaged'
+        };
+        const key = keyMap[ptype];
+        const translated = this.translate.instant(key);
+        labels.push(translated !== key ? translated : PROCUREMENT_TYPE_INFO[ptype].label);
         values.push(count);
       }
     }
@@ -708,7 +832,14 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   private countSpendingByStatus(): { labels: string[]; values: number[] } {
     const statusMap = new Map<string, number>();
     
-    const statusLabels: Record<string, string> = {
+    const statusI18nKeys: Record<string, string> = {
+      'PLANNING': 'spending.statusPlanning',
+      'COMMITTED': 'spending.statusCommitted',
+      'COMPLETED': 'spending.statusCompleted',
+      'CANCELLED': 'spending.statusCancelled'
+    };
+    
+    const statusFallbacks: Record<string, string> = {
       'PLANNING': 'Planning',
       'COMMITTED': 'Committed',
       'COMPLETED': 'Completed',
@@ -716,7 +847,14 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     };
     
     for (const item of this.spendingItems) {
-      const label = statusLabels[item.status] || item.status;
+      const key = statusI18nKeys[item.status];
+      let label: string;
+      if (key) {
+        const translated = this.translate.instant(key);
+        label = translated !== key ? translated : (statusFallbacks[item.status] || item.status);
+      } else {
+        label = statusFallbacks[item.status] || item.status;
+      }
       statusMap.set(label, (statusMap.get(label) || 0) + 1);
     }
     

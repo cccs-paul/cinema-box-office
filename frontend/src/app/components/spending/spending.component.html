@@ -263,8 +263,9 @@
       <div class="item-info">
         <span class="item-name">{{ item.name }}</span>
         <span class="procurement-indicator" *ngIf="item.procurementItemId" [title]="('spending.linkedTo' | translate) + ': ' + (item.procurementItemName || ('spending.procurementItem' | translate))">📦</span>
-        <span class="warning-indicator" *ngIf="item.procurementItemId && hasPriceMismatch(item)" [title]="'spending.priceMismatchWarning' | translate">⚠️</span>
-        <span class="warning-indicator invoice-warning" *ngIf="hasInvoiceMismatch(item)" [title]="'spending.invoiceMismatchTooltip' | translate">🧾⚠️</span>
+        <span class="warning-indicator"
+              *ngIf="getItemWarnings(item).length > 0"
+              [title]="getItemWarnings(item).join('\n')">⚠️</span>
         <span class="category-badge" *ngIf="item.categoryName && !displayPreferences.groupByCategory">{{ getCategoryDisplayNameById(item.categoryId, item.categoryName) }}</span>
         <!-- Tracking Status Badge - Shows procurement tracking for linked items, spending event for standalone -->
         <span class="tracking-badge" *ngIf="item.procurementItemId && item.procurementMostRecentEventType" 

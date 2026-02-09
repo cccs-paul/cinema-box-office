@@ -46,6 +46,83 @@ import {
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 
 /**
+ * Maps ProcurementEventType enum values to i18n key suffixes under 'procurement.'.
+ */
+const EVENT_TYPE_I18N_KEYS: Record<ProcurementEventType, string> = {
+  ACKNOWLEDGED_BY_PROCUREMENT: 'eventTypeAcknowledgedByProcurement',
+  ADDITIONAL_DOCUMENT_REQUESTED: 'eventTypeAdditionalDocumentRequested',
+  ADDITIONAL_SECTION_32_REQUESTED: 'eventTypeAdditionalSection32Requested',
+  CANCELLED: 'eventTypeCancelled',
+  COMPLETED: 'eventTypeCompleted',
+  CONTRACT_AMENDED: 'eventTypeContractAmended',
+  CONTRACT_AWARDED: 'eventTypeContractAwarded',
+  CREATED: 'eventTypeCreated',
+  DELIVERED: 'eventTypeDelivered',
+  EXERCISED_OPTION: 'eventTypeExercisedOption',
+  FULL_INVOICE_RECEIVED: 'eventTypeFullInvoiceReceived',
+  FULL_INVOICE_SIGNED: 'eventTypeFullInvoiceSigned',
+  GOODS_RECEIVED: 'eventTypeGoodsReceived',
+  INVOICED: 'eventTypeInvoiced',
+  MONTHLY_INVOICE_RECEIVED: 'eventTypeMonthlyInvoiceReceived',
+  MONTHLY_INVOICE_SIGNED: 'eventTypeMonthlyInvoiceSigned',
+  NOT_STARTED: 'eventTypeNotStarted',
+  NOTE_ADDED: 'eventTypeNoteAdded',
+  OTHER: 'eventTypeOther',
+  PACKAGE_SENT_TO_PROCUREMENT: 'eventTypePackageSentToProcurement',
+  PARTIAL_INVOICE_RECEIVED: 'eventTypePartialInvoiceReceived',
+  PARTIAL_INVOICE_SIGNED: 'eventTypePartialInvoiceSigned',
+  PAUSED: 'eventTypePaused',
+  PAYMENT_MADE: 'eventTypePaymentMade',
+  PO_ISSUED: 'eventTypePoIssued',
+  QUOTE: 'eventTypeQuote',
+  QUOTE_RECEIVED: 'eventTypeQuoteReceived',
+  QUOTE_REJECTED: 'eventTypeQuoteRejected',
+  QUOTE_SELECTED: 'eventTypeQuoteSelected',
+  RECEIVED_NEW_INVOICE: 'eventTypeReceivedNewInvoice',
+  REJECTED_INVOICE: 'eventTypeRejectedInvoice',
+  RETROACTIVE_AWARD_LETTER: 'eventTypeRetroactiveAwardLetter',
+  SAM_ACKNOWLEDGEMENT_RECEIVED: 'eventTypeSamAcknowledgementReceived',
+  SAM_ACKNOWLEDGEMENT_REQUESTED: 'eventTypeSamAcknowledgementRequested',
+  STATUS_CHANGE: 'eventTypeStatusChange',
+  STILL_IN_PROCUREMENT: 'eventTypeStillInProcurement',
+  UPDATE: 'eventTypeUpdate',
+  WITH_SECURITY: 'eventTypeWithSecurity'
+};
+
+/**
+ * Maps TrackingStatus enum values to i18n key suffixes under 'procurement.'.
+ */
+const TRACKING_STATUS_I18N_KEYS: Record<TrackingStatus, string> = {
+  PLANNING: 'statusPlanning',
+  ON_TRACK: 'statusOnTrack',
+  AT_RISK: 'statusAtRisk',
+  COMPLETED: 'statusCompleted',
+  CANCELLED: 'statusCancelled'
+};
+
+/**
+ * Maps ProcurementType enum values to i18n key suffixes under 'procurement.'.
+ */
+const PROCUREMENT_TYPE_I18N_KEYS: Record<ProcurementType, string> = {
+  RC_INITIATED: 'procurementTypeRcInitiated',
+  CENTRALLY_MANAGED: 'procurementTypeCentrallyManaged'
+};
+
+/**
+ * Maps ProcurementItemStatus enum values to i18n key suffixes under 'procurement.'.
+ */
+const PROCUREMENT_STATUS_I18N_KEYS: Record<ProcurementItemStatus, string> = {
+  DRAFT: 'statusDraft',
+  PENDING_QUOTES: 'statusPendingQuotes',
+  QUOTES_RECEIVED: 'statusQuotesReceived',
+  UNDER_REVIEW: 'statusUnderReview',
+  APPROVED: 'statusApproved',
+  PO_ISSUED: 'statusPoIssued',
+  COMPLETED: 'statusCompleted',
+  CANCELLED: 'statusCancelled'
+};
+
+/**
  * Procurement component for managing procurement items, quotes, and files.
  *
  * @author myRC Team
@@ -570,13 +647,10 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if user can write to the selected RC and the FY is active.
+   * Check if user can write to the selected RC.
    */
   get canWrite(): boolean {
     if (!this.selectedRC) {
-      return false;
-    }
-    if (this.selectedFY && !this.selectedFY.active) {
       return false;
     }
     return this.selectedRC.isOwner || this.selectedRC.accessLevel === 'READ_WRITE';
@@ -1839,6 +1913,11 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    * Get the label for an event type.
    */
   getEventTypeLabel(eventType: ProcurementEventType): string {
+    const key = EVENT_TYPE_I18N_KEYS[eventType];
+    if (key) {
+      const translated = this.translate.instant('procurement.' + key);
+      if (translated !== 'procurement.' + key) return translated;
+    }
     return EVENT_TYPE_INFO[eventType]?.label || eventType;
   }
 
@@ -2150,7 +2229,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    * Get the tracking status label.
    */
   getTrackingStatusLabel(status: TrackingStatus | string | undefined): string {
-    if (!status) return TRACKING_STATUS_INFO['ON_TRACK'].label;
+    if (!status) status = 'ON_TRACK';
+    const key = TRACKING_STATUS_I18N_KEYS[status as TrackingStatus];
+    if (key) {
+      const translated = this.translate.instant('procurement.' + key);
+      if (translated !== 'procurement.' + key) return translated;
+    }
     return TRACKING_STATUS_INFO[status as TrackingStatus]?.label || status;
   }
 
@@ -2184,7 +2268,12 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    * Get the procurement type label.
    */
   getProcurementTypeLabel(type: ProcurementType | string | undefined): string {
-    if (!type) return PROCUREMENT_TYPE_INFO['RC_INITIATED'].label;
+    if (!type) type = 'RC_INITIATED';
+    const key = PROCUREMENT_TYPE_I18N_KEYS[type as ProcurementType];
+    if (key) {
+      const translated = this.translate.instant('procurement.' + key);
+      if (translated !== 'procurement.' + key) return translated;
+    }
     return PROCUREMENT_TYPE_INFO[type as ProcurementType]?.label || type;
   }
 
@@ -2205,6 +2294,11 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   getStatusLabel(status: ProcurementItemStatus): string {
+    const key = PROCUREMENT_STATUS_I18N_KEYS[status];
+    if (key) {
+      const translated = this.translate.instant('procurement.' + key);
+      if (translated !== 'procurement.' + key) return translated;
+    }
     return PROCUREMENT_STATUS_INFO[status]?.label || status;
   }
 
@@ -2217,6 +2311,11 @@ export class ProcurementComponent implements OnInit, OnDestroy {
    */
   getEventStatusLabel(status: string | undefined): string {
     if (!status) return '';
+    const key = PROCUREMENT_STATUS_I18N_KEYS[status as ProcurementItemStatus];
+    if (key) {
+      const translated = this.translate.instant('procurement.' + key);
+      if (translated !== 'procurement.' + key) return translated;
+    }
     return PROCUREMENT_STATUS_INFO[status as ProcurementItemStatus]?.label || status;
   }
 

@@ -134,6 +134,10 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
+
+  .stat-card:nth-child(n+4) {
+    border-top: 2px solid var(--primary-gradient-start, #3b82f6);
+  }
 }
 
 .stat-card {
