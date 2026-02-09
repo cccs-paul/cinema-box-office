@@ -269,14 +269,14 @@ export class SpendingItemService {
    * Get the download URL for an invoice file.
    */
   getInvoiceFileDownloadUrl(rcId: number, fyId: number, spendingItemId: number, invoiceId: number, fileId: number): string {
-    return `/api${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}/files/${fileId}/download`;
+    return `${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}/files/${fileId}/download`;
   }
 
   /**
    * Get the view URL for an invoice file.
    */
   getInvoiceFileViewUrl(rcId: number, fyId: number, spendingItemId: number, invoiceId: number, fileId: number): string {
-    return `/api${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}/files/${fileId}/view`;
+    return `${this.invoiceUrl(rcId, fyId, spendingItemId)}/${invoiceId}/files/${fileId}/view`;
   }
 
   /**

@@ -824,6 +824,23 @@
           </div>
         </div>
         
+        <!-- Invoice Summary Box (always visible in edit mode) -->
+        <div class="edit-invoice-summary-box">
+          <div class="invoice-summary-header">
+            <span class="invoice-summary-icon">🧾</span>
+            <label>{{ 'spending.invoiceSummary' | translate }}</label>
+          </div>
+          <div class="invoice-summary-content" *ngIf="item.invoiceCount && item.invoiceCount > 0">
+            <div class="invoice-summary-total">
+              <span class="invoice-summary-label">{{ 'spending.invoiceSummaryTotal' | translate:{ count: item.invoiceCount } }}:</span>
+              <span class="invoice-summary-value">{{ formatCurrency(item.invoiceTotalCad, 'CAD') }}</span>
+            </div>
+          </div>
+          <div class="invoice-summary-empty" *ngIf="!item.invoiceCount || item.invoiceCount === 0">
+            <span>{{ 'spending.noInvoicesAttached' | translate }}</span>
+          </div>
+        </div>
+        
         <div class="form-row">
           <div class="form-group">
             <label for="editItemName">{{ 'common.name' | translate }} <span class="required">*</span></label>

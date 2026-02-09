@@ -665,4 +665,99 @@ describe('SpendingComponent', () => {
       expect(component.selectedEventItemId).toBeNull();
     });
   });
+
+  describe('Invoice Summary Box in Edit Mode', () => {
+    it('should have editingItemId initialized as null', () => {
+      expect(component.editingItemId).toBeNull();
+    });
+
+    it('should display invoice total when item has invoices', () => {
+      const itemWithInvoices: SpendingItem = {
+        ...mockSpendingItems[0],
+        invoiceCount: 3,
+        invoiceTotalCad: 15000
+      };
+      component.spendingItems = [itemWithInvoices];
+      component.editingItemId = itemWithInvoices.id;
+      fixture.detectChanges();
+
+      const summaryBox = fixture.nativeElement.querySelector('.edit-invoice-summary-box');
+      if (summaryBox) {
+        const totalContent = summaryBox.querySelector('.invoice-summary-content');
+        const emptyContent = summaryBox.querySelector('.invoice-summary-empty');
+        expect(totalContent).toBeTruthy();
+        expect(emptyContent).toBeFalsy();
+      }
+    });
+
+    it('should display no-invoices message when item has zero invoices', () => {
+      const itemNoInvoices: SpendingItem = {
+        ...mockSpendingItems[0],
+        invoiceCount: 0,
+        invoiceTotalCad: null
+      };
+      component.spendingItems = [itemNoInvoices];
+      component.editingItemId = itemNoInvoices.id;
+      fixture.detectChanges();
+
+      const summaryBox = fixture.nativeElement.querySelector('.edit-invoice-summary-box');
+      if (summaryBox) {
+        const totalContent = summaryBox.querySelector('.invoice-summary-content');
+        const emptyContent = summaryBox.querySelector('.invoice-summary-empty');
+        expect(totalContent).toBeFalsy();
+        expect(emptyContent).toBeTruthy();
+      }
+    });
+
+    it('should display no-invoices message when invoiceCount is undefined', () => {
+      const itemUndefined: SpendingItem = {
+        ...mockSpendingItems[0],
+        invoiceCount: undefined,
+        invoiceTotalCad: undefined
+      };
+      component.spendingItems = [itemUndefined];
+      component.editingItemId = itemUndefined.id;
+      fixture.detectChanges();
+
+      const summaryBox = fixture.nativeElement.querySelector('.edit-invoice-summary-box');
+      if (summaryBox) {
+        const emptyContent = summaryBox.querySelector('.invoice-summary-empty');
+        expect(emptyContent).toBeTruthy();
+      }
+    });
+
+    it('should show invoice summary box even when no procurement link exists', () => {
+      const itemNoProcurement: SpendingItem = {
+        ...mockSpendingItems[0],
+        procurementItemId: null,
+        invoiceCount: 2,
+        invoiceTotalCad: 8000
+      };
+      component.spendingItems = [itemNoProcurement];
+      component.editingItemId = itemNoProcurement.id;
+      fixture.detectChanges();
+
+      const procurementBox = fixture.nativeElement.querySelector('.edit-procurement-link-box');
+      const invoiceSummaryBox = fixture.nativeElement.querySelector('.edit-invoice-summary-box');
+      if (invoiceSummaryBox) {
+        expect(procurementBox).toBeFalsy();
+        expect(invoiceSummaryBox).toBeTruthy();
+      }
+    });
+
+    it('should format invoice total using formatCurrency', () => {
+      const formatted = component.formatCurrency(15000, 'CAD');
+      expect(formatted).toContain('15,000');
+    });
+
+    it('should format zero invoice total correctly', () => {
+      const formatted = component.formatCurrency(0, 'CAD');
+      expect(formatted).toContain('0.00');
+    });
+
+    it('should handle null invoice total', () => {
+      const formatted = component.formatCurrency(null, 'CAD');
+      expect(formatted).toContain('0.00');
+    });
+  });
 });

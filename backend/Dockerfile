@@ -1,11 +1,14 @@
 # Single stage - use pre-built JAR (run `mvn package` before docker build)
 # This avoids SSL issues in corporate networks with proxy/firewall interception
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:25-jre-noble
 
 WORKDIR /app
 
-# Create non-root user
-RUN groupadd -g 1001 myrc && \
+# Install curl for health checks and create non-root user
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd -g 1001 myrc && \
     useradd -m -u 1001 -g myrc myrc && \
     chown -R myrc:myrc /app
 

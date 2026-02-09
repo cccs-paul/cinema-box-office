@@ -581,7 +581,10 @@
     "selectFile": "Select File",
     "uploadFile": "Upload File",
     "replaceFile": "Replace File",
-    "invoiceFileReplaced": "Invoice file replaced successfully"
+    "invoiceFileReplaced": "Invoice file replaced successfully",
+    "invoiceSummary": "Invoice Summary",
+    "invoiceSummaryTotal": "Total from {{count}} invoice(s)",
+    "noInvoicesAttached": "No invoices attached to this item"
   },
   "summary": {
     "title": "Summary",

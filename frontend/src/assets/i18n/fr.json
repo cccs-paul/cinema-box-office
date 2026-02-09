@@ -556,7 +556,10 @@
     "selectFile": "Sélectionner un fichier",
     "uploadFile": "Téléverser un fichier",
     "replaceFile": "Remplacer le fichier",
-    "invoiceFileReplaced": "Fichier de facture remplacé avec succès"
+    "invoiceFileReplaced": "Fichier de facture remplacé avec succès",
+    "invoiceSummary": "Sommaire des factures",
+    "invoiceSummaryTotal": "Total de {{count}} facture(s)",
+    "noInvoicesAttached": "Aucune facture associée à cet article"
   },
   "summary": {
     "title": "Sommaire",
