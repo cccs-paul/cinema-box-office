@@ -179,6 +179,12 @@ export class SpendingComponent implements OnInit, OnDestroy {
   invoiceFileUploadId: number | null = null;
   invoiceFileDescription = '';
   isUploadingInvoiceFile = false;
+  // File selected during add invoice (before invoice creation)
+  newInvoiceFile: File | null = null;
+  newInvoiceFileName = '';
+  // Replace file tracking
+  replacingFileInvoiceId: number | null = null;
+  replacingFileId: number | null = null;
 
   // For navigation with query params (expand specific item)
   private pendingExpandItemId: number | null = null;
@@ -1440,6 +1446,8 @@ export class SpendingComponent implements OnInit, OnDestroy {
     this.newInvoiceDateReceived = '';
     this.newInvoiceDateProcessed = '';
     this.newInvoiceComments = '';
+    this.newInvoiceFile = null;
+    this.newInvoiceFileName = '';
   }
 
   /**
@@ -1467,16 +1475,35 @@ export class SpendingComponent implements OnInit, OnDestroy {
     this.spendingItemService.createInvoice(
       this.selectedRC.id, this.selectedFY.id, this.addInvoiceItemId, invoice
     ).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
+      next: (created) => {
         this.successMessage = this.translate.instant('spending.invoiceCreated');
+        const pendingFile = this.newInvoiceFile;
+        const pendingItemId = this.addInvoiceItemId;
         this.closeAddInvoiceForm();
         this.isCreatingInvoice = false;
-        // Reload spending items to update totals
-        this.loadSpendingItems();
-        // Reload invoices if viewing
-        if (this.invoiceItemId === this.addInvoiceItemId) {
-          const item = this.spendingItems.find(i => i.id === this.invoiceItemId);
-          if (item) this.loadInvoicesForItem(item);
+        // Upload file if one was selected during creation
+        if (pendingFile && created.id && pendingItemId && this.selectedRC && this.selectedFY) {
+          this.spendingItemService.uploadInvoiceFile(
+            this.selectedRC.id, this.selectedFY.id, pendingItemId, created.id, pendingFile
+          ).pipe(takeUntil(this.destroy$)).subscribe({
+            next: () => {
+              this.loadSpendingItems();
+              if (this.invoiceItemId === pendingItemId) {
+                const item = this.spendingItems.find(i => i.id === pendingItemId);
+                if (item) this.loadInvoicesForItem(item);
+              }
+            },
+            error: () => {
+              // Invoice created but file failed — still reload
+              this.loadSpendingItems();
+            }
+          });
+        } else {
+          this.loadSpendingItems();
+          if (this.invoiceItemId === pendingItemId) {
+            const item = this.spendingItems.find(i => i.id === pendingItemId);
+            if (item) this.loadInvoicesForItem(item);
+          }
         }
       },
       error: (err) => {
@@ -1645,5 +1672,52 @@ export class SpendingComponent implements OnInit, OnDestroy {
     return this.spendingItemService.getInvoiceFileViewUrl(
       this.selectedRC.id, this.selectedFY.id, this.invoiceItemId, invoice.id, file.id
     );
+  }
+
+  /**
+   * Replace an existing invoice file.
+   */
+  replaceInvoiceFile(event: Event, invoice: SpendingInvoice, file: SpendingInvoiceFile): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files[0] || !this.selectedRC || !this.selectedFY || !this.invoiceItemId || !invoice.id || !file.id) return;
+    this.replacingFileInvoiceId = invoice.id;
+    this.replacingFileId = file.id;
+    const newFile = input.files[0];
+    this.spendingItemService.replaceInvoiceFile(
+      this.selectedRC.id, this.selectedFY.id, this.invoiceItemId, invoice.id, file.id, newFile
+    ).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        this.successMessage = this.translate.instant('spending.invoiceFileReplaced');
+        this.replacingFileInvoiceId = null;
+        this.replacingFileId = null;
+        const item = this.spendingItems.find(i => i.id === this.invoiceItemId);
+        if (item) this.loadInvoicesForItem(item);
+      },
+      error: (err) => {
+        this.errorMessage = err.message || 'Failed to replace file';
+        this.replacingFileInvoiceId = null;
+        this.replacingFileId = null;
+      }
+    });
+    input.value = '';
+  }
+
+  /**
+   * Handle file selection in the add invoice form (before creation).
+   */
+  onNewInvoiceFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !input.files[0]) return;
+    this.newInvoiceFile = input.files[0];
+    this.newInvoiceFileName = input.files[0].name;
+    input.value = '';
+  }
+
+  /**
+   * Remove the selected file from the add invoice form.
+   */
+  removeNewInvoiceFile(): void {
+    this.newInvoiceFile = null;
+    this.newInvoiceFileName = '';
   }
 }

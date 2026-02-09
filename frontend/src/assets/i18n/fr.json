@@ -552,7 +552,11 @@
     "invoiceFileUploaded": "Fichier téléversé avec succès",
     "invoiceFileDeleted": "Fichier de facture supprimé avec succès",
     "confirmDeleteInvoiceFile": "Êtes-vous sûr de vouloir supprimer ce fichier ?",
-    "invoiceMismatchTooltip": "Le total des factures ne correspond pas au total des dépenses."
+    "invoiceMismatchTooltip": "Le total des factures ne correspond pas au total des dépenses.",
+    "selectFile": "Sélectionner un fichier",
+    "uploadFile": "Téléverser un fichier",
+    "replaceFile": "Remplacer le fichier",
+    "invoiceFileReplaced": "Fichier de facture remplacé avec succès"
   },
   "summary": {
     "title": "Sommaire",

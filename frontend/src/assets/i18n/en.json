@@ -577,7 +577,11 @@
     "invoiceFileUploaded": "File uploaded to invoice successfully",
     "invoiceFileDeleted": "Invoice file deleted successfully",
     "confirmDeleteInvoiceFile": "Are you sure you want to delete this file?",
-    "invoiceMismatchTooltip": "Invoice total does not match spending total."
+    "invoiceMismatchTooltip": "Invoice total does not match spending total.",
+    "selectFile": "Select File",
+    "uploadFile": "Upload File",
+    "replaceFile": "Replace File",
+    "invoiceFileReplaced": "Invoice file replaced successfully"
   },
   "summary": {
     "title": "Summary",

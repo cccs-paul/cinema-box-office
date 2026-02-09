@@ -579,19 +579,23 @@
         <div class="invoices-section">
           <div class="section-header">
             <label>🧾 {{ 'spending.invoicesReceipts' | translate }} ({{ item.invoiceCount || 0 }})</label>
-            <span class="invoice-total" *ngIf="item.invoiceCount && item.invoiceCount > 0">
+            <span class="invoice-total-badge" *ngIf="item.invoiceCount && item.invoiceCount > 0">
               {{ 'spending.invoiceTotal' | translate }}: {{ formatCurrency(getInvoiceTotalDisplay(item), item.currency) }}
               <span class="invoice-mismatch-icon" *ngIf="hasInvoiceMismatch(item)" [title]="('spending.invoiceMismatchTooltip' | translate) + ' ' + ('spending.spendingTotal' | translate) + ': ' + formatCurrency(calculateTotal(item), item.currency) + ' vs ' + ('spending.invoiceTotal' | translate) + ': ' + formatCurrency(getInvoiceTotalDisplay(item), item.currency)">
                 ⚠️
               </span>
             </span>
-            <button class="btn btn-primary" *ngIf="canWrite && addInvoiceItemId !== item.id" (click)="openAddInvoiceForm(item)">➕ {{ 'spending.addInvoice' | translate }}</button>
+            <div class="section-actions">
+              <button class="btn btn-primary" *ngIf="canWrite && addInvoiceItemId !== item.id" (click)="openAddInvoiceForm(item)">
+                ➕ {{ 'spending.addInvoice' | translate }}
+              </button>
+            </div>
           </div>
 
           <!-- Inline Add Invoice Form -->
           <div class="add-invoice-form" *ngIf="addInvoiceItemId === item.id">
             <form (ngSubmit)="createInvoice()">
-              <div class="form-row">
+              <div class="form-row three-cols">
                 <div class="form-group">
                   <label for="newInvoiceAmount">{{ 'spending.invoiceAmount' | translate }} *</label>
                   <input type="text" currencyInput id="newInvoiceAmount" [(ngModel)]="newInvoiceAmount" name="newInvoiceAmount" required />
@@ -621,56 +625,102 @@
                 <label for="newInvoiceComments">{{ 'spending.invoiceComments' | translate }}</label>
                 <textarea id="newInvoiceComments" [(ngModel)]="newInvoiceComments" name="newInvoiceComments" rows="2" [placeholder]="'spending.optionalComment' | translate"></textarea>
               </div>
+              <!-- File attachment during creation -->
+              <div class="form-group file-attach-section">
+                <label>{{ 'spending.attachFile' | translate }}</label>
+                <div class="file-attach-row">
+                  <label class="btn-file-select">
+                    📎 {{ 'spending.selectFile' | translate }}
+                    <input type="file" (change)="onNewInvoiceFileSelected($event)" style="display: none"
+                           accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv" />
+                  </label>
+                  <div class="selected-file-preview" *ngIf="newInvoiceFile">
+                    <span class="file-icon">📎</span>
+                    <span class="file-name">{{ newInvoiceFileName }}</span>
+                    <button type="button" class="btn-icon btn-small" (click)="removeNewInvoiceFile()" [title]="'common.remove' | translate">✕</button>
+                  </div>
+                </div>
+              </div>
               <div class="form-actions">
                 <button type="button" class="btn btn-secondary" (click)="closeAddInvoiceForm()">{{ 'common.cancel' | translate }}</button>
-                <button type="submit" class="btn btn-primary" [disabled]="isCreatingInvoice || !newInvoiceAmount">{{ isCreatingInvoice ? ('common.creating' | translate) : ('spending.addInvoice' | translate) }}</button>
+                <button type="submit" class="btn btn-primary" [disabled]="isCreatingInvoice || !newInvoiceAmount">
+                  {{ isCreatingInvoice ? ('common.creating' | translate) : ('spending.addInvoice' | translate) }}
+                </button>
               </div>
             </form>
           </div>
 
           <!-- Invoices List -->
           <div class="invoices-list" *ngIf="selectedItemInvoices.length > 0 && invoiceItemId === item.id">
-            <div class="invoices-list-header"><button class="btn-toggle" (click)="collapseInvoices()">{{ 'common.hideAll' | translate }} ▼</button></div>
+            <div class="invoices-list-header">
+              <button class="btn-toggle" (click)="collapseInvoices()">{{ 'common.hideAll' | translate }} ▼</button>
+            </div>
             <div class="invoice-item" *ngFor="let invoice of selectedItemInvoices">
               <ng-container *ngIf="editingInvoiceId !== invoice.id">
+                <div class="invoice-icon">🧾</div>
                 <div class="invoice-content">
                   <div class="invoice-header">
                     <span class="invoice-amount">{{ formatCurrency(invoice.amount, invoice.currency) }}</span>
-                    <span class="invoice-currency-badge" *ngIf="invoice.currency !== 'CAD'">{{ getCurrencyFlag(invoice.currency) }} {{ invoice.currency }} ({{ formatCurrency(invoice.amountCad, 'CAD') }})</span>
-                    <span class="invoice-date" *ngIf="invoice.dateReceived">{{ 'spending.received' | translate }}: {{ invoice.dateReceived }}</span>
-                    <span class="invoice-date" *ngIf="invoice.dateProcessed">{{ 'spending.processed' | translate }}: {{ invoice.dateProcessed }}</span>
+                    <span class="invoice-currency-badge" *ngIf="invoice.currency !== 'CAD'">
+                      {{ getCurrencyFlag(invoice.currency) }} {{ invoice.currency }}
+                      ({{ formatCurrency(invoice.amountCad, 'CAD') }})
+                    </span>
+                  </div>
+                  <div class="invoice-details">
+                    <span class="invoice-date" *ngIf="invoice.dateReceived">
+                      <span class="detail-label">{{ 'spending.received' | translate }}:</span> {{ invoice.dateReceived }}
+                    </span>
+                    <span class="invoice-date" *ngIf="invoice.dateProcessed">
+                      <span class="detail-label">{{ 'spending.processed' | translate }}:</span> {{ invoice.dateProcessed }}
+                    </span>
                   </div>
                   <p class="invoice-comment" *ngIf="invoice.comments">{{ invoice.comments }}</p>
+
                   <!-- Invoice Files -->
-                  <div class="invoice-files" *ngIf="invoice.files && invoice.files.length > 0">
-                    <div class="invoice-file" *ngFor="let file of invoice.files">
-                      <span class="file-icon">📎</span>
-                      <a class="file-name" [href]="getInvoiceFileViewUrl(invoice, file)" target="_blank">{{ file.fileName }}</a>
-                      <span class="file-size">({{ file.formattedFileSize }})</span>
-                      <a class="btn-icon btn-download" [href]="getInvoiceFileDownloadUrl(invoice, file)" [title]="'common.download' | translate">⬇️</a>
-                      <button class="btn-icon btn-delete" *ngIf="canWrite" (click)="deleteInvoiceFile(invoice, file)" [title]="'common.delete' | translate">🗑️</button>
+                  <div class="invoice-files-section" *ngIf="(invoice.files && invoice.files.length > 0) || canWrite">
+                    <div class="invoice-files-list" *ngIf="invoice.files && invoice.files.length > 0">
+                      <div class="file-item" *ngFor="let file of invoice.files">
+                        <span class="file-icon">📎</span>
+                        <div class="file-info">
+                          <span class="file-name">{{ file.fileName }}</span>
+                          <span class="file-size">({{ file.formattedFileSize }})</span>
+                        </div>
+                        <div class="file-actions">
+                          <a class="btn-icon" [href]="getInvoiceFileViewUrl(invoice, file)" target="_blank" [title]="'common.view' | translate">👁️</a>
+                          <a class="btn-icon" [href]="getInvoiceFileDownloadUrl(invoice, file)" [title]="'common.download' | translate">⬇️</a>
+                          <label class="btn-icon btn-replace" *ngIf="canWrite" [title]="'spending.replaceFile' | translate">
+                            🔄
+                            <input type="file" (change)="replaceInvoiceFile($event, invoice, file)" style="display: none"
+                                   accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv" />
+                          </label>
+                          <button class="btn-icon btn-danger" *ngIf="canWrite" (click)="deleteInvoiceFile(invoice, file)" [title]="'common.delete' | translate">🗑️</button>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Upload file button -->
+                    <div class="invoice-upload-row" *ngIf="canWrite">
+                      <label class="btn-file-select small">
+                        📤 {{ 'spending.uploadFile' | translate }}
+                        <input type="file" (change)="onInvoiceFileSelected($event, invoice)" style="display: none"
+                               accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv" />
+                      </label>
                     </div>
                   </div>
-                  <!-- File upload -->
-                  <div class="invoice-file-upload" *ngIf="canWrite">
-                    <label class="btn-link upload-label">
-                      📎 {{ 'spending.attachFile' | translate }}
-                      <input type="file" (change)="onInvoiceFileSelected($event, invoice)" style="display: none" />
-                    </label>
-                  </div>
+
                   <div class="invoice-meta">
                     <span class="created-by" *ngIf="invoice.createdBy">{{ invoice.createdBy }}</span>
                   </div>
                 </div>
                 <div class="invoice-actions" *ngIf="canWrite">
-                  <button class="btn-icon btn-edit" (click)="editInvoice(invoice)" [title]="'common.edit' | translate">✏️</button>
-                  <button class="btn-icon btn-delete" (click)="deleteInvoice(invoice)" [title]="'common.delete' | translate">🗑️</button>
+                  <button class="btn-icon" (click)="editInvoice(invoice)" [title]="'common.edit' | translate">✏️</button>
+                  <button class="btn-icon btn-danger" (click)="deleteInvoice(invoice)" [title]="'common.delete' | translate">🗑️</button>
                 </div>
               </ng-container>
+
               <!-- Edit Invoice Mode -->
               <div class="edit-invoice-form" *ngIf="editingInvoiceId === invoice.id">
                 <form (ngSubmit)="updateInvoice()">
-                  <div class="form-row">
+                  <div class="form-row three-cols">
                     <div class="form-group">
                       <label for="editInvoiceAmount">{{ 'spending.invoiceAmount' | translate }} *</label>
                       <input type="text" currencyInput id="editInvoiceAmount" [(ngModel)]="editInvoiceAmount" name="editInvoiceAmount" required />
@@ -702,7 +752,9 @@
                   </div>
                   <div class="form-actions">
                     <button type="button" class="btn btn-secondary" (click)="cancelEditInvoice()">{{ 'common.cancel' | translate }}</button>
-                    <button type="submit" class="btn btn-primary" [disabled]="isUpdatingInvoice || !editInvoiceAmount">{{ isUpdatingInvoice ? ('common.updating' | translate) : ('common.save' | translate) }}</button>
+                    <button type="submit" class="btn btn-primary" [disabled]="isUpdatingInvoice || !editInvoiceAmount">
+                      {{ isUpdatingInvoice ? ('common.updating' | translate) : ('common.save' | translate) }}
+                    </button>
                   </div>
                 </form>
               </div>
