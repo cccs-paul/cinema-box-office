@@ -88,14 +88,30 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   /**
-   * Checks whether the current user has read-only access to the RC.
-   * When true, editing operations (add/edit/delete money types and categories,
-   * changing on-target settings) should be disabled in the UI.
+   * Checks whether the fiscal year is inactive (making it read-only
+   * regardless of user role).
+   */
+  get isInactiveFY(): boolean {
+    return this.selectedFY != null && !this.selectedFY.active;
+  }
+
+  /**
+   * Checks whether the current user lacks owner access to the RC.
    * Money types and categories are configuration-level settings that require
    * OWNER access. Both READ_ONLY and READ_WRITE users are restricted.
    */
-  get isReadOnly(): boolean {
+  get isNotOwner(): boolean {
     return this.selectedRC?.accessLevel !== 'OWNER';
+  }
+
+  /**
+   * Checks whether editing is disabled — either because the user is not
+   * an owner or because the fiscal year is inactive.
+   * When true, editing operations (add/edit/delete money types and categories,
+   * changing on-target settings) should be disabled in the UI.
+   */
+  get isReadOnly(): boolean {
+    return this.isInactiveFY || this.isNotOwner;
   }
 
   constructor(

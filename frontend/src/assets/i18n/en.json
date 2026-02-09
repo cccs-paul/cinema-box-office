@@ -443,7 +443,7 @@
     "spendingLinkError": "Failed to toggle spending link",
     "spendingLinkWarningTitle": "Warning: Spending Item Modified",
     "spendingLinkWarningDefault": "The linked spending item has been modified after creation.",
-    "spendingLinkWarningNote": "Unlinking will soft-delete the spending item. This action cannot be undone.",
+    "spendingLinkWarningNote": "Unlinking will delete the linked spending item. This action cannot be undone.",
     "confirmUnlink": "Unlink Anyway",
     "linkedSpendingItems": "Linked Spending Items",
     "viewInSpending": "View in Spending",
@@ -754,7 +754,8 @@
     "importLineItemsDesc": "Import line items from a CSV file. This feature is currently under development.",
     "exportCompleted": "Export completed successfully!",
     "cannotDeleteCategoryInUse": "This category cannot be deleted because it is in use by funding, procurement, or spending items",
-    "readOnlyNotice": "Only owners can manage money types, categories, and summary settings. Configuration changes are disabled."
+    "readOnlyNotice": "Only owners can manage money types, categories, and summary settings. Configuration changes are disabled.",
+    "inactiveFYNotice": "This fiscal year is inactive and read-only. Configuration changes are disabled."
   },
   "developerTools": {
     "title": "Developer Tools",

@@ -1026,9 +1026,9 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             spendingItem.setFiscalYear(procurementItem.getFiscalYear());
             spendingItem.setProcurementItem(procurementItem);
             spendingItem.setStatus(SpendingItem.Status.PLANNING);
-            spendingItem.setCurrency(procurementItem.getFinalPriceCurrency() != null 
+            spendingItem.setCurrency(procurementItem.getFinalPriceCurrency() != null
                     ? procurementItem.getFinalPriceCurrency() : Currency.CAD);
-            spendingItem.setAmount(procurementItem.getFinalPrice() != null 
+            spendingItem.setAmount(procurementItem.getFinalPrice() != null
                     ? procurementItem.getFinalPrice() : procurementItem.getQuotedPrice());
             spendingItem.setActive(true);
 
@@ -1054,10 +1054,11 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
                         "The linked spending item has been modified. Are you sure you want to unlink it?");
             }
 
-            // Soft delete the spending item
-            spendingItem.setActive(false);
-            spendingItemRepository.save(spendingItem);
-            logger.info("Unlinked spending item from procurement item: " + procurementItemId);
+            // Hard delete the spending item (cascades to money allocations and events)
+            procurementItem.getSpendingItems().remove(spendingItem);
+            spendingItemRepository.delete(spendingItem);
+            spendingItemRepository.flush();
+            logger.info("Deleted spending item linked to procurement item: " + procurementItemId);
 
             ProcurementItemDTO dto = ProcurementItemDTO.fromEntityWithoutQuotes(procurementItem);
             return ToggleSpendingLinkResult.success(dto, false);

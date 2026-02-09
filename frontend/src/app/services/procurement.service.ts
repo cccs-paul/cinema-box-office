@@ -675,6 +675,12 @@ export class ProcurementService {
    * @returns Observable that throws an error
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
+    // Pass through 409 Conflict responses so callers can inspect the full response
+    // (e.g. for confirmation dialogs on toggle-spending-link warnings)
+    if (error.status === 409) {
+      return throwError(() => error);
+    }
+
     let errorMessage = 'An unexpected error occurred';
     if (error.error instanceof ErrorEvent) {
       errorMessage = error.error.message;

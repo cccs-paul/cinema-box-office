@@ -23,8 +23,14 @@
     <button class="dismiss-btn" (click)="clearCategoryError()">×</button>
   </div>
 
-  <!-- Read-Only Notice -->
-  <div class="info-message" *ngIf="isReadOnly">
+  <!-- Read-Only Notice: Inactive FY (owner sees this) -->
+  <div class="info-message" *ngIf="isInactiveFY">
+    <span class="info-icon">🔒</span>
+    {{ 'configuration.inactiveFYNotice' | translate }}
+  </div>
+
+  <!-- Read-Only Notice: Not an owner (only shown when FY is active) -->
+  <div class="info-message" *ngIf="!isInactiveFY && isNotOwner">
     <span class="info-icon">🔒</span>
     {{ 'configuration.readOnlyNotice' | translate }}
   </div>

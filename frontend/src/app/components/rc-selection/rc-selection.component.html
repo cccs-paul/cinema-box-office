@@ -227,7 +227,7 @@
         </button>
         <button class="btn btn-action btn-sm" 
                 (click)="confirmDeleteFY()" 
-                [disabled]="selectedFYId === null || !selectedRCIsOwner || !selectedRCCanWrite"
+                [disabled]="selectedFYId === null || !selectedRCIsOwner || !selectedRCCanWrite || (selectedFY && !selectedFY.active)"
                 [title]="'fiscalYear.delete' | translate">
           <span class="action-icon">🗑️</span>
           <span class="action-label">{{ 'fiscalYear.delete' | translate }}</span>
@@ -241,7 +241,7 @@
         </button>
         <button class="btn btn-action btn-sm" 
                 (click)="toggleFYRenameForm()" 
-                [disabled]="selectedFYId === null || !selectedRCCanWrite" 
+                [disabled]="selectedFYId === null || !selectedRCCanWrite || (selectedFY && !selectedFY.active)" 
                 [title]="'fiscalYear.rename' | translate">
           <span class="action-icon">✏️</span>
           <span class="action-label">{{ 'fiscalYear.rename' | translate }}</span>

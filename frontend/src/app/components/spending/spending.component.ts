@@ -431,12 +431,15 @@ export class SpendingComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if user can write to the selected RC.
+   * Check if user can write to the selected RC and the FY is active.
    *
-   * @returns true if user is owner or has READ_WRITE access
+   * @returns true if user is owner or has READ_WRITE access and FY is active
    */
   get canWrite(): boolean {
     if (!this.selectedRC) {
+      return false;
+    }
+    if (this.selectedFY && !this.selectedFY.active) {
       return false;
     }
     return this.selectedRC.isOwner || this.selectedRC.accessLevel === 'READ_WRITE';

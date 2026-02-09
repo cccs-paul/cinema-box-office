@@ -570,10 +570,13 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Check if user can write to the selected RC.
+   * Check if user can write to the selected RC and the FY is active.
    */
   get canWrite(): boolean {
     if (!this.selectedRC) {
+      return false;
+    }
+    if (this.selectedFY && !this.selectedFY.active) {
       return false;
     }
     return this.selectedRC.isOwner || this.selectedRC.accessLevel === 'READ_WRITE';

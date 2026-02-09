@@ -142,6 +142,12 @@ public class FiscalYearServiceImpl implements FiscalYearService {
     FiscalYear fy = fyOpt.get();
     Long rcId = fy.getResponsibilityCentre().getId();
 
+    // Block updates to inactive fiscal years
+    if (!fy.getActive()) {
+      throw new IllegalArgumentException(
+          "This fiscal year is inactive and read-only. No changes are allowed.");
+    }
+
     // Verify user has write access to the RC
     if (!hasWriteAccessToRC(rcId, username)) {
       throw new IllegalArgumentException(
@@ -176,6 +182,12 @@ public class FiscalYearServiceImpl implements FiscalYearService {
     FiscalYear fy = fyOpt.get();
     Long rcId = fy.getResponsibilityCentre().getId();
 
+    // Block deletion of inactive fiscal years
+    if (!fy.getActive()) {
+      throw new IllegalArgumentException(
+          "This fiscal year is inactive and read-only. No changes are allowed.");
+    }
+
     // Verify user has write access to the RC
     if (!hasWriteAccessToRC(rcId, username)) {
       throw new IllegalArgumentException(
@@ -196,6 +208,12 @@ public class FiscalYearServiceImpl implements FiscalYearService {
 
     FiscalYear fy = fyOpt.get();
     Long rcId = fy.getResponsibilityCentre().getId();
+
+    // Block updates to inactive fiscal years
+    if (!fy.getActive()) {
+      throw new IllegalArgumentException(
+          "This fiscal year is inactive and read-only. No changes are allowed.");
+    }
 
     // Only the RC owner can update display settings (including on-target thresholds)
     if (!isRCOwner(rcId, username)) {

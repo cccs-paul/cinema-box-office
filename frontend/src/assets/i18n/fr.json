@@ -719,7 +719,8 @@
     "importLineItemsDesc": "Importer des éléments depuis un fichier CSV. Cette fonctionnalité est en cours de développement.",
     "exportCompleted": "Exportation terminée avec succès!",
     "cannotDeleteCategoryInUse": "Cette catégorie ne peut pas être supprimée car elle est utilisée par des éléments de financement, d'approvisionnement ou de dépenses",
-    "readOnlyNotice": "Seuls les propriétaires peuvent gérer les types de fonds, les catégories et les paramètres du sommaire. Les modifications de configuration sont désactivées."
+    "readOnlyNotice": "Seuls les propriétaires peuvent gérer les types de fonds, les catégories et les paramètres du sommaire. Les modifications de configuration sont désactivées.",
+    "inactiveFYNotice": "Cet exercice financier est inactif et en lecture seule. Les modifications de configuration sont désactivées."
   },
   "developerTools": {
     "title": "Outils développeur",
