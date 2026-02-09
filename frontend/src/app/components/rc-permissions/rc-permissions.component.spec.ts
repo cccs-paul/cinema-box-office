@@ -236,8 +236,8 @@ describe('RCPermissionsComponent', () => {
       tick();
     }));
 
-    it('should have editingPermissionId as null initially', () => {
-      expect(component.editingPermissionId).toBeNull();
+    it('should have editingPermissionId as undefined initially', () => {
+      expect(component.editingPermissionId).toBeUndefined();
     });
 
     it('should have default edit access level', () => {
@@ -811,7 +811,7 @@ describe('RCPermissionsComponent', () => {
 
       component.startEdit(originalOwner);
 
-      expect(component.editingPermissionId).toBeNull();
+      expect(component.editingPermissionId).toBeUndefined();
     });
   });
 });

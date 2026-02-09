@@ -177,8 +177,8 @@
           </thead>
           <tbody>
             <tr *ngFor="let permission of permissions" 
-                [class.editing]="editingPermissionId === permission.id"
-                [class.original-owner]="!permission.id">
+                [class.editing]="isEditingPermission(permission)"
+                [class.original-owner]="permission.id === null">
               <td class="type-cell">
                 <span class="type-icon">{{ getPrincipalTypeIcon(permission.principalType) }}</span>
                 <span class="type-label">{{ getPrincipalTypeLabelTranslated(permission.principalType) }}</span>
@@ -193,12 +193,12 @@
               </td>
               <td class="access-cell">
                 <!-- Normal view -->
-                <span *ngIf="editingPermissionId !== permission.id" class="access-badge" [class]="'level-' + permission.accessLevel.toLowerCase()">
+                <span *ngIf="!isEditingPermission(permission)" class="access-badge" [class]="'level-' + permission.accessLevel.toLowerCase()">
                   {{ getAccessLevelIcon(permission.accessLevel) }} {{ getAccessLevelLabelTranslated(permission.accessLevel) }}
                 </span>
                 <!-- Edit view -->
                 <select 
-                  *ngIf="editingPermissionId === permission.id" 
+                  *ngIf="isEditingPermission(permission)" 
                   [(ngModel)]="editAccessLevel" 
                   class="form-select inline"
                 >
@@ -211,17 +211,17 @@
                 <div class="granted-info">
                   <span class="granted-date">{{ permission.grantedAt | date:'dd/MM/yyyy' }}</span>
                   <span class="granted-by" *ngIf="permission.grantedBy">{{ 'rcPermissions.by' | translate }} {{ permission.grantedBy }}</span>
-                  <span class="granted-by" *ngIf="!permission.grantedBy && !permission.id">{{ 'rcPermissions.originalOwner' | translate }}</span>
+                  <span class="granted-by" *ngIf="!permission.grantedBy && permission.id === null">{{ 'rcPermissions.originalOwner' | translate }}</span>
                 </div>
               </td>
               <td class="actions-cell">
                 <!-- Normal actions -->
-                <div *ngIf="editingPermissionId !== permission.id && canEditPermission(permission)" class="action-buttons">
+                <div *ngIf="!isEditingPermission(permission) && canEditPermission(permission)" class="action-buttons">
                   <!-- For original owner (id === null), only show relinquish button with warning -->
-                  <span *ngIf="!permission.id" class="owner-unlocked-hint" [title]="'rcPermissions.ownerUnlockedHint' | translate">
+                  <span *ngIf="permission.id === null" class="owner-unlocked-hint" [title]="'rcPermissions.ownerUnlockedHint' | translate">
                     🔓
                   </span>
-                  <button *ngIf="!permission.id" class="btn-action btn-delete" (click)="confirmDelete(permission)" [title]="'rcPermissions.relinquishOwnership' | translate">
+                  <button *ngIf="permission.id === null" class="btn-action btn-delete" (click)="confirmDelete(permission)" [title]="'rcPermissions.relinquishOwnership' | translate">
                     🔄
                   </button>
                   <!-- For all other entries, show edit and delete buttons -->
@@ -233,7 +233,7 @@
                   </button>
                 </div>
                 <!-- Edit actions -->
-                <div *ngIf="editingPermissionId === permission.id" class="action-buttons">
+                <div *ngIf="isEditingPermission(permission)" class="action-buttons">
                   <button class="btn-action btn-save" (click)="saveEdit()" [title]="'common.save' | translate" [disabled]="isSaving">
                     <span *ngIf="!isSaving">✅</span>
                     <span *ngIf="isSaving" class="spinner-small"></span>
@@ -243,7 +243,7 @@
                   </button>
                 </div>
                 <!-- Original owner badge (sole owner, no other owners exist) -->
-                <div *ngIf="editingPermissionId !== permission.id && !canEditPermission(permission) && !permission.id" class="original-owner-protected">
+                <div *ngIf="!isEditingPermission(permission) && !canEditPermission(permission) && permission.id === null" class="original-owner-protected">
                   <span class="protected-badge" [title]="'rcPermissions.originalOwnerProtectedHint' | translate">
                     🔒 {{ 'rcPermissions.originalOwner' | translate }}
                   </span>

@@ -64,8 +64,9 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
   private searchSubject$ = new Subject<{ query: string; type: 'USER' | 'GROUP' }>();
   private searchSubscription: Subscription | null = null;
 
-  // Edit form
-  editingPermissionId: number | null = null;
+  // Edit form — uses undefined to mean "not editing" so that the original
+  // owner's null id never accidentally matches the editing state.
+  editingPermissionId: number | null | undefined = undefined;
   editAccessLevel: 'OWNER' | 'READ_WRITE' | 'READ_ONLY' = 'READ_WRITE';
   isSaving = false;
 
@@ -348,7 +349,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
 
   // Edit methods
   startEdit(permission: RCAccess): void {
-    if (!permission.id) {
+    if (permission.id === null) {
       // Original owner: can't edit access level (it's implicit OWNER via FK).
       // They should use the "Relinquish" button instead.
       return;
@@ -358,8 +359,20 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
     this.clearMessages();
   }
 
+  /**
+   * Determine whether a specific permission row is currently being edited.
+   * Uses strict identity comparison and explicitly excludes the original
+   * owner's synthetic entry (id === null) which must never enter edit mode.
+   */
+  isEditingPermission(permission: RCAccess): boolean {
+    if (permission.id === null) {
+      return false;
+    }
+    return this.editingPermissionId !== undefined && this.editingPermissionId === permission.id;
+  }
+
   cancelEdit(): void {
-    this.editingPermissionId = null;
+    this.editingPermissionId = undefined;
   }
 
   saveEdit(): void {
@@ -369,7 +382,7 @@ export class RCPermissionsComponent implements OnInit, OnDestroy {
     this.permissionService.updatePermission(this.editingPermissionId, { accessLevel: this.editAccessLevel }).subscribe({
       next: () => {
         this.showSuccessMessage(this.translate.instant('rcPermissions.permissionUpdatedSuccess'));
-        this.editingPermissionId = null;
+        this.editingPermissionId = undefined;
         this.isSaving = false;
         this.loadPermissions();
       },
