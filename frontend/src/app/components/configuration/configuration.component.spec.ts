@@ -424,4 +424,207 @@ describe('ConfigurationComponent', () => {
       });
     });
   });
+
+  describe('Export/Import', () => {
+    beforeEach(fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+    }));
+
+    describe('exportToJSON', () => {
+      it('should set error when no RC/FY selected', () => {
+        component.rcId = null;
+        component.fyId = null;
+        component.exportToJSON();
+        expect(component.exportErrorMessage).toContain('Please select');
+      });
+
+      it('should set error when export path is empty', () => {
+        component.rcId = 1;
+        component.fyId = 1;
+        component.exportPath = '';
+        component.exportToJSON();
+        expect(component.exportErrorMessage).toContain('export destination');
+      });
+
+      it('should call fetch with correct URL', fakeAsync(() => {
+        component.rcId = 1;
+        component.fyId = 1;
+        component.exportPath = 'export.json';
+
+        const mockResponse = {
+          ok: true,
+          json: () => Promise.resolve({
+            metadata: { fundingItemCount: 2, spendingItemCount: 3, procurementItemCount: 1 }
+          })
+        };
+        spyOn(window, 'fetch').and.returnValue(Promise.resolve(mockResponse as any));
+        spyOn(URL, 'createObjectURL').and.returnValue('blob:test');
+        spyOn(URL, 'revokeObjectURL');
+
+        component.exportToJSON();
+        expect(component.isExporting).toBeTrue();
+
+        tick();
+        // Allow the promise chain to resolve
+        tick();
+        tick();
+
+        expect(window.fetch).toHaveBeenCalledWith('/api/responsibility-centres/1/fiscal-years/1/export');
+      }));
+
+      it('should handle export failure', fakeAsync(() => {
+        component.rcId = 1;
+        component.fyId = 1;
+        component.exportPath = 'export.json';
+
+        spyOn(window, 'fetch').and.returnValue(Promise.resolve({
+          ok: false,
+          status: 500
+        } as any));
+
+        component.exportToJSON();
+        tick();
+        tick();
+
+        expect(component.exportErrorMessage).toContain('Export failed');
+        expect(component.isExporting).toBeFalse();
+      }));
+    });
+
+    describe('isExportValid', () => {
+      it('should return true when export path is set', () => {
+        component.exportPath = 'export.json';
+        expect(component.isExportValid()).toBeTrue();
+      });
+
+      it('should return false when export path is empty', () => {
+        component.exportPath = '';
+        expect(component.isExportValid()).toBeFalse();
+      });
+
+      it('should return false when export path is whitespace', () => {
+        component.exportPath = '   ';
+        expect(component.isExportValid()).toBeFalse();
+      });
+    });
+
+    describe('isImportValid', () => {
+      it('should return true when path and handle are set', () => {
+        component.importPath = 'data.json';
+        component.importFileHandle = new File(['{}'], 'data.json');
+        expect(component.isImportValid()).toBeTrue();
+      });
+
+      it('should return false when path is empty', () => {
+        component.importPath = '';
+        component.importFileHandle = new File(['{}'], 'data.json');
+        expect(component.isImportValid()).toBeFalse();
+      });
+
+      it('should return false when handle is null', () => {
+        component.importPath = 'data.json';
+        component.importFileHandle = null;
+        expect(component.isImportValid()).toBeFalse();
+      });
+    });
+
+    describe('importFromJSON', () => {
+      it('should set error when no RC/FY selected', async () => {
+        component.rcId = null;
+        component.fyId = null;
+        await component.importFromJSON();
+        expect(component.importErrorMessage).toContain('Please select');
+      });
+
+      it('should set error when no file selected', async () => {
+        component.rcId = 1;
+        component.fyId = 1;
+        component.importPath = '';
+        component.importFileHandle = null;
+        await component.importFromJSON();
+        expect(component.importErrorMessage).toContain('import file');
+      });
+
+      it('should call fetch POST with correct URL and data', async () => {
+        component.rcId = 1;
+        component.fyId = 1;
+        const fileContent = JSON.stringify({ metadata: { exportVersion: '1.0' } });
+        component.importFileHandle = new File([fileContent], 'import.json', { type: 'application/json' });
+        component.importPath = 'import.json';
+
+        const mockResponse = {
+          ok: true,
+          json: () => Promise.resolve({
+            metadata: { fundingItemCount: 1, spendingItemCount: 2, procurementItemCount: 3 }
+          })
+        };
+        spyOn(window, 'fetch').and.returnValue(Promise.resolve(mockResponse as any));
+
+        await component.importFromJSON();
+
+        expect(window.fetch).toHaveBeenCalledWith(
+          '/api/responsibility-centres/1/fiscal-years/1/import',
+          jasmine.objectContaining({
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          })
+        );
+        expect(component.importSuccessMessage).toContain('Import completed');
+        expect(component.isImporting).toBeFalse();
+      });
+
+      it('should handle import failure', async () => {
+        component.rcId = 1;
+        component.fyId = 1;
+        const fileContent = JSON.stringify({ metadata: {} });
+        component.importFileHandle = new File([fileContent], 'import.json', { type: 'application/json' });
+        component.importPath = 'import.json';
+
+        spyOn(window, 'fetch').and.returnValue(Promise.resolve({
+          ok: false,
+          status: 400,
+          json: () => Promise.resolve({ message: 'Invalid data format' })
+        } as any));
+
+        await component.importFromJSON();
+
+        expect(component.importErrorMessage).toContain('Import failed');
+        expect(component.isImporting).toBeFalse();
+      });
+
+      it('should handle invalid JSON content', async () => {
+        component.rcId = 1;
+        component.fyId = 1;
+        component.importFileHandle = new File(['not valid json'], 'bad.json', { type: 'application/json' });
+        component.importPath = 'bad.json';
+
+        await component.importFromJSON();
+
+        expect(component.importErrorMessage).toContain('Import failed');
+        expect(component.isImporting).toBeFalse();
+      });
+    });
+
+    describe('selectImportFile', () => {
+      it('should create file input as fallback when File System Access API not available', async () => {
+        // The fallback uses a hidden file input element
+        const createElementSpy = spyOn(document, 'createElement').and.callThrough();
+        
+        // Mock window without showOpenFilePicker
+        const originalPicker = (window as any).showOpenFilePicker;
+        delete (window as any).showOpenFilePicker;
+        
+        try {
+          await component.selectImportFile();
+          // It creates an input element as fallback
+          expect(createElementSpy).toHaveBeenCalledWith('input');
+        } finally {
+          if (originalPicker) {
+            (window as any).showOpenFilePicker = originalPicker;
+          }
+        }
+      });
+    });
+  });
 });

@@ -742,8 +742,8 @@ View a summary of:
 
 ### 11.6 Import/Export Tab
 
-- **Export**: Download fiscal year data as a file
-- **Import**: Upload data to restore or migrate
+- **Export**: Download fiscal year data as a JSON file (includes all fields and base64-encoded file attachments)
+- **Import**: Upload a JSON export file to add new items to the current fiscal year
 
 ---
 
@@ -894,27 +894,25 @@ Click **Clear Filters** to reset all filters.
 
 1. Navigate to **Configuration**
 2. Go to the **Import/Export** tab
-3. Click **Export**
-4. Choose the download location
-5. Save the export file
+3. Click **Browse** to choose the download location
+4. Click **Export to JSON**
+5. A JSON file is saved containing all fiscal year data
 
 Export includes:
-- Fiscal year settings
-- Categories and money types
 - Funding items
-- Spending items
-- Procurement items with quotes and events
+- Spending items with invoices and file attachments (base64-encoded)
+- Procurement items with events, quotes, and file attachments (base64-encoded)
+- Export metadata (timestamps, item counts)
 
 ### 15.2 Importing Data
 
 1. Navigate to **Configuration**
 2. Go to the **Import/Export** tab
-3. Click **Import**
-4. Select the export file
-5. Review the import preview
-6. Confirm the import
+3. Click **Browse** to select a JSON export file
+4. Click **Import from JSON**
+5. New items are created in the current fiscal year
 
-> ⚠️ **Warning**: Importing may overwrite existing data. Always export a backup first.
+> ⚠️ **Note**: Importing adds new items to the existing fiscal year data. It does not overwrite or delete existing items. File attachments embedded in the JSON are automatically restored.
 
 ---
 
@@ -933,6 +931,17 @@ To change language:
 4. The interface updates immediately
 
 Language preference is saved and persists across sessions.
+
+All labels are fully translated, including:
+- Spending item statuses (Planning, Committed, Completed, Cancelled)
+- Procurement item statuses (Draft, Pending Quotes, Approved, etc.)
+- Tracking statuses (On Track, At Risk, Completed, etc.)
+- Procurement types (RC Initiated, Centrally Managed)
+- Quote statuses (Pending, Under Review, Selected, Rejected)
+- Event types (all 37 event types)
+- Category names and all other UI labels
+
+Search and filter functionality respects the current language setting.
 
 ### 16.2 Theme Selection
 

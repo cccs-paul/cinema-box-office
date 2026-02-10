@@ -4,6 +4,16 @@
 
 myRC is a comprehensive fiscal year and responsibility centre management system built with a **Java 25 Spring Boot REST API backend** and an **Angular frontend**. The application enables organizations to track funding items, budgets, and allocations across multiple responsibility centres and fiscal years.
 
+### Key Features
+- Funding, spending, and procurement item management
+- Multi-currency support with exchange rate tracking
+- File attachments for invoices, events, and quotes
+- JSON export/import with base64-encoded file attachments
+- Bilingual support (English/French) with fully translated status labels
+- Dark/light theme support
+- Role-based access control (OWNER, READ_WRITE, READ_ONLY)
+- Fuzzy search and multi-criteria filtering
+
 ## Quick Start
 
 For comprehensive instructions on running the application in development, production, Docker, Kubernetes, and VSCode, see **[RUNNING_THE_APPLICATION.md](RUNNING_THE_APPLICATION.md)**.
@@ -66,6 +76,12 @@ Response:
   "status": "UP",
   "message": "myRC API is running"
 }
+```
+
+#### Export/Import (JSON with base64-encoded file attachments)
+```bash
+GET  /api/responsibility-centres/{rcId}/fiscal-years/{fyId}/export
+POST /api/responsibility-centres/{rcId}/fiscal-years/{fyId}/import
 ```
 
 ### Building Backend

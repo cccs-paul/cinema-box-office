@@ -698,8 +698,8 @@
                         </div>
                       </div>
                     </div>
-                    <!-- Upload file button -->
-                    <div class="invoice-upload-row" *ngIf="canWrite">
+                    <!-- Upload file button - only shown if no file has been uploaded for this invoice -->
+                    <div class="invoice-upload-row" *ngIf="canWrite && (!invoice.files || invoice.files.length === 0)">
                       <label class="btn-file-select small">
                         📤 {{ 'spending.uploadFile' | translate }}
                         <input type="file" (change)="onInvoiceFileSelected($event, invoice)" style="display: none"

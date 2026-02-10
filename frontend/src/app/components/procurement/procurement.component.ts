@@ -518,9 +518,9 @@ export class ProcurementComponent implements OnInit, OnDestroy {
           vendor: item.vendor,
           contractNumber: item.contractNumber,
           categoryName: item.categoryName,
-          status: item.currentStatus ? (PROCUREMENT_STATUS_INFO[item.currentStatus]?.label || item.currentStatus) : '',
-          trackingStatus: item.trackingStatus ? (TRACKING_STATUS_INFO[item.trackingStatus as TrackingStatus]?.label || item.trackingStatus) : '',
-          procurementType: item.procurementType ? (PROCUREMENT_TYPE_INFO[item.procurementType as ProcurementType]?.label || item.procurementType) : ''
+          status: item.currentStatus ? this.getStatusLabel(item.currentStatus) : '',
+          trackingStatus: item.trackingStatus ? this.getTrackingStatusLabel(item.trackingStatus) : '',
+          procurementType: item.procurementType ? this.getProcurementTypeLabel(item.procurementType) : ''
         })
       );
     }
@@ -2328,6 +2328,17 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   }
 
   getQuoteStatusLabel(status: QuoteStatus): string {
+    const keyMap: Record<QuoteStatus, string> = {
+      PENDING: 'procurement.quoteStatusPending',
+      UNDER_REVIEW: 'procurement.quoteStatusUnderReview',
+      SELECTED: 'procurement.quoteStatusSelected',
+      REJECTED: 'procurement.quoteStatusRejected'
+    };
+    const key = keyMap[status];
+    if (key) {
+      const translated = this.translate.instant(key);
+      if (translated !== key) return translated;
+    }
     return QUOTE_STATUS_INFO[status]?.label || status;
   }
 

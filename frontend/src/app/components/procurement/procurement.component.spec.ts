@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
 import { of, BehaviorSubject, throwError, Subject } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ProcurementComponent } from './procurement.component';
 import { AuthService } from '../../services/auth.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
@@ -1108,6 +1108,166 @@ describe('ProcurementComponent', () => {
           1, 1, mockEvent.procurementItemId, mockEvent.id, mockEventFiles[0].id
         );
       }));
+    });
+  });
+
+  describe('getQuoteStatusLabel', () => {
+    it('should return label for PENDING status', () => {
+      const label = component.getQuoteStatusLabel('PENDING');
+      expect(label).toBe('Pending');
+    });
+
+    it('should return label for UNDER_REVIEW status', () => {
+      const label = component.getQuoteStatusLabel('UNDER_REVIEW');
+      expect(label).toBe('Under Review');
+    });
+
+    it('should return label for SELECTED status', () => {
+      const label = component.getQuoteStatusLabel('SELECTED');
+      expect(label).toBe('Selected');
+    });
+
+    it('should return label for REJECTED status', () => {
+      const label = component.getQuoteStatusLabel('REJECTED');
+      expect(label).toBe('Rejected');
+    });
+
+    it('should use i18n translation when available', () => {
+      const translate = TestBed.inject(TranslateService);
+      spyOn(translate, 'instant').and.callFake((key: string) => {
+        if (key === 'procurement.quoteStatusPending') return 'En attente';
+        return key;
+      });
+      const label = component.getQuoteStatusLabel('PENDING');
+      expect(label).toBe('En attente');
+    });
+
+    it('should fall back to model label when i18n key returns itself', () => {
+      const translate = TestBed.inject(TranslateService);
+      spyOn(translate, 'instant').and.callFake((key: string) => key);
+      const label = component.getQuoteStatusLabel('PENDING');
+      expect(label).toBe('Pending');
+    });
+  });
+
+  describe('getStatusLabel', () => {
+    it('should return label for DRAFT status', () => {
+      const label = component.getStatusLabel('DRAFT');
+      expect(label).toBe('Draft');
+    });
+
+    it('should return label for PENDING_QUOTES status', () => {
+      const label = component.getStatusLabel('PENDING_QUOTES');
+      expect(label).toBe('Pending Quotes');
+    });
+
+    it('should return label for APPROVED status', () => {
+      const label = component.getStatusLabel('APPROVED');
+      expect(label).toBe('Approved');
+    });
+
+    it('should return label for CANCELLED status', () => {
+      const label = component.getStatusLabel('CANCELLED');
+      expect(label).toBe('Cancelled');
+    });
+
+    it('should use i18n translation when available', () => {
+      const translate = TestBed.inject(TranslateService);
+      spyOn(translate, 'instant').and.callFake((key: string) => {
+        if (key === 'procurement.statusDraft') return 'Brouillon';
+        return key;
+      });
+      const label = component.getStatusLabel('DRAFT');
+      expect(label).toBe('Brouillon');
+    });
+  });
+
+  describe('getTrackingStatusLabel', () => {
+    it('should return label for ON_TRACK status', () => {
+      const label = component.getTrackingStatusLabel('ON_TRACK');
+      expect(label).toBe('On Track');
+    });
+
+    it('should return label for AT_RISK status', () => {
+      const label = component.getTrackingStatusLabel('AT_RISK');
+      expect(label).toBe('At Risk');
+    });
+
+    it('should return label for CANCELLED status', () => {
+      const label = component.getTrackingStatusLabel('CANCELLED');
+      expect(label).toBe('Cancelled');
+    });
+
+    it('should use i18n translation when available', () => {
+      const translate = TestBed.inject(TranslateService);
+      spyOn(translate, 'instant').and.callFake((key: string) => {
+        if (key === 'procurement.statusOnTrack') return 'En bonne voie';
+        return key;
+      });
+      const label = component.getTrackingStatusLabel('ON_TRACK');
+      expect(label).toBe('En bonne voie');
+    });
+  });
+
+  describe('getProcurementTypeLabel', () => {
+    it('should return label for RC_INITIATED', () => {
+      const label = component.getProcurementTypeLabel('RC_INITIATED');
+      expect(label).toBe('RC Initiated');
+    });
+
+    it('should return label for CENTRALLY_MANAGED', () => {
+      const label = component.getProcurementTypeLabel('CENTRALLY_MANAGED');
+      expect(label).toBe('Centrally Managed');
+    });
+
+    it('should use i18n translation when available', () => {
+      const translate = TestBed.inject(TranslateService);
+      spyOn(translate, 'instant').and.callFake((key: string) => {
+        if (key === 'procurement.procurementTypeRcInitiated') return 'Initié par le CR';
+        return key;
+      });
+      const label = component.getProcurementTypeLabel('RC_INITIATED');
+      expect(label).toBe('Initié par le CR');
+    });
+  });
+
+  describe('filteredProcurementItems with translated labels', () => {
+    it('should include translated status in fuzzy search fields', () => {
+      fuzzySearchService.filter.and.callFake(
+        (items: any[], _term: string, fieldExtractor: any) => {
+          const fields = fieldExtractor(mockProcurementItems[0]);
+          expect(fields.status).toBe('Draft');
+          expect(fields.trackingStatus).toBe('On Track');
+          expect(fields.procurementType).toBe('RC Initiated');
+          return items;
+        }
+      );
+
+      component.searchTerm = 'Draft';
+      component.selectedCategoryId = null;
+      component.selectedTrackingStatus = null;
+      component.filteredProcurementItems;
+      expect(fuzzySearchService.filter).toHaveBeenCalled();
+    });
+
+    it('should handle empty status in fuzzy search fields', () => {
+      const itemNoStatus: any = { ...mockProcurementItems[0], currentStatus: undefined, trackingStatus: undefined, procurementType: undefined };
+      component.procurementItems = [itemNoStatus];
+      fuzzySearchService.filter.and.callFake(
+        (items: any[], _term: string, fieldExtractor: any) => {
+          const fields = fieldExtractor(itemNoStatus);
+          expect(fields.status).toBe('');
+          expect(fields.trackingStatus).toBe('');
+          expect(fields.procurementType).toBe('');
+          return items;
+        }
+      );
+
+      component.searchTerm = 'test';
+      component.selectedCategoryId = null;
+      component.selectedTrackingStatus = null;
+      component.filteredProcurementItems;
+      expect(fuzzySearchService.filter).toHaveBeenCalled();
     });
   });
 });

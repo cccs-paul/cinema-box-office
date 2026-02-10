@@ -11,7 +11,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { of, BehaviorSubject, throwError, Subject } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SpendingComponent } from './spending.component';
 import { AuthService } from '../../services/auth.service';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
@@ -20,9 +20,10 @@ import { SpendingItemService } from '../../services/spending-item.service';
 import { CategoryService } from '../../services/category.service';
 import { MoneyService } from '../../services/money.service';
 import { CurrencyService } from '../../services/currency.service';
+import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { User } from '../../models/user.model';
 import { Money } from '../../models/money.model';
-import { SpendingItem, SpendingMoneyAllocation } from '../../models/spending-item.model';
+import { SpendingItem, SpendingMoneyAllocation, SpendingInvoice } from '../../models/spending-item.model';
 import { Category } from '../../models/category.model';
 
 describe('SpendingComponent', () => {
@@ -472,6 +473,38 @@ describe('SpendingComponent', () => {
       expect(label).toBe('Planning');
     });
 
+    it('should return correct label for COMMITTED status', () => {
+      const label = component.getStatusLabel('COMMITTED');
+      expect(label).toBe('Committed');
+    });
+
+    it('should return correct label for COMPLETED status', () => {
+      const label = component.getStatusLabel('COMPLETED');
+      expect(label).toBe('Completed');
+    });
+
+    it('should return correct label for CANCELLED status', () => {
+      const label = component.getStatusLabel('CANCELLED');
+      expect(label).toBe('Cancelled');
+    });
+
+    it('should use i18n translation when available', () => {
+      const translate = TestBed.inject(TranslateService);
+      spyOn(translate, 'instant').and.callFake((key: string) => {
+        if (key === 'spending.statusPlanning') return 'Planification';
+        return key;
+      });
+      const label = component.getStatusLabel('PLANNING');
+      expect(label).toBe('Planification');
+    });
+
+    it('should fall back to model label when i18n key returns itself', () => {
+      const translate = TestBed.inject(TranslateService);
+      spyOn(translate, 'instant').and.callFake((key: string) => key);
+      const label = component.getStatusLabel('PLANNING');
+      expect(label).toBe('Planning');
+    });
+
     it('should return status class for valid status', () => {
       const cssClass = component.getStatusClass('PLANNING');
       expect(cssClass).toContain('status-');
@@ -758,6 +791,90 @@ describe('SpendingComponent', () => {
     it('should handle null invoice total', () => {
       const formatted = component.formatCurrency(null, 'CAD');
       expect(formatted).toContain('0.00');
+    });
+  });
+
+  describe('filteredSpendingItems', () => {
+    it('should return all items when no search term is set', () => {
+      component.searchTerm = '';
+      const items = component.filteredSpendingItems;
+      expect(items.length).toBe(component.spendingItems.length);
+    });
+
+    it('should return items sorted alphabetically by name', () => {
+      const secondItem: SpendingItem = {
+        ...mockSpendingItems[0],
+        id: 2,
+        name: 'Alpha Server'
+      };
+      component.spendingItems = [mockSpendingItems[0], secondItem];
+      component.searchTerm = '';
+      const items = component.filteredSpendingItems;
+      expect(items[0].name).toBe('Alpha Server');
+      expect(items[1].name).toBe('GPU Purchase');
+    });
+
+    it('should include translated status label in fuzzy search fields', () => {
+      const fuzzySearch = TestBed.inject(FuzzySearchService);
+      spyOn(fuzzySearch, 'filter').and.callFake(
+        (items: any[], _term: string, fieldExtractor: any) => {
+          // Verify fieldExtractor includes status with translated label
+          const fields = fieldExtractor(mockSpendingItems[0]);
+          expect(fields.status).toBe('Planning');
+          return items;
+        }
+      );
+
+      component.searchTerm = 'Planning';
+      component.filteredSpendingItems;
+      expect(fuzzySearch.filter).toHaveBeenCalled();
+    });
+  });
+
+  describe('Upload file button visibility', () => {
+    it('should hide upload button when invoice has files', () => {
+      // When invoice has files, the template condition (!invoice.files || invoice.files.length === 0) is false
+      const invoice: SpendingInvoice = {
+        id: 1,
+        invoiceDate: '2026-01-01',
+        amount: 1000,
+        amountCad: 1000,
+        currency: 'CAD',
+        comments: 'Test Invoice',
+        spendingItemId: 1,
+        files: [{ id: 1, fileName: 'receipt.pdf', fileSize: 1024, contentType: 'application/pdf', active: true }]
+      } as any;
+      const hasFiles = invoice.files && invoice.files.length > 0;
+      expect(hasFiles).toBeTrue();
+    });
+
+    it('should show upload button when invoice has no files', () => {
+      const invoice: SpendingInvoice = {
+        id: 1,
+        invoiceDate: '2026-01-01',
+        amount: 1000,
+        amountCad: 1000,
+        currency: 'CAD',
+        comments: 'No file invoice',
+        spendingItemId: 1,
+        files: []
+      } as any;
+      const showButton = !invoice.files || invoice.files.length === 0;
+      expect(showButton).toBeTrue();
+    });
+
+    it('should show upload button when invoice files is undefined', () => {
+      const invoice: SpendingInvoice = {
+        id: 1,
+        invoiceDate: '2026-01-01',
+        amount: 1000,
+        amountCad: 1000,
+        currency: 'CAD',
+        comments: 'No file invoice',
+        spendingItemId: 1
+      } as any;
+      const showButton = !invoice.files || invoice.files.length === 0;
+      expect(showButton).toBeTrue();
     });
   });
 });

@@ -82,8 +82,13 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   exportPath = '';
   exportFileHandle: any = null;
   isExporting = false;
+  isImporting = false;
   exportSuccessMessage: string | null = null;
   exportErrorMessage: string | null = null;
+  importSuccessMessage: string | null = null;
+  importErrorMessage: string | null = null;
+  importFileHandle: any = null;
+  importPath = '';
 
   private destroy$ = new Subject<void>();
 
@@ -656,7 +661,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     const fyName = this.selectedFY?.name || 'FY';
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0]; // yyyy-mm-dd format
-    const defaultFilename = `${rcName}_${fyName}_export_${dateStr}.csv`;
+    const defaultFilename = `${rcName}_${fyName}_export_${dateStr}.json`;
 
     // Check if File System Access API is available
     if ('showSaveFilePicker' in window) {
@@ -665,9 +670,9 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
           suggestedName: defaultFilename,
           types: [
             {
-              description: 'CSV Files',
+              description: 'JSON Files',
               accept: {
-                'text/csv': ['.csv']
+                'application/json': ['.json']
               }
             }
           ]
@@ -698,9 +703,10 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Export Funding, Procurement, and Spending items to CSV.
+   * Export all data as JSON via backend endpoint.
+   * Includes all fields and base64-encoded file attachments.
    */
-  exportToCSV(): void {
+  exportToJSON(): void {
     if (!this.rcId || !this.fyId) {
       this.exportErrorMessage = 'Please select a Responsibility Centre and Fiscal Year';
       return;
@@ -715,150 +721,140 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     this.exportSuccessMessage = null;
     this.exportErrorMessage = null;
 
-    // Fetch all data for export
-    Promise.all([
-      this.fetchFundingItems(),
-      this.fetchProcurementItems(),
-      this.fetchSpendingItems()
-    ]).then(async ([fundingItems, procurementItems, spendingItems]) => {
-      const csvContent = this.generateCSVContent(fundingItems, procurementItems, spendingItems);
-      await this.downloadCSV(csvContent);
-      this.exportSuccessMessage = 'Export completed successfully!';
-      this.isExporting = false;
-    }).catch(error => {
-      this.exportErrorMessage = `Export failed: ${error.message || 'Unknown error'}`;
-      this.isExporting = false;
-    });
-  }
-
-  /**
-   * Fetch funding items for export.
-   */
-  private fetchFundingItems(): Promise<any[]> {
-    return fetch(`/api/fiscal-years/${this.fyId}/funding-items`)
+    fetch(`/api/responsibility-centres/${this.rcId}/fiscal-years/${this.fyId}/export`)
       .then(response => {
-        if (!response.ok) throw new Error('Failed to fetch funding items');
+        if (!response.ok) {
+          throw new Error(`Export failed with status ${response.status}`);
+        }
         return response.json();
+      })
+      .then(async (exportData) => {
+        const jsonContent = JSON.stringify(exportData, null, 2);
+        await this.downloadJSON(jsonContent);
+        const meta = exportData.metadata;
+        this.exportSuccessMessage = `Export completed: ${meta?.fundingItemCount ?? 0} funding, ` +
+          `${meta?.spendingItemCount ?? 0} spending, ${meta?.procurementItemCount ?? 0} procurement items`;
+        this.isExporting = false;
+      })
+      .catch(error => {
+        this.exportErrorMessage = `Export failed: ${error.message || 'Unknown error'}`;
+        this.isExporting = false;
       });
   }
 
   /**
-   * Fetch procurement items for export.
+   * Select import file using browser file picker.
    */
-  private fetchProcurementItems(): Promise<any[]> {
-    return fetch(`/api/responsibility-centres/${this.rcId}/fiscal-years/${this.fyId}/procurement-items`)
-      .then(response => {
-        if (!response.ok) throw new Error('Failed to fetch procurement items');
-        return response.json();
-      });
-  }
+  async selectImportFile(): Promise<void> {
+    // Check if File System Access API is available
+    if ('showOpenFilePicker' in window) {
+      try {
+        const options = {
+          types: [
+            {
+              description: 'JSON Files',
+              accept: {
+                'application/json': ['.json']
+              }
+            }
+          ],
+          multiple: false
+        };
 
-  /**
-   * Fetch spending items for export.
-   */
-  private fetchSpendingItems(): Promise<any[]> {
-    return fetch(`/api/responsibility-centres/${this.rcId}/fiscal-years/${this.fyId}/spending-items`)
-      .then(response => {
-        if (!response.ok) throw new Error('Failed to fetch spending items');
-        return response.json();
-      });
-  }
-
-  /**
-   * Generate CSV content from all items.
-   */
-  private generateCSVContent(fundingItems: any[], procurementItems: any[], spendingItems: any[]): string {
-    const lines: string[] = [];
-
-    // Funding Items Section
-    lines.push('=== FUNDING ITEMS ===');
-    lines.push('Type,ID,Name,Description,Source,Amount,Currency,Exchange Rate,Category,Money Allocations,Status,Created Date');
-    for (const item of fundingItems) {
-      const allocations = item.moneyAllocations?.map((a: any) => `${a.moneyCode || a.money?.code}:${a.amount}`).join(';') || '';
-      lines.push(this.escapeCSVRow([
-        'FUNDING',
-        item.id,
-        item.name,
-        item.description || '',
-        item.source || '',
-        item.amount || 0,
-        item.currency || 'USD',
-        item.exchangeRate || 1,
-        item.category?.name || '',
-        allocations,
-        item.status || '',
-        item.createdAt || ''
-      ]));
-    }
-
-    lines.push('');
-
-    // Procurement Items Section
-    lines.push('=== PROCUREMENT ITEMS ===');
-    lines.push('Type,ID,PR Number,PO Number,Name,Description,Vendor,Status,Amount,Currency,Exchange Rate,Category,Created Date');
-    for (const item of procurementItems) {
-      lines.push(this.escapeCSVRow([
-        'PROCUREMENT',
-        item.id,
-        item.purchaseRequisition || '',
-        item.purchaseOrder || '',
-        item.name,
-        item.description || '',
-        item.vendor || '',
-        item.status || '',
-        item.amount || 0,
-        item.currency || 'USD',
-        item.exchangeRate || 1,
-        item.category?.name || '',
-        item.createdAt || ''
-      ]));
-    }
-
-    lines.push('');
-
-    // Spending Items Section
-    lines.push('=== SPENDING ITEMS ===');
-    lines.push('Type,ID,Name,Description,Vendor,Reference Number,Amount,Currency,Exchange Rate,Category,Money Allocations,Status,Created Date');
-    for (const item of spendingItems) {
-      const allocations = item.moneyAllocations?.map((a: any) => `${a.moneyCode || a.money?.code}:${a.amount}`).join(';') || '';
-      lines.push(this.escapeCSVRow([
-        'SPENDING',
-        item.id,
-        item.name,
-        item.description || '',
-        item.vendor || '',
-        item.referenceNumber || '',
-        item.amount || 0,
-        item.currency || 'USD',
-        item.exchangeRate || 1,
-        item.category?.name || '',
-        allocations,
-        item.status || '',
-        item.createdAt || ''
-      ]));
-    }
-
-    return lines.join('\n');
-  }
-
-  /**
-   * Escape a row of values for CSV format.
-   */
-  private escapeCSVRow(values: any[]): string {
-    return values.map(value => {
-      const strValue = String(value ?? '');
-      // Escape double quotes and wrap in quotes if contains comma, newline, or quotes
-      if (strValue.includes(',') || strValue.includes('\n') || strValue.includes('"')) {
-        return '"' + strValue.replace(/"/g, '""') + '"';
+        const [handle] = await (window as any).showOpenFilePicker(options);
+        this.importFileHandle = handle;
+        this.importPath = handle.name;
+        this.importErrorMessage = null;
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          this.importErrorMessage = 'Failed to select import file';
+        }
       }
-      return strValue;
-    }).join(',');
+    } else {
+      // Fallback: use a hidden file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e: any) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          this.importFileHandle = file;
+          this.importPath = file.name;
+          this.importErrorMessage = null;
+        }
+      };
+      input.click();
+    }
   }
 
   /**
-   * Download the CSV content as a file.
+   * Check if import file is valid.
    */
-  private async downloadCSV(content: string): Promise<void> {
+  isImportValid(): boolean {
+    return this.importPath.trim().length > 0 && this.importFileHandle != null;
+  }
+
+  /**
+   * Import data from a JSON file via backend endpoint.
+   */
+  async importFromJSON(): Promise<void> {
+    if (!this.rcId || !this.fyId) {
+      this.importErrorMessage = 'Please select a Responsibility Centre and Fiscal Year';
+      return;
+    }
+
+    if (!this.isImportValid()) {
+      this.importErrorMessage = 'Please select an import file first';
+      return;
+    }
+
+    this.isImporting = true;
+    this.importSuccessMessage = null;
+    this.importErrorMessage = null;
+
+    try {
+      // Read the file content
+      let fileContent: string;
+      if (this.importFileHandle instanceof File) {
+        // Standard File object (fallback)
+        fileContent = await this.importFileHandle.text();
+      } else {
+        // File System Access API handle
+        const file = await this.importFileHandle.getFile();
+        fileContent = await file.text();
+      }
+
+      const importData = JSON.parse(fileContent);
+
+      const response = await fetch(
+        `/api/responsibility-centres/${this.rcId}/fiscal-years/${this.fyId}/import`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(importData)
+        }
+      );
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => null);
+        throw new Error(errorBody?.message || `Import failed with status ${response.status}`);
+      }
+
+      const result = await response.json();
+      const meta = result.metadata;
+      this.importSuccessMessage = `Import completed: ${meta?.fundingItemCount ?? 0} funding, ` +
+        `${meta?.spendingItemCount ?? 0} spending, ${meta?.procurementItemCount ?? 0} procurement items`;
+      this.isImporting = false;
+    } catch (error: any) {
+      this.importErrorMessage = `Import failed: ${error.message || 'Unknown error'}`;
+      this.isImporting = false;
+    }
+  }
+
+  /**
+   * Download the JSON content as a file.
+   */
+  private async downloadJSON(content: string): Promise<void> {
     // If we have a file handle from File System Access API, use it
     if (this.exportFileHandle) {
       try {
@@ -873,7 +869,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     }
 
     // Standard download approach
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([content], { type: 'application/json;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     
@@ -882,7 +878,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     const fyName = this.selectedFY?.name || 'FY';
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0]; // yyyy-mm-dd format
-    const filename = this.exportPath || `${rcName}_${fyName}_export_${dateStr}.csv`;
+    const filename = this.exportPath || `${rcName}_${fyName}_export_${dateStr}.json`;
     
     link.setAttribute('href', url);
     link.setAttribute('download', filename);

@@ -542,9 +542,9 @@
           <button 
             type="button" 
             class="btn btn-primary"
-            (click)="exportToCSV()"
+            (click)="exportToJSON()"
             [disabled]="isExporting || !isExportValid()">
-            <span *ngIf="!isExporting">📤 {{ 'configuration.exportToCsv' | translate }}</span>
+            <span *ngIf="!isExporting">📤 {{ 'configuration.exportToJson' | translate }}</span>
             <span *ngIf="isExporting">{{ 'configuration.exporting' | translate }}</span>
           </button>
         </div>
@@ -572,15 +572,15 @@
             <input 
               type="text" 
               id="importPath" 
+              [(ngModel)]="importPath"
               [placeholder]="'configuration.selectFile' | translate"
               readonly
-              disabled
               class="file-path-input"
             />
             <button 
               type="button" 
               class="btn btn-secondary"
-              disabled>
+              (click)="selectImportFile()">
               {{ 'configuration.browse' | translate }}
             </button>
           </div>
@@ -590,16 +590,19 @@
           <button 
             type="button" 
             class="btn btn-primary"
-            disabled
-            [title]="'configuration.importNotice' | translate">
-            📥 {{ 'configuration.importFromCsv' | translate }}
+            (click)="importFromJSON()"
+            [disabled]="isImporting || !isImportValid()">
+            <span *ngIf="!isImporting">📥 {{ 'configuration.importFromJson' | translate }}</span>
+            <span *ngIf="isImporting">{{ 'configuration.importing' | translate }}</span>
           </button>
         </div>
       </div>
       
-      <div class="import-notice">
-        <span class="notice-icon">ℹ️</span>
-        <span class="notice-text">{{ 'configuration.importNotice' | translate }}</span>
+      <div class="alert alert-success" *ngIf="importSuccessMessage">
+        {{ importSuccessMessage }}
+      </div>
+      <div class="alert alert-error" *ngIf="importErrorMessage">
+        {{ importErrorMessage }}
       </div>
     </div>
   </div>

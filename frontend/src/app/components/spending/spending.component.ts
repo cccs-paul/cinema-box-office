@@ -554,7 +554,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
           categoryName: item.categoryName,
           vendor: item.vendor,
           referenceNumber: item.referenceNumber,
-          status: SPENDING_STATUS_INFO[item.status]?.label || item.status
+          status: this.getStatusLabel(item.status)
         })
       );
     }
@@ -990,9 +990,20 @@ export class SpendingComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get the status label for display.
+   * Get the status label for display, using i18n translations.
    */
   getStatusLabel(status: SpendingItemStatus): string {
+    const keyMap: Record<SpendingItemStatus, string> = {
+      PLANNING: 'spending.statusPlanning',
+      COMMITTED: 'spending.statusCommitted',
+      COMPLETED: 'spending.statusCompleted',
+      CANCELLED: 'spending.statusCancelled'
+    };
+    const key = keyMap[status];
+    if (key) {
+      const translated = this.translate.instant(key);
+      if (translated !== key) return translated;
+    }
     return SPENDING_STATUS_INFO[status]?.label || status;
   }
 
