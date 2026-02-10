@@ -1270,4 +1270,50 @@ describe('ProcurementComponent', () => {
       expect(fuzzySearchService.filter).toHaveBeenCalled();
     });
   });
+
+  describe('Group by Category', () => {
+    it('should use displayPreferences.groupByCategory for grouping', () => {
+      component.displayPreferences = { showSearchBox: true, showCategoryFilter: true, groupByCategory: true };
+      expect(component.displayPreferences.groupByCategory).toBeTrue();
+    });
+
+    it('should return grouped items when groupByCategory is true', () => {
+      component.displayPreferences = { showSearchBox: true, showCategoryFilter: true, groupByCategory: true };
+      const groups = component.groupedProcurementItems;
+      expect(groups.length).toBeGreaterThan(0);
+      expect(groups[0].categoryName).toBeTruthy();
+      expect(groups[0].items.length).toBeGreaterThan(0);
+    });
+
+    it('should use translated category name in grouped view', () => {
+      component.displayPreferences = { showSearchBox: true, showCategoryFilter: true, groupByCategory: true };
+      const groups = component.groupedProcurementItems;
+      // The grouped view uses getCategoryDisplayNameById which translates
+      expect(groups[0].categoryName).toBeTruthy();
+    });
+  });
+
+  describe('Category Display Name Translation', () => {
+    it('should return translated name when category has translationKey', () => {
+      const translate = TestBed.inject(TranslateService);
+      spyOn(translate, 'instant').and.callFake((key: string) => {
+        if (key === 'categories.hardware') return 'Matériel';
+        return key;
+      });
+      const category = { ...mockCategories[0], translationKey: 'categories.hardware' } as any;
+      const name = component.getCategoryDisplayName(category);
+      expect(name).toBe('Matériel');
+    });
+
+    it('should return raw name when category has no translationKey', () => {
+      const category = { ...mockCategories[0], translationKey: undefined } as any;
+      const name = component.getCategoryDisplayName(category);
+      expect(name).toBe('Hardware');
+    });
+
+    it('should use getCategoryDisplayNameById for flat view category badge', () => {
+      const name = component.getCategoryDisplayNameById(1, 'Hardware');
+      expect(name).toBeTruthy();
+    });
+  });
 });

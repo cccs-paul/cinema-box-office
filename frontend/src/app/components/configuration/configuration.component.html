@@ -549,12 +549,21 @@
           </button>
         </div>
       </div>
-      
-      <div class="alert alert-success" *ngIf="exportSuccessMessage">
-        {{ exportSuccessMessage }}
+
+      <div class="export-progress" *ngIf="isExporting">
+        <div class="progress-bar">
+          <div class="progress-bar-fill progress-bar-indeterminate"></div>
+        </div>
+        <span class="progress-label">{{ exportProgressLabel }}</span>
       </div>
-      <div class="alert alert-error" *ngIf="exportErrorMessage">
-        {{ exportErrorMessage }}
+      
+      <div class="export-feedback" *ngIf="exportSuccessMessage || exportErrorMessage">
+        <div class="alert alert-success" *ngIf="exportSuccessMessage">
+          {{ exportSuccessMessage }}
+        </div>
+        <div class="alert alert-error" *ngIf="exportErrorMessage">
+          {{ exportErrorMessage }}
+        </div>
       </div>
     </div>
 
@@ -598,11 +607,13 @@
         </div>
       </div>
       
-      <div class="alert alert-success" *ngIf="importSuccessMessage">
-        {{ importSuccessMessage }}
-      </div>
-      <div class="alert alert-error" *ngIf="importErrorMessage">
-        {{ importErrorMessage }}
+      <div class="import-feedback" *ngIf="importSuccessMessage || importErrorMessage">
+        <div class="alert alert-success" *ngIf="importSuccessMessage">
+          {{ importSuccessMessage }}
+        </div>
+        <div class="alert alert-error" *ngIf="importErrorMessage">
+          {{ importErrorMessage }}
+        </div>
       </div>
     </div>
   </div>

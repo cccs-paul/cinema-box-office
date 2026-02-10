@@ -840,7 +840,10 @@
     "inactiveFYNotice": "This fiscal year is inactive and read-only. Configuration changes are disabled.",
     "exportToJson": "Export to JSON",
     "importFromJson": "Import from JSON",
-    "importing": "Importing..."
+    "importing": "Importing...",
+    "exportProgressConnecting": "Connecting to server...",
+    "exportProgressDownloading": "Downloading data...",
+    "exportProgressSaving": "Saving file..."
   },
   "developerTools": {
     "title": "Developer Tools",

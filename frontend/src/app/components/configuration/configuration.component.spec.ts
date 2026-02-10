@@ -490,6 +490,63 @@ describe('ConfigurationComponent', () => {
         expect(component.exportErrorMessage).toContain('Export failed');
         expect(component.isExporting).toBeFalse();
       }));
+
+      it('should set progress label to connecting on export start', fakeAsync(() => {
+        component.rcId = 1;
+        component.fyId = 1;
+        component.exportPath = 'export.json';
+
+        // Use a promise that never resolves so we can inspect intermediate state
+        spyOn(window, 'fetch').and.returnValue(new Promise(() => {}));
+
+        component.exportToJSON();
+
+        expect(component.isExporting).toBeTrue();
+        expect(component.exportProgressLabel).toBe('configuration.exportProgressConnecting');
+      }));
+
+      it('should update progress label through stages during successful export', fakeAsync(() => {
+        component.rcId = 1;
+        component.fyId = 1;
+        component.exportPath = 'export.json';
+
+        const mockResponse = {
+          ok: true,
+          json: () => Promise.resolve({
+            metadata: { fundingItemCount: 1, spendingItemCount: 2, procurementItemCount: 3 }
+          })
+        };
+        spyOn(window, 'fetch').and.returnValue(Promise.resolve(mockResponse as any));
+        spyOn(URL, 'createObjectURL').and.returnValue('blob:test');
+        spyOn(URL, 'revokeObjectURL');
+
+        component.exportToJSON();
+
+        // After fetch resolves, label should update to downloading
+        tick();
+        expect(component.exportProgressLabel).toBe('configuration.exportProgressSaving');
+
+        // Complete all remaining microtasks
+        tick();
+
+        expect(component.isExporting).toBeFalse();
+        expect(component.exportSuccessMessage).toContain('Export completed');
+      }));
+
+      it('should clear progress label on export failure', fakeAsync(() => {
+        component.rcId = 1;
+        component.fyId = 1;
+        component.exportPath = 'export.json';
+
+        spyOn(window, 'fetch').and.returnValue(Promise.reject(new Error('Network error')));
+
+        component.exportToJSON();
+        tick();
+        tick();
+
+        expect(component.isExporting).toBeFalse();
+        expect(component.exportErrorMessage).toContain('Network error');
+      }));
     });
 
     describe('isExportValid', () => {

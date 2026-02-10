@@ -824,7 +824,10 @@
     "inactiveFYNotice": "Cet exercice financier est inactif et en lecture seule. Les modifications de configuration sont désactivées.",
     "exportToJson": "Exporter en JSON",
     "importFromJson": "Importer depuis JSON",
-    "importing": "Importation..."
+    "importing": "Importation...",
+    "exportProgressConnecting": "Connexion au serveur...",
+    "exportProgressDownloading": "Téléchargement des données...",
+    "exportProgressSaving": "Enregistrement du fichier..."
   },
   "developerTools": {
     "title": "Outils développeur",

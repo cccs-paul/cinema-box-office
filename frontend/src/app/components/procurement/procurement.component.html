@@ -334,7 +334,7 @@
         </div>
 
         <!-- Grouped View -->
-        <div class="items-list grouped" *ngIf="!isLoadingItems && filteredProcurementItems.length > 0 && selectedFY?.groupByCategory">
+        <div class="items-list grouped" *ngIf="!isLoadingItems && filteredProcurementItems.length > 0 && displayPreferences.groupByCategory">
           <ng-container *ngFor="let group of groupedProcurementItems; trackBy: trackByGroupName">
             <div class="category-group-header">
               <span class="category-group-name">{{ group.categoryName }}</span>
@@ -349,7 +349,7 @@
         </div>
 
         <!-- Flat View -->
-        <div class="items-list" *ngIf="!isLoadingItems && filteredProcurementItems.length > 0 && !selectedFY?.groupByCategory">
+        <div class="items-list" *ngIf="!isLoadingItems && filteredProcurementItems.length > 0 && !displayPreferences.groupByCategory">
           <div class="item-card" *ngFor="let item of filteredProcurementItems; trackBy: trackByItemId" 
                [id]="'procurement-item-' + item.id"
                [class.expanded]="selectedItem?.id === item.id">
@@ -371,7 +371,7 @@
               <span class="procurement-type-badge" [ngClass]="getProcurementTypeClass(item.procurementType)">
                 {{ getProcurementTypeIcon(item.procurementType) }} {{ getProcurementTypeLabel(item.procurementType) }}
               </span>
-              <span class="category-badge" *ngIf="item.categoryName && !selectedFY?.groupByCategory">📁 {{ item.categoryName }}</span>
+              <span class="category-badge" *ngIf="item.categoryName && !displayPreferences.groupByCategory">📁 {{ getCategoryDisplayNameById(item.categoryId, item.categoryName) }}</span>
               <span class="quotes-count">📋 {{ item.quoteCount || 0 }}</span>
             </div>
             <div class="item-actions">

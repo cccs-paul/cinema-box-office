@@ -83,6 +83,7 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   exportFileHandle: any = null;
   isExporting = false;
   isImporting = false;
+  exportProgressLabel = '';
   exportSuccessMessage: string | null = null;
   exportErrorMessage: string | null = null;
   importSuccessMessage: string | null = null;
@@ -720,15 +721,18 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     this.isExporting = true;
     this.exportSuccessMessage = null;
     this.exportErrorMessage = null;
+    this.exportProgressLabel = this.translate.instant('configuration.exportProgressConnecting');
 
     fetch(`/api/responsibility-centres/${this.rcId}/fiscal-years/${this.fyId}/export`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`Export failed with status ${response.status}`);
         }
+        this.exportProgressLabel = this.translate.instant('configuration.exportProgressDownloading');
         return response.json();
       })
       .then(async (exportData) => {
+        this.exportProgressLabel = this.translate.instant('configuration.exportProgressSaving');
         const jsonContent = JSON.stringify(exportData, null, 2);
         await this.downloadJSON(jsonContent);
         const meta = exportData.metadata;
