@@ -58,7 +58,7 @@
               class="filter-btn"
               [class.active]="selectedCategoryId === category.id"
               (click)="filterByCategory(category.id)">
-              {{ category.name }}
+              {{ getCategoryDisplayName(category) }}
             </button>
           </div>
 
@@ -155,7 +155,7 @@
               <select id="newItemCategory" [(ngModel)]="newItemCategoryId" name="newItemCategory">
                 <option [ngValue]="null">-- {{ 'procurement.noCategory' | translate }} --</option>
                 <option *ngFor="let category of categories" [ngValue]="category.id">
-                  {{ category.name }}
+                  {{ getCategoryDisplayName(category) }}
                 </option>
               </select>
             </div>
@@ -588,7 +588,7 @@
                       <select id="editItemCategory" [(ngModel)]="editItemCategoryId" [disabled]="isUpdatingItem">
                         <option [ngValue]="null">-- {{ 'procurement.noCategory' | translate }} --</option>
                         <option *ngFor="let category of categories" [ngValue]="category.id">
-                          {{ category.name }}
+                          {{ getCategoryDisplayName(category) }}
                         </option>
                       </select>
                     </div>
