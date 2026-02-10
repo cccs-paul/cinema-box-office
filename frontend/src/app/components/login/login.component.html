@@ -12,8 +12,8 @@
   <!-- Header Section -->
   <header class="login-header">
     <div class="login-brand">
-      <img src="assets/logo.svg" alt="myRC Logo" class="login-logo" width="48" height="48">
-      <h1>{{ title }}</h1>
+      <img src="assets/logo.svg" [alt]="('app.title' | translate) + ' Logo'" class="login-logo" width="48" height="48">
+      <h1>{{ 'login.title' | translate }}</h1>
     </div>
     <p>{{ 'login.subtitle' | translate }}</p>
   </header>

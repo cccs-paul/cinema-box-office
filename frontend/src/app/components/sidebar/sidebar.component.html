@@ -6,8 +6,8 @@
 <aside class="app-sidebar">
   <!-- App Branding -->
   <div class="sidebar-branding">
-    <img src="assets/logo.svg" alt="myRC Logo" class="sidebar-logo" width="28" height="28">
-    <span class="sidebar-app-name">myRC</span>
+    <img src="assets/logo.svg" [alt]="('app.title' | translate) + ' Logo'" class="sidebar-logo" width="28" height="28">
+    <span class="sidebar-app-name">{{ 'app.title' | translate }}</span>
   </div>
 
   <!-- Context Display -->

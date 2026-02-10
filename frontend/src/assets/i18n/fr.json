@@ -1,6 +1,6 @@
 {
   "app": {
-    "title": "myRC",
+    "title": "monCR",
     "subtitle": "Système de gestion des centres de responsabilité"
   },
   "common": {
@@ -89,7 +89,7 @@
     "developerTools": "Outils développeur"
   },
   "login": {
-    "title": "myRC",
+    "title": "monCR",
     "subtitle": "Système de gestion des centres de responsabilité",
     "loadingAuthOptions": "Chargement des options d'authentification...",
     "noAuthMethods": "Aucune méthode d'authentification n'est actuellement activée.",
@@ -121,7 +121,7 @@
     "demoUsername": "Démo: admin",
     "demoPassword": "Démo: Admin@123",
     "demoCredentials": "Identifiants de démo",
-    "copyright": "© 2026 myRC. Tous droits réservés.",
+    "copyright": "© 2026 monCR. Tous droits réservés.",
     "api": "API",
     "database": "Base de données",
     "apiDocs": "Documentation API",
@@ -129,7 +129,7 @@
   },
   "register": {
     "title": "Créer un compte",
-    "subtitle": "Rejoignez myRC pour gérer vos centres de responsabilité",
+    "subtitle": "Rejoignez monCR pour gérer vos centres de responsabilité",
     "fullName": "Nom complet",
     "email": "Courriel",
     "enterFullName": "Entrez votre nom complet",
@@ -853,7 +853,7 @@
     "frontend": "Interface utilisateur",
     "backend": "Serveur dorsal",
     "license": "Licence",
-    "copyright": "© 2026 myRC. Tous droits réservés."
+    "copyright": "© 2026 monCR. Tous droits réservés."
   },
   "permissions": {
     "title": "Gérer les permissions",

@@ -34,7 +34,7 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnInit, OnDestroy {
-  title = 'myRC';
+
   activeTab: 'local' | 'ldap' | 'oauth2' = 'local';
   
   // Form groups

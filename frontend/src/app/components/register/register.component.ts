@@ -30,7 +30,7 @@ import { Subject, debounceTime, takeUntil, distinctUntilChanged } from 'rxjs';
   styleUrls: ['./register.component.scss'],
 })
 export class RegisterComponent implements OnInit, OnDestroy {
-  title = 'myRC';
+
   registerForm!: FormGroup;
 
   // Loading and error states

@@ -7,10 +7,10 @@
   <!-- Header Section -->
   <header class="register-header">
     <div class="register-brand">
-      <img src="assets/logo.svg" alt="myRC Logo" class="register-logo" width="48" height="48">
-      <h1>{{ title }}</h1>
+      <img src="assets/logo.svg" [alt]="('app.title' | translate) + ' Logo'" class="register-logo" width="48" height="48">
+      <h1>{{ 'register.title' | translate }}</h1>
     </div>
-    <p>Create Your Account</p>
+    <p>{{ 'register.subtitle' | translate }}</p>
   </header>
 
   <!-- Main Registration Section -->
@@ -174,7 +174,7 @@
     <!-- Footer Info -->
     <footer class="register-footer-info">
       <div class="footer-content">
-        <p>&copy; 2026 myRC. All rights reserved.</p>
+        <p>{{ 'login.copyright' | translate }}</p>
         
         <div class="footer-divider"></div>
         

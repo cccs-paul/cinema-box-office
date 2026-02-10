@@ -6,8 +6,8 @@
 <header class="app-header">
   <div class="header-content">
     <div class="header-title" *ngIf="showLogo">
-      <img src="assets/logo.svg" alt="myRC Logo" class="header-logo" width="32" height="32">
-      <h1>myRC</h1>
+      <img src="assets/logo.svg" [alt]="('app.title' | translate) + ' Logo'" class="header-logo" width="32" height="32">
+      <h1>{{ 'app.title' | translate }}</h1>
     </div>
     <div class="header-spacer" *ngIf="!showLogo"></div>
     <nav class="header-nav">
