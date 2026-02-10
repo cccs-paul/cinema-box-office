@@ -12,6 +12,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.SpendingItemDTO;
 import com.myrc.dto.SpendingMoneyAllocationDTO;
@@ -140,6 +141,7 @@ public class SpendingItemController {
    * @return the created spending item
    */
   @PostMapping
+  @Audited(action = "CREATE_SPENDING_ITEM", entityType = "SPENDING_ITEM")
   @Operation(summary = "Create a new spending item",
       description = "Creates a new spending item for a fiscal year")
   @ApiResponses(value = {
@@ -184,6 +186,7 @@ public class SpendingItemController {
    * @return the updated spending item
    */
   @PutMapping("/{spendingItemId}")
+  @Audited(action = "UPDATE_SPENDING_ITEM", entityType = "SPENDING_ITEM")
   @Operation(summary = "Update a spending item",
       description = "Updates an existing spending item")
   @ApiResponses(value = {
@@ -230,6 +233,7 @@ public class SpendingItemController {
    * @return no content on success
    */
   @DeleteMapping("/{spendingItemId}")
+  @Audited(action = "DELETE_SPENDING_ITEM", entityType = "SPENDING_ITEM")
   @Operation(summary = "Delete a spending item",
       description = "Deletes a spending item")
   @ApiResponses(value = {
@@ -275,6 +279,7 @@ public class SpendingItemController {
    * @return the updated spending item
    */
   @PutMapping("/{spendingItemId}/status")
+  @Audited(action = "UPDATE_SPENDING_STATUS", entityType = "SPENDING_ITEM")
   @Operation(summary = "Update spending item status",
       description = "Updates the status of a spending item")
   @ApiResponses(value = {
@@ -365,6 +370,7 @@ public class SpendingItemController {
    * @return the updated spending item
    */
   @PutMapping("/{spendingItemId}/allocations")
+  @Audited(action = "UPDATE_SPENDING_ALLOCATIONS", entityType = "SPENDING_ITEM")
   @Operation(summary = "Update money allocations",
       description = "Updates money allocations for a spending item")
   @ApiResponses(value = {

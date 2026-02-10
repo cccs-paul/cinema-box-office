@@ -1025,6 +1025,25 @@
     "title": "Configuration du CR",
     "backToRcSelection": "Retour à la sélection du CR",
     "permissionsTab": "Permissions",
-    "loadError": "Échec du chargement des détails du centre de responsabilité."
+    "loadError": "Échec du chargement des détails du centre de responsabilité.",
+    "auditTab": "Piste de vérification",
+    "auditNotOwner": "Seul le propriétaire de ce CR peut consulter les données de vérification.",
+    "auditEmpty": "Aucun événement de vérification enregistré.",
+    "auditLoadError": "Échec du chargement des événements de vérification.",
+    "auditColumnTimestamp": "Horodatage",
+    "auditColumnUser": "Utilisateur",
+    "auditColumnAction": "Action",
+    "auditColumnEntityType": "Type d'entité",
+    "auditColumnEntityName": "Nom de l'entité",
+    "auditColumnOutcome": "Résultat",
+    "auditColumnMethod": "Méthode",
+    "auditColumnEndpoint": "Point d'accès",
+    "auditColumnDetails": "Détails",
+    "auditColumnError": "Erreur",
+    "auditClonedBadge": "Cloné",
+    "auditShowDetails": "Afficher les détails",
+    "auditHideDetails": "Masquer les détails",
+    "auditFilterAll": "Tous",
+    "auditFilterFiscalYear": "Filtrer par exercice financier"
   }
 }

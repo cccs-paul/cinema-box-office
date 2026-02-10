@@ -12,6 +12,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.FundingItemDTO;
 import com.myrc.dto.MoneyAllocationDTO;
@@ -133,6 +134,7 @@ public class FundingItemController {
    * @return the created funding item
    */
   @PostMapping
+  @Audited(action = "CREATE_FUNDING_ITEM", entityType = "FUNDING_ITEM")
   @Operation(summary = "Create a new funding item",
       description = "Creates a new funding item for a fiscal year")
   @ApiResponses(value = {
@@ -192,6 +194,7 @@ public class FundingItemController {
    * @return the updated funding item
    */
   @PutMapping("/{fiId}")
+  @Audited(action = "UPDATE_FUNDING_ITEM", entityType = "FUNDING_ITEM")
   @Operation(summary = "Update a funding item",
       description = "Updates an existing funding item")
   @ApiResponses(value = {
@@ -246,6 +249,7 @@ public class FundingItemController {
    * @return no content
    */
   @DeleteMapping("/{fiId}")
+  @Audited(action = "DELETE_FUNDING_ITEM", entityType = "FUNDING_ITEM")
   @Operation(summary = "Delete a funding item",
       description = "Deletes a funding item")
   @ApiResponses(value = {

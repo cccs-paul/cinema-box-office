@@ -15,6 +15,7 @@
 
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.config.LdapSecurityConfig;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.ResponsibilityCentreDTO;
@@ -85,6 +86,7 @@ public class ResponsibilityCentreController {
    * @return created responsibility centre
    */
   @PostMapping
+  @Audited(action = "CREATE_RC", entityType = "RESPONSIBILITY_CENTRE")
   @Operation(summary = "Create a new responsibility centre",
       description = "Creates a new responsibility centre owned by the authenticated user")
   @ApiResponses(value = {
@@ -178,6 +180,7 @@ public class ResponsibilityCentreController {
    * @return updated responsibility centre
    */
   @PutMapping("/{id}")
+  @Audited(action = "UPDATE_RC", entityType = "RESPONSIBILITY_CENTRE")
   @Operation(summary = "Update a responsibility centre",
       description = "Updates a responsibility centre if the user is the owner")
   @ApiResponses(value = {
@@ -229,6 +232,7 @@ public class ResponsibilityCentreController {
    * @return no content response
    */
   @DeleteMapping("/{id}")
+  @Audited(action = "DELETE_RC", entityType = "RESPONSIBILITY_CENTRE")
   @Operation(summary = "Delete a responsibility centre",
       description = "Deletes a responsibility centre if the user is the owner")
   @ApiResponses(value = {
@@ -267,6 +271,7 @@ public class ResponsibilityCentreController {
    * @return no content response
    */
   @PostMapping("/{rcId}/access/grant")
+  @Audited(action = "GRANT_ACCESS", entityType = "RC_PERMISSION")
   @Operation(summary = "Grant access to a responsibility centre",
       description = "Grants access to a responsibility centre to another user")
   @ApiResponses(value = {
@@ -307,6 +312,7 @@ public class ResponsibilityCentreController {
    * @return no content response
    */
   @PostMapping("/{rcId}/access/revoke")
+  @Audited(action = "REVOKE_ACCESS", entityType = "RC_PERMISSION")
   @Operation(summary = "Revoke access to a responsibility centre",
       description = "Revokes a user's access to a responsibility centre")
   @ApiResponses(value = {
@@ -381,6 +387,7 @@ public class ResponsibilityCentreController {
    * @return the cloned responsibility centre
    */
   @PostMapping("/{id}/clone")
+  @Audited(action = "CLONE_RC", entityType = "RESPONSIBILITY_CENTRE")
   @Operation(summary = "Clone a responsibility centre",
       description = "Creates a copy of a responsibility centre with a new name")
   @ApiResponses(value = {

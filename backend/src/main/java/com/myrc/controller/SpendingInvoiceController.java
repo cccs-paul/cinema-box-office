@@ -9,6 +9,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.SpendingInvoiceDTO;
 import com.myrc.dto.SpendingInvoiceFileDTO;
@@ -92,6 +93,7 @@ public class SpendingInvoiceController {
     }
 
     @PostMapping
+    @Audited(action = "CREATE_SPENDING_INVOICE", entityType = "SPENDING_INVOICE")
     @Operation(summary = "Create a new invoice for a spending item")
     public ResponseEntity<?> createInvoice(
             @PathVariable Long rcId,
@@ -114,6 +116,7 @@ public class SpendingInvoiceController {
     }
 
     @PutMapping("/{invoiceId}")
+    @Audited(action = "UPDATE_SPENDING_INVOICE", entityType = "SPENDING_INVOICE")
     @Operation(summary = "Update an existing invoice")
     public ResponseEntity<?> updateInvoice(
             @PathVariable Long rcId,
@@ -140,6 +143,7 @@ public class SpendingInvoiceController {
     }
 
     @DeleteMapping("/{invoiceId}")
+    @Audited(action = "DELETE_SPENDING_INVOICE", entityType = "SPENDING_INVOICE")
     @Operation(summary = "Delete an invoice")
     public ResponseEntity<?> deleteInvoice(
             @PathVariable Long rcId,
@@ -255,6 +259,7 @@ public class SpendingInvoiceController {
     }
 
     @PostMapping("/{invoiceId}/files")
+    @Audited(action = "UPLOAD_INVOICE_FILE", entityType = "SPENDING_INVOICE")
     @Operation(summary = "Upload a file to an invoice")
     public ResponseEntity<?> uploadFile(
             @PathVariable Long rcId,
@@ -279,6 +284,7 @@ public class SpendingInvoiceController {
     }
 
     @DeleteMapping("/{invoiceId}/files/{fileId}")
+    @Audited(action = "DELETE_INVOICE_FILE", entityType = "SPENDING_INVOICE")
     @Operation(summary = "Delete an invoice file")
     public ResponseEntity<?> deleteFile(
             @PathVariable Long rcId,
@@ -304,6 +310,7 @@ public class SpendingInvoiceController {
     }
 
     @PutMapping("/{invoiceId}/files/{fileId}")
+    @Audited(action = "REPLACE_INVOICE_FILE", entityType = "SPENDING_INVOICE")
     @Operation(summary = "Replace an invoice file")
     public ResponseEntity<?> replaceFile(
             @PathVariable Long rcId,

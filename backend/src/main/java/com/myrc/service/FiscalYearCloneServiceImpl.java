@@ -34,6 +34,7 @@ import com.myrc.repository.SpendingCategoryRepository;
 import com.myrc.repository.SpendingEventRepository;
 import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.SpendingMoneyAllocationRepository;
+import com.myrc.service.AuditService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,6 +83,7 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
   private final ProcurementQuoteFileRepository procurementQuoteFileRepository;
   private final ProcurementEventRepository procurementEventRepository;
   private final ProcurementEventFileRepository procurementEventFileRepository;
+  private final AuditService auditService;
 
   public FiscalYearCloneServiceImpl(
       FiscalYearRepository fiscalYearRepository,
@@ -97,7 +99,8 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
       ProcurementQuoteRepository procurementQuoteRepository,
       ProcurementQuoteFileRepository procurementQuoteFileRepository,
       ProcurementEventRepository procurementEventRepository,
-      ProcurementEventFileRepository procurementEventFileRepository) {
+      ProcurementEventFileRepository procurementEventFileRepository,
+      AuditService auditService) {
     this.fiscalYearRepository = fiscalYearRepository;
     this.moneyRepository = moneyRepository;
     this.categoryRepository = categoryRepository;
@@ -112,6 +115,7 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
     this.procurementQuoteFileRepository = procurementQuoteFileRepository;
     this.procurementEventRepository = procurementEventRepository;
     this.procurementEventFileRepository = procurementEventFileRepository;
+    this.auditService = auditService;
   }
 
   @Override
@@ -159,6 +163,14 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
     int spendingItemCount = cloneSpendingItems(sourceFYId, clonedFY, moneyMap,
         categoryMap, procurementItemMap);
     logger.info("Cloned " + spendingItemCount + " spending items");
+
+    // 8. Clone Audit Events for this fiscal year
+    auditService.cloneAuditEventsForFiscalYear(
+        sourceFY.getResponsibilityCentre().getId(), sourceFYId,
+        targetRC.getId(), targetRC.getName(),
+        clonedFYId, targetFYName,
+        "system-clone");
+    logger.info("Cloned audit events for fiscal year");
 
     logger.info("Deep clone of fiscal year '" + sourceFY.getName()
         + "' completed as '" + targetFYName + "' (ID: " + clonedFYId + ")");

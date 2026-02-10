@@ -12,6 +12,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.ProcurementItemDTO;
 import com.myrc.dto.ProcurementQuoteDTO;
@@ -158,6 +159,7 @@ public class ProcurementItemController {
      * @return the created procurement item
      */
     @PostMapping
+    @Audited(action = "CREATE_PROCUREMENT_ITEM", entityType = "PROCUREMENT_ITEM")
     @Operation(summary = "Create a new procurement item",
             description = "Creates a new procurement item for a fiscal year")
     @ApiResponses(value = {
@@ -201,6 +203,7 @@ public class ProcurementItemController {
      * @return the updated procurement item
      */
     @PutMapping("/{procurementItemId}")
+    @Audited(action = "UPDATE_PROCUREMENT_ITEM", entityType = "PROCUREMENT_ITEM")
     @Operation(summary = "Update a procurement item",
             description = "Updates an existing procurement item")
     @ApiResponses(value = {
@@ -247,6 +250,7 @@ public class ProcurementItemController {
      * @return the updated procurement item
      */
     @PutMapping("/{procurementItemId}/status")
+    @Audited(action = "UPDATE_PROCUREMENT_STATUS", entityType = "PROCUREMENT_ITEM")
     @Operation(summary = "Update procurement item status",
             description = "Updates the status of a procurement item")
     @ApiResponses(value = {
@@ -292,6 +296,7 @@ public class ProcurementItemController {
      * @return no content response
      */
     @DeleteMapping("/{procurementItemId}")
+    @Audited(action = "DELETE_PROCUREMENT_ITEM", entityType = "PROCUREMENT_ITEM")
     @Operation(summary = "Delete a procurement item",
             description = "Deletes a procurement item (soft delete)")
     @ApiResponses(value = {
@@ -339,6 +344,7 @@ public class ProcurementItemController {
      * @return the updated procurement item or warning response
      */
     @PostMapping("/{procurementItemId}/toggle-spending-link")
+    @Audited(action = "TOGGLE_SPENDING_LINK", entityType = "PROCUREMENT_ITEM")
     @Operation(summary = "Toggle spending item link",
             description = "Creates or removes a spending item linked to this procurement item")
     @ApiResponses(value = {
@@ -484,6 +490,7 @@ public class ProcurementItemController {
      * @return the created quote
      */
     @PostMapping("/{procurementItemId}/quotes")
+    @Audited(action = "CREATE_PROCUREMENT_QUOTE", entityType = "PROCUREMENT_QUOTE")
     @Operation(summary = "Create a new quote",
             description = "Creates a new quote for a procurement item")
     @ApiResponses(value = {
@@ -530,6 +537,7 @@ public class ProcurementItemController {
      * @return the updated quote
      */
     @PutMapping("/{procurementItemId}/quotes/{quoteId}")
+    @Audited(action = "UPDATE_PROCUREMENT_QUOTE", entityType = "PROCUREMENT_QUOTE")
     @Operation(summary = "Update a quote",
             description = "Updates an existing quote")
     @ApiResponses(value = {
@@ -576,6 +584,7 @@ public class ProcurementItemController {
      * @return no content response
      */
     @DeleteMapping("/{procurementItemId}/quotes/{quoteId}")
+    @Audited(action = "DELETE_PROCUREMENT_QUOTE", entityType = "PROCUREMENT_QUOTE")
     @Operation(summary = "Delete a quote",
             description = "Deletes a quote (soft delete)")
     @ApiResponses(value = {
@@ -620,6 +629,7 @@ public class ProcurementItemController {
      * @return the updated quote
      */
     @PostMapping("/{procurementItemId}/quotes/{quoteId}/select")
+    @Audited(action = "SELECT_PROCUREMENT_QUOTE", entityType = "PROCUREMENT_QUOTE")
     @Operation(summary = "Select a quote",
             description = "Selects a quote for the procurement item")
     @ApiResponses(value = {
@@ -818,6 +828,7 @@ public class ProcurementItemController {
      * @return the created file metadata
      */
     @PostMapping("/{procurementItemId}/quotes/{quoteId}/files")
+    @Audited(action = "UPLOAD_QUOTE_FILE", entityType = "PROCUREMENT_QUOTE")
     @Operation(summary = "Upload a file",
             description = "Uploads a file to a quote")
     @ApiResponses(value = {
@@ -866,6 +877,7 @@ public class ProcurementItemController {
      * @return no content response
      */
     @DeleteMapping("/{procurementItemId}/quotes/{quoteId}/files/{fileId}")
+    @Audited(action = "DELETE_QUOTE_FILE", entityType = "PROCUREMENT_QUOTE")
     @Operation(summary = "Delete a file",
             description = "Deletes a file (soft delete)")
     @ApiResponses(value = {
@@ -914,6 +926,7 @@ public class ProcurementItemController {
      * @return the updated file DTO
      */
     @PutMapping("/{procurementItemId}/quotes/{quoteId}/files/{fileId}")
+    @Audited(action = "REPLACE_QUOTE_FILE", entityType = "PROCUREMENT_QUOTE")
     @Operation(summary = "Replace a file",
             description = "Replaces an existing file with a new one")
     @ApiResponses(value = {

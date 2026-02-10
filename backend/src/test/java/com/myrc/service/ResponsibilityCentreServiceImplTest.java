@@ -115,6 +115,9 @@ class ResponsibilityCentreServiceImplTest {
   @Mock
   private FiscalYearCloneService fiscalYearCloneService;
 
+  @Mock
+  private AuditService auditService;
+
   private ResponsibilityCentreServiceImpl service;
 
   private User testUser;
@@ -141,7 +144,8 @@ class ResponsibilityCentreServiceImplTest {
         procurementQuoteFileRepository,
         procurementEventRepository,
         procurementEventFileRepository,
-        fiscalYearCloneService
+        fiscalYearCloneService,
+        auditService
     );
 
     // Use reflection to set the entityManager field with a no-op implementation
@@ -661,6 +665,7 @@ class ResponsibilityCentreServiceImplTest {
       assertEquals("Cloned RC", result.getName());
       assertEquals("testuser", result.getOwnerUsername());
       verify(fiscalYearCloneService).deepCloneFiscalYear(eq(sourceFY), eq("FY 2025"), any());
+      verify(auditService).cloneAuditEventsForRC(eq(1L), eq(2L), eq("Cloned RC"), eq("testuser"));
     }
 
     @Test

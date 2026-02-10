@@ -1050,6 +1050,25 @@
     "title": "RC Configuration",
     "backToRcSelection": "Back to RC Selection",
     "permissionsTab": "Permissions",
-    "loadError": "Failed to load Responsibility Centre details."
+    "loadError": "Failed to load Responsibility Centre details.",
+    "auditTab": "Audit Trail",
+    "auditNotOwner": "Only the owner of this RC can view audit data.",
+    "auditEmpty": "No audit events recorded yet.",
+    "auditLoadError": "Failed to load audit events.",
+    "auditColumnTimestamp": "Timestamp",
+    "auditColumnUser": "User",
+    "auditColumnAction": "Action",
+    "auditColumnEntityType": "Entity Type",
+    "auditColumnEntityName": "Entity Name",
+    "auditColumnOutcome": "Outcome",
+    "auditColumnMethod": "Method",
+    "auditColumnEndpoint": "Endpoint",
+    "auditColumnDetails": "Details",
+    "auditColumnError": "Error",
+    "auditClonedBadge": "Cloned",
+    "auditShowDetails": "Show details",
+    "auditHideDetails": "Hide details",
+    "auditFilterAll": "All",
+    "auditFilterFiscalYear": "Filter by Fiscal Year"
   }
 }

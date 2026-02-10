@@ -12,6 +12,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.SpendingEventDTO;
 import com.myrc.service.SpendingEventService;
@@ -234,6 +235,7 @@ public class SpendingEventController {
      * @return the created event
      */
     @PostMapping
+    @Audited(action = "CREATE_SPENDING_EVENT", entityType = "SPENDING_EVENT")
     @Operation(summary = "Create a new event",
             description = "Creates a new event for a spending item. Only allowed for spending items not linked to procurement.")
     @ApiResponses(value = {
@@ -277,6 +279,7 @@ public class SpendingEventController {
      * @return the updated event
      */
     @PutMapping("/{eventId}")
+    @Audited(action = "UPDATE_SPENDING_EVENT", entityType = "SPENDING_EVENT")
     @Operation(summary = "Update an event",
             description = "Updates an existing spending event.")
     @ApiResponses(value = {
@@ -320,6 +323,7 @@ public class SpendingEventController {
      * @return 204 No Content on success
      */
     @DeleteMapping("/{eventId}")
+    @Audited(action = "DELETE_SPENDING_EVENT", entityType = "SPENDING_EVENT")
     @Operation(summary = "Delete an event",
             description = "Soft deletes a spending event.")
     @ApiResponses(value = {

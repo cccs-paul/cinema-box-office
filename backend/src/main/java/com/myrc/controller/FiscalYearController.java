@@ -5,6 +5,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.FiscalYearDTO;
 import com.myrc.service.FiscalYearService;
@@ -124,6 +125,7 @@ public class FiscalYearController {
    * @return the created fiscal year
    */
   @PostMapping
+  @Audited(action = "CREATE_FY", entityType = "FISCAL_YEAR")
   @Operation(summary = "Create a new fiscal year",
       description = "Creates a new fiscal year for a responsibility centre")
   @ApiResponses(value = {
@@ -183,6 +185,7 @@ public class FiscalYearController {
    * @return the updated fiscal year
    */
   @PutMapping("/{fyId}")
+  @Audited(action = "UPDATE_FY", entityType = "FISCAL_YEAR")
   @Operation(summary = "Update a fiscal year",
       description = "Updates an existing fiscal year")
   @ApiResponses(value = {
@@ -237,6 +240,7 @@ public class FiscalYearController {
    * @return no content
    */
   @DeleteMapping("/{fyId}")
+  @Audited(action = "DELETE_FY", entityType = "FISCAL_YEAR")
   @Operation(summary = "Delete a fiscal year",
       description = "Deletes a fiscal year")
   @ApiResponses(value = {
@@ -278,6 +282,7 @@ public class FiscalYearController {
    * @return the updated fiscal year
    */
   @PatchMapping("/{fyId}/display-settings")
+  @Audited(action = "UPDATE_FY_SETTINGS", entityType = "FISCAL_YEAR")
   @Operation(summary = "Update fiscal year display settings",
       description = "Updates display settings like category filter visibility, grouping, and on-target thresholds. Only RC owners can update.")
   @ApiResponses(value = {
@@ -329,6 +334,7 @@ public class FiscalYearController {
    * @return the updated fiscal year
    */
   @PatchMapping("/{fyId}/toggle-active")
+  @Audited(action = "UPDATE_FY_ACTIVE", entityType = "FISCAL_YEAR")
   @Operation(summary = "Toggle fiscal year active status",
       description = "Toggles whether a fiscal year is active or inactive. Only RC owners can toggle.")
   @ApiResponses(value = {
@@ -366,6 +372,7 @@ public class FiscalYearController {
   }
 
   @PostMapping("/{fyId}/clone")
+  @Audited(action = "CLONE_FY", entityType = "FISCAL_YEAR")
   @Operation(summary = "Clone a fiscal year",
       description = "Creates a deep copy of a fiscal year and all its child data within the same RC")
   @ApiResponses(value = {
@@ -412,6 +419,7 @@ public class FiscalYearController {
   }
 
   @PostMapping("/{fyId}/clone-to-rc")
+  @Audited(action = "CLONE_FY_TO_RC", entityType = "FISCAL_YEAR")
   @Operation(summary = "Clone a fiscal year to a different RC",
       description = "Creates a deep copy of a fiscal year and all its child data into a different Responsibility Centre. "
           + "The user must have at least read access to the source RC and write access to the target RC.")

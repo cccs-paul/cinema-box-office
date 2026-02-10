@@ -12,6 +12,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.MoneyDTO;
 import com.myrc.service.MoneyService;
@@ -132,6 +133,7 @@ public class MoneyController {
    * @return the created money
    */
   @PostMapping
+  @Audited(action = "CREATE_MONEY", entityType = "MONEY")
   @Operation(summary = "Create a new money",
       description = "Creates a new money type for a fiscal year")
   @ApiResponses(value = {
@@ -193,6 +195,7 @@ public class MoneyController {
    * @return the updated money
    */
   @PutMapping("/{moneyId}")
+  @Audited(action = "UPDATE_MONEY", entityType = "MONEY")
   @Operation(summary = "Update a money",
       description = "Updates an existing money type. Cannot change the code of the default AB money.")
   @ApiResponses(value = {
@@ -249,6 +252,7 @@ public class MoneyController {
    * @return no content on success
    */
   @DeleteMapping("/{moneyId}")
+  @Audited(action = "DELETE_MONEY", entityType = "MONEY")
   @Operation(summary = "Delete a money",
       description = "Deletes a money type. Cannot delete the default AB money.")
   @ApiResponses(value = {
@@ -302,6 +306,7 @@ public class MoneyController {
    * @return no content on success
    */
   @PostMapping("/reorder")
+  @Audited(action = "REORDER_MONIES", entityType = "MONEY")
   @Operation(summary = "Reorder monies",
       description = "Reorders money types within a fiscal year")
   @ApiResponses(value = {

@@ -37,11 +37,139 @@
         <span class="tab-icon">🔐</span>
         <span class="tab-label">{{ 'rcConfiguration.permissionsTab' | translate }}</span>
       </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab === 'audit'"
+        (click)="setActiveTab('audit')">
+        <span class="tab-icon">📋</span>
+        <span class="tab-label">{{ 'rcConfiguration.auditTab' | translate }}</span>
+      </button>
     </div>
 
     <!-- Permissions Tab Content -->
     <div class="tab-content" *ngIf="activeTab === 'permissions'">
       <app-rc-permissions [embedded]="true"></app-rc-permissions>
+    </div>
+
+    <!-- Audit Tab Content -->
+    <div class="tab-content" *ngIf="activeTab === 'audit'">
+      <!-- Not Owner Warning -->
+      <div class="audit-not-owner" *ngIf="!isOwner">
+        <span class="warning-icon">⚠️</span>
+        <p>{{ 'rcConfiguration.auditNotOwner' | translate }}</p>
+      </div>
+
+      <!-- Audit Content (Owner Only) -->
+      <div *ngIf="isOwner">
+        <!-- Audit Loading -->
+        <div class="loading-state" *ngIf="auditLoading">
+          <div class="spinner"></div>
+          <p>{{ 'common.loading' | translate }}</p>
+        </div>
+
+        <!-- Audit Error -->
+        <div class="alert alert-error" *ngIf="auditError">
+          <span>❌</span> {{ auditError }}
+        </div>
+
+        <!-- Audit Empty State -->
+        <div class="audit-empty" *ngIf="!auditLoading && !auditError && auditEvents.length === 0">
+          <span class="empty-icon">📋</span>
+          <p>{{ 'rcConfiguration.auditEmpty' | translate }}</p>
+        </div>
+
+        <!-- Audit Table -->
+        <div class="audit-table-container" *ngIf="!auditLoading && !auditError && auditEvents.length > 0">
+          <div class="audit-count">
+            {{ auditEvents.length }} {{ auditEvents.length === 1 ? 'event' : 'events' }}
+          </div>
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th>{{ 'rcConfiguration.auditColumnTimestamp' | translate }}</th>
+                <th>{{ 'rcConfiguration.auditColumnUser' | translate }}</th>
+                <th>{{ 'rcConfiguration.auditColumnAction' | translate }}</th>
+                <th>{{ 'rcConfiguration.auditColumnEntityType' | translate }}</th>
+                <th>{{ 'rcConfiguration.auditColumnEntityName' | translate }}</th>
+                <th>{{ 'rcConfiguration.auditColumnOutcome' | translate }}</th>
+                <th>{{ 'rcConfiguration.auditColumnDetails' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <ng-container *ngFor="let event of auditEvents">
+                <tr [class.expanded]="expandedAuditId === event.id"
+                    [class.outcome-success]="event.outcome === 'SUCCESS'"
+                    [class.outcome-failure]="event.outcome === 'FAILURE'"
+                    [class.outcome-pending]="event.outcome === 'PENDING'">
+                  <td class="timestamp-cell">{{ event.createdAt | date:'yyyy-MM-dd HH:mm:ss' }}</td>
+                  <td class="user-cell">{{ event.username }}</td>
+                  <td class="action-cell">
+                    <span class="action-badge">{{ event.action }}</span>
+                    <span class="cloned-badge" *ngIf="event.clonedFromAuditId">
+                      {{ 'rcConfiguration.auditClonedBadge' | translate }}
+                    </span>
+                  </td>
+                  <td class="entity-type-cell">{{ event.entityType }}</td>
+                  <td class="entity-name-cell">{{ event.entityName || '—' }}</td>
+                  <td class="outcome-cell">
+                    <span class="outcome-badge" [class]="'outcome-' + event.outcome.toLowerCase()">
+                      {{ event.outcome }}
+                    </span>
+                  </td>
+                  <td class="details-cell">
+                    <button class="btn-details" (click)="toggleAuditDetails(event.id)">
+                      {{ expandedAuditId === event.id
+                        ? ('rcConfiguration.auditHideDetails' | translate)
+                        : ('rcConfiguration.auditShowDetails' | translate) }}
+                    </button>
+                  </td>
+                </tr>
+                <!-- Expanded Details Row -->
+                <tr class="details-row" *ngIf="expandedAuditId === event.id">
+                  <td colspan="7">
+                    <div class="audit-details">
+                      <div class="detail-grid">
+                        <div class="detail-item" *ngIf="event.httpMethod">
+                          <span class="detail-label">{{ 'rcConfiguration.auditColumnMethod' | translate }}:</span>
+                          <span class="detail-value method-badge">{{ event.httpMethod }}</span>
+                        </div>
+                        <div class="detail-item" *ngIf="event.endpoint">
+                          <span class="detail-label">{{ 'rcConfiguration.auditColumnEndpoint' | translate }}:</span>
+                          <span class="detail-value endpoint-value">{{ event.endpoint }}</span>
+                        </div>
+                        <div class="detail-item" *ngIf="event.ipAddress">
+                          <span class="detail-label">IP:</span>
+                          <span class="detail-value">{{ event.ipAddress }}</span>
+                        </div>
+                        <div class="detail-item" *ngIf="event.userAgent">
+                          <span class="detail-label">User Agent:</span>
+                          <span class="detail-value user-agent-value">{{ event.userAgent }}</span>
+                        </div>
+                        <div class="detail-item" *ngIf="event.fiscalYearName">
+                          <span class="detail-label">Fiscal Year:</span>
+                          <span class="detail-value">{{ event.fiscalYearName }}</span>
+                        </div>
+                        <div class="detail-item" *ngIf="event.rcName">
+                          <span class="detail-label">RC:</span>
+                          <span class="detail-value">{{ event.rcName }}</span>
+                        </div>
+                        <div class="detail-item full-width" *ngIf="event.errorMessage">
+                          <span class="detail-label error-label">{{ 'rcConfiguration.auditColumnError' | translate }}:</span>
+                          <span class="detail-value error-value">{{ event.errorMessage }}</span>
+                        </div>
+                        <div class="detail-item full-width" *ngIf="event.parameters">
+                          <span class="detail-label">Parameters:</span>
+                          <pre class="detail-value parameters-value">{{ event.parameters }}</pre>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </ng-container>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 </div>

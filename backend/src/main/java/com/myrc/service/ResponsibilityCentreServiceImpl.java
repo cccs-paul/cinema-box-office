@@ -76,6 +76,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
   private final ProcurementEventRepository procurementEventRepository;
   private final ProcurementEventFileRepository procurementEventFileRepository;
   private final FiscalYearCloneService fiscalYearCloneService;
+  private final AuditService auditService;
 
   public ResponsibilityCentreServiceImpl(
       ResponsibilityCentreRepository rcRepository,
@@ -96,7 +97,8 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
       ProcurementQuoteFileRepository procurementQuoteFileRepository,
       ProcurementEventRepository procurementEventRepository,
       ProcurementEventFileRepository procurementEventFileRepository,
-      FiscalYearCloneService fiscalYearCloneService) {
+      FiscalYearCloneService fiscalYearCloneService,
+      AuditService auditService) {
     this.rcRepository = rcRepository;
     this.accessRepository = accessRepository;
     this.userRepository = userRepository;
@@ -116,6 +118,7 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     this.procurementEventRepository = procurementEventRepository;
     this.procurementEventFileRepository = procurementEventFileRepository;
     this.fiscalYearCloneService = fiscalYearCloneService;
+    this.auditService = auditService;
   }
 
   private static final String DEMO_RC_NAME = "Demo";
@@ -576,6 +579,10 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     for (FiscalYear sourceFY : sourceFiscalYears) {
       fiscalYearCloneService.deepCloneFiscalYear(sourceFY, sourceFY.getName(), saved);
     }
+
+    // Clone audit events for the RC
+    auditService.cloneAuditEventsForRC(sourceRcId, saved.getId(), newName, username);
+    logger.info("Cloned audit events for RC");
 
     logger.info("Successfully deep-cloned RC '{}' (ID: {}) as '{}' (ID: {}) with {} fiscal years",
         sourceRc.getName(), sourceRcId, newName, saved.getId(), sourceFiscalYears.size());

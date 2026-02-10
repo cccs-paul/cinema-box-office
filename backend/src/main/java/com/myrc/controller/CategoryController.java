@@ -12,6 +12,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.dto.CategoryDTO;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.model.FundingType;
@@ -135,6 +136,7 @@ public class CategoryController {
    * @return the created category
    */
   @PostMapping
+  @Audited(action = "CREATE_CATEGORY", entityType = "CATEGORY")
   @Operation(summary = "Create a new category",
       description = "Creates a new custom category for a fiscal year. Default categories cannot be created.")
   @ApiResponses(value = {
@@ -191,6 +193,7 @@ public class CategoryController {
    * @return the updated category
    */
   @PutMapping("/{categoryId}")
+  @Audited(action = "UPDATE_CATEGORY", entityType = "CATEGORY")
   @Operation(summary = "Update a category",
       description = "Updates an existing custom category. Default categories are read-only and cannot be modified.")
   @ApiResponses(value = {
@@ -254,6 +257,7 @@ public class CategoryController {
    * @return no content on success
    */
   @DeleteMapping("/{categoryId}")
+  @Audited(action = "DELETE_CATEGORY", entityType = "CATEGORY")
   @Operation(summary = "Delete a category",
       description = "Deletes a custom category. Default categories cannot be deleted.")
   @ApiResponses(value = {
@@ -300,6 +304,7 @@ public class CategoryController {
    * @return list of all categories including defaults
    */
   @PostMapping("/ensure-defaults")
+  @Audited(action = "ENSURE_DEFAULT_CATEGORIES", entityType = "CATEGORY")
   @Operation(summary = "Ensure default categories exist",
       description = "Creates the default categories if they don't exist")
   @ApiResponses(value = {
@@ -339,6 +344,7 @@ public class CategoryController {
    * @return the reordered categories
    */
   @PostMapping("/reorder")
+  @Audited(action = "REORDER_CATEGORIES", entityType = "CATEGORY")
   @Operation(summary = "Reorder categories",
       description = "Updates the display order of categories")
   @ApiResponses(value = {

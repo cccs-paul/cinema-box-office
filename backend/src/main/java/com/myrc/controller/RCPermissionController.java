@@ -5,6 +5,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.config.LdapSecurityConfig;
 import com.myrc.dto.RCAccessDTO;
 import com.myrc.model.RCAccess.AccessLevel;
@@ -80,6 +81,7 @@ public class RCPermissionController {
    * Grant access to a user.
    */
   @PostMapping("/rc/{rcId}/user")
+  @Audited(action = "GRANT_ACCESS", entityType = "RC_PERMISSION")
   @Operation(summary = "Grant user access",
       description = "Grants access to a specific user. Only owners can grant access.")
   @ApiResponses(value = {
@@ -117,6 +119,7 @@ public class RCPermissionController {
    * Grant access to a group or distribution list.
    */
   @PostMapping("/rc/{rcId}/group")
+  @Audited(action = "GRANT_GROUP_ACCESS", entityType = "RC_PERMISSION")
   @Operation(summary = "Grant group/DL access",
       description = "Grants access to a security group or distribution list. Only owners can grant access.")
   @ApiResponses(value = {
@@ -156,6 +159,7 @@ public class RCPermissionController {
    * Update an existing permission.
    */
   @PutMapping("/{accessId}")
+  @Audited(action = "UPDATE_ACCESS", entityType = "RC_PERMISSION")
   @Operation(summary = "Update permission",
       description = "Updates the access level of an existing permission. Only owners can update permissions.")
   @ApiResponses(value = {
@@ -193,6 +197,7 @@ public class RCPermissionController {
    * Revoke access.
    */
   @DeleteMapping("/{accessId}")
+  @Audited(action = "REVOKE_ACCESS", entityType = "RC_PERMISSION")
   @Operation(summary = "Revoke access",
       description = "Revokes an existing permission. Only owners can revoke permissions.")
   @ApiResponses(value = {
@@ -265,6 +270,7 @@ public class RCPermissionController {
    * former owner READ_WRITE access.
    */
   @PostMapping("/rc/{rcId}/relinquish-ownership")
+  @Audited(action = "TRANSFER_OWNERSHIP", entityType = "RC_PERMISSION")
   @Operation(summary = "Relinquish ownership",
       description = "Transfers ownership to the next explicit OWNER user. "
           + "The former owner receives READ_WRITE access.")

@@ -111,6 +111,9 @@ class FiscalYearCloneServiceImplTest {
   @Mock
   private ProcurementEventFileRepository procurementEventFileRepository;
 
+  @Mock
+  private AuditService auditService;
+
   private FiscalYearCloneServiceImpl cloneService;
 
   private User testUser;
@@ -133,7 +136,8 @@ class FiscalYearCloneServiceImplTest {
         procurementQuoteRepository,
         procurementQuoteFileRepository,
         procurementEventRepository,
-        procurementEventFileRepository
+        procurementEventFileRepository,
+        auditService
     );
 
     testUser = new User();

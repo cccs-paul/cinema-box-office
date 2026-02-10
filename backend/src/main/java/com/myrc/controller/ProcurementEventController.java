@@ -12,6 +12,7 @@
  */
 package com.myrc.controller;
 
+import com.myrc.audit.Audited;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.ProcurementEventDTO;
 import com.myrc.dto.ProcurementEventFileDTO;
@@ -256,6 +257,7 @@ public class ProcurementEventController {
      * @return the created event
      */
     @PostMapping
+    @Audited(action = "CREATE_PROCUREMENT_EVENT", entityType = "PROCUREMENT_EVENT")
     @Operation(summary = "Create a new event",
             description = "Creates a new event for a procurement item.")
     @ApiResponses(value = {
@@ -299,6 +301,7 @@ public class ProcurementEventController {
      * @return the updated event
      */
     @PutMapping("/{eventId}")
+    @Audited(action = "UPDATE_PROCUREMENT_EVENT", entityType = "PROCUREMENT_EVENT")
     @Operation(summary = "Update an event",
             description = "Updates an existing procurement event.")
     @ApiResponses(value = {
@@ -342,6 +345,7 @@ public class ProcurementEventController {
      * @return 204 No Content on success
      */
     @DeleteMapping("/{eventId}")
+    @Audited(action = "DELETE_PROCUREMENT_EVENT", entityType = "PROCUREMENT_EVENT")
     @Operation(summary = "Delete an event",
             description = "Deletes a procurement event (soft delete).")
     @ApiResponses(value = {
@@ -389,6 +393,7 @@ public class ProcurementEventController {
      * @return the created file metadata
      */
     @PostMapping("/{eventId}/files")
+    @Audited(action = "UPLOAD_EVENT_FILE", entityType = "PROCUREMENT_EVENT")
     @Operation(summary = "Upload a file to an event",
             description = "Uploads a file and attaches it to a procurement event.")
     @ApiResponses(value = {
@@ -577,6 +582,7 @@ public class ProcurementEventController {
      * @return the updated file metadata
      */
     @PutMapping("/{eventId}/files/{fileId}")
+    @Audited(action = "UPDATE_EVENT_FILE", entityType = "PROCUREMENT_EVENT")
     @Operation(summary = "Update file description",
             description = "Updates the description of a specific file.")
     @ApiResponses(value = {
@@ -622,6 +628,7 @@ public class ProcurementEventController {
      * @return 204 No Content on success
      */
     @DeleteMapping("/{eventId}/files/{fileId}")
+    @Audited(action = "DELETE_EVENT_FILE", entityType = "PROCUREMENT_EVENT")
     @Operation(summary = "Delete a file",
             description = "Deletes a specific file (soft delete).")
     @ApiResponses(value = {

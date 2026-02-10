@@ -14,12 +14,15 @@
  */
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
+import { AuditService } from '../../services/audit.service';
+import { AuditEvent } from '../../models/audit-event.model';
 import { RCPermissionsComponent } from '../rc-permissions/rc-permissions.component';
 
 /**
@@ -34,7 +37,7 @@ import { RCPermissionsComponent } from '../rc-permissions/rc-permissions.compone
 @Component({
   selector: 'app-rc-configuration',
   standalone: true,
-  imports: [CommonModule, TranslateModule, RCPermissionsComponent],
+  imports: [CommonModule, FormsModule, TranslateModule, RCPermissionsComponent],
   templateUrl: './rc-configuration.component.html',
   styleUrls: ['./rc-configuration.component.scss']
 })
@@ -46,7 +49,7 @@ export class RCConfigurationComponent implements OnInit, OnDestroy {
   rc: ResponsibilityCentreDTO | null = null;
 
   /** The currently active tab. */
-  activeTab: 'permissions' = 'permissions';
+  activeTab: 'permissions' | 'audit' = 'permissions';
 
   /** Whether the RC is loading. */
   isLoading = true;
@@ -54,10 +57,26 @@ export class RCConfigurationComponent implements OnInit, OnDestroy {
   /** Error message to display. */
   errorMessage: string | null = null;
 
+  /** Audit events for the RC. */
+  auditEvents: AuditEvent[] = [];
+
+  /** Whether audit events are loading. */
+  auditLoading = false;
+
+  /** Error message for audit tab. */
+  auditError: string | null = null;
+
+  /** Whether the current user is the RC owner (needed for audit access). */
+  isOwner = false;
+
+  /** The expanded audit event ID (for showing details). */
+  expandedAuditId: number | null = null;
+
   private destroy$ = new Subject<void>();
 
   constructor(
     private rcService: ResponsibilityCentreService,
+    private auditService: AuditService,
     private router: Router,
     private route: ActivatedRoute,
     private translate: TranslateService
@@ -92,6 +111,7 @@ export class RCConfigurationComponent implements OnInit, OnDestroy {
     this.rcService.getResponsibilityCentre(this.rcId).subscribe({
       next: (rc) => {
         this.rc = rc;
+        this.isOwner = rc.isOwner === true;
         this.isLoading = false;
       },
       error: () => {
@@ -106,8 +126,43 @@ export class RCConfigurationComponent implements OnInit, OnDestroy {
    *
    * @param tab the tab to activate
    */
-  setActiveTab(tab: 'permissions'): void {
+  setActiveTab(tab: 'permissions' | 'audit'): void {
     this.activeTab = tab;
+    if (tab === 'audit' && this.isOwner && this.auditEvents.length === 0) {
+      this.loadAuditEvents();
+    }
+  }
+
+  /**
+   * Load audit events for the RC.
+   */
+  loadAuditEvents(): void {
+    if (!this.rcId) return;
+
+    this.auditLoading = true;
+    this.auditError = null;
+
+    this.auditService.getAuditEventsForRC(this.rcId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (events) => {
+          this.auditEvents = events;
+          this.auditLoading = false;
+        },
+        error: () => {
+          this.auditError = this.translate.instant('rcConfiguration.auditLoadError');
+          this.auditLoading = false;
+        }
+      });
+  }
+
+  /**
+   * Toggle the expanded state of an audit event row.
+   *
+   * @param eventId the audit event ID
+   */
+  toggleAuditDetails(eventId: number): void {
+    this.expandedAuditId = this.expandedAuditId === eventId ? null : eventId;
   }
 
   /**

@@ -1243,7 +1243,6 @@
                               {{ getEventStatusLabel(event.newStatus) }}
                             </span>
                           </div>
-                          <p class="event-description">{{ getEventTypeDescription(event.eventType) }}</p>
                           <p class="event-comment" *ngIf="event.comment">{{ event.comment }}</p>
                           <div class="event-meta">
                             <span class="created-by" *ngIf="event.createdBy">{{ 'procurement.by' | translate }}: {{ event.createdBy }}</span>
@@ -1260,7 +1259,7 @@
                                   ({{ eventFiles[event.id]?.length || event.fileCount || 0 }})
                                 </span>
                               </button>
-                              <button class="btn-small btn-secondary" *ngIf="canWrite" (click)="showEventFileUpload(event)" 
+                              <button class="btn-small btn-secondary" *ngIf="canWrite && !(event.fileCount || eventFiles[event.id]?.length)" (click)="showEventFileUpload(event)" 
                                       [title]="'procurement.uploadFile' | translate">
                                 📤 {{ 'procurement.uploadFile' | translate }}
                               </button>
