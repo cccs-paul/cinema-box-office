@@ -14,9 +14,10 @@ resources:
   - frontend.yaml
   - ingress.yaml
 
-commonLabels:
-  app: myrc
-  version: "1.0.0"
+labels:
+  - pairs:
+      app: myrc
+      version: "1.0.0"
 
 commonAnnotations:
   managed-by: "kustomize"

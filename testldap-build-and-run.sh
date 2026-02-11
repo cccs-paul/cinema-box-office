@@ -212,7 +212,7 @@ fi
 
 # Check API health
 echo -n "API Health: "
-API_RESPONSE=$(curl -s http://localhost:8080/api/health 2>&1 | grep -o '"status":"UP"' || true)
+API_RESPONSE=$(curl -s http://localhost:8080/api/actuator/health/liveness 2>&1 | grep -o '"status":"UP"' || true)
 if [ -n "$API_RESPONSE" ]; then
     echo -e "${GREEN}✓ UP${NC}"
 else
@@ -299,7 +299,7 @@ echo -e "${YELLOW}Useful Commands:${NC}"
 echo -e "  View logs:        ${BLUE}docker compose --project-name $PROJECT_NAME -f $COMPOSE_FILE logs -f${NC}"
 echo -e "  View API logs:    ${BLUE}docker compose --project-name $PROJECT_NAME -f $COMPOSE_FILE logs -f api${NC}"
 echo -e "  View LDAP logs:   ${BLUE}docker compose --project-name $PROJECT_NAME -f $COMPOSE_FILE logs -f openldap${NC}"
-echo -e "  Stop services:    ${BLUE}docker compose --project-name $PROJECT_NAME -f $COMPOSE_FILE down${NC}"
+echo -e "  Stop services:    ${BLUE}./stop.sh testldap${NC}"
 echo -e "  List LDAP users:  ${BLUE}ldapsearch -H ldap://localhost:10389 -x -b 'ou=people,dc=planetexpress,dc=com' -D 'cn=admin,dc=planetexpress,dc=com' -w GoodNewsEveryone '(objectClass=inetOrgPerson)' uid cn mail${NC}"
 echo ""
 echo -e "${YELLOW}Documentation:${NC}"

@@ -58,7 +58,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U myrc"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
     networks:
       - myrc-testldap-network
     restart: unless-stopped
@@ -82,7 +83,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/myrc
       SPRING_DATASOURCE_USERNAME: myrc
       SPRING_DATASOURCE_PASSWORD: myrc_password
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_BASELINE_VERSION: "0"
 
       # --- Login Methods: LDAP only ---
       APP_SECURITY_LOGIN_METHODS_APP_ACCOUNT_ENABLED: "false"
@@ -138,6 +142,12 @@ services:
         condition: service_healthy
       openldap:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/api/actuator/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     networks:
       - myrc-testldap-network
     restart: unless-stopped

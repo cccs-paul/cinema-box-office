@@ -11,13 +11,20 @@ metadata:
     component: config
 data:
   # Backend configuration
-  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+  # Use 'validate' with Flyway migrations for multi-replica safety.
+  # Flyway handles schema changes with proper database locking.
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
   SPRING_JPA_SHOW_SQL: "false"
   SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
   
+  # Flyway migration settings
+  SPRING_FLYWAY_ENABLED: "true"
+  SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+  SPRING_FLYWAY_BASELINE_VERSION: "0"
+  
   # Logging
   LOGGING_LEVEL_ROOT: "INFO"
-  LOGGING_LEVEL_COM_BOXOFFICE: "DEBUG"
+  LOGGING_LEVEL_COM_MYRC: "INFO"
   
   # Security profiles (can be overridden per environment)
   # Options: dev, prod, ldap, oauth2
@@ -25,10 +32,11 @@ data:
   
   # API configuration
   API_BASE_URL: "http://api:8080/api"
-  API_HEALTH_ENDPOINT: "/health"
+  API_HEALTH_ENDPOINT: "/actuator/health"
   
-  # CORS configuration
-  CORS_ALLOWED_ORIGINS: "http://localhost:4200,http://localhost:80"
-  CORS_ALLOWED_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
-  CORS_ALLOWED_HEADERS: "Content-Type,Authorization"
-  CORS_ALLOW_CREDENTIALS: "true"
+  # CORS configuration — set to your actual domain(s) in production
+  APP_CORS_ALLOWED_ORIGINS: "https://myrc.example.com"
+  
+  # File upload limits
+  SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: "50MB"
+  SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: "50MB"

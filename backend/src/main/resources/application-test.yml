@@ -6,6 +6,9 @@ spring:
   session:
     # Disable JDBC session store for tests (use in-memory)
     store-type: none
+  flyway:
+    # Disable Flyway for tests — H2 uses Hibernate ddl-auto: create-drop
+    enabled: false
   jpa:
     hibernate:
       ddl-auto: create-drop

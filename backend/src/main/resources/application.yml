@@ -18,7 +18,9 @@ spring:
     timeout: 30m
   jpa:
     hibernate:
-      ddl-auto: update
+      # Use 'validate' in production to ensure schema matches entities.
+      # Flyway handles all schema migrations with proper locking for multi-replica safety.
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
@@ -29,6 +31,11 @@ spring:
     username: myrc
     password: myrc_password
     driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: '0'
   security:
     oauth2:
       resourceserver:
@@ -43,6 +50,9 @@ server:
 
 # Application-specific security configuration
 app:
+  # CORS allowed origins (comma-separated, configurable via APP_CORS_ALLOWED_ORIGINS env var)
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:4200,http://localhost:3000,http://localhost:80,http://localhost}
   security:
     # Login methods configuration - enable/disable specific authentication methods
     login-methods:
@@ -144,10 +154,17 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       show-details: always
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        readiness:
+          include: readinessState,db
 
 springdoc:
   swagger-ui:

@@ -46,6 +46,7 @@ spec:
         app: myrc
         component: frontend
     spec:
+      terminationGracePeriodSeconds: 15
       containers:
       - name: frontend
         image: myrc-web:latest
@@ -61,11 +62,18 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "500m"
+        startupProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          timeoutSeconds: 3
+          failureThreshold: 10
         livenessProbe:
           httpGet:
             path: /
             port: 80
-          initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
@@ -73,7 +81,6 @@ spec:
           httpGet:
             path: /
             port: 80
-          initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 5
           failureThreshold: 3
@@ -94,6 +101,23 @@ spec:
                   - frontend
               topologyKey: kubernetes.io/hostname
       restartPolicy: Always
+
+---
+# PodDisruptionBudget — ensure at least 1 frontend pod is always available
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: frontend-pdb
+  namespace: myrc
+  labels:
+    app: myrc
+    component: frontend
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: myrc
+      component: frontend
 
 ---
 apiVersion: autoscaling/v2

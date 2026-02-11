@@ -18,9 +18,9 @@ COPY --chown=myrc:myrc backend/target/*.jar app.jar
 # Switch to non-root user
 USER myrc
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -sf http://localhost:8080/api/health || exit 1
+# Health check using Actuator liveness endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -sf http://localhost:8080/api/actuator/health/liveness || exit 1
 
 # Expose API port
 EXPOSE 8080

@@ -190,7 +190,7 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 
 # Check API health
 echo -n "API Health: "
-API_RESPONSE=$(curl -s http://localhost:8080/api/health 2>&1 | grep -o '"status":"UP"' || true)
+API_RESPONSE=$(curl -s http://localhost:8080/api/actuator/health/liveness 2>&1 | grep -o '"status":"UP"' || true)
 if [ -n "$API_RESPONSE" ]; then
     echo -e "${GREEN}✓ UP${NC}"
 else
@@ -227,6 +227,7 @@ else
     echo -e "  Frontend: ${BLUE}http://localhost${NC}"
 fi
 echo -e "  API:       ${BLUE}http://localhost:8080/api${NC}"
+echo -e "  API Health: ${BLUE}http://localhost:8080/api/actuator/health${NC}"
 echo -e "  pgAdmin:   ${BLUE}http://localhost:5050${NC} (if enabled)"
 echo ""
 echo -e "${YELLOW}Default Credentials:${NC}"

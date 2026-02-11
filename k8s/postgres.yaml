@@ -1,6 +1,8 @@
 ---
-# myRC - PostgreSQL Database Deployment
+# myRC - PostgreSQL Database StatefulSet
 # License: MIT
+# Uses StatefulSet for stable persistent storage identity.
+# For production HA, consider CloudNativePG operator or a managed database service.
 apiVersion: v1
 kind: Service
 metadata:
@@ -18,27 +20,12 @@ spec:
     app: myrc
     component: database
   type: ClusterIP
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-pvc
-  namespace: myrc
-  labels:
-    app: myrc
-    component: database
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
-  storageClassName: standard
+  # Headless service for StatefulSet DNS
+  clusterIP: None
 
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: postgres
   namespace: myrc
@@ -46,6 +33,7 @@ metadata:
     app: myrc
     component: database
 spec:
+  serviceName: postgres
   replicas: 1
   selector:
     matchLabels:
@@ -57,6 +45,7 @@ spec:
         app: myrc
         component: database
     spec:
+      terminationGracePeriodSeconds: 60
       containers:
       - name: postgres
         image: postgres:16-alpine
@@ -79,19 +68,21 @@ spec:
             secretKeyRef:
               name: myrc-db-secret
               key: db-password
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         resources:
           requests:
             memory: "256Mi"
             cpu: "100m"
           limits:
-            memory: "512Mi"
+            memory: "1Gi"
             cpu: "500m"
         livenessProbe:
           exec:
             command:
             - /bin/sh
             - -c
-            - pg_isready -U $POSTGRES_USER
+            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -101,7 +92,7 @@ spec:
             command:
             - /bin/sh
             - -c
-            - pg_isready -U $POSTGRES_USER
+            - pg_isready -U $POSTGRES_USER -d $POSTGRES_DB
           initialDelaySeconds: 10
           periodSeconds: 5
           timeoutSeconds: 5
@@ -109,9 +100,16 @@ spec:
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data
-          subPath: postgres
-      volumes:
-      - name: postgres-storage
-        persistentVolumeClaim:
-          claimName: postgres-pvc
-      restartPolicy: Always
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-storage
+      labels:
+        app: myrc
+        component: database
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard

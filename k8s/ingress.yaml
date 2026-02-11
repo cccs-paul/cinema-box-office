@@ -14,7 +14,11 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    # Match application's 50MB file upload limit
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    # Timeout settings for long-running API operations
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
 spec:
   tls:
   - hosts:
