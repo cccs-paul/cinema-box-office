@@ -681,14 +681,15 @@
                   <div class="invoice-files-section" *ngIf="(invoice.files && invoice.files.length > 0) || canWrite">
                     <div class="invoice-files-list" *ngIf="invoice.files && invoice.files.length > 0">
                       <div class="file-item" *ngFor="let file of invoice.files">
-                        <span class="file-icon">📎</span>
+                        <span class="file-icon">{{ getFileIcon(file.contentType) }}</span>
                         <div class="file-info">
                           <span class="file-name">{{ file.fileName }}</span>
                           <span class="file-size">({{ file.formattedFileSize }})</span>
                         </div>
                         <div class="file-actions">
-                          <a class="btn-icon" [href]="getInvoiceFileViewUrl(invoice, file)" target="_blank" [title]="'common.view' | translate">👁️</a>
-                          <a class="btn-icon" [href]="getInvoiceFileDownloadUrl(invoice, file)" [title]="'common.download' | translate">⬇️</a>
+                          <button class="btn-icon" [title]="'common.preview' | translate" (click)="previewInvoiceFile(invoice, file)" *ngIf="isPreviewable(file.contentType)">👁️</button>
+                          <button class="btn-icon" [title]="'common.viewInBrowser' | translate" (click)="viewInvoiceFileInBrowser(invoice, file)">🔗</button>
+                          <button class="btn-icon" [title]="'common.download' | translate" (click)="downloadInvoiceFile(invoice, file)">⬇️</button>
                           <label class="btn-icon btn-replace" *ngIf="canWrite" [title]="'spending.replaceFile' | translate">
                             🔄
                             <input type="file" (change)="replaceInvoiceFile($event, invoice, file)" style="display: none"
@@ -1117,6 +1118,47 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invoice File Preview Modal -->
+  <div class="preview-overlay" *ngIf="previewingFile" (click)="closeInvoiceFilePreview()">
+    <div class="preview-modal" (click)="$event.stopPropagation()">
+      <div class="preview-header">
+        <h3>{{ previewingFile.fileName }}</h3>
+        <div class="preview-actions">
+          <button class="btn-icon" [title]="'common.viewInBrowser' | translate" (click)="viewInvoiceFileInBrowser(previewingInvoice!, previewingFile)">🔗</button>
+          <button class="btn-icon" [title]="'common.download' | translate" (click)="downloadInvoiceFile(previewingInvoice!, previewingFile)">⬇️</button>
+          <label class="btn-icon btn-replace" *ngIf="canWrite" [title]="'spending.replaceFile' | translate">
+            🔄
+            <input type="file" (change)="replaceInvoiceFile($event, previewingInvoice!, previewingFile!)" style="display: none"
+                   accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv" />
+          </label>
+          <button class="btn-icon btn-danger" *ngIf="canWrite" [title]="'common.delete' | translate"
+            (click)="deleteInvoiceFile(previewingInvoice!, previewingFile!); closeInvoiceFilePreview()">🗑️</button>
+          <button class="btn-close" (click)="closeInvoiceFilePreview()">✕</button>
+        </div>
+      </div>
+      <div class="preview-content">
+        <div class="loading" *ngIf="isLoadingPreview">
+          <span class="spinner"></span> {{ 'spending.loadingPreview' | translate }}
+        </div>
+        <iframe 
+          *ngIf="!isLoadingPreview && previewUrl && previewingFile.contentType === 'application/pdf'" 
+          [src]="previewUrl" 
+          class="pdf-preview"
+          [title]="'spending.pdfPreview' | translate">
+        </iframe>
+        <img 
+          *ngIf="!isLoadingPreview && previewUrl && previewingFile.contentType.startsWith('image/')" 
+          [src]="previewUrl" 
+          class="image-preview"
+          [alt]="'spending.imagePreview' | translate"
+        />
+        <div class="text-preview" *ngIf="!isLoadingPreview && previewTextContent && previewingFile.contentType.startsWith('text/')">
+          <pre>{{ previewTextContent }}</pre>
+        </div>
       </div>
     </div>
   </div>

@@ -295,7 +295,7 @@ describe('SpendingComponent', () => {
     });
 
     it('should load spending items for the selected FY', () => {
-      expect(spendingItemService.getSpendingItemsByFY).toHaveBeenCalledWith(1, 1, undefined);
+      expect(spendingItemService.getSpendingItemsByFY).toHaveBeenCalledWith(1, 1);
     });
 
     it('should set default category when categories are loaded', () => {
@@ -324,21 +324,26 @@ describe('SpendingComponent', () => {
   });
 
   describe('filterByCategory', () => {
-    it('should filter items by category', () => {
-      spendingItemService.getSpendingItemsByFY.calls.reset();
+    it('should filter items by category (client-side)', () => {
       component.filterByCategory(2);
 
       expect(component.selectedCategoryId).toBe(2);
-      expect(spendingItemService.getSpendingItemsByFY).toHaveBeenCalledWith(1, 1, 2);
+      // Category filtering is now client-side — no server reload
+      expect(component.filteredSpendingItems.every(item => item.categoryId === 2)).toBeTrue();
     });
 
     it('should clear filter when category is null', () => {
-      spendingItemService.getSpendingItemsByFY.calls.reset();
       component.selectedCategoryId = 2;
       component.filterByCategory(null);
 
       expect(component.selectedCategoryId).toBeNull();
-      expect(spendingItemService.getSpendingItemsByFY).toHaveBeenCalledWith(1, 1, undefined);
+    });
+
+    it('should toggle category off when same category is selected', () => {
+      component.selectedCategoryId = 2;
+      component.filterByCategory(2);
+
+      expect(component.selectedCategoryId).toBeNull();
     });
   });
 

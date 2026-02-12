@@ -66,7 +66,9 @@
     "deleting": "Suppression...",
     "showAll": "Tout afficher",
     "hideAll": "Tout masquer",
-    "processing": "Traitement en cours..."
+    "processing": "Traitement en cours...",
+    "preview": "Aperçu",
+    "viewInBrowser": "Ouvrir dans un nouvel onglet"
   },
   "header": {
     "userMenu": "Menu utilisateur",
@@ -624,7 +626,10 @@
     "statusPlanning": "Planification",
     "statusCommitted": "Engagé",
     "statusCompleted": "Complété",
-    "statusCancelled": "Annulé"
+    "statusCancelled": "Annulé",
+    "loadingPreview": "Chargement de l'aperçu...",
+    "pdfPreview": "Aperçu PDF",
+    "imagePreview": "Aperçu de l'image"
   },
   "summary": {
     "title": "Sommaire",

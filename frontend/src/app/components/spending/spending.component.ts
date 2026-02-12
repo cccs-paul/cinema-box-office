@@ -7,6 +7,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
 import { User } from '../../models/user.model';
@@ -230,6 +231,13 @@ export class SpendingComponent implements OnInit, OnDestroy {
   replacingFileInvoiceId: number | null = null;
   replacingFileId: number | null = null;
 
+  // Invoice File Preview Modal
+  previewingInvoice: SpendingInvoice | null = null;
+  previewingFile: SpendingInvoiceFile | null = null;
+  previewUrl: SafeResourceUrl | null = null;
+  previewTextContent = '';
+  isLoadingPreview = false;
+
   // For navigation with query params (expand specific item)
   private pendingExpandItemId: number | null = null;
 
@@ -251,7 +259,8 @@ export class SpendingComponent implements OnInit, OnDestroy {
     private currencyService: CurrencyService,
     private fuzzySearchService: FuzzySearchService,
     private translate: TranslateService,
-    private userPreferencesService: UserPreferencesService
+    private userPreferencesService: UserPreferencesService,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -394,8 +403,7 @@ export class SpendingComponent implements OnInit, OnDestroy {
     this.isLoadingItems = true;
     this.spendingItemService.getSpendingItemsByFY(
       this.selectedRC.id, 
-      this.selectedFY.id, 
-      this.selectedCategoryId || undefined
+      this.selectedFY.id
     ).subscribe({
       next: (items) => {
         this.spendingItems = items;
@@ -533,7 +541,6 @@ export class SpendingComponent implements OnInit, OnDestroy {
     } else {
       this.selectedCategoryId = categoryId;
     }
-    this.loadSpendingItems();
   }
 
   /**
@@ -542,6 +549,11 @@ export class SpendingComponent implements OnInit, OnDestroy {
    */
   get filteredSpendingItems(): SpendingItem[] {
     let items = [...this.spendingItems];
+
+    // Filter by category if selected (client-side, like Funding)
+    if (this.selectedCategoryId !== null) {
+      items = items.filter(item => item.categoryId === this.selectedCategoryId);
+    }
 
     // Apply fuzzy search filter
     if (this.searchTerm.trim()) {
@@ -1796,5 +1808,101 @@ export class SpendingComponent implements OnInit, OnDestroy {
   removeNewInvoiceFile(): void {
     this.newInvoiceFile = null;
     this.newInvoiceFileName = '';
+  }
+
+  // ==========================
+  // Invoice File Preview Methods
+  // ==========================
+
+  /**
+   * Get the icon for a file based on its content type.
+   */
+  getFileIcon(contentType: string): string {
+    if (contentType.startsWith('image/')) return '🖼️';
+    if (contentType === 'application/pdf') return '📄';
+    if (contentType.includes('word')) return '📝';
+    if (contentType.includes('excel') || contentType.includes('spreadsheet')) return '📊';
+    if (contentType.startsWith('text/')) return '📃';
+    return '📎';
+  }
+
+  /**
+   * Check if a file type can be previewed inline.
+   */
+  isPreviewable(contentType: string): boolean {
+    return contentType === 'application/pdf' ||
+           contentType.startsWith('image/') ||
+           contentType.startsWith('text/');
+  }
+
+  /**
+   * Open file preview modal for an invoice file.
+   */
+  previewInvoiceFile(invoice: SpendingInvoice, file: SpendingInvoiceFile): void {
+    if (!this.selectedRC || !this.selectedFY || !this.invoiceItemId || !invoice.id || !file.id) return;
+
+    this.previewingInvoice = invoice;
+    this.previewingFile = file;
+    this.isLoadingPreview = true;
+    this.previewUrl = null;
+    this.previewTextContent = '';
+
+    const url = this.spendingItemService.getInvoiceFileViewUrl(
+      this.selectedRC.id, this.selectedFY.id, this.invoiceItemId, invoice.id, file.id
+    );
+
+    // For PDFs and images, we can use the URL directly in an iframe/img
+    if (file.contentType === 'application/pdf' || file.contentType.startsWith('image/')) {
+      this.previewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      this.isLoadingPreview = false;
+    } else if (file.contentType.startsWith('text/')) {
+      // For text files, fetch the content
+      fetch(url, { credentials: 'include' })
+        .then(response => response.text())
+        .then(text => {
+          this.previewTextContent = text;
+          this.previewUrl = this.sanitizer.bypassSecurityTrustResourceUrl('about:blank'); // trigger display
+          this.isLoadingPreview = false;
+        })
+        .catch(() => {
+          this.showError('Failed to load file preview');
+          this.isLoadingPreview = false;
+          this.previewingFile = null;
+          this.previewingInvoice = null;
+        });
+    } else {
+      this.isLoadingPreview = false;
+    }
+  }
+
+  /**
+   * Open an invoice file in a new browser tab.
+   */
+  viewInvoiceFileInBrowser(invoice: SpendingInvoice, file: SpendingInvoiceFile): void {
+    const url = this.getInvoiceFileViewUrl(invoice, file);
+    if (url !== '#') {
+      window.open(url, '_blank');
+    }
+  }
+
+  /**
+   * Download an invoice file.
+   */
+  downloadInvoiceFile(invoice: SpendingInvoice, file: SpendingInvoiceFile): void {
+    const url = this.getInvoiceFileDownloadUrl(invoice, file);
+    if (url !== '#') {
+      window.open(url, '_blank');
+    }
+  }
+
+  /**
+   * Close the invoice file preview modal.
+   */
+  closeInvoiceFilePreview(): void {
+    this.previewingFile = null;
+    this.previewingInvoice = null;
+    this.previewUrl = null;
+    this.previewTextContent = '';
+    this.isLoadingPreview = false;
   }
 }

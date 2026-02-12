@@ -66,7 +66,9 @@
     "deleting": "Deleting...",
     "showAll": "Show All",
     "hideAll": "Hide All",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "preview": "Preview",
+    "viewInBrowser": "Open in New Tab"
   },
   "header": {
     "userMenu": "User menu",
@@ -630,7 +632,10 @@
     "statusPlanning": "Planning",
     "statusCommitted": "Committed",
     "statusCompleted": "Completed",
-    "statusCancelled": "Cancelled"
+    "statusCancelled": "Cancelled",
+    "loadingPreview": "Loading preview...",
+    "pdfPreview": "PDF Preview",
+    "imagePreview": "Image Preview"
   },
   "summary": {
     "title": "Summary",
