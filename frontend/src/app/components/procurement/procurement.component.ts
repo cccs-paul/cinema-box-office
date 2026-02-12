@@ -249,6 +249,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   newQuoteExchangeRate: number | null = null;
   newQuoteAmountCapCad: number | null = null;
   newQuoteAmountOmCad: number | null = null;
+  newQuoteAmountCad: number | null = null;
   newQuoteReceivedDate = '';
   newQuoteExpiryDate = '';
   newQuoteNotes = '';
@@ -268,6 +269,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   editQuoteExchangeRate: number | null = null;
   editQuoteAmountCapCad: number | null = null;
   editQuoteAmountOmCad: number | null = null;
+  editQuoteAmountCad: number | null = null;
   editQuoteReceivedDate = '';
   editQuoteExpiryDate = '';
   editQuoteNotes = '';
@@ -759,6 +761,76 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newItemProcurementType = 'RC_INITIATED';
   }
 
+  // =================================
+  // Price CAD Auto-Computation
+  // =================================
+
+  /**
+   * Auto-compute the CAD equivalent for a price field.
+   * When currency is CAD, the CAD value equals the price.
+   * When currency is non-CAD with an exchange rate, CAD = price × exchangeRate.
+   */
+  private computePriceCad(price: number | null, currency: string, exchangeRate: number | null): number | null {
+    if (price == null) return null;
+    if (currency === 'CAD') return price;
+    if (exchangeRate != null && exchangeRate > 0) {
+      return Math.round(price * exchangeRate * 100) / 100;
+    }
+    return null;
+  }
+
+  /** Re-compute new item quoted price CAD when price, currency, or rate changes */
+  onNewQuotedPriceChange(): void {
+    this.newItemQuotedPriceCad = this.computePriceCad(
+      this.newItemQuotedPrice, this.newItemQuotedPriceCurrency, this.newItemQuotedPriceExchangeRate
+    );
+  }
+
+  /** Re-compute new item final price CAD when price, currency, or rate changes */
+  onNewFinalPriceChange(): void {
+    this.newItemFinalPriceCad = this.computePriceCad(
+      this.newItemFinalPrice, this.newItemFinalPriceCurrency, this.newItemFinalPriceExchangeRate
+    );
+  }
+
+  /** Re-compute edit item quoted price CAD when price, currency, or rate changes */
+  onEditQuotedPriceChange(): void {
+    this.editItemQuotedPriceCad = this.computePriceCad(
+      this.editItemQuotedPrice, this.editItemQuotedPriceCurrency, this.editItemQuotedPriceExchangeRate
+    );
+  }
+
+  /** Re-compute edit item final price CAD when price, currency, or rate changes */
+  onEditFinalPriceChange(): void {
+    this.editItemFinalPriceCad = this.computePriceCad(
+      this.editItemFinalPrice, this.editItemFinalPriceCurrency, this.editItemFinalPriceExchangeRate
+    );
+  }
+
+  /** Re-compute new quote amount CAD when amount, currency, or rate changes */
+  onNewQuoteAmountChange(): void {
+    this.newQuoteAmountCad = this.computePriceCad(
+      this.newQuoteAmount, this.newQuoteCurrency, this.newQuoteExchangeRate
+    );
+  }
+
+  /** Re-compute edit quote amount CAD when amount, currency, or rate changes */
+  onEditQuoteAmountChange(): void {
+    this.editQuoteAmountCad = this.computePriceCad(
+      this.editQuoteAmount, this.editQuoteCurrency, this.editQuoteExchangeRate
+    );
+  }
+
+  /**
+   * Compute the CAD equivalent for a quote's amount for display purposes.
+   * Used in the quote card display for non-CAD quotes.
+   */
+  getQuoteAmountCad(quote: ProcurementQuote): number | null {
+    return this.computePriceCad(
+      quote.amount ?? null, quote.currency || 'CAD', quote.exchangeRate ?? null
+    );
+  }
+
   createProcurementItem(): void {
     if (!this.selectedRC || !this.selectedFY || !this.newItemName.trim()) {
       return;
@@ -1133,6 +1205,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.newQuoteExchangeRate = null;
     this.newQuoteAmountCapCad = null;
     this.newQuoteAmountOmCad = null;
+    this.newQuoteAmountCad = null;
     this.newQuoteReceivedDate = '';
     this.newQuoteExpiryDate = '';
     this.newQuoteNotes = '';
@@ -1279,6 +1352,9 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editQuoteExchangeRate = quote.exchangeRate ?? null;
     this.editQuoteAmountCapCad = quote.amountCapCad ?? null;
     this.editQuoteAmountOmCad = quote.amountOmCad ?? null;
+    this.editQuoteAmountCad = this.computePriceCad(
+      quote.amount ?? null, quote.currency || 'CAD', quote.exchangeRate ?? null
+    );
     this.editQuoteReceivedDate = quote.receivedDate ? quote.receivedDate.split('T')[0] : '';
     this.editQuoteExpiryDate = quote.expiryDate ? quote.expiryDate.split('T')[0] : '';
     this.editQuoteNotes = quote.notes || '';
@@ -1307,6 +1383,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
     this.editQuoteExchangeRate = null;
     this.editQuoteAmountCapCad = null;
     this.editQuoteAmountOmCad = null;
+    this.editQuoteAmountCad = null;
     this.editQuoteReceivedDate = '';
     this.editQuoteExpiryDate = '';
     this.editQuoteNotes = '';

@@ -100,6 +100,17 @@
         <p>{{ 'insights.noInvoiceData' | translate }}</p>
       </div>
     </div>
+
+    <!-- Currency Distribution -->
+    <div class="chart-card">
+      <div class="chart-container">
+        <canvas #currencyDistributionChart></canvas>
+      </div>
+      <div class="chart-empty" *ngIf="fundingItems.length === 0 && spendingItems.length === 0">
+        <span class="empty-icon">💱</span>
+        <p>{{ 'insights.noCurrencyData' | translate }}</p>
+      </div>
+    </div>
   </div>
 
   <!-- Quick Stats -->

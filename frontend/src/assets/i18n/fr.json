@@ -346,6 +346,7 @@
     "quoteCurrency": "Devise",
     "quoteAmount": "Montant",
     "quoteAmountPlaceholder": "Entrez le montant",
+    "quoteAmountCad": "Montant (CAD)",
     "quoteAmountCap": "Montant CAP",
     "quoteAmountOm": "Montant O&M",
     "quoteAmountCapCad": "Montant CAP (CAD)",
@@ -724,7 +725,9 @@
     "invoiceCoverage": "Couverture des factures par catégorie",
     "allocatedAmount": "Alloué",
     "invoicedAmount": "Facturé",
-    "noInvoiceData": "Aucune donnée de facture disponible"
+    "noInvoiceData": "Aucune donnée de facture disponible",
+    "currencyDistribution": "Répartition par devise",
+    "noCurrencyData": "Aucune donnée de devise disponible"
   },
   "configuration": {
     "title": "Configuration",

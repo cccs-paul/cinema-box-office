@@ -148,8 +148,8 @@
     font-weight: 500;
 
     &.status-approved {
-      background: rgba(34, 197, 94, 0.15);
-      color: #16a34a;
+      background: var(--badge-green-bg);
+      color: var(--badge-green-text);
     }
   }
 

@@ -156,6 +156,12 @@ export interface SpendingItem {
   /** Currency of procurement prices */
   procurementPriceCurrency?: string | null;
 
+  /** Currency of procurement final price */
+  procurementFinalPriceCurrency?: string | null;
+
+  /** Currency of procurement quoted price */
+  procurementQuotedPriceCurrency?: string | null;
+
   /** Final price in CAD (converted) */
   procurementFinalPriceCad?: number | null;
 

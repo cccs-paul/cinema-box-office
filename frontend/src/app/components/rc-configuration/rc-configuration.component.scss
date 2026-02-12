@@ -68,9 +68,9 @@
   gap: 8px;
 
   &.alert-error {
-    background-color: #fef2f2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
+    background-color: var(--alert-error-bg);
+    color: var(--alert-error-text);
+    border: 1px solid var(--alert-error-border);
   }
 }
 
@@ -148,22 +148,22 @@
 }
 
 // Dark mode
-:host-context(.dark-theme) {
+:host-context(html.dark-theme) {
   .alert.alert-error {
-    background-color: #451a1a;
+    background-color: rgba(220, 38, 38, 0.15);
     color: #fca5a5;
-    border-color: #7f1d1d;
+    border-color: rgba(220, 38, 38, 0.3);
   }
 
   .audit-not-owner {
-    background-color: #422006;
+    background-color: rgba(234, 179, 8, 0.15);
     color: #fbbf24;
-    border-color: #78350f;
+    border-color: rgba(234, 179, 8, 0.3);
   }
 
   .audit-table {
     th {
-      background-color: var(--bg-secondary, #1f2937);
+      background-color: var(--background-secondary, #1f2937);
       color: var(--text-secondary, #9ca3af);
       border-color: var(--border-color, #374151);
     }
@@ -173,11 +173,11 @@
     }
 
     tbody tr:hover {
-      background-color: var(--bg-hover, #1f2937);
+      background-color: var(--background-tertiary, #1f2937);
     }
 
     .details-row td {
-      background-color: var(--bg-secondary, #111827);
+      background-color: var(--background-secondary, #111827);
     }
   }
 
@@ -189,14 +189,56 @@
     }
 
     .parameters-value {
-      background-color: #1f2937;
-      border-color: #374151;
-      color: #e5e7eb;
+      background-color: var(--background-secondary);
+      border-color: var(--border-color);
+      color: var(--text-primary);
     }
   }
 
   .audit-empty {
     color: var(--text-secondary, #9ca3af);
+  }
+
+  .action-badge {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+  }
+
+  .cloned-badge {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: #86efac;
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+
+  .outcome-badge {
+    &.outcome-success {
+      background-color: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+    }
+
+    &.outcome-failure {
+      background-color: rgba(220, 38, 38, 0.2);
+      color: #fca5a5;
+    }
+
+    &.outcome-pending {
+      background-color: rgba(234, 179, 8, 0.2);
+      color: #fbbf24;
+    }
+  }
+
+  .method-badge {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+  }
+
+  .error-label,
+  .error-value {
+    color: #fca5a5;
+  }
+
+  .error-value {
+    background-color: rgba(220, 38, 38, 0.15);
   }
 }
 
@@ -206,10 +248,10 @@
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  background-color: #fffbeb;
-  border: 1px solid #fde68a;
+  background-color: var(--badge-yellow-bg);
+  border: 1px solid var(--banner-caution-border);
   border-radius: 8px;
-  color: #92400e;
+  color: var(--badge-yellow-text);
 
   .warning-icon {
     font-size: 20px;
@@ -314,8 +356,8 @@
     font-size: 11px;
     font-weight: 600;
     font-family: monospace;
-    background-color: #eff6ff;
-    color: #1e40af;
+    background-color: var(--badge-blue-bg);
+    color: var(--badge-blue-text);
     white-space: nowrap;
   }
 
@@ -325,9 +367,9 @@
     border-radius: 10px;
     font-size: 10px;
     font-weight: 500;
-    background-color: #f0fdf4;
-    color: #166534;
-    border: 1px solid #bbf7d0;
+    background-color: var(--badge-green-bg);
+    color: var(--badge-green-text);
+    border: 1px solid var(--banner-good-border);
   }
 
   .entity-name-cell {
@@ -345,18 +387,18 @@
     font-weight: 600;
 
     &.outcome-success {
-      background-color: #f0fdf4;
-      color: #166534;
+      background-color: var(--badge-green-bg);
+      color: var(--badge-green-text);
     }
 
     &.outcome-failure {
-      background-color: #fef2f2;
-      color: #991b1b;
+      background-color: var(--badge-red-bg);
+      color: var(--badge-red-text);
     }
 
     &.outcome-pending {
-      background-color: #fffbeb;
-      color: #92400e;
+      background-color: var(--badge-yellow-bg);
+      color: var(--badge-yellow-text);
     }
   }
 
@@ -423,8 +465,8 @@
       font-family: monospace;
       font-weight: 600;
       font-size: 12px;
-      background-color: #eff6ff;
-      color: #1e40af;
+      background-color: var(--badge-blue-bg);
+      color: var(--badge-blue-text);
     }
 
     .endpoint-value {
@@ -439,12 +481,12 @@
     }
 
     .error-label {
-      color: #991b1b;
+      color: var(--badge-red-text);
     }
 
     .error-value {
-      color: #991b1b;
-      background-color: #fef2f2;
+      color: var(--badge-red-text);
+      background-color: var(--badge-red-bg);
       padding: 4px 8px;
       border-radius: 4px;
     }
@@ -452,7 +494,7 @@
     .parameters-value {
       font-family: monospace;
       font-size: 12px;
-      background-color: #f9fafb;
+      background-color: var(--background-tertiary, #f9fafb);
       border: 1px solid var(--border-color, #e5e7eb);
       border-radius: 4px;
       padding: 8px 12px;
@@ -468,10 +510,10 @@
 // Row outcome indicators (subtle left border)
 .audit-table tbody tr {
   &.outcome-failure {
-    border-left: 3px solid #ef4444;
+    border-left: 3px solid var(--event-rejected-border);
   }
 
   &.outcome-pending {
-    border-left: 3px solid #f59e0b;
+    border-left: 3px solid var(--event-pending-border);
   }
 }

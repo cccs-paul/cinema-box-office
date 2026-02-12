@@ -53,6 +53,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('procurementTypeChart') procurementTypeChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('spendingStatusChart') spendingStatusChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('invoiceCoverageChart') invoiceCoverageChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('currencyDistributionChart') currencyDistributionChartRef!: ElementRef<HTMLCanvasElement>;
 
   currentUser: User | null = null;
 
@@ -200,6 +201,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.createProcurementTypeChart();
     this.createSpendingStatusChart();
     this.createInvoiceCoverageChart();
+    this.createCurrencyDistributionChart();
   }
 
   /**
@@ -671,10 +673,11 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
       const categoryId = item.categoryId || null;
       const categoryName = this.getCategoryDisplayNameById(categoryId, item.categoryName || uncategorizedLabel);
       let total = 0;
+      const rate = this.getCadConversionRate(item);
       
       if (item.moneyAllocations) {
         for (const allocation of item.moneyAllocations) {
-          total += (allocation.capAmount || 0) + (allocation.omAmount || 0);
+          total += ((allocation.capAmount || 0) + (allocation.omAmount || 0)) * rate;
         }
       }
       
@@ -723,10 +726,11 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     let fundingOm = 0;
     
     for (const item of this.fundingItems) {
+      const rate = this.getCadConversionRate(item);
       if (item.moneyAllocations) {
         for (const allocation of item.moneyAllocations) {
-          fundingCap += allocation.capAmount || 0;
-          fundingOm += allocation.omAmount || 0;
+          fundingCap += (allocation.capAmount || 0) * rate;
+          fundingOm += (allocation.omAmount || 0) * rate;
         }
       }
     }
@@ -742,10 +746,11 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     let spendingOm = 0;
     
     for (const item of this.spendingItems) {
+      const rate = this.getCadConversionRate(item);
       if (item.moneyAllocations) {
         for (const allocation of item.moneyAllocations) {
-          spendingCap += allocation.capAmount || 0;
-          spendingOm += allocation.omAmount || 0;
+          spendingCap += (allocation.capAmount || 0) * rate;
+          spendingOm += (allocation.omAmount || 0) * rate;
         }
       }
     }
@@ -874,6 +879,119 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
       return (value / 1000).toFixed(1) + 'K';
     }
     return value.toFixed(0);
+  }
+
+  /**
+   * Get the CAD conversion rate for an item.
+   * Returns 1 for CAD items, the exchangeRate for non-CAD items.
+   */
+  private getCadConversionRate(item: any): number {
+    if (!item.currency || item.currency === 'CAD') return 1;
+    return item.exchangeRate || 1;
+  }
+
+  /**
+   * Aggregate spending amounts by currency for the currency distribution chart.
+   */
+  private aggregateByCurrency(): { labels: string[]; values: number[] } {
+    const currencyMap = new Map<string, number>();
+
+    for (const item of this.spendingItems) {
+      const currency = item.currency || 'CAD';
+      let total = 0;
+      if (item.moneyAllocations) {
+        for (const allocation of item.moneyAllocations) {
+          total += (allocation.capAmount || 0) + (allocation.omAmount || 0);
+        }
+      }
+      currencyMap.set(currency, (currencyMap.get(currency) || 0) + total);
+    }
+
+    // Also include funding items
+    for (const item of this.fundingItems) {
+      const currency = item.currency || 'CAD';
+      let total = 0;
+      if (item.moneyAllocations) {
+        for (const allocation of item.moneyAllocations) {
+          total += (allocation.capAmount || 0) + (allocation.omAmount || 0);
+        }
+      }
+      currencyMap.set(currency, (currencyMap.get(currency) || 0) + total);
+    }
+
+    // Sort by amount descending
+    const sorted = Array.from(currencyMap.entries())
+      .filter(([, amount]) => amount > 0)
+      .sort((a, b) => b[1] - a[1]);
+
+    return {
+      labels: sorted.map(([currency]) => currency),
+      values: sorted.map(([, amount]) => amount)
+    };
+  }
+
+  /**
+   * Create currency distribution doughnut chart.
+   */
+  private createCurrencyDistributionChart(): void {
+    if (!this.currencyDistributionChartRef?.nativeElement) return;
+
+    const currencyData = this.aggregateByCurrency();
+    if (currencyData.labels.length === 0) return;
+
+    // Currency-specific colors
+    const currencyColors: Record<string, string> = {
+      'CAD': '#ef4444', // red
+      'USD': '#3b82f6', // blue
+      'GBP': '#8b5cf6', // purple
+      'EUR': '#10b981', // green
+      'AUD': '#f59e0b', // amber
+      'NZD': '#06b6d4'  // cyan
+    };
+
+    const backgroundColors = currencyData.labels.map(
+      (label, i) => currencyColors[label] || this.colors[i % this.colors.length]
+    );
+
+    const chart = new Chart(this.currencyDistributionChartRef.nativeElement, {
+      type: 'doughnut',
+      data: {
+        labels: currencyData.labels,
+        datasets: [{
+          data: currencyData.values,
+          backgroundColor: backgroundColors,
+          borderWidth: 2,
+          borderColor: '#ffffff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { padding: 15, usePointStyle: true }
+          },
+          title: {
+            display: true,
+            text: this.translate.instant('insights.currencyDistribution'),
+            font: { size: 16, weight: 'bold' }
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const label = context.label || '';
+                const value = context.parsed || 0;
+                const total = (context.dataset.data as number[]).reduce((a: number, b: number) => a + b, 0);
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+                return `${label}: $${this.formatNumber(value)} (${percentage}%)`;
+              }
+            }
+          }
+        }
+      }
+    });
+    this.charts.push(chart);
   }
 
   /**

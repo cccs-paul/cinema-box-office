@@ -50,6 +50,8 @@ public class SpendingItemDTO {
   private BigDecimal procurementFinalPrice;
   private BigDecimal procurementQuotedPrice;
   private String procurementPriceCurrency;
+  private String procurementFinalPriceCurrency;
+  private String procurementQuotedPriceCurrency;
   private BigDecimal procurementFinalPriceCad;
   private BigDecimal procurementQuotedPriceCad;
   // Tracking event info (for non-procurement-linked items)
@@ -183,7 +185,14 @@ public class SpendingItemDTO {
       dto.setProcurementItemName(procItem.getName());
       dto.setProcurementFinalPrice(procItem.getFinalPrice());
       dto.setProcurementQuotedPrice(procItem.getQuotedPrice());
-      // Use final price currency if available, otherwise quoted price currency
+      // Set individual currency fields
+      String finalCurrency = procItem.getFinalPriceCurrency() != null 
+          ? procItem.getFinalPriceCurrency().getCode() : "CAD";
+      String quotedCurrency = procItem.getQuotedPriceCurrency() != null 
+          ? procItem.getQuotedPriceCurrency().getCode() : "CAD";
+      dto.setProcurementFinalPriceCurrency(finalCurrency);
+      dto.setProcurementQuotedPriceCurrency(quotedCurrency);
+      // Legacy single currency field: prefer final price currency, fallback to quoted
       String priceCurrency = procItem.getFinalPriceCurrency() != null 
           ? procItem.getFinalPriceCurrency().getCode() 
           : (procItem.getQuotedPriceCurrency() != null 
@@ -363,6 +372,22 @@ public class SpendingItemDTO {
 
   public void setProcurementPriceCurrency(String procurementPriceCurrency) {
     this.procurementPriceCurrency = procurementPriceCurrency;
+  }
+
+  public String getProcurementFinalPriceCurrency() {
+    return procurementFinalPriceCurrency;
+  }
+
+  public void setProcurementFinalPriceCurrency(String procurementFinalPriceCurrency) {
+    this.procurementFinalPriceCurrency = procurementFinalPriceCurrency;
+  }
+
+  public String getProcurementQuotedPriceCurrency() {
+    return procurementQuotedPriceCurrency;
+  }
+
+  public void setProcurementQuotedPriceCurrency(String procurementQuotedPriceCurrency) {
+    this.procurementQuotedPriceCurrency = procurementQuotedPriceCurrency;
   }
 
   public BigDecimal getProcurementFinalPriceCad() {

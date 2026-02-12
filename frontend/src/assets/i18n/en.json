@@ -352,6 +352,7 @@
     "quoteCurrency": "Currency",
     "quoteAmount": "Amount",
     "quoteAmountPlaceholder": "Enter amount",
+    "quoteAmountCad": "Amount (CAD)",
     "quoteAmountCap": "CAP Amount",
     "quoteAmountOm": "O&M Amount",
     "quoteAmountCapCad": "CAP Amount (CAD)",
@@ -740,7 +741,9 @@
     "invoiceCoverage": "Invoice Coverage by Category",
     "allocatedAmount": "Allocated",
     "invoicedAmount": "Invoiced",
-    "noInvoiceData": "No invoice data available"
+    "noInvoiceData": "No invoice data available",
+    "currencyDistribution": "Allocation by Currency",
+    "noCurrencyData": "No currency data available"
   },
   "configuration": {
     "title": "Configuration",

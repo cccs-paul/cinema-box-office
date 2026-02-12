@@ -739,18 +739,18 @@
       flex-shrink: 0;
 
       &.access-owner {
-        background: #fef3c7;
-        color: #92400e;
+        background: var(--badge-yellow-bg);
+        color: var(--badge-yellow-text);
       }
 
       &.access-readwrite {
-        background: #d1fae5;
-        color: #065f46;
+        background: var(--badge-green-bg);
+        color: var(--badge-green-text);
       }
 
       &.access-readonly {
-        background: #e0e7ff;
-        color: #3730a3;
+        background: var(--badge-purple-bg);
+        color: var(--badge-purple-text);
       }
     }
   }

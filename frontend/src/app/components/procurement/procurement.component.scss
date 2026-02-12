@@ -970,48 +970,43 @@
   white-space: nowrap;
 
   &.status-blue {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: var(--badge-blue-bg);
+    color: var(--badge-blue-text);
   }
 
   &.status-yellow {
-    background: #fef3c7;
-    color: #b45309;
+    background: var(--badge-yellow-bg);
+    color: var(--badge-yellow-text);
   }
 
   &.status-orange {
-    background: #ffedd5;
-    color: #c2410c;
+    background: var(--badge-orange-bg);
+    color: var(--badge-orange-text);
   }
 
   &.status-purple {
-    background: #f3e8ff;
-    color: #7c3aed;
+    background: var(--badge-purple-bg);
+    color: var(--badge-purple-text);
   }
 
   &.status-green {
-    background: #dcfce7;
-    color: #16a34a;
+    background: var(--badge-green-bg);
+    color: var(--badge-green-text);
   }
 
   &.status-cyan {
-    background: #cffafe;
-    color: #0891b2;
-  }
-
-  &.status-blue {
-    background: #dbeafe;
-    color: #2563eb;
+    background: var(--badge-cyan-bg);
+    color: var(--badge-cyan-text);
   }
 
   &.status-gray {
-    background: #f1f5f9;
-    color: #64748b;
+    background: var(--badge-gray-bg);
+    color: var(--badge-gray-text);
   }
 
   &.status-red {
-    background: #fef2f2;
-    color: #dc2626;
+    background: var(--badge-red-bg);
+    color: var(--badge-red-text);
   }
 }
 
@@ -1042,23 +1037,23 @@
     }
 
     &.status-green {
-      background: #dcfce7;
-      color: #16a34a;
+      background: var(--badge-green-bg);
+      color: var(--badge-green-text);
     }
 
     &.status-yellow {
-      background: #fef3c7;
-      color: #b45309;
+      background: var(--badge-yellow-bg);
+      color: var(--badge-yellow-text);
     }
 
     &.status-blue {
-      background: #dbeafe;
-      color: #2563eb;
+      background: var(--badge-blue-bg);
+      color: var(--badge-blue-text);
     }
 
     &.status-red {
-      background: #fef2f2;
-      color: #dc2626;
+      background: var(--badge-red-bg);
+      color: var(--badge-red-text);
     }
   }
 }
@@ -1103,13 +1098,13 @@
     }
 
     &.status-blue {
-      background: #dbeafe;
-      color: #2563eb;
+      background: var(--badge-blue-bg);
+      color: var(--badge-blue-text);
     }
 
     &.status-purple {
-      background: #ede9fe;
-      color: #7c3aed;
+      background: var(--badge-purple-bg);
+      color: var(--badge-purple-text);
     }
   }
 }
@@ -1126,13 +1121,13 @@
   white-space: nowrap;
 
   &.status-blue {
-    background: #dbeafe;
-    color: #2563eb;
+    background: var(--badge-blue-bg);
+    color: var(--badge-blue-text);
   }
 
   &.status-purple {
-    background: #ede9fe;
-    color: #7c3aed;
+    background: var(--badge-purple-bg);
+    color: var(--badge-purple-text);
   }
 }
 
@@ -1705,6 +1700,13 @@
     .currency-flag {
       margin-right: 0.25rem;
     }
+
+    .quote-amount-cad {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-left: 0.375rem;
+    }
   }
 
   .quote-dates {
@@ -1748,7 +1750,7 @@
     top: 0.5rem;
     right: 0.5rem;
     font-size: 0.75rem;
-    color: #16a34a;
+    color: var(--badge-green-text);
     font-weight: 500;
   }
 }
@@ -2628,6 +2630,20 @@
         box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
       }
     }
+  }
+}
+
+/* Computed field style - for auto-calculated readonly fields */
+.computed-field {
+  cursor: default;
+
+  input, &input {
+    background-color: var(--computed-field-bg, #eef2ff) !important;
+    color: var(--text-secondary, #6b7280) !important;
+    border: 1px solid var(--computed-field-border, #c7d2fe) !important;
+    border-style: solid !important;
+    font-weight: 500;
+    cursor: default;
   }
 }
 

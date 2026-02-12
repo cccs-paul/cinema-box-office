@@ -1156,18 +1156,24 @@ export class SpendingComponent implements OnInit, OnDestroy {
    * Get the procurement price in CAD (final price if available, otherwise quoted).
    */
   getProcurementPriceCad(item: SpendingItem): number {
+    // Use final price if available, else quoted price
+    // For CAD currency, the raw price is already in CAD
     if (item.procurementFinalPriceCad != null) {
       return item.procurementFinalPriceCad;
+    }
+    if (item.procurementFinalPrice != null) {
+      // If final price exists but no CAD conversion, it's in CAD
+      const currency = item.procurementFinalPriceCurrency || item.procurementPriceCurrency || 'CAD';
+      if (currency === 'CAD') return item.procurementFinalPrice;
+      return 0; // Non-CAD without conversion
     }
     if (item.procurementQuotedPriceCad != null) {
       return item.procurementQuotedPriceCad;
     }
-    // Fallback to non-CAD prices if CAD versions not available
-    if (item.procurementFinalPrice != null) {
-      return item.procurementFinalPrice;
-    }
     if (item.procurementQuotedPrice != null) {
-      return item.procurementQuotedPrice;
+      const currency = item.procurementQuotedPriceCurrency || item.procurementPriceCurrency || 'CAD';
+      if (currency === 'CAD') return item.procurementQuotedPrice;
+      return 0; // Non-CAD without conversion
     }
     return 0;
   }
@@ -1691,6 +1697,31 @@ export class SpendingComponent implements OnInit, OnDestroy {
   getInvoiceTotalDisplay(item: SpendingItem): number {
     if (!item.invoices || item.invoices.length === 0) return 0;
     return item.invoices.reduce((sum, inv) => sum + (inv.amount || 0), 0);
+  }
+
+  /**
+   * Get invoice total in CAD across all invoices.
+   * Uses amountCad for non-CAD invoices, amount for CAD invoices.
+   */
+  getInvoiceTotalCadDisplay(item: SpendingItem): number {
+    if (!item.invoices || item.invoices.length === 0) {
+      // Fall back to server-computed value
+      return item.invoiceTotalCad || 0;
+    }
+    return item.invoices.reduce((sum, inv) => {
+      if (inv.currency === 'CAD' || !inv.currency) {
+        return sum + (inv.amount || 0);
+      }
+      return sum + (inv.amountCad || 0);
+    }, 0);
+  }
+
+  /**
+   * Check if any invoice for this item uses a different currency than the item.
+   */
+  hasMultipleCurrencies(item: SpendingItem): boolean {
+    if (!item.invoices || item.invoices.length === 0) return false;
+    return item.invoices.some(inv => inv.currency !== item.currency);
   }
 
   /**

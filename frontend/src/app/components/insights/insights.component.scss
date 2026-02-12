@@ -41,9 +41,9 @@
   margin-bottom: 1rem;
 
   &.alert-error {
-    background-color: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
+    background-color: var(--alert-error-bg);
+    color: var(--alert-error-text);
+    border: 1px solid var(--alert-error-border);
   }
 }
 

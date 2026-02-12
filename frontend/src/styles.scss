@@ -24,6 +24,87 @@
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --computed-field-bg: #eef2ff;
+  --computed-field-border: #c7d2fe;
+
+  /* Badge / label colors */
+  --badge-blue-bg: #dbeafe;
+  --badge-blue-text: #1d4ed8;
+  --badge-yellow-bg: #fef3c7;
+  --badge-yellow-text: #b45309;
+  --badge-orange-bg: #ffedd5;
+  --badge-orange-text: #c2410c;
+  --badge-purple-bg: #f3e8ff;
+  --badge-purple-text: #7c3aed;
+  --badge-green-bg: #dcfce7;
+  --badge-green-text: #16a34a;
+  --badge-cyan-bg: #cffafe;
+  --badge-cyan-text: #0891b2;
+  --badge-gray-bg: #f1f5f9;
+  --badge-gray-text: #64748b;
+  --badge-red-bg: #fef2f2;
+  --badge-red-text: #dc2626;
+
+  /* Semantic status colors */
+  --status-good-text: #16a34a;
+  --status-caution-text: #d97706;
+  --status-warning-text: #ea580c;
+  --status-neutral-text: #6b7280;
+  --status-info-text: #2563eb;
+  --status-danger-text: #dc2626;
+  --status-foreign-currency-text: #d97706;
+  --delete-hover-bg: #fef2f2;
+  --delete-hover-text: #dc2626;
+
+  /* Event icon backgrounds */
+  --event-pending-border: #f97316;
+  --event-pending-icon-bg: #fff7ed;
+  --event-approved-border: #22c55e;
+  --event-approved-icon-bg: #f0fdf4;
+  --event-rejected-border: #ef4444;
+  --event-rejected-icon-bg: #fef2f2;
+  --event-complete-border: #3b82f6;
+  --event-complete-icon-bg: #eff6ff;
+  --event-cancelled-border: #94a3b8;
+  --event-cancelled-icon-bg: #f8fafc;
+
+  /* Health banner gradients */
+  --banner-good-bg: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  --banner-good-text: #166534;
+  --banner-good-border: #86efac;
+  --banner-caution-bg: linear-gradient(135deg, #fef3c7, #fde68a);
+  --banner-caution-text: #92400e;
+  --banner-caution-border: #fcd34d;
+  --banner-warning-bg: linear-gradient(135deg, #ffedd5, #fed7aa);
+  --banner-warning-text: #c2410c;
+  --banner-warning-border: #fdba74;
+  --banner-danger-bg: linear-gradient(135deg, #fee2e2, #fecaca);
+  --banner-danger-text: #dc2626;
+  --banner-danger-border: #fca5a5;
+
+  /* Progress bar */
+  --progress-track-bg: #e5e7eb;
+  --progress-good: #22c55e;
+  --progress-caution: #f59e0b;
+  --progress-warning: #f97316;
+  --progress-danger: #ef4444;
+
+  /* Section header gradients */
+  --header-funding-bg: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  --header-funding-text: #166534;
+  --header-spending-bg: linear-gradient(135deg, #fee2e2, #fecaca);
+  --header-spending-text: #dc2626;
+  --header-procurement-bg: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  --header-procurement-text: #1e40af;
+
+  /* Amount colors */
+  --amount-funding: #059669;
+  --amount-spending: #dc2626;
+
+  /* Alert / message */
+  --alert-error-bg: #fef2f2;
+  --alert-error-text: #dc2626;
+  --alert-error-border: #fee2e2;
 }
 
 html.dark-theme {
@@ -46,6 +127,87 @@ html.dark-theme {
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --computed-field-bg: #1e2433;
+  --computed-field-border: #3b4560;
+
+  /* Badge / label colors – dark variants */
+  --badge-blue-bg: rgba(59, 130, 246, 0.2);
+  --badge-blue-text: #93bbfd;
+  --badge-yellow-bg: rgba(251, 191, 36, 0.2);
+  --badge-yellow-text: #fbbf24;
+  --badge-orange-bg: rgba(249, 115, 22, 0.2);
+  --badge-orange-text: #fb923c;
+  --badge-purple-bg: rgba(139, 92, 246, 0.2);
+  --badge-purple-text: #c4b5fd;
+  --badge-green-bg: rgba(34, 197, 94, 0.2);
+  --badge-green-text: #4ade80;
+  --badge-cyan-bg: rgba(6, 182, 212, 0.2);
+  --badge-cyan-text: #22d3ee;
+  --badge-gray-bg: rgba(148, 163, 184, 0.15);
+  --badge-gray-text: #94a3b8;
+  --badge-red-bg: rgba(239, 68, 68, 0.2);
+  --badge-red-text: #fca5a5;
+
+  /* Semantic status colors */
+  --status-good-text: #4ade80;
+  --status-caution-text: #fbbf24;
+  --status-warning-text: #fb923c;
+  --status-neutral-text: #9ca3af;
+  --status-info-text: #60a5fa;
+  --status-danger-text: #f87171;
+  --status-foreign-currency-text: #fbbf24;
+  --delete-hover-bg: rgba(239, 68, 68, 0.15);
+  --delete-hover-text: #fca5a5;
+
+  /* Event icon backgrounds */
+  --event-pending-border: #fb923c;
+  --event-pending-icon-bg: rgba(249, 115, 22, 0.15);
+  --event-approved-border: #4ade80;
+  --event-approved-icon-bg: rgba(34, 197, 94, 0.15);
+  --event-rejected-border: #f87171;
+  --event-rejected-icon-bg: rgba(239, 68, 68, 0.15);
+  --event-complete-border: #60a5fa;
+  --event-complete-icon-bg: rgba(59, 130, 246, 0.15);
+  --event-cancelled-border: #64748b;
+  --event-cancelled-icon-bg: rgba(148, 163, 184, 0.15);
+
+  /* Health banner gradients */
+  --banner-good-bg: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+  --banner-good-text: #4ade80;
+  --banner-good-border: rgba(34, 197, 94, 0.3);
+  --banner-caution-bg: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.1));
+  --banner-caution-text: #fbbf24;
+  --banner-caution-border: rgba(251, 191, 36, 0.3);
+  --banner-warning-bg: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.1));
+  --banner-warning-text: #fb923c;
+  --banner-warning-border: rgba(249, 115, 22, 0.3);
+  --banner-danger-bg: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+  --banner-danger-text: #f87171;
+  --banner-danger-border: rgba(239, 68, 68, 0.3);
+
+  /* Progress bar */
+  --progress-track-bg: #404040;
+  --progress-good: #4ade80;
+  --progress-caution: #fbbf24;
+  --progress-warning: #fb923c;
+  --progress-danger: #f87171;
+
+  /* Section header gradients */
+  --header-funding-bg: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+  --header-funding-text: #4ade80;
+  --header-spending-bg: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+  --header-spending-text: #f87171;
+  --header-procurement-bg: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+  --header-procurement-text: #93bbfd;
+
+  /* Amount colors */
+  --amount-funding: #34d399;
+  --amount-spending: #f87171;
+
+  /* Alert / message */
+  --alert-error-bg: rgba(239, 68, 68, 0.15);
+  --alert-error-text: #fca5a5;
+  --alert-error-border: rgba(239, 68, 68, 0.25);
 }
 
 * {

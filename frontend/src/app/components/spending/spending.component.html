@@ -368,8 +368,8 @@
                 <span class="price-row" *ngIf="item.procurementFinalPrice != null">
                   <span class="price-label">{{ 'procurement.finalPrice' | translate }}:</span>
                   <span class="price-value">
-                    {{ formatCurrency(item.procurementFinalPrice, item.procurementPriceCurrency || 'CAD') }}
-                    <span class="price-cad" *ngIf="item.procurementPriceCurrency !== 'CAD' && item.procurementFinalPriceCad != null">
+                    {{ formatCurrency(item.procurementFinalPrice, item.procurementFinalPriceCurrency || item.procurementPriceCurrency || 'CAD') }}
+                    <span class="price-cad" *ngIf="(item.procurementFinalPriceCurrency || item.procurementPriceCurrency) !== 'CAD' && item.procurementFinalPriceCad != null">
                       ({{ formatCurrency(item.procurementFinalPriceCad, 'CAD') }})
                     </span>
                   </span>
@@ -377,8 +377,8 @@
                 <span class="price-row" *ngIf="item.procurementFinalPrice == null && item.procurementQuotedPrice != null">
                   <span class="price-label">{{ 'procurement.quotedPrice' | translate }}:</span>
                   <span class="price-value">
-                    {{ formatCurrency(item.procurementQuotedPrice, item.procurementPriceCurrency || 'CAD') }}
-                    <span class="price-cad" *ngIf="item.procurementPriceCurrency !== 'CAD' && item.procurementQuotedPriceCad != null">
+                    {{ formatCurrency(item.procurementQuotedPrice, item.procurementQuotedPriceCurrency || item.procurementPriceCurrency || 'CAD') }}
+                    <span class="price-cad" *ngIf="(item.procurementQuotedPriceCurrency || item.procurementPriceCurrency) !== 'CAD' && item.procurementQuotedPriceCad != null">
                       ({{ formatCurrency(item.procurementQuotedPriceCad, 'CAD') }})
                     </span>
                   </span>
@@ -581,8 +581,8 @@
           <div class="section-header">
             <label>🧾 {{ 'spending.invoicesReceipts' | translate }} ({{ item.invoiceCount || 0 }})</label>
             <span class="invoice-total-badge" *ngIf="item.invoiceCount && item.invoiceCount > 0">
-              {{ 'spending.invoiceTotal' | translate }}: {{ formatCurrency(getInvoiceTotalDisplay(item), item.currency) }}
-              <span class="invoice-mismatch-icon" *ngIf="hasInvoiceMismatch(item)" [title]="('spending.invoiceMismatchTooltip' | translate) + ' ' + ('spending.spendingTotal' | translate) + ': ' + formatCurrency(calculateTotal(item), item.currency) + ' vs ' + ('spending.invoiceTotal' | translate) + ': ' + formatCurrency(getInvoiceTotalDisplay(item), item.currency)">
+              {{ 'spending.invoiceTotal' | translate }}: {{ formatCurrency(getInvoiceTotalCadDisplay(item), 'CAD') }}
+              <span class="invoice-mismatch-icon" *ngIf="hasInvoiceMismatch(item)" [title]="('spending.invoiceMismatchTooltip' | translate) + ' ' + ('spending.spendingTotal' | translate) + ': ' + formatCurrency(calculateTotalCad(item), 'CAD') + ' vs ' + ('spending.invoiceTotal' | translate) + ': ' + formatCurrency(getInvoiceTotalCadDisplay(item), 'CAD')">
                 ⚠️
               </span>
             </span>
@@ -767,8 +767,8 @@
           <div class="invoices-collapsed" *ngIf="(selectedItemInvoices.length === 0 || invoiceItemId !== item.id) && item.invoiceCount && item.invoiceCount > 0 && addInvoiceItemId !== item.id">
             <div class="invoice-summary-row">
               <span class="invoice-count">{{ item.invoiceCount }} {{ item.invoiceCount === 1 ? ('spending.invoice' | translate) : ('spending.invoicesLabel' | translate) }}</span>
-              <span class="invoice-total-compact">{{ formatCurrency(getInvoiceTotalDisplay(item), item.currency) }}</span>
-              <span class="invoice-mismatch-icon" *ngIf="hasInvoiceMismatch(item)" [title]="('spending.invoiceMismatchTooltip' | translate) + ' ' + ('spending.spendingTotal' | translate) + ': ' + formatCurrency(calculateTotal(item), item.currency) + ' vs ' + ('spending.invoiceTotal' | translate) + ': ' + formatCurrency(getInvoiceTotalDisplay(item), item.currency)">⚠️</span>
+              <span class="invoice-total-compact">{{ formatCurrency(getInvoiceTotalCadDisplay(item), 'CAD') }}</span>
+              <span class="invoice-mismatch-icon" *ngIf="hasInvoiceMismatch(item)" [title]="('spending.invoiceMismatchTooltip' | translate) + ' ' + ('spending.spendingTotal' | translate) + ': ' + formatCurrency(calculateTotalCad(item), 'CAD') + ' vs ' + ('spending.invoiceTotal' | translate) + ': ' + formatCurrency(getInvoiceTotalCadDisplay(item), 'CAD')">⚠️</span>
             </div>
             <button class="btn-link" (click)="loadInvoicesForItem(item)">{{ 'common.showAll' | translate }} ▶</button>
           </div>
@@ -807,8 +807,8 @@
               <div class="price-row" *ngIf="item.procurementFinalPrice != null">
                 <span class="price-label">{{ 'procurement.finalPrice' | translate }}:</span>
                 <span class="price-value">
-                  {{ formatCurrency(item.procurementFinalPrice, item.procurementPriceCurrency || 'CAD') }}
-                  <span class="price-cad" *ngIf="item.procurementPriceCurrency !== 'CAD' && item.procurementFinalPriceCad != null">
+                  {{ formatCurrency(item.procurementFinalPrice, item.procurementFinalPriceCurrency || item.procurementPriceCurrency || 'CAD') }}
+                  <span class="price-cad" *ngIf="(item.procurementFinalPriceCurrency || item.procurementPriceCurrency) !== 'CAD' && item.procurementFinalPriceCad != null">
                     ({{ formatCurrency(item.procurementFinalPriceCad, 'CAD') }})
                   </span>
                 </span>
@@ -816,8 +816,8 @@
               <div class="price-row" *ngIf="item.procurementFinalPrice == null && item.procurementQuotedPrice != null">
                 <span class="price-label">{{ 'procurement.quotedPrice' | translate }}:</span>
                 <span class="price-value">
-                  {{ formatCurrency(item.procurementQuotedPrice, item.procurementPriceCurrency || 'CAD') }}
-                  <span class="price-cad" *ngIf="item.procurementPriceCurrency !== 'CAD' && item.procurementQuotedPriceCad != null">
+                  {{ formatCurrency(item.procurementQuotedPrice, item.procurementQuotedPriceCurrency || item.procurementPriceCurrency || 'CAD') }}
+                  <span class="price-cad" *ngIf="(item.procurementQuotedPriceCurrency || item.procurementPriceCurrency) !== 'CAD' && item.procurementQuotedPriceCad != null">
                     ({{ formatCurrency(item.procurementQuotedPriceCad, 'CAD') }})
                   </span>
                 </span>

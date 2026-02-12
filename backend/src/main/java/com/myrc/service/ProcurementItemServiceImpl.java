@@ -275,7 +275,18 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             item.setFinalPriceCurrency(com.myrc.model.Currency.CAD);
         }
         item.setFinalPriceExchangeRate(dto.getFinalPriceExchangeRate());
-        item.setFinalPriceCad(dto.getFinalPriceCad());
+        // Auto-compute finalPriceCad from price × exchangeRate
+        if (item.getFinalPrice() != null) {
+            if (item.getFinalPriceCurrency() == com.myrc.model.Currency.CAD) {
+                item.setFinalPriceCad(item.getFinalPrice());
+            } else if (item.getFinalPriceExchangeRate() != null) {
+                item.setFinalPriceCad(item.getFinalPrice().multiply(item.getFinalPriceExchangeRate()));
+            } else {
+                item.setFinalPriceCad(dto.getFinalPriceCad());
+            }
+        } else {
+            item.setFinalPriceCad(null);
+        }
 
         // Set quoted price fields
         item.setQuotedPrice(dto.getQuotedPrice());
@@ -289,7 +300,18 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
             item.setQuotedPriceCurrency(com.myrc.model.Currency.CAD);
         }
         item.setQuotedPriceExchangeRate(dto.getQuotedPriceExchangeRate());
-        item.setQuotedPriceCad(dto.getQuotedPriceCad());
+        // Auto-compute quotedPriceCad from price × exchangeRate
+        if (item.getQuotedPrice() != null) {
+            if (item.getQuotedPriceCurrency() == com.myrc.model.Currency.CAD) {
+                item.setQuotedPriceCad(item.getQuotedPrice());
+            } else if (item.getQuotedPriceExchangeRate() != null) {
+                item.setQuotedPriceCad(item.getQuotedPrice().multiply(item.getQuotedPriceExchangeRate()));
+            } else {
+                item.setQuotedPriceCad(dto.getQuotedPriceCad());
+            }
+        } else {
+            item.setQuotedPriceCad(null);
+        }
         
         // Set category if provided
         if (dto.getCategoryId() != null) {
@@ -399,8 +421,15 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         if (dto.getFinalPriceExchangeRate() != null) {
             item.setFinalPriceExchangeRate(dto.getFinalPriceExchangeRate());
         }
-        if (dto.getFinalPriceCad() != null) {
-            item.setFinalPriceCad(dto.getFinalPriceCad());
+        // Auto-compute finalPriceCad from price × exchangeRate
+        if (item.getFinalPrice() != null) {
+            if (item.getFinalPriceCurrency() == com.myrc.model.Currency.CAD) {
+                item.setFinalPriceCad(item.getFinalPrice());
+            } else if (item.getFinalPriceExchangeRate() != null) {
+                item.setFinalPriceCad(item.getFinalPrice().multiply(item.getFinalPriceExchangeRate()));
+            }
+        } else {
+            item.setFinalPriceCad(null);
         }
 
         // Update quoted price fields
@@ -417,8 +446,15 @@ public class ProcurementItemServiceImpl implements ProcurementItemService {
         if (dto.getQuotedPriceExchangeRate() != null) {
             item.setQuotedPriceExchangeRate(dto.getQuotedPriceExchangeRate());
         }
-        if (dto.getQuotedPriceCad() != null) {
-            item.setQuotedPriceCad(dto.getQuotedPriceCad());
+        // Auto-compute quotedPriceCad from price × exchangeRate
+        if (item.getQuotedPrice() != null) {
+            if (item.getQuotedPriceCurrency() == com.myrc.model.Currency.CAD) {
+                item.setQuotedPriceCad(item.getQuotedPrice());
+            } else if (item.getQuotedPriceExchangeRate() != null) {
+                item.setQuotedPriceCad(item.getQuotedPrice().multiply(item.getQuotedPriceExchangeRate()));
+            }
+        } else {
+            item.setQuotedPriceCad(null);
         }
         
         // Update category (null removes the category)

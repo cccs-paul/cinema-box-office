@@ -1223,7 +1223,7 @@ textarea.form-control {
     color: var(--text-secondary);
 
     &.foreign-currency {
-      color: #d97706;
+      color: var(--status-foreign-currency-text);
     }
   }
 
@@ -1260,8 +1260,8 @@ textarea.form-control {
   }
 
   &.btn-delete:hover {
-    background: #fef2f2;
-    color: #dc2626;
+    background: var(--delete-hover-bg);
+    color: var(--delete-hover-text);
   }
 }
 
@@ -2141,33 +2141,33 @@ textarea.form-control {
 }
 
 .status-draft, .status-secondary {
-  background: rgba(156, 163, 175, 0.15);
-  color: #6b7280;
+  background: var(--badge-gray-bg);
+  color: var(--badge-gray-text);
 }
 
 .status-pending, .status-warning {
-  background: rgba(251, 191, 36, 0.15);
-  color: #d97706;
+  background: var(--badge-yellow-bg);
+  color: var(--badge-yellow-text);
 }
 
 .status-approved, .status-info {
-  background: rgba(59, 130, 246, 0.15);
-  color: #2563eb;
+  background: var(--badge-blue-bg);
+  color: var(--badge-blue-text);
 }
 
 .status-active, .status-primary {
-  background: rgba(79, 70, 229, 0.15);
-  color: #4338ca;
+  background: var(--badge-purple-bg);
+  color: var(--badge-purple-text);
 }
 
 .status-complete, .status-success {
-  background: rgba(34, 197, 94, 0.15);
-  color: #16a34a;
+  background: var(--badge-green-bg);
+  color: var(--badge-green-text);
 }
 
 .status-cancelled, .status-danger {
-  background: rgba(239, 68, 68, 0.15);
-  color: #dc2626;
+  background: var(--badge-red-bg);
+  color: var(--badge-red-text);
 }
 
 /* Actions */
@@ -2386,28 +2386,28 @@ textarea.form-control {
 
   /* Event type color variations */
   &.status-pending {
-    border-left-color: #f97316;
-    .event-icon { background-color: #fff7ed; }
+    border-left-color: var(--event-pending-border);
+    .event-icon { background-color: var(--event-pending-icon-bg); }
   }
 
   &.status-approved {
-    border-left-color: #22c55e;
-    .event-icon { background-color: #f0fdf4; }
+    border-left-color: var(--event-approved-border);
+    .event-icon { background-color: var(--event-approved-icon-bg); }
   }
 
   &.status-rejected {
-    border-left-color: #ef4444;
-    .event-icon { background-color: #fef2f2; }
+    border-left-color: var(--event-rejected-border);
+    .event-icon { background-color: var(--event-rejected-icon-bg); }
   }
 
   &.status-complete {
-    border-left-color: #3b82f6;
-    .event-icon { background-color: #eff6ff; }
+    border-left-color: var(--event-complete-border);
+    .event-icon { background-color: var(--event-complete-icon-bg); }
   }
 
   &.status-cancelled {
-    border-left-color: #94a3b8;
-    .event-icon { background-color: #f8fafc; }
+    border-left-color: var(--event-cancelled-border);
+    .event-icon { background-color: var(--event-cancelled-icon-bg); }
   }
 }
 

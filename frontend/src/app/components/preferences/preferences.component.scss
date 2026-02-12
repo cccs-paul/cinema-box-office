@@ -288,24 +288,24 @@
   font-size: var(--a11y-category-badge-font-size, 0.75rem);
   padding: var(--a11y-badge-padding-vertical, 0.15rem) var(--a11y-badge-padding-horizontal, 0.5rem);
   border-radius: var(--a11y-badge-border-radius, 0.25rem);
-  background: var(--category-badge-bg, #e2e3e5);
-  color: var(--category-badge-text, #383d41);
+  background: var(--badge-gray-bg);
+  color: var(--badge-gray-text);
 }
 
 .preview-tracking-badge {
   font-size: var(--a11y-tracking-badge-font-size, 0.65rem);
   padding: var(--a11y-badge-padding-vertical, 0.15rem) var(--a11y-badge-padding-horizontal, 0.5rem);
   border-radius: var(--a11y-badge-border-radius, 0.25rem);
-  background: var(--success-bg, #d4edda);
-  color: var(--success-text, #155724);
+  background: var(--badge-green-bg);
+  color: var(--badge-green-text);
 }
 
 .preview-currency-badge {
   font-size: var(--a11y-currency-badge-font-size, 0.8rem);
   padding: var(--a11y-badge-padding-vertical, 0.15rem) var(--a11y-badge-padding-horizontal, 0.5rem);
   border-radius: var(--a11y-badge-border-radius, 0.25rem);
-  background: var(--currency-badge-bg, #d1ecf1);
-  color: var(--currency-badge-text, #0c5460);
+  background: var(--badge-cyan-bg);
+  color: var(--badge-cyan-text);
 }
 
 .preview-total-amount {
