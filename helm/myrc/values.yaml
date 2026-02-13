@@ -1,0 +1,326 @@
+# =============================================================================
+# myRC Helm Chart - Default Values
+# =============================================================================
+# This file contains the default values for all configurable parameters.
+# Override values by passing --values <file> or --set key=value to helm install.
+#
+# Deployment scenarios are provided in the values/ directory:
+#   values-dev.yaml             - Local development (app accounts, Flyway create-drop)
+#   values-test.yaml            - Test / QA environment
+#   values-prod.yaml            - Production (hardened, HA)
+#   values-app-accounts.yaml    - App-account-only authentication
+#   values-ldap.yaml            - LDAP + app account authentication (existing LDAP)
+#   values-testldap.yaml        - Test LDAP (bundled OpenLDAP with Futurama users)
+#   values-ldap-app.yaml        - LDAP + app accounts
+#   values-oauth2.yaml          - OAuth2 / OIDC authentication
+# =============================================================================
+
+# -- Global settings
+global:
+  # -- Namespace for all resources
+  namespace: myrc
+  # -- Common labels applied to every resource
+  labels:
+    app: myrc
+    version: "1.0.0"
+
+# -- Image pull secrets (list of secret names)
+imagePullSecrets: []
+
+# =============================================================================
+# Backend (Spring Boot API)
+# =============================================================================
+backend:
+  # -- Number of replicas
+  replicaCount: 2
+
+  image:
+    repository: myrc-api
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+  # -- Spring profiles to activate (comma-separated)
+  springProfiles: "prod"
+
+  # -- Extra environment variables (list of {name, value} or {name, valueFrom})
+  extraEnv: []
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+  # Probes
+  startupProbe:
+    httpGet:
+      path: /api/actuator/health/liveness
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 24
+
+  livenessProbe:
+    httpGet:
+      path: /api/actuator/health/liveness
+      port: 8080
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /api/actuator/health/readiness
+      port: 8080
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  # -- Pod anti-affinity to spread replicas across nodes
+  podAntiAffinity: true
+
+# =============================================================================
+# Frontend (Angular / Nginx)
+# =============================================================================
+frontend:
+  replicaCount: 2
+
+  image:
+    repository: myrc-web
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+  podAntiAffinity: true
+
+# =============================================================================
+# PostgreSQL Database
+# =============================================================================
+postgresql:
+  # -- Deploy a PostgreSQL StatefulSet. Set to false to use an external database.
+  enabled: true
+
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
+
+  auth:
+    database: myrc
+    username: myrc
+    # -- Password (read from secret in production)
+    password: myrc_password
+
+  storage:
+    size: 10Gi
+    storageClassName: standard
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# -- External database (used when postgresql.enabled=false)
+externalDatabase:
+  host: ""
+  port: 5432
+  database: myrc
+  username: myrc
+  # -- Set via --set or use existingSecret
+  password: ""
+  existingSecret: ""
+  existingSecretPasswordKey: db-password
+
+# =============================================================================
+# Flyway Migration Settings
+# =============================================================================
+flyway:
+  enabled: true
+  baselineOnMigrate: true
+  baselineVersion: "0"
+
+# =============================================================================
+# JPA / Hibernate
+# =============================================================================
+jpa:
+  ddlAuto: validate
+  showSql: false
+
+# =============================================================================
+# Ingress
+# =============================================================================
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+  host: myrc.example.com
+  tls:
+    enabled: true
+    secretName: myrc-tls
+
+# =============================================================================
+# CORS
+# =============================================================================
+cors:
+  allowedOrigins: "https://myrc.example.com"
+
+# =============================================================================
+# File Upload Limits
+# =============================================================================
+upload:
+  maxFileSize: 50MB
+  maxRequestSize: 50MB
+
+# =============================================================================
+# Logging
+# =============================================================================
+logging:
+  rootLevel: INFO
+  appLevel: INFO
+
+# =============================================================================
+# Authentication & Security
+# =============================================================================
+auth:
+  # -- App-account (local database) authentication
+  appAccount:
+    enabled: true
+    allowRegistration: true
+
+  # -- LDAP authentication
+  ldap:
+    enabled: false
+    url: "ldap://ldap.example.com:389"
+    baseDn: "dc=example,dc=com"
+    managerDn: "cn=admin,dc=example,dc=com"
+    managerPassword: ""
+    userSearchBase: "ou=users"
+    userSearchFilter: "(uid={0})"
+    groupSearchBase: "ou=groups"
+    groupSearchFilter: "(member={0})"
+    groupNameAttribute: "cn"
+    connectTimeout: 5000
+    readTimeout: 5000
+    allowSignUp: true
+    skipOrgRoleSync: false
+    # -- Attribute mappings
+    attributes:
+      username: uid
+      email: mail
+      name: cn
+      surname: sn
+      givenName: givenName
+      memberOf: memberOf
+    # -- Group-to-role mappings (list)
+    groupMappings: []
+    #   - groupDn: "cn=admins,ou=groups,dc=example,dc=com"
+    #     role: ADMIN
+    #     isAdmin: true
+    #   - groupDn: "cn=users,ou=groups,dc=example,dc=com"
+    #     role: USER
+    #     isAdmin: false
+
+    # -- TLS/SSL settings
+    ssl:
+      enabled: false
+      startTls: false
+      skipVerify: false
+      minTlsVersion: TLSv1.2
+
+  # -- OAuth2 / OIDC authentication
+  oauth2:
+    enabled: false
+    # -- Provider configurations
+    providers: {}
+    #   google:
+    #     clientId: ""
+    #     clientSecret: ""
+    #     scope: "openid,profile,email"
+    #   github:
+    #     clientId: ""
+    #     clientSecret: ""
+    #     scope: "user:email"
+
+# =============================================================================
+# Test LDAP (bundled OpenLDAP for dev/test)
+# =============================================================================
+testLdap:
+  # -- Deploy a test OpenLDAP server with Futurama users
+  enabled: false
+  image:
+    repository: ghcr.io/rroemhild/docker-test-openldap
+    tag: master
+    pullPolicy: IfNotPresent
+  service:
+    ldapPort: 10389
+    ldapsPort: 10636
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+# =============================================================================
+# Service Account
+# =============================================================================
+serviceAccount:
+  create: true
+  name: myrc
+  annotations: {}
+
+# =============================================================================
+# RBAC
+# =============================================================================
+rbac:
+  create: true

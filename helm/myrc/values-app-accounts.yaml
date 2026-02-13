@@ -1,0 +1,21 @@
+# =============================================================================
+# myRC Helm Values - App Accounts Only
+# =============================================================================
+# Usage:
+#   helm install myrc ./helm/myrc -f helm/myrc/values-app-accounts.yaml
+#
+# Characteristics:
+#   - Only local database accounts are enabled
+#   - No LDAP, no OAuth2
+#   - Self-registration enabled
+#   - Suitable for standalone / disconnected deployments
+# =============================================================================
+
+auth:
+  appAccount:
+    enabled: true
+    allowRegistration: true
+  ldap:
+    enabled: false
+  oauth2:
+    enabled: false

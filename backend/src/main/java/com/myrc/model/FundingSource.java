@@ -37,7 +37,13 @@ public enum FundingSource {
    * Approved Deficit funding source.
    * Represents funding from an approved deficit.
    */
-  APPROVED_DEFICIT;
+  APPROVED_DEFICIT,
+
+  /**
+   * Pressure funding source.
+   * Represents funding from pressure-based budget requests (unfunded requirements).
+   */
+  PRESSURE;
 
   /**
    * Get the display label for this funding source.
@@ -52,6 +58,8 @@ public enum FundingSource {
         return "On-Ramp";
       case APPROVED_DEFICIT:
         return "Approved Deficit";
+      case PRESSURE:
+        return "Pressure";
       default:
         return this.name();
     }

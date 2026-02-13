@@ -6,6 +6,7 @@ myRC is a comprehensive fiscal year and responsibility centre management system 
 
 ### Key Features
 - Funding, spending, and procurement item management
+- Four funding source types: Business Plan, On-Ramp, Approved Deficit, and Pressure
 - Multi-currency support with exchange rate tracking
 - File attachments for invoices, events, and quotes
 - JSON export/import with base64-encoded file attachments
@@ -39,6 +40,7 @@ myrc/
 │   ├── nginx.conf                     # Nginx web server configuration
 │   └── .dockerignore                  # Docker build exclusions
 ├── docker-compose.yml                 # Multi-container orchestration
+├── helm/myrc/                         # Helm chart for all deployment scenarios
 └── pom.xml                            # Root Maven POM
 
 ```
@@ -167,6 +169,36 @@ docker build -f frontend/Dockerfile -t myrc-web .
 ```bash
 docker run -p 80:80 myrc-web
 ```
+
+## Helm Deployment (Recommended)
+
+The Helm chart supports all deployment scenarios with composable values files:
+
+```bash
+# Build images first
+./build.sh
+
+# Development (single replicas, debug logging)
+helm install myrc-dev ./helm/myrc -f helm/myrc/values-dev.yaml
+
+# Production (HA, TLS, autoscaling)
+helm install myrc ./helm/myrc -f helm/myrc/values-prod.yaml
+
+# Test LDAP (bundled OpenLDAP with Futurama users)
+helm install myrc-testldap ./helm/myrc -f helm/myrc/values-testldap.yaml
+
+# LDAP + App Accounts (existing corporate LDAP)
+helm install myrc ./helm/myrc -f helm/myrc/values-ldap-app.yaml \
+  --set auth.ldap.url=ldap://ldap.corp.com:389 \
+  --set auth.ldap.managerPassword=<PASSWORD>
+
+# OAuth2
+helm install myrc ./helm/myrc -f helm/myrc/values-oauth2.yaml \
+  --set auth.oauth2.providers.google.clientId=<ID> \
+  --set auth.oauth2.providers.google.clientSecret=<SECRET>
+```
+
+See [docs/HELM.md](docs/HELM.md) and [helm/myrc/README.md](helm/myrc/README.md) for full documentation.
 
 ## Docker Compose Setup
 
@@ -428,5 +460,5 @@ For issues and questions, please open an issue in the repository.
 
 ---
 
-**Last Updated**: January 16, 2026
+**Last Updated**: February 13, 2026
 **Version**: 1.0.0

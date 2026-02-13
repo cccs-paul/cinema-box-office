@@ -1,0 +1,99 @@
+# =============================================================================
+# myRC Helm Values - Test LDAP (Bundled OpenLDAP)
+# =============================================================================
+# Usage:
+#   helm install myrc-testldap ./helm/myrc -f helm/myrc/values-testldap.yaml
+#
+# Characteristics:
+#   - Deploys a bundled OpenLDAP server (ghcr.io/rroemhild/docker-test-openldap)
+#   - Pre-populated with Futurama / Planet Express test users
+#   - LDAP-only authentication (app accounts disabled)
+#   - Ideal for development and integration testing
+#
+# Test Users (password = username):
+#   professor / professor  → admin_staff group → ADMIN role
+#   hermes / hermes        → admin_staff group → ADMIN role
+#   fry / fry              → ship_crew group   → USER role
+#   leela / leela          → ship_crew group   → USER role
+#   bender / bender        → ship_crew group   → USER role
+# =============================================================================
+
+backend:
+  replicaCount: 1
+  springProfiles: "dev"
+  autoscaling:
+    enabled: false
+  podDisruptionBudget:
+    enabled: false
+  podAntiAffinity: false
+
+frontend:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  podDisruptionBudget:
+    enabled: false
+  podAntiAffinity: false
+
+postgresql:
+  enabled: true
+  storage:
+    size: 5Gi
+
+logging:
+  rootLevel: INFO
+  appLevel: DEBUG
+
+cors:
+  allowedOrigins: "http://localhost:4200,http://localhost:3000,http://localhost:80,http://localhost"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  host: myrc.local
+  tls:
+    enabled: false
+    secretName: ""
+
+# -- Enable the bundled test LDAP
+testLdap:
+  enabled: true
+
+auth:
+  appAccount:
+    enabled: false
+    allowRegistration: false
+  ldap:
+    enabled: true
+    # URL is auto-configured to the bundled testldap service
+    url: ""
+    baseDn: "dc=planetexpress,dc=com"
+    managerDn: "cn=admin,dc=planetexpress,dc=com"
+    managerPassword: "GoodNewsEveryone"
+    userSearchBase: "ou=people"
+    userSearchFilter: "(uid={0})"
+    groupSearchBase: "ou=people"
+    groupSearchFilter: "(member={0})"
+    groupNameAttribute: "cn"
+    connectTimeout: 5000
+    readTimeout: 5000
+    allowSignUp: true
+    skipOrgRoleSync: false
+    attributes:
+      username: uid
+      email: mail
+      name: cn
+      surname: sn
+      givenName: givenName
+      memberOf: memberOf
+    groupMappings:
+      - groupDn: "cn=admin_staff,ou=people,dc=planetexpress,dc=com"
+        role: ADMIN
+        isAdmin: true
+      - groupDn: "cn=ship_crew,ou=people,dc=planetexpress,dc=com"
+        role: USER
+        isAdmin: false
+  oauth2:
+    enabled: false

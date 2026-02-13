@@ -1,0 +1,80 @@
+# =============================================================================
+# myRC Helm Values - Minikube / Local Kubernetes
+# =============================================================================
+# Usage:
+#   helm install myrc-local ./helm/myrc -f helm/myrc/values-minikube.yaml
+#
+# Characteristics:
+#   - Single replicas for all components
+#   - No HPA / PDB (metrics-server may not be available)
+#   - NodePort services for direct access without ingress controller
+#   - Reduced resource requests for constrained environments
+#   - App accounts with self-registration
+# =============================================================================
+
+backend:
+  replicaCount: 1
+  springProfiles: "dev"
+  service:
+    type: NodePort
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  autoscaling:
+    enabled: false
+  podDisruptionBudget:
+    enabled: false
+  podAntiAffinity: false
+
+frontend:
+  replicaCount: 1
+  service:
+    type: NodePort
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  autoscaling:
+    enabled: false
+  podDisruptionBudget:
+    enabled: false
+  podAntiAffinity: false
+
+postgresql:
+  enabled: true
+  storage:
+    size: 2Gi
+    storageClassName: standard
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 512Mi
+
+logging:
+  rootLevel: INFO
+  appLevel: DEBUG
+
+cors:
+  allowedOrigins: "http://localhost,http://localhost:4200,http://localhost:30080"
+
+ingress:
+  enabled: false
+
+auth:
+  appAccount:
+    enabled: true
+    allowRegistration: true
+  ldap:
+    enabled: false
+  oauth2:
+    enabled: false

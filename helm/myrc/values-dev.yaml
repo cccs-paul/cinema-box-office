@@ -1,0 +1,61 @@
+# =============================================================================
+# myRC Helm Values - Development Environment
+# =============================================================================
+# Usage:
+#   helm install myrc-dev ./helm/myrc -f helm/myrc/values-dev.yaml
+#
+# Characteristics:
+#   - Single replicas (save resources)
+#   - App accounts enabled with self-registration
+#   - Debug logging
+#   - No TLS ingress
+#   - Flyway + validate DDL
+# =============================================================================
+
+backend:
+  replicaCount: 1
+  springProfiles: "dev"
+  autoscaling:
+    enabled: false
+  podDisruptionBudget:
+    enabled: false
+  podAntiAffinity: false
+
+frontend:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  podDisruptionBudget:
+    enabled: false
+  podAntiAffinity: false
+
+postgresql:
+  enabled: true
+  storage:
+    size: 5Gi
+
+logging:
+  rootLevel: INFO
+  appLevel: DEBUG
+
+cors:
+  allowedOrigins: "http://localhost:4200,http://localhost:3000,http://localhost:80,http://localhost"
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  host: myrc.local
+  tls:
+    enabled: false
+    secretName: ""
+
+auth:
+  appAccount:
+    enabled: true
+    allowRegistration: true
+  ldap:
+    enabled: false
+  oauth2:
+    enabled: false

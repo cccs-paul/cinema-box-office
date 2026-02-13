@@ -1,0 +1,39 @@
+# =============================================================================
+# myRC Helm Values - OAuth2 / OIDC Authentication
+# =============================================================================
+# Usage:
+#   helm install myrc ./helm/myrc -f helm/myrc/values-oauth2.yaml \
+#     --set auth.oauth2.providers.google.clientId=<CLIENT_ID> \
+#     --set auth.oauth2.providers.google.clientSecret=<CLIENT_SECRET>
+#
+# Characteristics:
+#   - OAuth2 / OpenID Connect authentication enabled
+#   - Supports Google, GitHub, Azure AD, and generic OIDC providers
+#   - App accounts disabled by default (override if needed)
+#   - Requires client credentials from your OAuth2 provider
+# =============================================================================
+
+auth:
+  appAccount:
+    enabled: false
+    allowRegistration: false
+  ldap:
+    enabled: false
+  oauth2:
+    enabled: true
+    providers:
+      google:
+        clientId: ""      # Set via --set
+        clientSecret: ""  # Set via --set
+        scope: "openid,profile,email"
+      github:
+        clientId: ""      # Set via --set
+        clientSecret: ""  # Set via --set
+        scope: "user:email"
+      # azure:
+      #   clientId: ""
+      #   clientSecret: ""
+      #   scope: "openid,profile,email"
+
+testLdap:
+  enabled: false

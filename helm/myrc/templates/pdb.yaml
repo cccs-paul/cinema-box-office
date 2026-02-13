@@ -1,0 +1,35 @@
+{{- /*
+myRC Helm Chart - PodDisruptionBudgets
+*/ -}}
+{{- if .Values.backend.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "myrc.fullname" . }}-api-pdb
+  namespace: {{ include "myrc.namespace" . }}
+  labels:
+    {{- include "myrc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  minAvailable: {{ .Values.backend.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "myrc.backend.selectorLabels" . | nindent 6 }}
+{{- end }}
+
+---
+{{- if .Values.frontend.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "myrc.fullname" . }}-frontend-pdb
+  namespace: {{ include "myrc.namespace" . }}
+  labels:
+    {{- include "myrc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  minAvailable: {{ .Values.frontend.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "myrc.frontend.selectorLabels" . | nindent 6 }}
+{{- end }}

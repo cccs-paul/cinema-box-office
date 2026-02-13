@@ -1,0 +1,55 @@
+# =============================================================================
+# myRC Helm Values - LDAP + App Accounts
+# =============================================================================
+# Usage:
+#   helm install myrc ./helm/myrc -f helm/myrc/values-ldap-app.yaml \
+#     --set auth.ldap.managerPassword=<LDAP_ADMIN_PASSWORD> \
+#     --set auth.ldap.url=ldap://your-ldap.corp.com:389 \
+#     --set auth.ldap.baseDn=dc=corp,dc=com \
+#     --set auth.ldap.managerDn=cn=svc-myrc,ou=service-accounts,dc=corp,dc=com
+#
+# Characteristics:
+#   - Both LDAP and local app accounts are enabled
+#   - Users can log in with either LDAP credentials or local accounts
+#   - Self-registration disabled for app accounts (admin creates accounts)
+#   - Useful during LDAP migration or for service accounts
+# =============================================================================
+
+auth:
+  appAccount:
+    enabled: true
+    allowRegistration: false
+  ldap:
+    enabled: true
+    url: "ldap://ldap.example.com:389"
+    baseDn: "dc=example,dc=com"
+    managerDn: "cn=admin,dc=example,dc=com"
+    managerPassword: ""  # Set via --set or external secret
+    userSearchBase: "ou=users"
+    userSearchFilter: "(uid={0})"
+    groupSearchBase: "ou=groups"
+    groupSearchFilter: "(member={0})"
+    groupNameAttribute: "cn"
+    connectTimeout: 5000
+    readTimeout: 5000
+    allowSignUp: true
+    skipOrgRoleSync: false
+    attributes:
+      username: uid
+      email: mail
+      name: cn
+      surname: sn
+      givenName: givenName
+      memberOf: memberOf
+    groupMappings:
+      - groupDn: "cn=myrc-admins,ou=groups,dc=example,dc=com"
+        role: ADMIN
+        isAdmin: true
+      - groupDn: "cn=myrc-users,ou=groups,dc=example,dc=com"
+        role: USER
+        isAdmin: false
+  oauth2:
+    enabled: false
+
+testLdap:
+  enabled: false

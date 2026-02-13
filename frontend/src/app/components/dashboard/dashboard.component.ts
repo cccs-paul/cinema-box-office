@@ -105,7 +105,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   successMessage: string | null = null;
 
   // Source list for dropdown
-  sourceOptions: FundingSource[] = ['BUSINESS_PLAN', 'ON_RAMP', 'APPROVED_DEFICIT'];
+  sourceOptions: FundingSource[] = ['BUSINESS_PLAN', 'ON_RAMP', 'APPROVED_DEFICIT', 'PRESSURE'];
 
   // Summary interfaces
   summaryByMoneyType: { moneyCode: string; moneyName: string; totalCap: number; totalOm: number; total: number }[] = [];

@@ -34,7 +34,7 @@ export interface MoneyAllocation {
 /**
  * Enum for funding item source values.
  */
-export type FundingSource = 'BUSINESS_PLAN' | 'ON_RAMP' | 'APPROVED_DEFICIT';
+export type FundingSource = 'BUSINESS_PLAN' | 'ON_RAMP' | 'APPROVED_DEFICIT' | 'PRESSURE';
 
 /**
  * Funding Item interface representing a budget allocation within a fiscal year.
@@ -170,6 +170,8 @@ export function getSourceLabel(source: FundingSource): string {
       return 'On-Ramp';
     case 'APPROVED_DEFICIT':
       return 'Approved Deficit';
+    case 'PRESSURE':
+      return 'Pressure';
     default:
       return source;
   }
@@ -186,6 +188,8 @@ export function getSourceClass(source: FundingSource): string {
       return 'source-on-ramp';
     case 'APPROVED_DEFICIT':
       return 'source-approved-deficit';
+    case 'PRESSURE':
+      return 'source-pressure';
     default:
       return 'source-business-plan';
   }

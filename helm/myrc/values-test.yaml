@@ -1,0 +1,66 @@
+# =============================================================================
+# myRC Helm Values - Test / QA Environment
+# =============================================================================
+# Usage:
+#   helm install myrc-test ./helm/myrc -f helm/myrc/values-test.yaml
+#
+# Characteristics:
+#   - 2 replicas per component for HA testing
+#   - App accounts enabled for QA testers
+#   - INFO-level logging
+#   - TLS enabled
+#   - Autoscaling enabled (conservative limits)
+# =============================================================================
+
+backend:
+  replicaCount: 2
+  springProfiles: "prod"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 85
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+frontend:
+  replicaCount: 2
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 85
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+postgresql:
+  enabled: true
+  storage:
+    size: 10Gi
+
+logging:
+  rootLevel: INFO
+  appLevel: INFO
+
+cors:
+  allowedOrigins: "https://myrc-test.example.com"
+
+ingress:
+  enabled: true
+  host: myrc-test.example.com
+  tls:
+    enabled: true
+    secretName: myrc-test-tls
+
+auth:
+  appAccount:
+    enabled: true
+    allowRegistration: true
+  ldap:
+    enabled: false
+  oauth2:
+    enabled: false

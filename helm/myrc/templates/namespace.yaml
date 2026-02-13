@@ -1,0 +1,9 @@
+{{- /*
+myRC Helm Chart - Namespace
+*/ -}}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ include "myrc.namespace" . }}
+  labels:
+    {{- include "myrc.labels" . | nindent 4 }}

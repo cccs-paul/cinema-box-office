@@ -1,0 +1,84 @@
+{{- /*
+myRC Helm Chart - Test LDAP Deployment (Futurama / Planet Express)
+Only created when testLdap.enabled=true
+*/ -}}
+{{- if .Values.testLdap.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "myrc.fullname" . }}-testldap
+  namespace: {{ include "myrc.namespace" . }}
+  labels:
+    {{- include "myrc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: testldap
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.testLdap.service.ldapPort }}
+      targetPort: {{ .Values.testLdap.service.ldapPort }}
+      protocol: TCP
+      name: ldap
+    - port: {{ .Values.testLdap.service.ldapsPort }}
+      targetPort: {{ .Values.testLdap.service.ldapsPort }}
+      protocol: TCP
+      name: ldaps
+  selector:
+    {{- include "myrc.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: testldap
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myrc.fullname" . }}-testldap
+  namespace: {{ include "myrc.namespace" . }}
+  labels:
+    {{- include "myrc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: testldap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "myrc.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: testldap
+  template:
+    metadata:
+      labels:
+        {{- include "myrc.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: testldap
+    spec:
+      containers:
+        - name: openldap
+          image: "{{ .Values.testLdap.image.repository }}:{{ .Values.testLdap.image.tag }}"
+          imagePullPolicy: {{ .Values.testLdap.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.testLdap.service.ldapPort }}
+              protocol: TCP
+              name: ldap
+            - containerPort: {{ .Values.testLdap.service.ldapsPort }}
+              protocol: TCP
+              name: ldaps
+          resources:
+            {{- toYaml .Values.testLdap.resources | nindent 12 }}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "ldapsearch -H ldap://localhost:{{ .Values.testLdap.service.ldapPort }} -x -b 'dc=planetexpress,dc=com' -D 'cn=admin,dc=planetexpress,dc=com' -w GoodNewsEveryone '(objectClass=organization)' dn 2>/dev/null | grep -q 'dn:'"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 10
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - "ldapsearch -H ldap://localhost:{{ .Values.testLdap.service.ldapPort }} -x -b 'dc=planetexpress,dc=com' -D 'cn=admin,dc=planetexpress,dc=com' -w GoodNewsEveryone '(objectClass=organization)' dn 2>/dev/null | grep -q 'dn:'"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+      restartPolicy: Always
+{{- end }}

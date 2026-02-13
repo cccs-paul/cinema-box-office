@@ -1,0 +1,225 @@
+{{- /*
+myRC Helm Chart - Backend Deployment & Service
+*/ -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "myrc.fullname" . }}-api
+  namespace: {{ include "myrc.namespace" . }}
+  labels:
+    {{- include "myrc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  type: {{ .Values.backend.service.type }}
+  ports:
+    - port: {{ .Values.backend.service.port }}
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "myrc.backend.selectorLabels" . | nindent 4 }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "myrc.fullname" . }}-api
+  namespace: {{ include "myrc.namespace" . }}
+  labels:
+    {{- include "myrc.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "myrc.backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "myrc.backend.selectorLabels" . | nindent 8 }}
+      annotations:
+        # Force restart on config/secret changes
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secrets.yaml") . | sha256sum }}
+    spec:
+      serviceAccountName: {{ include "myrc.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 30
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: api
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+              name: http
+          env:
+            # Database
+            - name: SPRING_DATASOURCE_URL
+              value: {{ include "myrc.jdbcUrl" . | quote }}
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myrc.databaseSecretName" . }}
+                  key: db-user
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myrc.databaseSecretName" . }}
+                  key: db-password
+            # ConfigMap-driven settings
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: SPRING_JPA_HIBERNATE_DDL_AUTO
+            - name: SPRING_FLYWAY_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: SPRING_FLYWAY_ENABLED
+            - name: SPRING_FLYWAY_BASELINE_ON_MIGRATE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: SPRING_FLYWAY_BASELINE_ON_MIGRATE
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: APP_CORS_ALLOWED_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_CORS_ALLOWED_ORIGINS
+            - name: LOGGING_LEVEL_ROOT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: LOGGING_LEVEL_ROOT
+            - name: LOGGING_LEVEL_COM_MYRC
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: LOGGING_LEVEL_COM_MYRC
+            - name: SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE
+            - name: SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE
+            # Auth login methods
+            - name: APP_SECURITY_LOGIN_METHODS_APP_ACCOUNT_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LOGIN_METHODS_APP_ACCOUNT_ENABLED
+            - name: APP_SECURITY_LOGIN_METHODS_APP_ACCOUNT_ALLOW_REGISTRATION
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LOGIN_METHODS_APP_ACCOUNT_ALLOW_REGISTRATION
+            - name: APP_SECURITY_LOGIN_METHODS_LDAP_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LOGIN_METHODS_LDAP_ENABLED
+            - name: APP_SECURITY_LOGIN_METHODS_OAUTH2_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LOGIN_METHODS_OAUTH2_ENABLED
+            {{- if .Values.auth.ldap.enabled }}
+            # LDAP settings from ConfigMap
+            - name: APP_SECURITY_LDAP_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LDAP_ENABLED
+            - name: APP_SECURITY_LDAP_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LDAP_URL
+            - name: APP_SECURITY_LDAP_BASE_DN
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LDAP_BASE_DN
+            - name: APP_SECURITY_LDAP_MANAGER_DN
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LDAP_MANAGER_DN
+            - name: APP_SECURITY_LDAP_MANAGER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myrc.fullname" . }}-ldap-secret
+                  key: ldap-manager-password
+            - name: APP_SECURITY_LDAP_USER_SEARCH_BASE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LDAP_USER_SEARCH_BASE
+            - name: APP_SECURITY_LDAP_USER_SEARCH_FILTER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LDAP_USER_SEARCH_FILTER
+            - name: APP_SECURITY_LDAP_GROUP_SEARCH_BASE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LDAP_GROUP_SEARCH_BASE
+            - name: APP_SECURITY_LDAP_GROUP_SEARCH_FILTER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LDAP_GROUP_SEARCH_FILTER
+            - name: APP_SECURITY_LDAP_CONNECT_TIMEOUT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LDAP_CONNECT_TIMEOUT
+            - name: APP_SECURITY_LDAP_ALLOW_SIGN_UP
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "myrc.fullname" . }}-config
+                  key: APP_SECURITY_LDAP_ALLOW_SIGN_UP
+            {{- end }}
+            {{- with .Values.backend.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.backend.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.backend.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.backend.readinessProbe | nindent 12 }}
+      {{- if .Values.backend.podAntiAffinity }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    {{- include "myrc.backend.selectorLabels" . | nindent 20 }}
+                topologyKey: kubernetes.io/hostname
+      {{- end }}
+      restartPolicy: Always

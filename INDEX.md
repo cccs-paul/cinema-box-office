@@ -20,7 +20,21 @@
   ./k8s-health.sh --watch      # Continuous monitoring
   ```
 
-### Kubernetes Configuration
+### Helm Charts (Recommended)
+- **[helm/myrc/README.md](helm/myrc/README.md)** - Helm chart documentation
+- **[docs/HELM.md](docs/HELM.md)** - Comprehensive Helm deployment guide
+- **Values files for every scenario:**
+  - `helm/myrc/values-dev.yaml` — Development
+  - `helm/myrc/values-test.yaml` — Test / QA
+  - `helm/myrc/values-prod.yaml` — Production (hardened, HA)
+  - `helm/myrc/values-app-accounts.yaml` — App accounts only
+  - `helm/myrc/values-ldap.yaml` — LDAP only (existing server)
+  - `helm/myrc/values-ldap-app.yaml` — LDAP + app accounts
+  - `helm/myrc/values-testldap.yaml` — Bundled test LDAP (Futurama users)
+  - `helm/myrc/values-oauth2.yaml` — OAuth2 / OIDC
+  - `helm/myrc/values-minikube.yaml` — Minikube / local
+
+### Kubernetes Configuration (Raw Manifests)
 - **[k8s/README.md](k8s/README.md)** - Kubernetes quick reference
 - **[k8s/namespace.yaml](k8s/namespace.yaml)** - Namespace definition
 - **[k8s/configmap.yaml](k8s/configmap.yaml)** - Application configuration
@@ -87,7 +101,13 @@
 
 ## 🎯 Usage Guides by Use Case
 
-### I want to deploy to Kubernetes
+### I want to deploy to Kubernetes (Helm — recommended)
+1. Read [docs/HELM.md](docs/HELM.md)
+2. Choose your scenario (dev, prod, LDAP, OAuth2, etc.)
+3. Run `helm install myrc ./helm/myrc -f helm/myrc/values-<scenario>.yaml`
+4. Verify with `kubectl get pods -n myrc`
+
+### I want to deploy to Kubernetes (raw manifests)
 1. Read [docs/IMPLEMENTATION_GUIDE.md](docs/IMPLEMENTATION_GUIDE.md)
 2. Follow [docs/KUBERNETES.md](docs/KUBERNETES.md)
 3. Use [k8s-deploy.sh install](k8s-deploy.sh)
@@ -125,6 +145,11 @@ myrc/
 ├── INDEX.md                                ← You are here
 ├── k8s-deploy.sh                          ← Deployment tool
 ├── k8s-health.sh                          ← Health monitor
+├── helm/myrc/                             ← Helm chart (recommended)
+│   ├── Chart.yaml                         ← Chart metadata
+│   ├── values.yaml                        ← Default values
+│   ├── values-*.yaml                      ← Scenario overrides
+│   └── templates/                         ← K8s templates
 ├── k8s/
 │   ├── README.md                          ← K8s quick reference
 │   ├── namespace.yaml                     ← Namespace
@@ -144,8 +169,7 @@ myrc/
     ├── LDAP.md                            ← LDAP integration
     ├── OAUTH2.md                          ← OAuth2 integration
     ├── TESTING.md                         ← Testing procedures
-    ├── TROUBLESHOOTING.md                 ← Troubleshooting
-    └── DEPLOYMENT_CHECKLIST.md            ← Pre-deployment checks
+    ├── TROUBLESHOOTING.md                 ← Troubleshooting    ├── HELM.md                            ← Helm deployment guide    └── DEPLOYMENT_CHECKLIST.md            ← Pre-deployment checks
 ```
 
 ## 📈 Quick Statistics
@@ -198,7 +222,8 @@ open http://localhost:4200
 
 | Question | Resource |
 |----------|----------|
-| How do I deploy? | [docs/KUBERNETES.md](docs/KUBERNETES.md) |
+| How do I deploy (Helm)? | [docs/HELM.md](docs/HELM.md) |
+| How do I deploy (raw)? | [docs/KUBERNETES.md](docs/KUBERNETES.md) |
 | How do I set up LDAP? | [docs/LDAP.md](docs/LDAP.md) |
 | How do I set up OAuth2? | [docs/OAUTH2.md](docs/OAUTH2.md) |
 | How do I prepare for production? | [docs/PRODUCTION.md](docs/PRODUCTION.md) |
@@ -277,8 +302,8 @@ open http://localhost:4200
 
 ---
 
-**Last Updated:** January 2025  
-**Version:** 1.0  
+**Last Updated:** February 2026  
+**Version:** 1.0.0  
 **Status:** Production Ready  
 
 For questions or issues, refer to the relevant documentation from this index.

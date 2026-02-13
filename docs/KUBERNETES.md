@@ -4,6 +4,8 @@
 
 This guide covers deploying myRC to Kubernetes clusters. The application is containerized and ready for production deployment.
 
+> **Recommended:** For new deployments, use the **Helm chart** instead of raw manifests. See [docs/HELM.md](HELM.md) and [helm/myrc/README.md](../helm/myrc/README.md) for Helm-based deployment with composable values files for every scenario (dev, test, prod, LDAP, OAuth2, etc.).
+
 ## Prerequisites
 
 - Kubernetes cluster (v1.19+)
@@ -268,7 +270,8 @@ env:
 
 ## Next Steps
 
-1. [LDAP Integration](LDAP.md)
-2. [OAuth2 Integration](OAUTH2.md)
-3. [Security Best Practices](SECURITY.md)
-4. [Production Deployment](PRODUCTION.md)
+1. [Helm Deployment (recommended)](HELM.md)
+2. [LDAP Integration](LDAP.md)
+3. [OAuth2 Integration](OAUTH2.md)
+4. [Security Best Practices](SECURITY.md)
+5. [Production Deployment](PRODUCTION.md)

@@ -1,0 +1,49 @@
+{{/*
+myRC Helm Chart - NOTES.txt
+Displayed after helm install/upgrade
+*/}}
+
+===================================================
+  myRC has been deployed!
+===================================================
+
+Release: {{ .Release.Name }}
+Namespace: {{ include "myrc.namespace" . }}
+
+Components:
+  Backend API:  {{ include "myrc.fullname" . }}-api  ({{ .Values.backend.replicaCount }} replica(s))
+  Frontend:     {{ include "myrc.fullname" . }}-frontend ({{ .Values.frontend.replicaCount }} replica(s))
+{{- if .Values.postgresql.enabled }}
+  PostgreSQL:   {{ include "myrc.fullname" . }}-postgres (StatefulSet, {{ .Values.postgresql.storage.size }})
+{{- else }}
+  Database:     External ({{ .Values.externalDatabase.host }}:{{ .Values.externalDatabase.port }})
+{{- end }}
+{{- if .Values.testLdap.enabled }}
+  Test LDAP:    {{ include "myrc.fullname" . }}-testldap (Futurama/Planet Express users)
+{{- end }}
+
+Authentication:
+  App Accounts: {{ .Values.auth.appAccount.enabled }}
+  LDAP:         {{ .Values.auth.ldap.enabled }}
+  OAuth2:       {{ .Values.auth.oauth2.enabled }}
+{{- if .Values.testLdap.enabled }}
+  Test LDAP:    enabled (fry/fry, leela/leela, professor/professor)
+{{- end }}
+
+{{- if .Values.ingress.enabled }}
+
+Ingress:
+  Host: {{ .Values.ingress.host }}
+  TLS:  {{ .Values.ingress.tls.enabled }}
+  URL:  {{ if .Values.ingress.tls.enabled }}https{{ else }}http{{ end }}://{{ .Values.ingress.host }}
+{{- end }}
+
+Spring Profiles: {{ .Values.backend.springProfiles }}
+
+To check status:
+  kubectl get pods -n {{ include "myrc.namespace" . }}
+  kubectl get svc -n {{ include "myrc.namespace" . }}
+
+To view logs:
+  kubectl logs -f deployment/{{ include "myrc.fullname" . }}-api -n {{ include "myrc.namespace" . }}
+  kubectl logs -f deployment/{{ include "myrc.fullname" . }}-frontend -n {{ include "myrc.namespace" . }}
