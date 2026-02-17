@@ -117,4 +117,24 @@ public interface ResponsibilityCentreService {
    * @return the cloned responsibility centre DTO
    */
   ResponsibilityCentreDTO cloneResponsibilityCentre(Long sourceRcId, String username, String newName);
+
+  /**
+   * Toggle the training enabled status for a responsibility centre.
+   *
+   * @param rcId the ID of the responsibility centre
+   * @param username the username of the requesting user (must be owner)
+   * @param enabled the new training enabled status
+   * @return optional containing the updated responsibility centre if successful
+   */
+  Optional<ResponsibilityCentreDTO> setTrainingEnabled(Long rcId, String username, boolean enabled);
+
+  /**
+   * Toggle the travel enabled status for a responsibility centre.
+   *
+   * @param rcId the ID of the responsibility centre
+   * @param username the username of the requesting user (must be owner)
+   * @param enabled the new travel enabled status
+   * @return optional containing the updated responsibility centre if successful
+   */
+  Optional<ResponsibilityCentreDTO> setTravelEnabled(Long rcId, String username, boolean enabled);
 }

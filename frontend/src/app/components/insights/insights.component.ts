@@ -25,6 +25,10 @@ import { SpendingItem } from '../../models/spending-item.model';
 import { ProcurementItem, TRACKING_STATUS_INFO, TrackingStatus, ProcurementType, PROCUREMENT_TYPE_INFO } from '../../models/procurement.model';
 import { CategoryService } from '../../services/category.service';
 import { Category } from '../../models/category.model';
+import { TrainingItemService } from '../../services/training-item.service';
+import { TravelItemService } from '../../services/travel-item.service';
+import { TrainingItem, TrainingItemStatus, TrainingType, TRAINING_STATUS_INFO, TRAINING_TYPE_INFO } from '../../models/training-item.model';
+import { TravelItem, TravelItemStatus, TravelType, TRAVEL_STATUS_INFO, TRAVEL_TYPE_INFO } from '../../models/travel-item.model';
 
 // Chart.js imports
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
@@ -54,6 +58,10 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('spendingStatusChart') spendingStatusChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('invoiceCoverageChart') invoiceCoverageChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('currencyDistributionChart') currencyDistributionChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('trainingStatusChart') trainingStatusChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('trainingTypeChart') trainingTypeChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('travelStatusChart') travelStatusChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('travelTypeChart') travelTypeChartRef!: ElementRef<HTMLCanvasElement>;
 
   currentUser: User | null = null;
 
@@ -65,6 +73,8 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
   fundingItems: FundingItem[] = [];
   spendingItems: SpendingItem[] = [];
   procurementItems: ProcurementItem[] = [];
+  trainingItems: TrainingItem[] = [];
+  travelItems: TravelItem[] = [];
   categories: Category[] = [];
   
   isLoading = false;
@@ -91,6 +101,8 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     private spendingItemService: SpendingItemService,
     private procurementService: ProcurementService,
     private categoryService: CategoryService,
+    private trainingItemService: TrainingItemService,
+    private travelItemService: TravelItemService,
     private translate: TranslateService,
     private languageService: LanguageService
   ) {}
@@ -108,7 +120,7 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     // Subscribe to language changes and recreate charts
     this.languageService.currentLanguage$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       // Only recreate charts if data is already loaded
-      if (this.fundingItems.length > 0 || this.spendingItems.length > 0 || this.procurementItems.length > 0) {
+      if (this.fundingItems.length > 0 || this.spendingItems.length > 0 || this.procurementItems.length > 0 || this.trainingItems.length > 0 || this.travelItems.length > 0) {
         this.destroyCharts();
         setTimeout(() => this.createCharts(), 50);
       }
@@ -168,13 +180,17 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
       funding: this.fundingItemService.getFundingItemsByFY(this.selectedFY.id),
       spending: this.spendingItemService.getSpendingItemsByFY(this.selectedRC.id, this.selectedFY.id),
       procurement: this.procurementService.getProcurementItems(this.selectedRC.id, this.selectedFY.id),
-      categories: this.categoryService.getCategoriesByFY(this.selectedRC.id, this.selectedFY.id)
+      categories: this.categoryService.getCategoriesByFY(this.selectedRC.id, this.selectedFY.id),
+      training: this.trainingItemService.getTrainingItemsByFY(this.selectedRC.id, this.selectedFY.id),
+      travel: this.travelItemService.getTravelItemsByFY(this.selectedRC.id, this.selectedFY.id)
     }).subscribe({
       next: (data) => {
         this.fundingItems = data.funding;
         this.spendingItems = data.spending;
         this.procurementItems = data.procurement;
         this.categories = data.categories;
+        this.trainingItems = data.training;
+        this.travelItems = data.travel;
         this.isLoading = false;
         
         // Give DOM time to render before creating charts
@@ -202,6 +218,10 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.createSpendingStatusChart();
     this.createInvoiceCoverageChart();
     this.createCurrencyDistributionChart();
+    this.createTrainingStatusChart();
+    this.createTrainingTypeChart();
+    this.createTravelStatusChart();
+    this.createTravelTypeChart();
   }
 
   /**
@@ -1003,5 +1023,191 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
       style: 'currency',
       currency: currency
     }).format(value);
+  }
+
+  /**
+   * Create training status pie chart.
+   */
+  private createTrainingStatusChart(): void {
+    if (!this.trainingStatusChartRef?.nativeElement) return;
+
+    const statusCounts = new Map<TrainingItemStatus, number>();
+    for (const item of this.trainingItems) {
+      statusCounts.set(item.status, (statusCounts.get(item.status) || 0) + 1);
+    }
+
+    const labels: string[] = [];
+    const values: number[] = [];
+    const colors: string[] = [];
+
+    const statusColorMap: Record<TrainingItemStatus, string> = {
+      'PLANNED': '#64748b',
+      'APPROVED': '#2563eb',
+      'IN_PROGRESS': '#f59e0b',
+      'COMPLETED': '#16a34a',
+      'CANCELLED': '#dc2626'
+    };
+
+    for (const [status, count] of statusCounts) {
+      labels.push(this.translate.instant('training.status_' + status));
+      values.push(count);
+      colors.push(statusColorMap[status] || '#94a3b8');
+    }
+
+    const chart = new Chart(this.trainingStatusChartRef.nativeElement, {
+      type: 'pie',
+      data: {
+        labels,
+        datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#ffffff' }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } },
+          title: { display: true, text: this.translate.instant('insights.trainingByStatus'), font: { size: 16, weight: 'bold' } }
+        }
+      }
+    });
+    this.charts.push(chart);
+  }
+
+  /**
+   * Create training type pie chart.
+   */
+  private createTrainingTypeChart(): void {
+    if (!this.trainingTypeChartRef?.nativeElement) return;
+
+    const typeCounts = new Map<TrainingType, number>();
+    for (const item of this.trainingItems) {
+      if (item.trainingType) {
+        typeCounts.set(item.trainingType, (typeCounts.get(item.trainingType) || 0) + 1);
+      }
+    }
+
+    const labels: string[] = [];
+    const values: number[] = [];
+
+    for (const [type, count] of typeCounts) {
+      labels.push(this.translate.instant('training.type_' + type));
+      values.push(count);
+    }
+
+    const chart = new Chart(this.trainingTypeChartRef.nativeElement, {
+      type: 'pie',
+      data: {
+        labels,
+        datasets: [{ data: values, backgroundColor: this.colors.slice(0, labels.length), borderWidth: 2, borderColor: '#ffffff' }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } },
+          title: { display: true, text: this.translate.instant('insights.trainingByType'), font: { size: 16, weight: 'bold' } }
+        }
+      }
+    });
+    this.charts.push(chart);
+  }
+
+  /**
+   * Create travel status pie chart.
+   */
+  private createTravelStatusChart(): void {
+    if (!this.travelStatusChartRef?.nativeElement) return;
+
+    const statusCounts = new Map<TravelItemStatus, number>();
+    for (const item of this.travelItems) {
+      statusCounts.set(item.status, (statusCounts.get(item.status) || 0) + 1);
+    }
+
+    const labels: string[] = [];
+    const values: number[] = [];
+    const colors: string[] = [];
+
+    const statusColorMap: Record<TravelItemStatus, string> = {
+      'PLANNED': '#64748b',
+      'APPROVED': '#2563eb',
+      'IN_PROGRESS': '#f59e0b',
+      'COMPLETED': '#16a34a',
+      'CANCELLED': '#dc2626'
+    };
+
+    for (const [status, count] of statusCounts) {
+      labels.push(this.translate.instant('travel.status_' + status));
+      values.push(count);
+      colors.push(statusColorMap[status] || '#94a3b8');
+    }
+
+    const chart = new Chart(this.travelStatusChartRef.nativeElement, {
+      type: 'pie',
+      data: {
+        labels,
+        datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: '#ffffff' }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } },
+          title: { display: true, text: this.translate.instant('insights.travelByStatus'), font: { size: 16, weight: 'bold' } }
+        }
+      }
+    });
+    this.charts.push(chart);
+  }
+
+  /**
+   * Create travel type pie chart.
+   */
+  private createTravelTypeChart(): void {
+    if (!this.travelTypeChartRef?.nativeElement) return;
+
+    const typeCounts = new Map<TravelType, number>();
+    for (const item of this.travelItems) {
+      if (item.travelType) {
+        typeCounts.set(item.travelType, (typeCounts.get(item.travelType) || 0) + 1);
+      }
+    }
+
+    const labels: string[] = [];
+    const values: number[] = [];
+
+    for (const [type, count] of typeCounts) {
+      labels.push(this.translate.instant('travel.type_' + type));
+      values.push(count);
+    }
+
+    const chart = new Chart(this.travelTypeChartRef.nativeElement, {
+      type: 'pie',
+      data: {
+        labels,
+        datasets: [{ data: values, backgroundColor: this.colors.slice(0, labels.length), borderWidth: 2, borderColor: '#ffffff' }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } },
+          title: { display: true, text: this.translate.instant('insights.travelByType'), font: { size: 16, weight: 'bold' } }
+        }
+      }
+    });
+    this.charts.push(chart);
+  }
+
+  /**
+   * Get total estimated cost for training items (CAD).
+   */
+  getTotalTrainingEstimated(): number {
+    return this.trainingItems.reduce((sum, item) => sum + (item.estimatedCostCad || 0), 0);
+  }
+
+  /**
+   * Get total estimated cost for travel items (CAD).
+   */
+  getTotalTravelEstimated(): number {
+    return this.travelItems.reduce((sum, item) => sum + (item.estimatedCostCad || 0), 0);
   }
 }

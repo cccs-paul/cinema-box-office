@@ -589,4 +589,34 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
 
     return ResponsibilityCentreDTO.fromEntity(saved, username, "OWNER");
   }
+
+  @Override
+  public Optional<ResponsibilityCentreDTO> setTrainingEnabled(Long rcId, String username, boolean enabled) {
+    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
+    if (rcOpt.isEmpty()) return Optional.empty();
+
+    ResponsibilityCentre rc = rcOpt.get();
+    if (!rc.getOwner().getUsername().equals(username)) {
+      throw new IllegalArgumentException("Only the owner can change training settings");
+    }
+
+    rc.setTrainingEnabled(enabled);
+    rc = rcRepository.save(rc);
+    return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, "OWNER"));
+  }
+
+  @Override
+  public Optional<ResponsibilityCentreDTO> setTravelEnabled(Long rcId, String username, boolean enabled) {
+    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
+    if (rcOpt.isEmpty()) return Optional.empty();
+
+    ResponsibilityCentre rc = rcOpt.get();
+    if (!rc.getOwner().getUsername().equals(username)) {
+      throw new IllegalArgumentException("Only the owner can change travel settings");
+    }
+
+    rc.setTravelEnabled(enabled);
+    rc = rcRepository.save(rc);
+    return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, "OWNER"));
+  }
 }

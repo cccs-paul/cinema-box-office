@@ -13,6 +13,8 @@ import { ResponsibilityCentreService } from '../../services/responsibility-centr
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { MoneyService } from '../../services/money.service';
 import { CategoryService, CategoryCreateRequest, CategoryUpdateRequest } from '../../services/category.service';
+import { TrainingItemService } from '../../services/training-item.service';
+import { TravelItemService } from '../../services/travel-item.service';
 import { Money, MoneyCreateRequest, MoneyUpdateRequest } from '../../models/money.model';
 import { Category, FundingType } from '../../models/category.model';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
@@ -42,7 +44,16 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   fyId: number | null = null;
 
   // Configuration tabs
-  activeTab: 'monies' | 'categories' | 'summary' | 'import-export' = 'monies';
+  activeTab: 'monies' | 'categories' | 'summary' | 'import-export' | 'features' = 'monies';
+
+  // Feature toggles state
+  hasTrainingItems = false;
+  hasTravelItems = false;
+  checkingTrainingItems = false;
+  checkingTravelItems = false;
+  togglingTraining = false;
+  togglingTravel = false;
+  featureError: string | null = null;
 
   // Money management state
   monies: Money[] = [];
@@ -125,6 +136,8 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
     private fyService: FiscalYearService,
     private moneyService: MoneyService,
     private categoryService: CategoryService,
+    private trainingItemService: TrainingItemService,
+    private travelItemService: TravelItemService,
     private translate: TranslateService
   ) {}
 
@@ -202,8 +215,152 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   /**
    * Switch to a configuration tab.
    */
-  setActiveTab(tab: 'monies' | 'categories' | 'summary' | 'import-export'): void {
+  setActiveTab(tab: 'monies' | 'categories' | 'summary' | 'import-export' | 'features'): void {
     this.activeTab = tab;
+    if (tab === 'features') {
+      this.checkForExistingItems();
+    }
+  }
+
+  /**
+   * Check if training or travel items exist in any FY of this RC.
+   * Prevents disabling features that have data.
+   */
+  private checkForExistingItems(): void {
+    if (!this.rcId) return;
+
+    this.checkingTrainingItems = true;
+    this.checkingTravelItems = true;
+
+    this.fyService.getFiscalYearsByRC(this.rcId).subscribe({
+      next: (fiscalYears: any[]) => {
+        if (fiscalYears.length === 0) {
+          this.hasTrainingItems = false;
+          this.hasTravelItems = false;
+          this.checkingTrainingItems = false;
+          this.checkingTravelItems = false;
+          return;
+        }
+
+        let trainingChecked = 0;
+        let travelChecked = 0;
+        let foundTraining = false;
+        let foundTravel = false;
+
+        for (const fy of fiscalYears) {
+          this.trainingItemService.getTrainingItemsByFY(this.rcId!, fy.id).subscribe({
+            next: (items) => {
+              if (items.length > 0) foundTraining = true;
+              trainingChecked++;
+              if (trainingChecked === fiscalYears.length) {
+                this.hasTrainingItems = foundTraining;
+                this.checkingTrainingItems = false;
+              }
+            },
+            error: () => {
+              trainingChecked++;
+              if (trainingChecked === fiscalYears.length) {
+                this.hasTrainingItems = foundTraining;
+                this.checkingTrainingItems = false;
+              }
+            }
+          });
+
+          this.travelItemService.getTravelItemsByFY(this.rcId!, fy.id).subscribe({
+            next: (items) => {
+              if (items.length > 0) foundTravel = true;
+              travelChecked++;
+              if (travelChecked === fiscalYears.length) {
+                this.hasTravelItems = foundTravel;
+                this.checkingTravelItems = false;
+              }
+            },
+            error: () => {
+              travelChecked++;
+              if (travelChecked === fiscalYears.length) {
+                this.hasTravelItems = foundTravel;
+                this.checkingTravelItems = false;
+              }
+            }
+          });
+        }
+      },
+      error: () => {
+        this.checkingTrainingItems = false;
+        this.checkingTravelItems = false;
+      }
+    });
+  }
+
+  /**
+   * Toggle training enabled for this RC.
+   */
+  toggleTrainingEnabled(): void {
+    if (!this.rcId || !this.selectedRC || this.isNotOwner) return;
+
+    const newValue = !this.selectedRC.trainingEnabled;
+
+    if (!newValue && this.hasTrainingItems) {
+      this.featureError = this.translate.instant('configuration.cannotDisableTraining');
+      return;
+    }
+
+    this.togglingTraining = true;
+    this.featureError = null;
+
+    this.rcService.setTrainingEnabled(this.rcId, newValue).subscribe({
+      next: (updatedRc) => {
+        this.selectedRC = updatedRc;
+        this.togglingTraining = false;
+        this.showSuccess(newValue
+          ? this.translate.instant('configuration.trainingEnabledMsg')
+          : this.translate.instant('configuration.trainingDisabledMsg'));
+        this.rcService.notifyRCUpdated(this.rcId!);
+      },
+      error: (err) => {
+        this.featureError = err.message || 'Failed to update training setting';
+        this.togglingTraining = false;
+      }
+    });
+  }
+
+  /**
+   * Toggle travel enabled for this RC.
+   */
+  toggleTravelEnabled(): void {
+    if (!this.rcId || !this.selectedRC || this.isNotOwner) return;
+
+    const newValue = !this.selectedRC.travelEnabled;
+
+    if (!newValue && this.hasTravelItems) {
+      this.featureError = this.translate.instant('configuration.cannotDisableTravel');
+      return;
+    }
+
+    this.togglingTravel = true;
+    this.featureError = null;
+
+    this.rcService.setTravelEnabled(this.rcId, newValue).subscribe({
+      next: (updatedRc) => {
+        this.selectedRC = updatedRc;
+        this.togglingTravel = false;
+        this.showSuccess(newValue
+          ? this.translate.instant('configuration.travelEnabledMsg')
+          : this.translate.instant('configuration.travelDisabledMsg'));
+        this.rcService.notifyRCUpdated(this.rcId!);
+      },
+      error: (err) => {
+        this.featureError = err.message || 'Failed to update travel setting';
+        this.togglingTravel = false;
+      }
+    });
+  }
+
+  /**
+   * Clear feature error message.
+   */
+  clearFeatureError(): void {
+    this.featureError = null;
   }
 
   /**

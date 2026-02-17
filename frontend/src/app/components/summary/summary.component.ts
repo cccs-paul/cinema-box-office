@@ -24,6 +24,10 @@ import { FundingItem } from '../../models/funding-item.model';
 import { SpendingItem } from '../../models/spending-item.model';
 import { ProcurementItem } from '../../models/procurement.model';
 import { Money } from '../../models/money.model';
+import { TrainingItemService } from '../../services/training-item.service';
+import { TravelItemService } from '../../services/travel-item.service';
+import { TrainingItem } from '../../models/training-item.model';
+import { TravelItem } from '../../models/travel-item.model';
 
 /**
  * Interface for money type summary data.
@@ -68,6 +72,8 @@ export class SummaryComponent implements OnInit, OnDestroy {
   fundingItems: FundingItem[] = [];
   spendingItems: SpendingItem[] = [];
   procurementItems: ProcurementItem[] = [];
+  trainingItems: TrainingItem[] = [];
+  travelItems: TravelItem[] = [];
   moneyTypes: Money[] = [];
   moneyTypeSummaries: MoneyTypeSummary[] = [];
   
@@ -102,6 +108,14 @@ export class SummaryComponent implements OnInit, OnDestroy {
   procurementCompleted = 0;
   procurementCancelled = 0;
 
+  // Training totals (O&M only)
+  totalTrainingOm = 0;
+  totalTrainingEstimated = 0;
+
+  // Travel totals (O&M only)
+  totalTravelOm = 0;
+  totalTravelEstimated = 0;
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -112,6 +126,8 @@ export class SummaryComponent implements OnInit, OnDestroy {
     private fundingItemService: FundingItemService,
     private spendingItemService: SpendingItemService,
     private procurementService: ProcurementService,
+    private trainingItemService: TrainingItemService,
+    private travelItemService: TravelItemService,
     private moneyService: MoneyService
   ) {}
 
@@ -174,13 +190,17 @@ export class SummaryComponent implements OnInit, OnDestroy {
       funding: this.fundingItemService.getFundingItemsByFY(this.selectedFY.id),
       spending: this.spendingItemService.getSpendingItemsByFY(this.selectedRC.id, this.selectedFY.id),
       procurement: this.procurementService.getProcurementItems(this.selectedRC.id, this.selectedFY.id),
-      moneyTypes: this.moneyService.getMoniesByFiscalYear(this.selectedRC.id, this.selectedFY.id)
+      moneyTypes: this.moneyService.getMoniesByFiscalYear(this.selectedRC.id, this.selectedFY.id),
+      training: this.trainingItemService.getTrainingItemsByFY(this.selectedRC.id, this.selectedFY.id),
+      travel: this.travelItemService.getTravelItemsByFY(this.selectedRC.id, this.selectedFY.id)
     }).subscribe({
       next: (data) => {
         this.fundingItems = data.funding;
         this.spendingItems = data.spending;
         this.procurementItems = data.procurement;
         this.moneyTypes = data.moneyTypes;
+        this.trainingItems = data.training;
+        this.travelItems = data.travel;
         this.isLoading = false;
         this.calculateTotals();
         this.calculateMoneyTypeSummaries();
@@ -201,6 +221,10 @@ export class SummaryComponent implements OnInit, OnDestroy {
     this.totalFundingOm = 0;
     this.totalSpendingCap = 0;
     this.totalSpendingOm = 0;
+    this.totalTrainingOm = 0;
+    this.totalTrainingEstimated = 0;
+    this.totalTravelOm = 0;
+    this.totalTravelEstimated = 0;
 
     // Calculate funding totals
     for (const item of this.fundingItems) {
@@ -223,6 +247,32 @@ export class SummaryComponent implements OnInit, OnDestroy {
       }
     }
     this.totalSpending = this.totalSpendingCap + this.totalSpendingOm;
+
+    // Calculate training O&M totals (training only uses O&M allocations)
+    for (const item of this.trainingItems) {
+      this.totalTrainingEstimated += item.estimatedCostCad || 0;
+      if (item.moneyAllocations) {
+        for (const allocation of item.moneyAllocations) {
+          this.totalTrainingOm += allocation.omAmount || 0;
+        }
+      }
+    }
+    // Add training O&M to overall spending O&M
+    this.totalSpendingOm += this.totalTrainingOm;
+    this.totalSpending += this.totalTrainingOm;
+
+    // Calculate travel O&M totals (travel only uses O&M allocations)
+    for (const item of this.travelItems) {
+      this.totalTravelEstimated += item.estimatedCostCad || 0;
+      if (item.moneyAllocations) {
+        for (const allocation of item.moneyAllocations) {
+          this.totalTravelOm += allocation.omAmount || 0;
+        }
+      }
+    }
+    // Add travel O&M to overall spending O&M
+    this.totalSpendingOm += this.totalTravelOm;
+    this.totalSpending += this.totalTravelOm;
 
     // Calculate remaining
     this.remainingCap = this.totalFundingCap - this.totalSpendingCap;
@@ -287,6 +337,26 @@ export class SummaryComponent implements OnInit, OnDestroy {
           const allocation = item.moneyAllocations.find(a => a.moneyId === money.id);
           if (allocation) {
             spendingCap += allocation.capAmount || 0;
+            spendingOm += allocation.omAmount || 0;
+          }
+        }
+      }
+
+      // Sum training O&M for this money type
+      for (const item of this.trainingItems) {
+        if (item.moneyAllocations) {
+          const allocation = item.moneyAllocations.find(a => a.moneyId === money.id);
+          if (allocation) {
+            spendingOm += allocation.omAmount || 0;
+          }
+        }
+      }
+
+      // Sum travel O&M for this money type
+      for (const item of this.travelItems) {
+        if (item.moneyAllocations) {
+          const allocation = item.moneyAllocations.find(a => a.moneyId === money.id);
+          if (allocation) {
             spendingOm += allocation.omAmount || 0;
           }
         }

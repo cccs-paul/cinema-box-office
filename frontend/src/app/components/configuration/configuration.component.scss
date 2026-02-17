@@ -1177,3 +1177,133 @@ html.dark-theme {
     color: var(--text-secondary);
   }
 }
+
+// Feature Toggle Cards
+.feature-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+  background: var(--background-secondary, #ffffff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 10px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &.enabled {
+    border-left: 4px solid var(--primary-gradient-start, #1976d2);
+  }
+
+  &.disabled-feature {
+    border-left: 4px solid var(--text-tertiary, #9ca3af);
+    opacity: 0.8;
+  }
+
+  .feature-info {
+    flex: 1;
+
+    .feature-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+
+      .feature-icon {
+        font-size: 1.5rem;
+      }
+
+      h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+    }
+
+    .feature-description {
+      margin: 0 0 0.75rem;
+      font-size: 0.875rem;
+      color: var(--text-secondary, #6b7280);
+      line-height: 1.5;
+    }
+
+    .feature-status {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+
+        &.status-enabled {
+          background: rgba(46, 125, 50, 0.12);
+          color: #2e7d32;
+        }
+
+        &.status-disabled {
+          background: rgba(158, 158, 158, 0.15);
+          color: #757575;
+        }
+      }
+
+      .status-hint {
+        font-size: 0.8rem;
+        color: var(--warning-color, #ed6c02);
+        font-style: italic;
+      }
+    }
+  }
+
+  .feature-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.25rem;
+
+    .toggle-loading {
+      font-size: 0.9rem;
+      animation: spin 1s linear infinite;
+    }
+
+    .toggle-switch.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+
+      .toggle-slider {
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// Dark theme for feature cards
+:host-context(html.dark-theme) {
+  .feature-card {
+    background: var(--background-secondary);
+    border-color: var(--border-color);
+
+    .feature-status .status-badge {
+      &.status-enabled {
+        background: rgba(76, 175, 80, 0.15);
+        color: #81c784;
+      }
+
+      &.status-disabled {
+        background: rgba(158, 158, 158, 0.15);
+        color: #bdbdbd;
+      }
+    }
+  }
+}

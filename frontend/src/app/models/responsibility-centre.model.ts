@@ -12,6 +12,8 @@ export interface ResponsibilityCentreDTO {
   accessLevel: 'OWNER' | 'READ_ONLY' | 'READ_WRITE';
   isOwner: boolean;  // Backend uses @JsonProperty("isOwner")
   canEdit?: boolean; // Backend uses @JsonProperty("canEdit")
+  trainingEnabled?: boolean;
+  travelEnabled?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

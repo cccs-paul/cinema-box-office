@@ -31,38 +31,67 @@ import { FiscalYear } from '../../models/fiscal-year.model';
   styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent implements OnInit, OnDestroy {
-  menuItems = [
+  private allMenuItems = [
     {
       labelKey: 'sidebar.funding',
       icon: '📊',
       route: '/app/dashboard',
       badge: null,
+      requiresFeature: null as string | null,
     },
     {
       labelKey: 'sidebar.procurement',
       icon: '📦',
       route: '/app/procurement',
       badge: null,
+      requiresFeature: null as string | null,
     },
     {
       labelKey: 'sidebar.spending',
       icon: '💰',
       route: '/app/spending',
       badge: null,
+      requiresFeature: null as string | null,
+    },
+    {
+      labelKey: 'sidebar.training',
+      icon: '🎓',
+      route: '/app/training',
+      badge: null,
+      requiresFeature: 'training' as string | null,
+    },
+    {
+      labelKey: 'sidebar.travel',
+      icon: '✈️',
+      route: '/app/travel',
+      badge: null,
+      requiresFeature: 'travel' as string | null,
     },
     {
       labelKey: 'sidebar.insights',
       icon: '📈',
       route: '/app/insights',
       badge: null,
+      requiresFeature: null as string | null,
     },
     {
       labelKey: 'sidebar.summary',
       icon: '📋',
       route: '/app/summary',
       badge: null,
+      requiresFeature: null as string | null,
     },
   ];
+
+  get menuItems() {
+    return this.allMenuItems.filter(item => {
+      if (!item.requiresFeature) return true;
+      if (!this.selectedRC) return true; // show by default until RC loads
+      if (item.requiresFeature === 'training') return this.selectedRC.trainingEnabled !== false;
+      if (item.requiresFeature === 'travel') return this.selectedRC.travelEnabled !== false;
+      return true;
+    });
+  }
 
   bottomMenuItems = [
     {
@@ -104,6 +133,19 @@ export class SidebarComponent implements OnInit, OnDestroy {
         error: () => {
           this.selectedRC = null;
         }
+      });
+
+    // Subscribe to RC updates (e.g. feature toggle changes) to refresh sidebar menu
+    this.rcService.rcUpdated$
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(rcId => this.rcService.getResponsibilityCentre(rcId))
+      )
+      .subscribe({
+        next: (rc) => {
+          this.selectedRC = rc;
+        },
+        error: () => {}
       });
 
     // Subscribe to combined RC and FY changes for FY loading

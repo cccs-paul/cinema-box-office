@@ -6,7 +6,7 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ResponsibilityCentreDTO } from '../models/responsibility-centre.model';
 
@@ -24,6 +24,15 @@ export class ResponsibilityCentreService {
     this.getStoredSelectedFY()
   );
   public selectedFY$ = this.selectedFYSubject.asObservable();
+
+  /** Emits when RC data is updated (e.g. feature toggles changed), so subscribers can refresh. */
+  private rcUpdatedSubject = new Subject<number>();
+  public rcUpdated$ = this.rcUpdatedSubject.asObservable();
+
+  /** Notify subscribers that an RC has been updated (e.g. after toggling features). */
+  notifyRCUpdated(rcId: number): void {
+    this.rcUpdatedSubject.next(rcId);
+  }
 
   constructor(private http: HttpClient) {}
 
@@ -119,6 +128,22 @@ export class ResponsibilityCentreService {
     localStorage.removeItem('selectedFY');
     this.selectedRCSubject.next(null);
     this.selectedFYSubject.next(null);
+  }
+
+  setTrainingEnabled(rcId: number, enabled: boolean): Observable<ResponsibilityCentreDTO> {
+    return this.http.patch<ResponsibilityCentreDTO>(
+      `${this.apiUrl}/${rcId}/training-enabled`,
+      { enabled },
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
+  setTravelEnabled(rcId: number, enabled: boolean): Observable<ResponsibilityCentreDTO> {
+    return this.http.patch<ResponsibilityCentreDTO>(
+      `${this.apiUrl}/${rcId}/travel-enabled`,
+      { enabled },
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
   }
 
   private getStoredSelectedRC(): number | null {

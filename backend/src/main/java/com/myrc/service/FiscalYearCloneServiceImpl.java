@@ -20,6 +20,10 @@ import com.myrc.model.SpendingCategory;
 import com.myrc.model.SpendingEvent;
 import com.myrc.model.SpendingItem;
 import com.myrc.model.SpendingMoneyAllocation;
+import com.myrc.model.TrainingItem;
+import com.myrc.model.TrainingMoneyAllocation;
+import com.myrc.model.TravelItem;
+import com.myrc.model.TravelMoneyAllocation;
 import com.myrc.repository.CategoryRepository;
 import com.myrc.repository.FiscalYearRepository;
 import com.myrc.repository.FundingItemRepository;
@@ -34,6 +38,10 @@ import com.myrc.repository.SpendingCategoryRepository;
 import com.myrc.repository.SpendingEventRepository;
 import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.SpendingMoneyAllocationRepository;
+import com.myrc.repository.TrainingItemRepository;
+import com.myrc.repository.TrainingMoneyAllocationRepository;
+import com.myrc.repository.TravelItemRepository;
+import com.myrc.repository.TravelMoneyAllocationRepository;
 import com.myrc.service.AuditService;
 import java.util.HashMap;
 import java.util.List;
@@ -83,6 +91,10 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
   private final ProcurementQuoteFileRepository procurementQuoteFileRepository;
   private final ProcurementEventRepository procurementEventRepository;
   private final ProcurementEventFileRepository procurementEventFileRepository;
+  private final TrainingItemRepository trainingItemRepository;
+  private final TrainingMoneyAllocationRepository trainingMoneyAllocationRepository;
+  private final TravelItemRepository travelItemRepository;
+  private final TravelMoneyAllocationRepository travelMoneyAllocationRepository;
   private final AuditService auditService;
 
   public FiscalYearCloneServiceImpl(
@@ -100,6 +112,10 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
       ProcurementQuoteFileRepository procurementQuoteFileRepository,
       ProcurementEventRepository procurementEventRepository,
       ProcurementEventFileRepository procurementEventFileRepository,
+      TrainingItemRepository trainingItemRepository,
+      TrainingMoneyAllocationRepository trainingMoneyAllocationRepository,
+      TravelItemRepository travelItemRepository,
+      TravelMoneyAllocationRepository travelMoneyAllocationRepository,
       AuditService auditService) {
     this.fiscalYearRepository = fiscalYearRepository;
     this.moneyRepository = moneyRepository;
@@ -115,6 +131,10 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
     this.procurementQuoteFileRepository = procurementQuoteFileRepository;
     this.procurementEventRepository = procurementEventRepository;
     this.procurementEventFileRepository = procurementEventFileRepository;
+    this.trainingItemRepository = trainingItemRepository;
+    this.trainingMoneyAllocationRepository = trainingMoneyAllocationRepository;
+    this.travelItemRepository = travelItemRepository;
+    this.travelMoneyAllocationRepository = travelMoneyAllocationRepository;
     this.auditService = auditService;
   }
 
@@ -164,7 +184,15 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
         categoryMap, procurementItemMap);
     logger.info("Cloned " + spendingItemCount + " spending items");
 
-    // 8. Clone Audit Events for this fiscal year
+    // 8. Clone Training Items (with money allocations)
+    int trainingItemCount = cloneTrainingItems(sourceFYId, clonedFY, moneyMap);
+    logger.info("Cloned " + trainingItemCount + " training items");
+
+    // 9. Clone Travel Items (with money allocations)
+    int travelItemCount = cloneTravelItems(sourceFYId, clonedFY, moneyMap);
+    logger.info("Cloned " + travelItemCount + " travel items");
+
+    // 10. Clone Audit Events for this fiscal year
     auditService.cloneAuditEventsForFiscalYear(
         sourceFY.getResponsibilityCentre().getId(), sourceFYId,
         targetRC.getId(), targetRC.getName(),
@@ -578,6 +606,129 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
       clonedEvent.setCreatedBy(srcEvent.getCreatedBy());
       clonedEvent.setActive(srcEvent.getActive());
       spendingEventRepository.save(clonedEvent);
+    }
+  }
+
+  /**
+   * Clone all training items from a source FY to a cloned FY.
+   */
+  private int cloneTrainingItems(Long sourceFYId, FiscalYear clonedFY,
+      Map<Long, Money> moneyMap) {
+    List<TrainingItem> sourceItems =
+        trainingItemRepository.findByFiscalYearIdOrderByNameAsc(sourceFYId);
+    int count = 0;
+
+    for (TrainingItem source : sourceItems) {
+      TrainingItem cloned = new TrainingItem();
+      cloned.setName(source.getName());
+      cloned.setDescription(source.getDescription());
+      cloned.setProvider(source.getProvider());
+      cloned.setReferenceNumber(source.getReferenceNumber());
+      cloned.setEstimatedCost(source.getEstimatedCost());
+      cloned.setActualCost(source.getActualCost());
+      cloned.setStatus(source.getStatus());
+      cloned.setTrainingType(source.getTrainingType());
+      cloned.setCurrency(source.getCurrency());
+      cloned.setExchangeRate(source.getExchangeRate());
+      cloned.setStartDate(source.getStartDate());
+      cloned.setEndDate(source.getEndDate());
+      cloned.setLocation(source.getLocation());
+      cloned.setEmployeeName(source.getEmployeeName());
+      cloned.setNumberOfParticipants(source.getNumberOfParticipants());
+      cloned.setFiscalYear(clonedFY);
+      cloned.setActive(source.getActive());
+      cloned = trainingItemRepository.save(cloned);
+
+      // Clone training money allocations
+      cloneTrainingMoneyAllocations(source, cloned, moneyMap);
+      count++;
+    }
+    return count;
+  }
+
+  /**
+   * Clone all training money allocations from a source training item to a cloned one.
+   */
+  private void cloneTrainingMoneyAllocations(TrainingItem source, TrainingItem cloned,
+      Map<Long, Money> moneyMap) {
+    List<TrainingMoneyAllocation> sourceAllocations =
+        trainingMoneyAllocationRepository.findByTrainingItemId(source.getId());
+
+    for (TrainingMoneyAllocation srcAlloc : sourceAllocations) {
+      Money mappedMoney = moneyMap.get(srcAlloc.getMoney().getId());
+      if (mappedMoney == null) {
+        logger.warning("Skipping training money allocation — source Money ID "
+            + srcAlloc.getMoney().getId() + " has no mapped clone");
+        continue;
+      }
+
+      TrainingMoneyAllocation clonedAlloc = new TrainingMoneyAllocation();
+      clonedAlloc.setTrainingItem(cloned);
+      clonedAlloc.setMoney(mappedMoney);
+      clonedAlloc.setOmAmount(srcAlloc.getOmAmount());
+      trainingMoneyAllocationRepository.save(clonedAlloc);
+    }
+  }
+
+  /**
+   * Clone all travel items from a source FY to a cloned FY.
+   */
+  private int cloneTravelItems(Long sourceFYId, FiscalYear clonedFY,
+      Map<Long, Money> moneyMap) {
+    List<TravelItem> sourceItems =
+        travelItemRepository.findByFiscalYearIdOrderByNameAsc(sourceFYId);
+    int count = 0;
+
+    for (TravelItem source : sourceItems) {
+      TravelItem cloned = new TravelItem();
+      cloned.setName(source.getName());
+      cloned.setDescription(source.getDescription());
+      cloned.setTravelAuthorizationNumber(source.getTravelAuthorizationNumber());
+      cloned.setReferenceNumber(source.getReferenceNumber());
+      cloned.setDestination(source.getDestination());
+      cloned.setPurpose(source.getPurpose());
+      cloned.setEstimatedCost(source.getEstimatedCost());
+      cloned.setActualCost(source.getActualCost());
+      cloned.setStatus(source.getStatus());
+      cloned.setTravelType(source.getTravelType());
+      cloned.setCurrency(source.getCurrency());
+      cloned.setExchangeRate(source.getExchangeRate());
+      cloned.setDepartureDate(source.getDepartureDate());
+      cloned.setReturnDate(source.getReturnDate());
+      cloned.setTravellerName(source.getTravellerName());
+      cloned.setNumberOfTravellers(source.getNumberOfTravellers());
+      cloned.setFiscalYear(clonedFY);
+      cloned.setActive(source.getActive());
+      cloned = travelItemRepository.save(cloned);
+
+      // Clone travel money allocations
+      cloneTravelMoneyAllocations(source, cloned, moneyMap);
+      count++;
+    }
+    return count;
+  }
+
+  /**
+   * Clone all travel money allocations from a source travel item to a cloned one.
+   */
+  private void cloneTravelMoneyAllocations(TravelItem source, TravelItem cloned,
+      Map<Long, Money> moneyMap) {
+    List<TravelMoneyAllocation> sourceAllocations =
+        travelMoneyAllocationRepository.findByTravelItemId(source.getId());
+
+    for (TravelMoneyAllocation srcAlloc : sourceAllocations) {
+      Money mappedMoney = moneyMap.get(srcAlloc.getMoney().getId());
+      if (mappedMoney == null) {
+        logger.warning("Skipping travel money allocation — source Money ID "
+            + srcAlloc.getMoney().getId() + " has no mapped clone");
+        continue;
+      }
+
+      TravelMoneyAllocation clonedAlloc = new TravelMoneyAllocation();
+      clonedAlloc.setTravelItem(cloned);
+      clonedAlloc.setMoney(mappedMoney);
+      clonedAlloc.setOmAmount(srcAlloc.getOmAmount());
+      travelMoneyAllocationRepository.save(clonedAlloc);
     }
   }
 }

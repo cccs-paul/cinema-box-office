@@ -68,6 +68,12 @@ public class ResponsibilityCentre {
   @Column(nullable = false)
   private Boolean active = true;
 
+  @Column(nullable = false)
+  private Boolean trainingEnabled = true;
+
+  @Column(nullable = false)
+  private Boolean travelEnabled = true;
+
   // Constructors
   public ResponsibilityCentre() {}
 
@@ -150,6 +156,22 @@ public class ResponsibilityCentre {
    */
   public void setVersion(Long version) {
     this.version = version;
+  }
+
+  public Boolean getTrainingEnabled() {
+    return trainingEnabled;
+  }
+
+  public void setTrainingEnabled(Boolean trainingEnabled) {
+    this.trainingEnabled = trainingEnabled;
+  }
+
+  public Boolean getTravelEnabled() {
+    return travelEnabled;
+  }
+
+  public void setTravelEnabled(Boolean travelEnabled) {
+    this.travelEnabled = travelEnabled;
   }
 
   @Override

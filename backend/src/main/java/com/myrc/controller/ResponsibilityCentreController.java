@@ -225,6 +225,84 @@ public class ResponsibilityCentreController {
   }
 
   /**
+   * Toggle training enabled for a responsibility centre.
+   *
+   * @param id the RC ID
+   * @param authentication the authentication principal
+   * @param request the toggle request body
+   * @return updated responsibility centre
+   */
+  @PatchMapping("/{id}/training-enabled")
+  @Operation(summary = "Toggle training enabled for an RC",
+      description = "Enables or disables training for a responsibility centre")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Training setting updated"),
+      @ApiResponse(responseCode = "400", description = "Invalid request"),
+      @ApiResponse(responseCode = "404", description = "RC not found")
+  })
+  public ResponseEntity<?> setTrainingEnabled(
+      @PathVariable Long id,
+      Authentication authentication,
+      @RequestBody java.util.Map<String, Boolean> request) {
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
+    }
+    try {
+      Boolean enabled = request.get("enabled");
+      if (enabled == null) {
+        return ResponseEntity.badRequest().body(new ErrorResponse("Missing 'enabled' field"));
+      }
+      Optional<ResponsibilityCentreDTO> result = rcService.setTrainingEnabled(id, username, enabled);
+      return result.map(ResponseEntity::ok)
+          .orElseGet(() -> ResponseEntity.notFound().build());
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+    }
+  }
+
+  /**
+   * Toggle travel enabled for a responsibility centre.
+   *
+   * @param id the RC ID
+   * @param authentication the authentication principal
+   * @param request the toggle request body
+   * @return updated responsibility centre
+   */
+  @PatchMapping("/{id}/travel-enabled")
+  @Operation(summary = "Toggle travel enabled for an RC",
+      description = "Enables or disables travel for a responsibility centre")
+  @ApiResponses(value = {
+      @ApiResponse(responseCode = "200", description = "Travel setting updated"),
+      @ApiResponse(responseCode = "400", description = "Invalid request"),
+      @ApiResponse(responseCode = "404", description = "RC not found")
+  })
+  public ResponseEntity<?> setTravelEnabled(
+      @PathVariable Long id,
+      Authentication authentication,
+      @RequestBody java.util.Map<String, Boolean> request) {
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
+    }
+    try {
+      Boolean enabled = request.get("enabled");
+      if (enabled == null) {
+        return ResponseEntity.badRequest().body(new ErrorResponse("Missing 'enabled' field"));
+      }
+      Optional<ResponsibilityCentreDTO> result = rcService.setTravelEnabled(id, username, enabled);
+      return result.map(ResponseEntity::ok)
+          .orElseGet(() -> ResponseEntity.notFound().build());
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+    }
+  }
+
+  /**
    * Delete a responsibility centre.
    *
    * @param id the RC ID

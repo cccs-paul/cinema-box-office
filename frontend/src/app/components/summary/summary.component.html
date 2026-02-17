@@ -287,6 +287,50 @@
           </div>
         </div>
       </div>
+
+      <!-- Training Stats -->
+      <div class="stats-card training">
+        <div class="stats-header">
+          <span class="stats-icon">🎓</span>
+          <span class="stats-title">{{ 'summary.training' | translate }}</span>
+        </div>
+        <div class="stats-body">
+          <div class="stat-row">
+            <span class="stat-label">{{ 'summary.items' | translate }}</span>
+            <span class="stat-value">{{ trainingItems.length }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">{{ 'summary.estimatedCost' | translate }}</span>
+            <span class="stat-value">{{ formatCurrency(totalTrainingEstimated) }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">{{ 'summary.omAllocated' | translate }}</span>
+            <span class="stat-value">{{ formatCurrency(totalTrainingOm) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Travel Stats -->
+      <div class="stats-card travel">
+        <div class="stats-header">
+          <span class="stats-icon">✈️</span>
+          <span class="stats-title">{{ 'summary.travel' | translate }}</span>
+        </div>
+        <div class="stats-body">
+          <div class="stat-row">
+            <span class="stat-label">{{ 'summary.items' | translate }}</span>
+            <span class="stat-value">{{ travelItems.length }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">{{ 'summary.estimatedCost' | translate }}</span>
+            <span class="stat-value">{{ formatCurrency(totalTravelEstimated) }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">{{ 'summary.omAllocated' | translate }}</span>
+            <span class="stat-value">{{ formatCurrency(totalTravelOm) }}</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

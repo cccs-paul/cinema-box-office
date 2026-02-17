@@ -43,6 +43,10 @@ import com.myrc.repository.SpendingCategoryRepository;
 import com.myrc.repository.SpendingEventRepository;
 import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.SpendingMoneyAllocationRepository;
+import com.myrc.repository.TrainingItemRepository;
+import com.myrc.repository.TrainingMoneyAllocationRepository;
+import com.myrc.repository.TravelItemRepository;
+import com.myrc.repository.TravelMoneyAllocationRepository;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
@@ -112,6 +116,18 @@ class FiscalYearCloneServiceImplTest {
   private ProcurementEventFileRepository procurementEventFileRepository;
 
   @Mock
+  private TrainingItemRepository trainingItemRepository;
+
+  @Mock
+  private TrainingMoneyAllocationRepository trainingMoneyAllocationRepository;
+
+  @Mock
+  private TravelItemRepository travelItemRepository;
+
+  @Mock
+  private TravelMoneyAllocationRepository travelMoneyAllocationRepository;
+
+  @Mock
   private AuditService auditService;
 
   private FiscalYearCloneServiceImpl cloneService;
@@ -137,6 +153,10 @@ class FiscalYearCloneServiceImplTest {
         procurementQuoteFileRepository,
         procurementEventRepository,
         procurementEventFileRepository,
+        trainingItemRepository,
+        trainingMoneyAllocationRepository,
+        travelItemRepository,
+        travelMoneyAllocationRepository,
         auditService
     );
 

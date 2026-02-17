@@ -28,6 +28,10 @@ import com.myrc.model.ResponsibilityCentre;
 import com.myrc.model.SpendingItem;
 import com.myrc.model.SpendingEvent;
 import com.myrc.model.SpendingMoneyAllocation;
+import com.myrc.model.TrainingItem;
+import com.myrc.model.TrainingMoneyAllocation;
+import com.myrc.model.TravelItem;
+import com.myrc.model.TravelMoneyAllocation;
 import com.myrc.model.User;
 import com.myrc.repository.CategoryRepository;
 import com.myrc.repository.FiscalYearRepository;
@@ -41,6 +45,10 @@ import com.myrc.repository.RCAccessRepository;
 import com.myrc.repository.ResponsibilityCentreRepository;
 import com.myrc.repository.SpendingItemRepository;
 import com.myrc.repository.SpendingEventRepository;
+import com.myrc.repository.TrainingItemRepository;
+import com.myrc.repository.TrainingMoneyAllocationRepository;
+import com.myrc.repository.TravelItemRepository;
+import com.myrc.repository.TravelMoneyAllocationRepository;
 import com.myrc.repository.UserRepository;
 import com.myrc.service.MoneyService;
 import com.myrc.service.CategoryService;
@@ -114,6 +122,18 @@ public class DataInitializer implements ApplicationRunner {
 
     @Autowired
     private ProcurementEventRepository procurementEventRepository;
+
+    @Autowired
+    private TrainingItemRepository trainingItemRepository;
+
+    @Autowired
+    private TrainingMoneyAllocationRepository trainingMoneyAllocationRepository;
+
+    @Autowired
+    private TravelItemRepository travelItemRepository;
+
+    @Autowired
+    private TravelMoneyAllocationRepository travelMoneyAllocationRepository;
 
     @Override
     public void run(org.springframework.boot.ApplicationArguments args) throws Exception {
@@ -249,6 +269,10 @@ public class DataInitializer implements ApplicationRunner {
                 initializeProcurementLinkedSpendingItems(demoFY);
                 // Create demo spending events for discrete spending items
                 initializeDemoSpendingEvents(demoFY);
+                // Create demo training items
+                initializeDemoTrainingItems(demoFY);
+                // Create demo travel items
+                initializeDemoTravelItems(demoFY);
             }
             return;
         }
@@ -293,6 +317,14 @@ public class DataInitializer implements ApplicationRunner {
 
             // Create demo spending events for discrete spending items
             initializeDemoSpendingEvents(savedFY);
+
+            // Create demo training items
+            initializeDemoTrainingItems(savedFY);
+            logger.info("Demo training items created for Demo FY");
+
+            // Create demo travel items
+            initializeDemoTravelItems(savedFY);
+            logger.info("Demo travel items created for Demo FY");
         } catch (Exception e) {
             logger.warning(() -> "Failed to create Demo FY: " + e.getMessage());
         }
@@ -1460,6 +1492,227 @@ public class DataInitializer implements ApplicationRunner {
     /**
      * Grant read-only access to the Demo RC for all users who don't already have access.
      */
+    /**
+     * Initialize demo training items for the Demo FY.
+     * Creates sample training activities with realistic data and money allocations.
+     *
+     * @param demoFY the Demo fiscal year
+     */
+    private void initializeDemoTrainingItems(FiscalYear demoFY) {
+        List<Money> fyMonies = moneyRepository.findByFiscalYearId(demoFY.getId());
+        if (fyMonies.isEmpty()) {
+            logger.warning("No money types found for Demo FY, skipping training item creation");
+            return;
+        }
+
+        Money abMoney = fyMonies.stream().filter(m -> "AB".equals(m.getCode())).findFirst().orElse(fyMonies.get(0));
+        Money oaMoney = fyMonies.stream().filter(m -> "OA".equals(m.getCode())).findFirst().orElse(null);
+
+        // Training items: {name, description, provider, referenceNumber, employeeName, location, numberOfParticipants, estimatedCost, actualCost, status, type}
+        Object[][] trainingData = {
+            {"AWS Cloud Practitioner Certification", "Cloud fundamentals certification for infrastructure team members", "Amazon Web Services", "TRN-2025-001", "Sarah Chen, David Kim", "Online", 2,
+                new BigDecimal("3500.00"), new BigDecimal("3500.00"), TrainingItem.Status.COMPLETED, TrainingItem.TrainingType.CERTIFICATION},
+            {"Advanced Python for Data Science", "Intensive Python programming course focused on data analytics and ML", "Coursera / University of Michigan", "TRN-2025-002", "Michael Torres", "Online", 1,
+                new BigDecimal("1200.00"), null, TrainingItem.Status.IN_PROGRESS, TrainingItem.TrainingType.ONLINE},
+            {"Project Management Professional (PMP)", "PMP certification preparation and exam", "Project Management Institute", "TRN-2025-003", "Jennifer Walsh", "Ottawa, ON", 1,
+                new BigDecimal("4500.00"), null, TrainingItem.Status.APPROVED, TrainingItem.TrainingType.CERTIFICATION},
+            {"GC Cybersecurity Conference 2025", "Annual government cybersecurity conference with hands-on workshops", "Treasury Board Secretariat", "TRN-2025-004", "Robert Leblanc, Anna Patel, James Liu", "Gatineau, QC", 3,
+                new BigDecimal("2100.00"), new BigDecimal("1950.00"), TrainingItem.Status.COMPLETED, TrainingItem.TrainingType.CONFERENCE},
+            {"French Language Training - Level B", "Intermediate French language training for bilingual proficiency", "Public Service Commission", "TRN-2025-005", "Emily Thompson", "Ottawa, ON", 1,
+                new BigDecimal("6000.00"), null, TrainingItem.Status.IN_PROGRESS, TrainingItem.TrainingType.COURSE},
+            {"Agile Scrum Master Workshop", "Two-day intensive Scrum Master certification workshop", "Scrum Alliance", "TRN-2025-006", "David Kim, Lisa Nguyen", "Toronto, ON", 2,
+                new BigDecimal("3200.00"), null, TrainingItem.Status.PLANNED, TrainingItem.TrainingType.WORKSHOP},
+            {"First Aid & CPR Recertification", "Mandatory workplace health and safety recertification", "Canadian Red Cross", "TRN-2025-007", "All team members", "Ottawa, ON", 12,
+                new BigDecimal("1800.00"), new BigDecimal("1800.00"), TrainingItem.Status.COMPLETED, TrainingItem.TrainingType.COURSE},
+            {"Machine Learning Fundamentals Seminar", "Half-day seminar on ML concepts and applications in government", "National Research Council", "TRN-2025-008", "Sarah Chen, Michael Torres", "Ottawa, ON", 2,
+                new BigDecimal("400.00"), null, TrainingItem.Status.PLANNED, TrainingItem.TrainingType.SEMINAR},
+            {"Leadership Development Program", "Six-month leadership development program for aspiring managers", "Canada School of Public Service", "TRN-2025-009", "Jennifer Walsh", "Ottawa, ON", 1,
+                new BigDecimal("8500.00"), null, TrainingItem.Status.APPROVED, TrainingItem.TrainingType.COURSE},
+            {"ITIL 4 Foundation Certification", "IT service management certification aligned with GC standards", "Axelos / PeopleCert", "TRN-2025-010", "Robert Leblanc", "Online", 1,
+                new BigDecimal("1500.00"), null, TrainingItem.Status.CANCELLED, TrainingItem.TrainingType.CERTIFICATION}
+        };
+
+        for (Object[] data : trainingData) {
+            String name = (String) data[0];
+
+            if (trainingItemRepository.existsByNameAndFiscalYearId(name, demoFY.getId())) {
+                logger.info("Demo training item '" + name + "' already exists, skipping");
+                continue;
+            }
+
+            try {
+                TrainingItem item = new TrainingItem();
+                item.setName(name);
+                item.setDescription((String) data[1]);
+                item.setProvider((String) data[2]);
+                item.setReferenceNumber((String) data[3]);
+                item.setEmployeeName((String) data[4]);
+                item.setLocation((String) data[5]);
+                item.setNumberOfParticipants((Integer) data[6]);
+                item.setEstimatedCost((BigDecimal) data[7]);
+                item.setActualCost((BigDecimal) data[8]);
+                item.setStatus((TrainingItem.Status) data[9]);
+                item.setTrainingType((TrainingItem.TrainingType) data[10]);
+                item.setCurrency(Currency.CAD);
+                item.setFiscalYear(demoFY);
+
+                // Set date ranges based on status
+                LocalDate baseDate = LocalDate.of(2025, 9, 1);
+                switch (item.getStatus()) {
+                    case COMPLETED:
+                        item.setStartDate(baseDate.minusMonths(3));
+                        item.setEndDate(baseDate.minusMonths(1));
+                        break;
+                    case IN_PROGRESS:
+                        item.setStartDate(baseDate);
+                        item.setEndDate(baseDate.plusMonths(3));
+                        break;
+                    case APPROVED:
+                        item.setStartDate(baseDate.plusMonths(1));
+                        item.setEndDate(baseDate.plusMonths(4));
+                        break;
+                    case PLANNED:
+                        item.setStartDate(baseDate.plusMonths(2));
+                        item.setEndDate(baseDate.plusMonths(5));
+                        break;
+                    default:
+                        break;
+                }
+
+                TrainingItem saved = trainingItemRepository.save(item);
+
+                // Add money allocations
+                BigDecimal omAmount = item.getEstimatedCost() != null ? item.getEstimatedCost() : BigDecimal.ZERO;
+
+                // Split higher-cost items across AB and OA money types
+                if (oaMoney != null && omAmount.compareTo(new BigDecimal("3000")) > 0) {
+                    BigDecimal oaAmount = omAmount.multiply(new BigDecimal("0.30")).setScale(2, java.math.RoundingMode.HALF_UP);
+                    BigDecimal abAmount = omAmount.subtract(oaAmount);
+
+                    trainingMoneyAllocationRepository.save(new TrainingMoneyAllocation(saved, abMoney, abAmount));
+                    trainingMoneyAllocationRepository.save(new TrainingMoneyAllocation(saved, oaMoney, oaAmount));
+                } else {
+                    trainingMoneyAllocationRepository.save(new TrainingMoneyAllocation(saved, abMoney, omAmount));
+                }
+
+                logger.info("Created demo training item: " + name);
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create demo training item '" + name + "': " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Initialize demo travel items for the Demo FY.
+     * Creates sample travel activities with realistic data and money allocations.
+     *
+     * @param demoFY the Demo fiscal year
+     */
+    private void initializeDemoTravelItems(FiscalYear demoFY) {
+        List<Money> fyMonies = moneyRepository.findByFiscalYearId(demoFY.getId());
+        if (fyMonies.isEmpty()) {
+            logger.warning("No money types found for Demo FY, skipping travel item creation");
+            return;
+        }
+
+        Money abMoney = fyMonies.stream().filter(m -> "AB".equals(m.getCode())).findFirst().orElse(fyMonies.get(0));
+        Money oaMoney = fyMonies.stream().filter(m -> "OA".equals(m.getCode())).findFirst().orElse(null);
+
+        // Travel items: {name, description, destination, purpose, travelAuthNumber, refNumber, travellerName, numberOfTravellers, estimatedCost, actualCost, status, type}
+        Object[][] travelData = {
+            {"Ottawa-Vancouver Cloud Migration Planning", "On-site meetings with Pacific region team for cloud infrastructure migration planning", "Vancouver, BC", "Technical planning sessions for Phase 2 cloud migration", "TA-2025-0101", "EXP-2025-301", "Sarah Chen, David Kim", 2,
+                new BigDecimal("6200.00"), new BigDecimal("5850.00"), TravelItem.Status.COMPLETED, TravelItem.TravelType.DOMESTIC},
+            {"GC Digital Exchange Conference", "Participation in annual GC digital innovation conference with presentation on ML initiatives", "Toronto, ON", "Conference presentation and networking", "TA-2025-0102", "EXP-2025-302", "Michael Torres", 1,
+                new BigDecimal("2800.00"), new BigDecimal("2650.00"), TravelItem.Status.COMPLETED, TravelItem.TravelType.CONFERENCE},
+            {"Five Eyes Cybersecurity Summit", "International intelligence partnership meetings on cybersecurity cooperation", "London, UK", "Bilateral meetings and summit participation", "TA-2025-0103", "EXP-2025-303", "Robert Leblanc, Anna Patel", 2,
+                new BigDecimal("14500.00"), null, TravelItem.Status.APPROVED, TravelItem.TravelType.INTERNATIONAL},
+            {"Montreal Data Centre Inspection", "Quarterly inspection of primary data centre facility and vendor meetings", "Montreal, QC", "Facility inspection and vendor review", "TA-2025-0104", "EXP-2025-304", "James Liu", 1,
+                new BigDecimal("1200.00"), new BigDecimal("980.00"), TravelItem.Status.COMPLETED, TravelItem.TravelType.DOMESTIC},
+            {"Halifax Regional Office Onboarding", "Travel to support onboarding of new Atlantic region staff members", "Halifax, NS", "Staff onboarding and regional coordination", "TA-2025-0105", "EXP-2025-305", "Jennifer Walsh, Emily Thompson", 2,
+                new BigDecimal("4800.00"), null, TravelItem.Status.IN_PROGRESS, TravelItem.TravelType.DOMESTIC},
+            {"AWS re:Invent Conference", "Annual AWS cloud computing conference for technical training and vendor engagement", "Las Vegas, NV, USA", "Technical training and vendor roadmap discussions", "TA-2025-0106", "EXP-2025-306", "David Kim", 1,
+                new BigDecimal("5500.00"), null, TravelItem.Status.PLANNED, TravelItem.TravelType.INTERNATIONAL},
+            {"Winnipeg Satellite Office Setup", "On-site setup and configuration of new satellite office IT infrastructure", "Winnipeg, MB", "IT infrastructure deployment", "TA-2025-0107", "EXP-2025-307", "Lisa Nguyen, James Liu", 2,
+                new BigDecimal("3600.00"), null, TravelItem.Status.APPROVED, TravelItem.TravelType.DOMESTIC},
+            {"Local Client Meetings - NCR", "Regular client meetings across National Capital Region offices", "Gatineau, QC", "Quarterly client check-ins", "TA-2025-0108", "EXP-2025-308", "Jennifer Walsh", 1,
+                new BigDecimal("150.00"), new BigDecimal("120.00"), TravelItem.Status.COMPLETED, TravelItem.TravelType.LOCAL},
+            {"GC Agile Community of Practice Meetup", "Cross-departmental agile practices workshop and community building", "Ottawa, ON", "Knowledge sharing and community building", "TA-2025-0109", "EXP-2025-309", "Emily Thompson, Michael Torres", 2,
+                new BigDecimal("200.00"), null, TravelItem.Status.PLANNED, TravelItem.TravelType.TRAINING},
+            {"Calgary Oil & Gas Sector Briefing", "Sector-specific briefing for regulated industry cybersecurity requirements", "Calgary, AB", "Industry regulatory consultation", "TA-2025-0110", "EXP-2025-310", "Robert Leblanc", 1,
+                new BigDecimal("3200.00"), null, TravelItem.Status.CANCELLED, TravelItem.TravelType.DOMESTIC}
+        };
+
+        for (Object[] data : travelData) {
+            String name = (String) data[0];
+
+            if (travelItemRepository.existsByNameAndFiscalYearId(name, demoFY.getId())) {
+                logger.info("Demo travel item '" + name + "' already exists, skipping");
+                continue;
+            }
+
+            try {
+                TravelItem item = new TravelItem();
+                item.setName(name);
+                item.setDescription((String) data[1]);
+                item.setDestination((String) data[2]);
+                item.setPurpose((String) data[3]);
+                item.setTravelAuthorizationNumber((String) data[4]);
+                item.setReferenceNumber((String) data[5]);
+                item.setTravellerName((String) data[6]);
+                item.setNumberOfTravellers((Integer) data[7]);
+                item.setEstimatedCost((BigDecimal) data[8]);
+                item.setActualCost((BigDecimal) data[9]);
+                item.setStatus((TravelItem.Status) data[10]);
+                item.setTravelType((TravelItem.TravelType) data[11]);
+                item.setCurrency(Currency.CAD);
+                item.setFiscalYear(demoFY);
+
+                // Set date ranges based on status
+                LocalDate baseDate = LocalDate.of(2025, 10, 1);
+                switch (item.getStatus()) {
+                    case COMPLETED:
+                        item.setDepartureDate(baseDate.minusMonths(3));
+                        item.setReturnDate(baseDate.minusMonths(3).plusDays(4));
+                        break;
+                    case IN_PROGRESS:
+                        item.setDepartureDate(baseDate);
+                        item.setReturnDate(baseDate.plusDays(5));
+                        break;
+                    case APPROVED:
+                        item.setDepartureDate(baseDate.plusMonths(1));
+                        item.setReturnDate(baseDate.plusMonths(1).plusDays(6));
+                        break;
+                    case PLANNED:
+                        item.setDepartureDate(baseDate.plusMonths(3));
+                        item.setReturnDate(baseDate.plusMonths(3).plusDays(3));
+                        break;
+                    default:
+                        break;
+                }
+
+                TravelItem saved = travelItemRepository.save(item);
+
+                // Add money allocations
+                BigDecimal omAmount = item.getEstimatedCost() != null ? item.getEstimatedCost() : BigDecimal.ZERO;
+
+                // Split higher-cost trips across AB and OA money types
+                if (oaMoney != null && omAmount.compareTo(new BigDecimal("5000")) > 0) {
+                    BigDecimal oaAmount = omAmount.multiply(new BigDecimal("0.40")).setScale(2, java.math.RoundingMode.HALF_UP);
+                    BigDecimal abAmount = omAmount.subtract(oaAmount);
+
+                    travelMoneyAllocationRepository.save(new TravelMoneyAllocation(saved, abMoney, abAmount));
+                    travelMoneyAllocationRepository.save(new TravelMoneyAllocation(saved, oaMoney, oaAmount));
+                } else {
+                    travelMoneyAllocationRepository.save(new TravelMoneyAllocation(saved, abMoney, omAmount));
+                }
+
+                logger.info("Created demo travel item: " + name);
+            } catch (Exception e) {
+                logger.warning(() -> "Failed to create demo travel item '" + name + "': " + e.getMessage());
+            }
+        }
+    }
+
     private void grantDemoAccessToAllUsers() {
         User adminUser = userRepository.findByUsername("admin").orElse(null);
         if (adminUser == null) {

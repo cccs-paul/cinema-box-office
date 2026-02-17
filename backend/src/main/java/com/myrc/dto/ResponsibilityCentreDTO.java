@@ -29,6 +29,8 @@ public class ResponsibilityCentreDTO {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
+  private Boolean trainingEnabled;
+  private Boolean travelEnabled;
   private static final String DEMO_RC_NAME = "Demo";  // Name of the demo RC
 
   // Constructors
@@ -84,6 +86,8 @@ public class ResponsibilityCentreDTO {
         rc.getActive()
     );
     dto.setCurrentUsername(currentUsername);
+    dto.setTrainingEnabled(rc.getTrainingEnabled());
+    dto.setTravelEnabled(rc.getTravelEnabled());
     return dto;
   }
 
@@ -109,6 +113,8 @@ public class ResponsibilityCentreDTO {
         rc.getActive()
     );
     dto.setCurrentUsername(currentUsername);
+    dto.setTrainingEnabled(rc.getTrainingEnabled());
+    dto.setTravelEnabled(rc.getTravelEnabled());
     return dto;
   }
 
@@ -183,6 +189,22 @@ public class ResponsibilityCentreDTO {
 
   public void setCurrentUsername(String currentUsername) {
     this.currentUsername = currentUsername;
+  }
+
+  public Boolean getTrainingEnabled() {
+    return trainingEnabled;
+  }
+
+  public void setTrainingEnabled(Boolean trainingEnabled) {
+    this.trainingEnabled = trainingEnabled;
+  }
+
+  public Boolean getTravelEnabled() {
+    return travelEnabled;
+  }
+
+  public void setTravelEnabled(Boolean travelEnabled) {
+    this.travelEnabled = travelEnabled;
   }
 
   /**

@@ -65,6 +65,13 @@
       <span class="tab-icon">📥</span>
       <span class="tab-label">{{ 'configuration.importExport' | translate }}</span>
     </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'features'"
+      (click)="setActiveTab('features')">
+      <span class="tab-icon">🧩</span>
+      <span class="tab-label">{{ 'configuration.features' | translate }}</span>
+    </button>
   </div>
 
   <!-- Monies Tab Content -->
@@ -614,6 +621,89 @@
         <div class="alert alert-error" *ngIf="importErrorMessage">
           {{ importErrorMessage }}
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Tab Content -->
+  <div class="tab-content" *ngIf="activeTab === 'features'">
+    <div class="section-header">
+      <h2>{{ 'configuration.featuresTitle' | translate }}</h2>
+      <p class="section-description">
+        {{ 'configuration.featuresDesc' | translate }}
+      </p>
+    </div>
+
+    <!-- Feature Error -->
+    <div class="error-message" *ngIf="featureError">
+      <span class="error-icon">⚠️</span>
+      {{ featureError }}
+      <button class="dismiss-btn" (click)="clearFeatureError()">×</button>
+    </div>
+
+    <!-- Owner-only notice -->
+    <div class="info-message" *ngIf="isNotOwner">
+      <span class="info-icon">🔒</span>
+      {{ 'configuration.featuresOwnerOnly' | translate }}
+    </div>
+
+    <!-- Training Feature Card -->
+    <div class="feature-card" [class.enabled]="selectedRC?.trainingEnabled !== false" [class.disabled-feature]="selectedRC?.trainingEnabled === false">
+      <div class="feature-info">
+        <div class="feature-header">
+          <span class="feature-icon">🎓</span>
+          <h3>{{ 'configuration.trainingFeatureTitle' | translate }}</h3>
+        </div>
+        <p class="feature-description">{{ 'configuration.trainingFeatureDesc' | translate }}</p>
+        <div class="feature-status">
+          <span class="status-badge" [class.status-enabled]="selectedRC?.trainingEnabled !== false" [class.status-disabled]="selectedRC?.trainingEnabled === false">
+            {{ (selectedRC?.trainingEnabled !== false ? 'configuration.enabled' : 'configuration.disabled') | translate }}
+          </span>
+          <span class="status-hint" *ngIf="hasTrainingItems">
+            {{ 'configuration.hasItemsWarning' | translate }}
+          </span>
+        </div>
+      </div>
+      <div class="feature-control">
+        <label class="toggle-switch" [class.disabled]="isNotOwner || togglingTraining || (hasTrainingItems && selectedRC?.trainingEnabled !== false)">
+          <input 
+            type="checkbox"
+            [checked]="selectedRC?.trainingEnabled !== false"
+            (change)="toggleTrainingEnabled()"
+            [disabled]="isNotOwner || togglingTraining || checkingTrainingItems || (hasTrainingItems && selectedRC?.trainingEnabled !== false)">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-loading" *ngIf="togglingTraining || checkingTrainingItems">⏳</span>
+      </div>
+    </div>
+
+    <!-- Travel Feature Card -->
+    <div class="feature-card" [class.enabled]="selectedRC?.travelEnabled !== false" [class.disabled-feature]="selectedRC?.travelEnabled === false">
+      <div class="feature-info">
+        <div class="feature-header">
+          <span class="feature-icon">✈️</span>
+          <h3>{{ 'configuration.travelFeatureTitle' | translate }}</h3>
+        </div>
+        <p class="feature-description">{{ 'configuration.travelFeatureDesc' | translate }}</p>
+        <div class="feature-status">
+          <span class="status-badge" [class.status-enabled]="selectedRC?.travelEnabled !== false" [class.status-disabled]="selectedRC?.travelEnabled === false">
+            {{ (selectedRC?.travelEnabled !== false ? 'configuration.enabled' : 'configuration.disabled') | translate }}
+          </span>
+          <span class="status-hint" *ngIf="hasTravelItems">
+            {{ 'configuration.hasItemsWarning' | translate }}
+          </span>
+        </div>
+      </div>
+      <div class="feature-control">
+        <label class="toggle-switch" [class.disabled]="isNotOwner || togglingTravel || (hasTravelItems && selectedRC?.travelEnabled !== false)">
+          <input 
+            type="checkbox"
+            [checked]="selectedRC?.travelEnabled !== false"
+            (change)="toggleTravelEnabled()"
+            [disabled]="isNotOwner || togglingTravel || checkingTravelItems || (hasTravelItems && selectedRC?.travelEnabled !== false)">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-loading" *ngIf="togglingTravel || checkingTravelItems">⏳</span>
       </div>
     </div>
   </div>

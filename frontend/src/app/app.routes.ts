@@ -14,6 +14,8 @@ import { RCConfigurationComponent } from './components/rc-configuration/rc-confi
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { SpendingComponent } from './components/spending/spending.component';
 import { ProcurementComponent } from './components/procurement/procurement.component';
+import { TrainingComponent } from './components/training/training.component';
+import { TravelComponent } from './components/travel/travel.component';
 import { InsightsComponent } from './components/insights/insights.component';
 import { SummaryComponent } from './components/summary/summary.component';
 import { DeveloperToolsComponent } from './components/developer-tools/developer-tools.component';
@@ -81,6 +83,14 @@ export const routes: Routes = [
       {
         path: 'procurement',
         component: ProcurementComponent,
+      },
+      {
+        path: 'training',
+        component: TrainingComponent,
+      },
+      {
+        path: 'travel',
+        component: TravelComponent,
       },
       {
         path: 'insights',
