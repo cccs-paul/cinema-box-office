@@ -274,8 +274,10 @@ public class TravelItemServiceImpl implements TravelItemService {
     traveller.setTaac(travellerDTO.getTaac());
     traveller.setEstimatedCost(travellerDTO.getEstimatedCost());
     traveller.setFinalCost(travellerDTO.getFinalCost());
-    traveller.setCurrency(travellerDTO.getCurrency() != null ? Currency.valueOf(travellerDTO.getCurrency()) : Currency.CAD);
-    traveller.setExchangeRate(travellerDTO.getExchangeRate());
+    traveller.setEstimatedCurrency(travellerDTO.getEstimatedCurrency() != null ? Currency.valueOf(travellerDTO.getEstimatedCurrency()) : Currency.CAD);
+    traveller.setEstimatedExchangeRate(travellerDTO.getEstimatedExchangeRate());
+    traveller.setFinalCurrency(travellerDTO.getFinalCurrency() != null ? Currency.valueOf(travellerDTO.getFinalCurrency()) : Currency.CAD);
+    traveller.setFinalExchangeRate(travellerDTO.getFinalExchangeRate());
     if (travellerDTO.getApprovalStatus() != null) {
       traveller.setApprovalStatus(TravelTraveller.ApprovalStatus.valueOf(travellerDTO.getApprovalStatus()));
     }
@@ -309,8 +311,10 @@ public class TravelItemServiceImpl implements TravelItemService {
     if (travellerDTO.getTaac() != null) traveller.setTaac(travellerDTO.getTaac());
     if (travellerDTO.getEstimatedCost() != null) traveller.setEstimatedCost(travellerDTO.getEstimatedCost());
     if (travellerDTO.getFinalCost() != null) traveller.setFinalCost(travellerDTO.getFinalCost());
-    if (travellerDTO.getCurrency() != null) traveller.setCurrency(Currency.valueOf(travellerDTO.getCurrency()));
-    if (travellerDTO.getExchangeRate() != null) traveller.setExchangeRate(travellerDTO.getExchangeRate());
+    if (travellerDTO.getEstimatedCurrency() != null) traveller.setEstimatedCurrency(Currency.valueOf(travellerDTO.getEstimatedCurrency()));
+    if (travellerDTO.getEstimatedExchangeRate() != null) traveller.setEstimatedExchangeRate(travellerDTO.getEstimatedExchangeRate());
+    if (travellerDTO.getFinalCurrency() != null) traveller.setFinalCurrency(Currency.valueOf(travellerDTO.getFinalCurrency()));
+    if (travellerDTO.getFinalExchangeRate() != null) traveller.setFinalExchangeRate(travellerDTO.getFinalExchangeRate());
     if (travellerDTO.getApprovalStatus() != null) traveller.setApprovalStatus(TravelTraveller.ApprovalStatus.valueOf(travellerDTO.getApprovalStatus()));
 
     traveller = travellerRepository.save(traveller);
@@ -350,8 +354,10 @@ public class TravelItemServiceImpl implements TravelItemService {
       traveller.setTaac(dto.getTaac());
       traveller.setEstimatedCost(dto.getEstimatedCost());
       traveller.setFinalCost(dto.getFinalCost());
-      traveller.setCurrency(dto.getCurrency() != null ? Currency.valueOf(dto.getCurrency()) : Currency.CAD);
-      traveller.setExchangeRate(dto.getExchangeRate());
+      traveller.setEstimatedCurrency(dto.getEstimatedCurrency() != null ? Currency.valueOf(dto.getEstimatedCurrency()) : Currency.CAD);
+      traveller.setEstimatedExchangeRate(dto.getEstimatedExchangeRate());
+      traveller.setFinalCurrency(dto.getFinalCurrency() != null ? Currency.valueOf(dto.getFinalCurrency()) : Currency.CAD);
+      traveller.setFinalExchangeRate(dto.getFinalExchangeRate());
       if (dto.getApprovalStatus() != null) {
         traveller.setApprovalStatus(TravelTraveller.ApprovalStatus.valueOf(dto.getApprovalStatus()));
       }

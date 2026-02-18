@@ -303,6 +303,62 @@ public class ResponsibilityCentreController {
   }
 
   /**
+   * Toggle training include in summary for a responsibility centre.
+   */
+  @PatchMapping("/{id}/training-include-in-summary")
+  @Operation(summary = "Toggle training include in summary for an RC")
+  public ResponseEntity<?> setTrainingIncludeInSummary(
+      @PathVariable Long id,
+      Authentication authentication,
+      @RequestBody java.util.Map<String, Boolean> request) {
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
+    }
+    try {
+      Boolean include = request.get("include");
+      if (include == null) {
+        return ResponseEntity.badRequest().body(new ErrorResponse("Missing 'include' field"));
+      }
+      Optional<ResponsibilityCentreDTO> result = rcService.setTrainingIncludeInSummary(id, username, include);
+      return result.map(ResponseEntity::ok)
+          .orElseGet(() -> ResponseEntity.notFound().build());
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+    }
+  }
+
+  /**
+   * Toggle travel include in summary for a responsibility centre.
+   */
+  @PatchMapping("/{id}/travel-include-in-summary")
+  @Operation(summary = "Toggle travel include in summary for an RC")
+  public ResponseEntity<?> setTravelIncludeInSummary(
+      @PathVariable Long id,
+      Authentication authentication,
+      @RequestBody java.util.Map<String, Boolean> request) {
+    String username = "default-user";
+    if (authentication != null && authentication.getName() != null && !authentication.getName().isEmpty()) {
+      username = authentication.getName();
+    }
+    try {
+      Boolean include = request.get("include");
+      if (include == null) {
+        return ResponseEntity.badRequest().body(new ErrorResponse("Missing 'include' field"));
+      }
+      Optional<ResponsibilityCentreDTO> result = rcService.setTravelIncludeInSummary(id, username, include);
+      return result.map(ResponseEntity::ok)
+          .orElseGet(() -> ResponseEntity.notFound().build());
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("An unexpected error occurred"));
+    }
+  }
+
+  /**
    * Delete a responsibility centre.
    *
    * @param id the RC ID

@@ -12,6 +12,8 @@ import { ResponsibilityCentreService } from '../../services/responsibility-centr
 import { FiscalYearService } from '../../services/fiscal-year.service';
 import { MoneyService } from '../../services/money.service';
 import { CategoryService } from '../../services/category.service';
+import { TrainingItemService } from '../../services/training-item.service';
+import { TravelItemService } from '../../services/travel-item.service';
 import { Money } from '../../models/money.model';
 import { Category } from '../../models/category.model';
 
@@ -87,6 +89,12 @@ describe('ConfigurationComponent', () => {
     categoryService.updateCategory.and.returnValue(of(mockCategories[1]));
     categoryService.deleteCategory.and.returnValue(of(undefined));
 
+    const trainingItemService = jasmine.createSpyObj('TrainingItemService', ['getTrainingItemsByFY']);
+    trainingItemService.getTrainingItemsByFY.and.returnValue(of([]));
+
+    const travelItemService = jasmine.createSpyObj('TravelItemService', ['getTravelItemsByFY']);
+    travelItemService.getTravelItemsByFY.and.returnValue(of([]));
+
     await TestBed.configureTestingModule({
       imports: [ConfigurationComponent, FormsModule, TranslateModule.forRoot()]
     })
@@ -94,6 +102,8 @@ describe('ConfigurationComponent', () => {
     .overrideProvider(FiscalYearService, { useValue: fyService })
     .overrideProvider(MoneyService, { useValue: moneyService })
     .overrideProvider(CategoryService, { useValue: categoryService })
+    .overrideProvider(TrainingItemService, { useValue: trainingItemService })
+    .overrideProvider(TravelItemService, { useValue: travelItemService })
     .compileComponents();
 
     fixture = TestBed.createComponent(ConfigurationComponent);

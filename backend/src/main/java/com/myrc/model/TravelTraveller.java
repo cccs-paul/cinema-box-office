@@ -73,10 +73,17 @@ public class TravelTraveller {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 3)
-  private Currency currency = Currency.CAD;
+  private Currency estimatedCurrency = Currency.CAD;
 
   @Column(precision = 15, scale = 6)
-  private BigDecimal exchangeRate;
+  private BigDecimal estimatedExchangeRate;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 3)
+  private Currency finalCurrency = Currency.CAD;
+
+  @Column(precision = 15, scale = 6)
+  private BigDecimal finalExchangeRate;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 30)
@@ -121,11 +128,17 @@ public class TravelTraveller {
   public BigDecimal getFinalCost() { return finalCost; }
   public void setFinalCost(BigDecimal finalCost) { this.finalCost = finalCost; }
 
-  public Currency getCurrency() { return currency; }
-  public void setCurrency(Currency currency) { this.currency = currency; }
+  public Currency getEstimatedCurrency() { return estimatedCurrency; }
+  public void setEstimatedCurrency(Currency estimatedCurrency) { this.estimatedCurrency = estimatedCurrency; }
 
-  public BigDecimal getExchangeRate() { return exchangeRate; }
-  public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
+  public BigDecimal getEstimatedExchangeRate() { return estimatedExchangeRate; }
+  public void setEstimatedExchangeRate(BigDecimal estimatedExchangeRate) { this.estimatedExchangeRate = estimatedExchangeRate; }
+
+  public Currency getFinalCurrency() { return finalCurrency; }
+  public void setFinalCurrency(Currency finalCurrency) { this.finalCurrency = finalCurrency; }
+
+  public BigDecimal getFinalExchangeRate() { return finalExchangeRate; }
+  public void setFinalExchangeRate(BigDecimal finalExchangeRate) { this.finalExchangeRate = finalExchangeRate; }
 
   public ApprovalStatus getApprovalStatus() { return approvalStatus; }
   public void setApprovalStatus(ApprovalStatus approvalStatus) { this.approvalStatus = approvalStatus; }
@@ -144,8 +157,8 @@ public class TravelTraveller {
    */
   public BigDecimal getEstimatedCostInCAD() {
     if (estimatedCost == null) return BigDecimal.ZERO;
-    if (currency == Currency.CAD || exchangeRate == null) return estimatedCost;
-    return estimatedCost.multiply(exchangeRate);
+    if (estimatedCurrency == Currency.CAD || estimatedExchangeRate == null) return estimatedCost;
+    return estimatedCost.multiply(estimatedExchangeRate);
   }
 
   /**
@@ -153,8 +166,8 @@ public class TravelTraveller {
    */
   public BigDecimal getFinalCostInCAD() {
     if (finalCost == null) return BigDecimal.ZERO;
-    if (currency == Currency.CAD || exchangeRate == null) return finalCost;
-    return finalCost.multiply(exchangeRate);
+    if (finalCurrency == Currency.CAD || finalExchangeRate == null) return finalCost;
+    return finalCost.multiply(finalExchangeRate);
   }
 
   @Override
@@ -166,7 +179,8 @@ public class TravelTraveller {
         ", approvalStatus=" + approvalStatus +
         ", estimatedCost=" + estimatedCost +
         ", finalCost=" + finalCost +
-        ", currency=" + currency +
+        ", estimatedCurrency=" + estimatedCurrency +
+        ", finalCurrency=" + finalCurrency +
         '}';
   }
 }

@@ -101,12 +101,6 @@ public class TrainingItem {
   @Column(length = 200)
   private String provider;
 
-  /**
-   * Electronic Commitment Order number (replaces reference number).
-   */
-  @Column(length = 100)
-  private String eco;
-
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
   private Status status = Status.PLANNED;
@@ -198,9 +192,6 @@ public class TrainingItem {
 
   public String getProvider() { return provider; }
   public void setProvider(String provider) { this.provider = provider; }
-
-  public String getEco() { return eco; }
-  public void setEco(String eco) { this.eco = eco; }
 
   public Status getStatus() { return status; }
   public void setStatus(Status status) { this.status = status; }
@@ -305,7 +296,6 @@ public class TrainingItem {
         ", name='" + name + '\'' +
         ", trainingType=" + trainingType +
         ", format=" + format +
-        ", eco='" + eco + '\'' +
         ", status=" + status +
         ", participants=" + (participants != null ? participants.size() : 0) +
         ", fiscalYear=" + (fiscalYear != null ? fiscalYear.getName() : null) +

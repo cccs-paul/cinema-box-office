@@ -31,6 +31,8 @@ public class ResponsibilityCentreDTO {
   private Boolean active;
   private Boolean trainingEnabled;
   private Boolean travelEnabled;
+  private Boolean trainingIncludeInSummary;
+  private Boolean travelIncludeInSummary;
   private static final String DEMO_RC_NAME = "Demo";  // Name of the demo RC
 
   // Constructors
@@ -88,6 +90,8 @@ public class ResponsibilityCentreDTO {
     dto.setCurrentUsername(currentUsername);
     dto.setTrainingEnabled(rc.getTrainingEnabled());
     dto.setTravelEnabled(rc.getTravelEnabled());
+    dto.setTrainingIncludeInSummary(rc.getTrainingIncludeInSummary());
+    dto.setTravelIncludeInSummary(rc.getTravelIncludeInSummary());
     return dto;
   }
 
@@ -115,6 +119,8 @@ public class ResponsibilityCentreDTO {
     dto.setCurrentUsername(currentUsername);
     dto.setTrainingEnabled(rc.getTrainingEnabled());
     dto.setTravelEnabled(rc.getTravelEnabled());
+    dto.setTrainingIncludeInSummary(rc.getTrainingIncludeInSummary());
+    dto.setTravelIncludeInSummary(rc.getTravelIncludeInSummary());
     return dto;
   }
 
@@ -205,6 +211,22 @@ public class ResponsibilityCentreDTO {
 
   public void setTravelEnabled(Boolean travelEnabled) {
     this.travelEnabled = travelEnabled;
+  }
+
+  public Boolean getTrainingIncludeInSummary() {
+    return trainingIncludeInSummary;
+  }
+
+  public void setTrainingIncludeInSummary(Boolean trainingIncludeInSummary) {
+    this.trainingIncludeInSummary = trainingIncludeInSummary;
+  }
+
+  public Boolean getTravelIncludeInSummary() {
+    return travelIncludeInSummary;
+  }
+
+  public void setTravelIncludeInSummary(Boolean travelIncludeInSummary) {
+    this.travelIncludeInSummary = travelIncludeInSummary;
   }
 
   /**

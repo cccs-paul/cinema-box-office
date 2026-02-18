@@ -78,7 +78,8 @@ describe('SidebarComponent', () => {
 
     rcService = jasmine.createSpyObj('ResponsibilityCentreService', ['getResponsibilityCentre'], {
       selectedRC$: selectedRCSubject.asObservable(),
-      selectedFY$: selectedFYSubject.asObservable()
+      selectedFY$: selectedFYSubject.asObservable(),
+      rcUpdated$: new Subject<number>().asObservable()
     });
     rcService.getResponsibilityCentre.and.returnValue(of(mockRC));
 
@@ -114,12 +115,14 @@ describe('SidebarComponent', () => {
     });
 
     it('should have correct menu items', () => {
-      expect(component.menuItems.length).toBe(5);
+      expect(component.menuItems.length).toBe(7);
       expect(component.menuItems[0].labelKey).toBe('sidebar.funding');
       expect(component.menuItems[1].labelKey).toBe('sidebar.procurement');
       expect(component.menuItems[2].labelKey).toBe('sidebar.spending');
-      expect(component.menuItems[3].labelKey).toBe('sidebar.insights');
-      expect(component.menuItems[4].labelKey).toBe('sidebar.summary');
+      expect(component.menuItems[3].labelKey).toBe('sidebar.training');
+      expect(component.menuItems[4].labelKey).toBe('sidebar.travel');
+      expect(component.menuItems[5].labelKey).toBe('sidebar.insights');
+      expect(component.menuItems[6].labelKey).toBe('sidebar.summary');
     });
 
     it('should have correct bottom menu items', () => {
@@ -132,8 +135,10 @@ describe('SidebarComponent', () => {
       expect(component.menuItems[0].route).toBe('/app/dashboard');
       expect(component.menuItems[1].route).toBe('/app/procurement');
       expect(component.menuItems[2].route).toBe('/app/spending');
-      expect(component.menuItems[3].route).toBe('/app/insights');
-      expect(component.menuItems[4].route).toBe('/app/summary');
+      expect(component.menuItems[3].route).toBe('/app/training');
+      expect(component.menuItems[4].route).toBe('/app/travel');
+      expect(component.menuItems[5].route).toBe('/app/insights');
+      expect(component.menuItems[6].route).toBe('/app/summary');
     });
 
     it('should have icons for all menu items', () => {
@@ -236,6 +241,39 @@ describe('SidebarComponent', () => {
       
       expect(nextSpy).toHaveBeenCalled();
       expect(completeSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Feature-based menu visibility', () => {
+    it('should show all 7 menu items when no RC is loaded', () => {
+      component.selectedRC = null;
+      expect(component.menuItems.length).toBe(7);
+    });
+
+    it('should show training and travel when RC has features enabled', () => {
+      component.selectedRC = { ...mockRC, trainingEnabled: true, travelEnabled: true } as any;
+      expect(component.menuItems.length).toBe(7);
+      expect(component.menuItems.find(i => i.labelKey === 'sidebar.training')).toBeTruthy();
+      expect(component.menuItems.find(i => i.labelKey === 'sidebar.travel')).toBeTruthy();
+    });
+
+    it('should hide training when RC has trainingEnabled=false', () => {
+      component.selectedRC = { ...mockRC, trainingEnabled: false, travelEnabled: true } as any;
+      expect(component.menuItems.find(i => i.labelKey === 'sidebar.training')).toBeFalsy();
+      expect(component.menuItems.find(i => i.labelKey === 'sidebar.travel')).toBeTruthy();
+    });
+
+    it('should hide travel when RC has travelEnabled=false', () => {
+      component.selectedRC = { ...mockRC, trainingEnabled: true, travelEnabled: false } as any;
+      expect(component.menuItems.find(i => i.labelKey === 'sidebar.training')).toBeTruthy();
+      expect(component.menuItems.find(i => i.labelKey === 'sidebar.travel')).toBeFalsy();
+    });
+
+    it('should hide both training and travel when both disabled', () => {
+      component.selectedRC = { ...mockRC, trainingEnabled: false, travelEnabled: false } as any;
+      expect(component.menuItems.length).toBe(5);
+      expect(component.menuItems.find(i => i.labelKey === 'sidebar.training')).toBeFalsy();
+      expect(component.menuItems.find(i => i.labelKey === 'sidebar.travel')).toBeFalsy();
     });
   });
 });

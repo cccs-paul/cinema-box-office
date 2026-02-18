@@ -98,6 +98,27 @@ export interface TrainingMoneyAllocation {
 }
 
 /**
+ * Enum for training participant status values.
+ */
+export type TrainingParticipantStatus =
+  | 'PLANNED'
+  | 'ECO_CREATED'
+  | 'REGISTERED'
+  | 'COMPLETED'
+  | 'CANCELLED';
+
+/**
+ * Map of participant status to display information.
+ */
+export const PARTICIPANT_STATUS_INFO: Record<TrainingParticipantStatus, TrainingStatusInfo> = {
+  PLANNED: { label: 'Planned', color: 'secondary', icon: '📋' },
+  ECO_CREATED: { label: 'ECO Created', color: 'info', icon: '📄' },
+  REGISTERED: { label: 'Registered', color: 'primary', icon: '✅' },
+  COMPLETED: { label: 'Completed', color: 'success', icon: '✔️' },
+  CANCELLED: { label: 'Cancelled', color: 'danger', icon: '❌' }
+};
+
+/**
  * Training participant within a training item.
  */
 export interface TrainingParticipant {
@@ -107,17 +128,29 @@ export interface TrainingParticipant {
   /** Participant name */
   name: string;
 
+  /** ECO number (per participant) */
+  eco?: string;
+
+  /** Participant status */
+  status: TrainingParticipantStatus;
+
   /** Estimated cost */
   estimatedCost: number | null;
 
   /** Final cost */
   finalCost: number | null;
 
-  /** Currency code (ISO 4217) */
-  currency: string;
+  /** Currency code for estimated cost */
+  estimatedCurrency: string;
 
-  /** Exchange rate to CAD */
-  exchangeRate: number | null;
+  /** Exchange rate to CAD for estimated cost */
+  estimatedExchangeRate: number | null;
+
+  /** Currency code for final cost */
+  finalCurrency: string;
+
+  /** Exchange rate to CAD for final cost */
+  finalExchangeRate: number | null;
 
   /** Estimated cost converted to CAD */
   estimatedCostCad?: number | null;
@@ -147,9 +180,6 @@ export interface TrainingItem {
 
   /** Training provider */
   provider?: string;
-
-  /** ECO number */
-  eco?: string;
 
   /** Current status */
   status: TrainingItemStatus;

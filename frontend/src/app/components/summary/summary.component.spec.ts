@@ -15,6 +15,8 @@ import { FundingItemService } from '../../services/funding-item.service';
 import { SpendingItemService } from '../../services/spending-item.service';
 import { ProcurementService } from '../../services/procurement.service';
 import { MoneyService } from '../../services/money.service';
+import { TrainingItemService } from '../../services/training-item.service';
+import { TravelItemService } from '../../services/travel-item.service';
 import { User } from '../../models/user.model';
 
 describe('SummaryComponent', () => {
@@ -28,6 +30,8 @@ describe('SummaryComponent', () => {
   let spendingItemService: jasmine.SpyObj<SpendingItemService>;
   let procurementService: jasmine.SpyObj<ProcurementService>;
   let moneyService: jasmine.SpyObj<MoneyService>;
+  let trainingItemService: jasmine.SpyObj<TrainingItemService>;
+  let travelItemService: jasmine.SpyObj<TravelItemService>;
 
   let currentUserSubject: BehaviorSubject<User | null>;
 
@@ -122,6 +126,12 @@ describe('SummaryComponent', () => {
     moneyService = jasmine.createSpyObj('MoneyService', ['getMoniesByFiscalYear']);
     moneyService.getMoniesByFiscalYear.and.returnValue(of(mockMoneyTypes as any));
 
+    trainingItemService = jasmine.createSpyObj('TrainingItemService', ['getTrainingItemsByFY']);
+    trainingItemService.getTrainingItemsByFY.and.returnValue(of([] as any));
+
+    travelItemService = jasmine.createSpyObj('TravelItemService', ['getTravelItemsByFY']);
+    travelItemService.getTravelItemsByFY.and.returnValue(of([] as any));
+
     await TestBed.configureTestingModule({
       imports: [SummaryComponent, TranslateModule.forRoot()]
     })
@@ -133,6 +143,8 @@ describe('SummaryComponent', () => {
     .overrideProvider(SpendingItemService, { useValue: spendingItemService })
     .overrideProvider(ProcurementService, { useValue: procurementService })
     .overrideProvider(MoneyService, { useValue: moneyService })
+    .overrideProvider(TrainingItemService, { useValue: trainingItemService })
+    .overrideProvider(TravelItemService, { useValue: travelItemService })
     .compileComponents();
 
     fixture = TestBed.createComponent(SummaryComponent);

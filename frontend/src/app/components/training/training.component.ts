@@ -20,7 +20,7 @@ import { CurrencyService } from '../../services/currency.service';
 import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
-import { TrainingItem, TrainingMoneyAllocation, TrainingItemStatus, TrainingType, TrainingFormat, TrainingParticipant, TRAINING_STATUS_INFO, TRAINING_TYPE_INFO, TRAINING_FORMAT_INFO } from '../../models/training-item.model';
+import { TrainingItem, TrainingMoneyAllocation, TrainingItemStatus, TrainingType, TrainingFormat, TrainingParticipant, TrainingParticipantStatus, TRAINING_STATUS_INFO, TRAINING_TYPE_INFO, TRAINING_FORMAT_INFO, PARTICIPANT_STATUS_INFO } from '../../models/training-item.model';
 import { Money } from '../../models/money.model';
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 
@@ -73,7 +73,6 @@ export class TrainingComponent implements OnInit, OnDestroy {
   newItemName = '';
   newItemDescription = '';
   newItemProvider = '';
-  newItemEco = '';
   newItemStatus: TrainingItemStatus = 'PLANNED';
   newItemTrainingType: TrainingType = 'COURSE_TRAINING';
   newItemFormat: TrainingFormat = 'IN_PERSON';
@@ -92,7 +91,6 @@ export class TrainingComponent implements OnInit, OnDestroy {
   editItemName = '';
   editItemDescription = '';
   editItemProvider = '';
-  editItemEco = '';
   editItemStatus: TrainingItemStatus = 'PLANNED';
   editItemTrainingType: TrainingType = 'COURSE_TRAINING';
   editItemFormat: TrainingFormat = 'IN_PERSON';
@@ -114,6 +112,11 @@ export class TrainingComponent implements OnInit, OnDestroy {
   statusOptions: TrainingItemStatus[] = ['PLANNED', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
   trainingTypeOptions: TrainingType[] = ['COURSE_TRAINING', 'CONFERENCE_REGISTRATION', 'OTHER'];
   formatOptions: TrainingFormat[] = ['IN_PERSON', 'ONLINE'];
+  participantStatusOptions: TrainingParticipantStatus[] = ['PLANNED', 'ECO_CREATED', 'REGISTERED', 'COMPLETED', 'CANCELLED'];
+
+  get canWrite(): boolean {
+    return this.selectedRC?.accessLevel === 'OWNER' || this.selectedRC?.accessLevel === 'READ_WRITE';
+  }
 
   // Summary data
   summaryByMoneyType: { moneyCode: string; moneyName: string; totalOm: number }[] = [];
@@ -259,7 +262,6 @@ export class TrainingComponent implements OnInit, OnDestroy {
           name: item.name,
           description: item.description,
           provider: item.provider,
-          eco: item.eco,
           location: item.location
         })
       );
@@ -342,7 +344,6 @@ export class TrainingComponent implements OnInit, OnDestroy {
     this.newItemName = '';
     this.newItemDescription = '';
     this.newItemProvider = '';
-    this.newItemEco = '';
     this.newItemStatus = 'PLANNED';
     this.newItemTrainingType = 'COURSE_TRAINING';
     this.newItemFormat = 'IN_PERSON';
@@ -363,7 +364,6 @@ export class TrainingComponent implements OnInit, OnDestroy {
       name: this.newItemName.trim(),
       description: this.newItemDescription.trim() || undefined,
       provider: this.newItemProvider.trim() || undefined,
-      eco: this.newItemEco.trim() || undefined,
       status: this.newItemStatus,
       trainingType: this.newItemTrainingType,
       format: this.newItemFormat,
@@ -417,7 +417,6 @@ export class TrainingComponent implements OnInit, OnDestroy {
     this.editItemName = item.name;
     this.editItemDescription = item.description || '';
     this.editItemProvider = item.provider || '';
-    this.editItemEco = item.eco || '';
     this.editItemStatus = item.status;
     this.editItemTrainingType = item.trainingType;
     this.editItemFormat = item.format || 'IN_PERSON';
@@ -442,7 +441,6 @@ export class TrainingComponent implements OnInit, OnDestroy {
       name: this.editItemName.trim(),
       description: this.editItemDescription.trim() || undefined,
       provider: this.editItemProvider.trim() || undefined,
-      eco: this.editItemEco.trim() || undefined,
       status: this.editItemStatus,
       trainingType: this.editItemTrainingType,
       format: this.editItemFormat,
@@ -574,6 +572,36 @@ export class TrainingComponent implements OnInit, OnDestroy {
     return TRAINING_FORMAT_INFO[format] || { label: format, color: 'gray', icon: '📝' };
   }
 
+  getParticipantStatusLabel(status: TrainingParticipantStatus | string): string {
+    const info = PARTICIPANT_STATUS_INFO[status as TrainingParticipantStatus];
+    return info ? info.label : status;
+  }
+
+  /**
+   * Get budget mismatch warnings for a training item.
+   * Warns when money allocation total doesn't match estimated or final cost totals.
+   */
+  getItemWarnings(item: TrainingItem): string[] {
+    const warnings: string[] = [];
+    const allocTotal = item.moneyAllocationTotalOm ?? 0;
+    const estTotal = item.estimatedCostCad ?? 0;
+    const actTotal = item.actualCostCad ?? 0;
+
+    if (allocTotal > 0 && estTotal > 0 && Math.abs(allocTotal - estTotal) > 0.01) {
+      warnings.push(this.translate.instant('training.budgetMismatchEstimated', {
+        allocation: this.formatCurrency(allocTotal),
+        estimated: this.formatCurrency(estTotal)
+      }));
+    }
+    if (allocTotal > 0 && actTotal > 0 && Math.abs(allocTotal - actTotal) > 0.01) {
+      warnings.push(this.translate.instant('training.budgetMismatchActual', {
+        allocation: this.formatCurrency(allocTotal),
+        actual: this.formatCurrency(actTotal)
+      }));
+    }
+    return warnings;
+  }
+
   getCurrencyFlag(code: string): string {
     return getCurrencyFlag(code);
   }
@@ -600,10 +628,14 @@ export class TrainingComponent implements OnInit, OnDestroy {
   addNewParticipant(participants: TrainingParticipant[]): void {
     participants.push({
       name: '',
+      eco: '',
+      status: 'PLANNED',
       estimatedCost: null,
       finalCost: null,
-      currency: DEFAULT_CURRENCY,
-      exchangeRate: null
+      estimatedCurrency: DEFAULT_CURRENCY,
+      estimatedExchangeRate: null,
+      finalCurrency: DEFAULT_CURRENCY,
+      finalExchangeRate: null
     });
   }
 
@@ -621,10 +653,14 @@ export class TrainingComponent implements OnInit, OnDestroy {
 
     const participant: TrainingParticipant = {
       name: '',
+      eco: '',
+      status: 'PLANNED',
       estimatedCost: null,
       finalCost: null,
-      currency: DEFAULT_CURRENCY,
-      exchangeRate: null
+      estimatedCurrency: DEFAULT_CURRENCY,
+      estimatedExchangeRate: null,
+      finalCurrency: DEFAULT_CURRENCY,
+      finalExchangeRate: null
     };
 
     this.trainingItemService.addParticipant(this.selectedRC.id, this.selectedFY.id, item.id, participant).subscribe({

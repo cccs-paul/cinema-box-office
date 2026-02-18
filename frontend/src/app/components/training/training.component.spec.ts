@@ -78,14 +78,15 @@ describe('TrainingComponent', () => {
     name: 'Java Certification',
     description: 'Oracle Java SE certification course',
     provider: 'Oracle',
-    eco: 'ECO-001',
     format: 'ONLINE',
     status: 'PLANNED',
     trainingType: 'COURSE_TRAINING',
     startDate: '2026-03-01',
     endDate: '2026-03-15',
     location: 'Online',
+    numberOfParticipants: 0,
     participants: [],
+    estimatedCostCad: 2500,
     fiscalYearId: 1,
     active: true,
     moneyAllocations: [mockAllocation],
@@ -268,6 +269,7 @@ describe('TrainingComponent', () => {
 
   describe('Delete training item', () => {
     it('should delete training item', () => {
+      spyOn(window, 'confirm').and.returnValue(true);
       trainingItemService.deleteTrainingItem.and.returnValue(of(void 0));
       trainingItemService.getTrainingItemsByFY.and.returnValue(of([]));
 
@@ -285,6 +287,98 @@ describe('TrainingComponent', () => {
       component.updateStatus(mockTrainingItem, 'APPROVED');
 
       expect(trainingItemService.updateStatus).toHaveBeenCalledWith(1, 1, 1, 'APPROVED');
+    });
+  });
+
+  describe('Budget mismatch warnings', () => {
+    it('should return no warnings when allocation matches estimated cost', () => {
+      const item = { ...mockTrainingItem, moneyAllocationTotalOm: 2500, estimatedCostCad: 2500, actualCostCad: null };
+      expect(component.getItemWarnings(item as any)).toEqual([]);
+    });
+
+    it('should warn when allocation differs from estimated cost', () => {
+      const item = { ...mockTrainingItem, moneyAllocationTotalOm: 3000, estimatedCostCad: 2500, actualCostCad: null };
+      const warnings = component.getItemWarnings(item as any);
+      expect(warnings.length).toBe(1);
+    });
+
+    it('should warn when allocation differs from actual cost', () => {
+      const item = { ...mockTrainingItem, moneyAllocationTotalOm: 3000, estimatedCostCad: null, actualCostCad: 2500 };
+      const warnings = component.getItemWarnings(item as any);
+      expect(warnings.length).toBe(1);
+    });
+
+    it('should return two warnings when both estimated and actual differ', () => {
+      const item = { ...mockTrainingItem, moneyAllocationTotalOm: 3000, estimatedCostCad: 2500, actualCostCad: 2800 };
+      const warnings = component.getItemWarnings(item as any);
+      expect(warnings.length).toBe(2);
+    });
+
+    it('should not warn when allocation is zero', () => {
+      const item = { ...mockTrainingItem, moneyAllocationTotalOm: 0, estimatedCostCad: 2500, actualCostCad: 2500 };
+      expect(component.getItemWarnings(item as any)).toEqual([]);
+    });
+
+    it('should not warn when estimated cost is zero', () => {
+      const item = { ...mockTrainingItem, moneyAllocationTotalOm: 3000, estimatedCostCad: 0, actualCostCad: null };
+      expect(component.getItemWarnings(item as any)).toEqual([]);
+    });
+
+    it('should tolerate tiny float differences within $0.01', () => {
+      const item = { ...mockTrainingItem, moneyAllocationTotalOm: 2500, estimatedCostCad: 2500.005, actualCostCad: null };
+      expect(component.getItemWarnings(item as any)).toEqual([]);
+    });
+  });
+
+  describe('Summary calculations', () => {
+    it('should count total participants', () => {
+      const itemWithParticipants = { ...mockTrainingItem, numberOfParticipants: 3 };
+      trainingItemService.getTrainingItemsByFY.and.returnValue(of([itemWithParticipants]));
+      component.ngOnInit();
+      fixture.detectChanges();
+      expect(component.totalParticipants).toBe(3);
+    });
+
+    it('should sum grandTotalActual from actualCostCad', () => {
+      const item = { ...mockTrainingItem, estimatedCostCad: 2500, actualCostCad: 2200 };
+      trainingItemService.getTrainingItemsByFY.and.returnValue(of([item]));
+      component.ngOnInit();
+      fixture.detectChanges();
+      expect(component.grandTotalActual).toBe(2200);
+    });
+  });
+
+  describe('Delete confirmation', () => {
+    it('should not delete when confirm is cancelled', () => {
+      spyOn(window, 'confirm').and.returnValue(false);
+      trainingItemService.deleteTrainingItem.and.returnValue(of(void 0));
+
+      component.deleteItem(mockTrainingItem);
+
+      expect(trainingItemService.deleteTrainingItem).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Participant management', () => {
+    it('should add new participant with default values', () => {
+      const participants: any[] = [];
+      component.addNewParticipant(participants);
+      expect(participants.length).toBe(1);
+      expect(participants[0].status).toBe('PLANNED');
+      expect(participants[0].estimatedCurrency).toBe('CAD');
+      expect(participants[0].finalCurrency).toBe('CAD');
+      expect(participants[0].estimatedCost).toBeNull();
+      expect(participants[0].finalCost).toBeNull();
+    });
+
+    it('should remove new participant by index', () => {
+      const participants: any[] = [
+        { name: 'Alice', status: 'PLANNED' },
+        { name: 'Bob', status: 'PLANNED' }
+      ];
+      component.removeNewParticipant(participants, 0);
+      expect(participants.length).toBe(1);
+      expect(participants[0].name).toBe('Bob');
     });
   });
 });

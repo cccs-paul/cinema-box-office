@@ -550,38 +550,97 @@ textarea.form-control {
   }
 }
 
-.item-header {
+// Item Summary Row (Spending-style)
+.item-summary {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 0.875rem 1.25rem;
+  align-items: center;
+  padding: 0.625rem 1rem;
   cursor: pointer;
-  user-select: none;
+  transition: background-color 0.2s ease;
 
   &:hover {
-    background: var(--background-secondary, #f9fafb);
+    background: var(--background-tertiary, #f9fafb);
+  }
+
+  .item-card.expanded & {
+    background: var(--background-tertiary, #f9fafb);
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+  }
+
+  .item-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    flex: 1;
+
+    .item-type-icon {
+      font-size: 1.125rem;
+      flex-shrink: 0;
+    }
+
+    .item-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    .item-participants {
+      color: var(--text-secondary, #6b7280);
+      font-size: 0.85rem;
+    }
+
+    .total-amount {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+    }
+  }
+
+  .item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .warning-indicator {
+    font-size: 0.85rem;
+    cursor: help;
+    animation: pulse-warning 2s ease-in-out infinite;
   }
 }
 
-.item-main-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-  min-width: 0;
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
 
-  .item-type-icon {
-    font-size: 1.125rem;
-    flex-shrink: 0;
+.btn-icon {
+  padding: 0.25rem 0.5rem;
+  background: transparent;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+
+  &:hover {
+    background: var(--background-tertiary, #f3f4f6);
   }
 
-  .item-name {
-    font-weight: 600;
-    font-size: 0.9375rem;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  &.expand-btn {
+    color: var(--text-tertiary, #9ca3af);
+    font-size: 0.75rem;
+  }
+
+  &.btn-edit:hover {
+    color: var(--primary-gradient-start, #1976d2);
+  }
+
+  &.btn-delete:hover {
+    color: var(--danger-color, #ef4444);
   }
 }
 
@@ -618,32 +677,34 @@ textarea.form-control {
   }
 }
 
-.item-meta {
-  display: flex;
+.participant-status-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 1rem;
-  flex-shrink: 0;
-  margin-left: 1rem;
-  font-size: 0.875rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
 
-  .item-cost {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
+  &[data-status="PLANNED"] {
+    background: rgba(107, 114, 128, 0.12);
+    color: #6b7280;
   }
-
-  .item-participants {
-    color: var(--text-secondary, #6b7280);
+  &[data-status="ECO_CREATED"] {
+    background: rgba(59, 130, 246, 0.12);
+    color: #3b82f6;
   }
-
-  .expand-icon {
-    font-size: 0.75rem;
-    color: var(--text-secondary, #6b7280);
-    transition: transform 0.2s ease;
-
-    &.rotated {
-      transform: rotate(180deg);
-    }
+  &[data-status="REGISTERED"] {
+    background: rgba(124, 58, 237, 0.12);
+    color: #7c3aed;
+  }
+  &[data-status="COMPLETED"] {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+  }
+  &[data-status="CANCELLED"] {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
   }
 }
 

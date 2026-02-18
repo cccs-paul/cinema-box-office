@@ -137,4 +137,14 @@ public interface ResponsibilityCentreService {
    * @return optional containing the updated responsibility centre if successful
    */
   Optional<ResponsibilityCentreDTO> setTravelEnabled(Long rcId, String username, boolean enabled);
+
+  /**
+   * Toggle training include in summary for a responsibility centre.
+   */
+  Optional<ResponsibilityCentreDTO> setTrainingIncludeInSummary(Long rcId, String username, boolean include);
+
+  /**
+   * Toggle travel include in summary for a responsibility centre.
+   */
+  Optional<ResponsibilityCentreDTO> setTravelIncludeInSummary(Long rcId, String username, boolean include);
 }

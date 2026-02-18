@@ -158,18 +158,28 @@
               <input type="number" [(ngModel)]="t.estimatedCost" step="0.01" class="form-control">
             </div>
             <div class="form-group">
+              <label>{{ 'travel.estCurrency' | translate }}</label>
+              <select [(ngModel)]="t.estimatedCurrency" class="form-control">
+                <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }}</option>
+              </select>
+            </div>
+            <div class="form-group" *ngIf="t.estimatedCurrency !== 'CAD'">
+              <label>{{ 'travel.estExchangeRate' | translate }}</label>
+              <input type="number" [(ngModel)]="t.estimatedExchangeRate" step="0.0001" class="form-control">
+            </div>
+            <div class="form-group">
               <label>{{ 'travel.finalCost' | translate }}</label>
               <input type="number" [(ngModel)]="t.finalCost" step="0.01" class="form-control">
             </div>
             <div class="form-group">
-              <label>{{ 'common.currency' | translate }}</label>
-              <select [(ngModel)]="t.currency" class="form-control">
+              <label>{{ 'travel.finalCurrency' | translate }}</label>
+              <select [(ngModel)]="t.finalCurrency" class="form-control">
                 <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }}</option>
               </select>
             </div>
-            <div class="form-group" *ngIf="t.currency !== 'CAD'">
-              <label>{{ 'travel.exchangeRate' | translate }}</label>
-              <input type="number" [(ngModel)]="t.exchangeRate" step="0.0001" class="form-control">
+            <div class="form-group" *ngIf="t.finalCurrency !== 'CAD'">
+              <label>{{ 'travel.finalExchangeRate' | translate }}</label>
+              <input type="number" [(ngModel)]="t.finalExchangeRate" step="0.0001" class="form-control">
             </div>
             <button class="btn-remove-allocation" (click)="removeNewTraveller(newItemTravellers, i)">✕</button>
           </div>
@@ -240,26 +250,45 @@
       *ngFor="let item of filteredItems"
       [class.expanded]="isExpanded(item.id)"
     >
-      <!-- Item Header (click to expand) -->
-      <div class="item-header" (click)="toggleItem(item.id)">
-        <div class="item-main-info">
+      <!-- Item Summary Row (Spending-style) -->
+      <div class="item-summary" (click)="toggleItem(item.id)">
+        <div class="item-info">
           <span class="item-type-icon">{{ getTravelTypeInfo(item.travelType).icon }}</span>
           <span class="item-name">{{ item.name }}</span>
           <span class="status-badge" [attr.data-status]="item.status">
             {{ getStatusInfo(item.status).icon }} {{ 'travel.status_' + item.status | translate }}
           </span>
-        </div>
-        <div class="item-meta">
-          <span class="item-destination" *ngIf="item.destination">
-            📍 {{ item.destination }}
-          </span>
-          <span class="item-cost" *ngIf="item.estimatedCostCad !== null && item.estimatedCostCad !== undefined">
-            {{ formatCurrency(item.estimatedCostCad) }}
-          </span>
+          <span class="warning-indicator"
+                *ngIf="getItemWarnings(item).length > 0"
+                [title]="getItemWarnings(item).join('\n')">⚠️</span>
           <span class="item-travellers" *ngIf="item.numberOfTravellers">
             👥 {{ item.numberOfTravellers }}
           </span>
-          <span class="expand-icon" [class.rotated]="isExpanded(item.id)">▼</span>
+          <span class="total-amount" *ngIf="item.estimatedCostCad !== null && item.estimatedCostCad !== undefined">
+            {{ formatCurrency(item.estimatedCostCad) }}
+          </span>
+        </div>
+        <div class="item-actions">
+          <button
+            class="btn-icon expand-btn"
+            [title]="isExpanded(item.id) ? ('common.collapse' | translate) : ('common.expand' | translate)"
+            (click)="toggleItem(item.id); $event.stopPropagation()">
+            {{ isExpanded(item.id) ? '▲' : '▼' }}
+          </button>
+          <button
+            class="btn-icon btn-edit"
+            [title]="'common.edit' | translate"
+            *ngIf="canWrite && editingItemId !== item.id"
+            (click)="startEdit(item); $event.stopPropagation()">
+            ✏️
+          </button>
+          <button
+            class="btn-icon btn-delete"
+            [title]="'common.delete' | translate"
+            *ngIf="canWrite"
+            (click)="deleteItem(item); $event.stopPropagation()">
+            🗑️
+          </button>
         </div>
       </div>
 
@@ -319,10 +348,11 @@
                   <th>{{ 'travel.travellerName' | translate }}</th>
                   <th>{{ 'travel.taac' | translate }}</th>
                   <th>{{ 'travel.approvalStatus' | translate }}</th>
-                  <th>{{ 'common.currency' | translate }}</th>
+                  <th>{{ 'travel.estCurrency' | translate }}</th>
                   <th>{{ 'travel.estimatedCost' | translate }}</th>
-                  <th>{{ 'travel.finalCost' | translate }}</th>
                   <th>{{ 'travel.estimatedCad' | translate }}</th>
+                  <th>{{ 'travel.finalCurrency' | translate }}</th>
+                  <th>{{ 'travel.finalCost' | translate }}</th>
                   <th>{{ 'travel.finalCad' | translate }}</th>
                 </tr>
               </thead>
@@ -335,17 +365,20 @@
                       {{ getApprovalStatusInfo(t.approvalStatus).icon }} {{ 'travel.approval_' + t.approvalStatus | translate }}
                     </span>
                   </td>
-                  <td>{{ getCurrencyFlag(t.currency) }} {{ t.currency }}</td>
-                  <td class="amount-cell">{{ formatCurrency(t.estimatedCost, t.currency) }}</td>
-                  <td class="amount-cell">{{ formatCurrency(t.finalCost, t.currency) }}</td>
+                  <td>{{ getCurrencyFlag(t.estimatedCurrency) }} {{ t.estimatedCurrency }}</td>
+                  <td class="amount-cell">{{ formatCurrency(t.estimatedCost, t.estimatedCurrency) }}</td>
                   <td class="amount-cell">{{ formatCurrency(t.estimatedCostCad, 'CAD') }}</td>
+                  <td>{{ getCurrencyFlag(t.finalCurrency) }} {{ t.finalCurrency }}</td>
+                  <td class="amount-cell">{{ formatCurrency(t.finalCost, t.finalCurrency) }}</td>
                   <td class="amount-cell">{{ formatCurrency(t.finalCostCad, 'CAD') }}</td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="6"><strong>{{ 'common.total' | translate }} (CAD)</strong></td>
+                  <td colspan="5"><strong>{{ 'common.total' | translate }} (CAD)</strong></td>
                   <td class="amount-cell"><strong>{{ formatCurrency(item.estimatedCostCad, 'CAD') }}</strong></td>
+                  <td></td>
+                  <td></td>
                   <td class="amount-cell"><strong>{{ formatCurrency(item.actualCostCad, 'CAD') }}</strong></td>
                 </tr>
               </tfoot>
@@ -383,12 +416,6 @@
             <select [ngModel]="item.status" (ngModelChange)="updateStatus(item, $event)" class="form-control status-select">
               <option *ngFor="let s of statusOptions" [value]="s">{{ 'travel.status_' + s | translate }}</option>
             </select>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="item-actions">
-            <button class="btn btn-secondary" (click)="startEdit(item)">{{ 'common.edit' | translate }}</button>
-            <button class="btn btn-danger" (click)="deleteItem(item)">{{ 'common.delete' | translate }}</button>
           </div>
         </div>
 
@@ -478,18 +505,28 @@
                   <input type="number" [(ngModel)]="t.estimatedCost" step="0.01" class="form-control">
                 </div>
                 <div class="form-group">
+                  <label>{{ 'travel.estCurrency' | translate }}</label>
+                  <select [(ngModel)]="t.estimatedCurrency" class="form-control">
+                    <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }}</option>
+                  </select>
+                </div>
+                <div class="form-group" *ngIf="t.estimatedCurrency !== 'CAD'">
+                  <label>{{ 'travel.estExchangeRate' | translate }}</label>
+                  <input type="number" [(ngModel)]="t.estimatedExchangeRate" step="0.0001" class="form-control">
+                </div>
+                <div class="form-group">
                   <label>{{ 'travel.finalCost' | translate }}</label>
                   <input type="number" [(ngModel)]="t.finalCost" step="0.01" class="form-control">
                 </div>
                 <div class="form-group">
-                  <label>{{ 'common.currency' | translate }}</label>
-                  <select [(ngModel)]="t.currency" class="form-control">
+                  <label>{{ 'travel.finalCurrency' | translate }}</label>
+                  <select [(ngModel)]="t.finalCurrency" class="form-control">
                     <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }}</option>
                   </select>
                 </div>
-                <div class="form-group" *ngIf="t.currency !== 'CAD'">
-                  <label>{{ 'travel.exchangeRate' | translate }}</label>
-                  <input type="number" [(ngModel)]="t.exchangeRate" step="0.0001" class="form-control">
+                <div class="form-group" *ngIf="t.finalCurrency !== 'CAD'">
+                  <label>{{ 'travel.finalExchangeRate' | translate }}</label>
+                  <input type="number" [(ngModel)]="t.finalExchangeRate" step="0.0001" class="form-control">
                 </div>
                 <div class="traveller-actions">
                   <button class="btn btn-sm btn-primary" (click)="saveTraveller(item, t)" [disabled]="isSavingTraveller">💾</button>

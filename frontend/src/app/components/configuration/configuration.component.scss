@@ -1183,6 +1183,7 @@ html.dark-theme {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1.5rem;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1rem;
@@ -1281,6 +1282,41 @@ html.dark-theme {
       }
     }
   }
+
+  .feature-sub-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    margin-top: 0.25rem;
+    background: var(--background-tertiary, #f9fafb);
+    border-radius: 8px;
+    border: 1px solid var(--border-color, #e5e7eb);
+
+    .sub-option-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+
+      .sub-option-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .sub-option-desc {
+        font-size: 0.75rem;
+        color: var(--text-secondary, #6b7280);
+      }
+    }
+
+    .sub-option-control {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
 }
 
 @keyframes spin {
@@ -1304,6 +1340,11 @@ html.dark-theme {
         background: rgba(158, 158, 158, 0.15);
         color: #bdbdbd;
       }
+    }
+
+    .feature-sub-option {
+      background: var(--background-tertiary, #2a2a2a);
+      border-color: var(--border-color);
     }
   }
 }

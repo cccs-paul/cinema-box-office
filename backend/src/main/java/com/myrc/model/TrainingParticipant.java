@@ -36,6 +36,17 @@ import jakarta.persistence.Version;
 @Table(name = "training_participants")
 public class TrainingParticipant {
 
+  /**
+   * Status lifecycle for a training participant.
+   */
+  public enum ParticipantStatus {
+    PLANNED,
+    ECO_CREATED,
+    REGISTERED,
+    COMPLETED,
+    CANCELLED
+  }
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -47,6 +58,19 @@ public class TrainingParticipant {
   @Column(nullable = false, length = 500)
   private String name;
 
+  /**
+   * ECO number for this participant.
+   */
+  @Column(length = 100)
+  private String eco;
+
+  /**
+   * Status of the participant.
+   */
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 20)
+  private ParticipantStatus status = ParticipantStatus.PLANNED;
+
   @Column(precision = 15, scale = 2)
   private BigDecimal estimatedCost;
 
@@ -55,10 +79,17 @@ public class TrainingParticipant {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 3)
-  private Currency currency = Currency.CAD;
+  private Currency estimatedCurrency = Currency.CAD;
 
   @Column(precision = 15, scale = 6)
-  private BigDecimal exchangeRate;
+  private BigDecimal estimatedExchangeRate;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false, length = 3)
+  private Currency finalCurrency = Currency.CAD;
+
+  @Column(precision = 15, scale = 6)
+  private BigDecimal finalExchangeRate;
 
   @CreationTimestamp
   @Column(nullable = false, updatable = false)
@@ -96,11 +127,23 @@ public class TrainingParticipant {
   public BigDecimal getFinalCost() { return finalCost; }
   public void setFinalCost(BigDecimal finalCost) { this.finalCost = finalCost; }
 
-  public Currency getCurrency() { return currency; }
-  public void setCurrency(Currency currency) { this.currency = currency; }
+  public String getEco() { return eco; }
+  public void setEco(String eco) { this.eco = eco; }
 
-  public BigDecimal getExchangeRate() { return exchangeRate; }
-  public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
+  public ParticipantStatus getStatus() { return status; }
+  public void setStatus(ParticipantStatus status) { this.status = status; }
+
+  public Currency getEstimatedCurrency() { return estimatedCurrency; }
+  public void setEstimatedCurrency(Currency estimatedCurrency) { this.estimatedCurrency = estimatedCurrency; }
+
+  public BigDecimal getEstimatedExchangeRate() { return estimatedExchangeRate; }
+  public void setEstimatedExchangeRate(BigDecimal estimatedExchangeRate) { this.estimatedExchangeRate = estimatedExchangeRate; }
+
+  public Currency getFinalCurrency() { return finalCurrency; }
+  public void setFinalCurrency(Currency finalCurrency) { this.finalCurrency = finalCurrency; }
+
+  public BigDecimal getFinalExchangeRate() { return finalExchangeRate; }
+  public void setFinalExchangeRate(BigDecimal finalExchangeRate) { this.finalExchangeRate = finalExchangeRate; }
 
   public LocalDateTime getCreatedAt() { return createdAt; }
   public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -116,8 +159,8 @@ public class TrainingParticipant {
    */
   public BigDecimal getEstimatedCostInCAD() {
     if (estimatedCost == null) return BigDecimal.ZERO;
-    if (currency == Currency.CAD || exchangeRate == null) return estimatedCost;
-    return estimatedCost.multiply(exchangeRate);
+    if (estimatedCurrency == Currency.CAD || estimatedExchangeRate == null) return estimatedCost;
+    return estimatedCost.multiply(estimatedExchangeRate);
   }
 
   /**
@@ -125,8 +168,8 @@ public class TrainingParticipant {
    */
   public BigDecimal getFinalCostInCAD() {
     if (finalCost == null) return BigDecimal.ZERO;
-    if (currency == Currency.CAD || exchangeRate == null) return finalCost;
-    return finalCost.multiply(exchangeRate);
+    if (finalCurrency == Currency.CAD || finalExchangeRate == null) return finalCost;
+    return finalCost.multiply(finalExchangeRate);
   }
 
   @Override
@@ -134,9 +177,12 @@ public class TrainingParticipant {
     return "TrainingParticipant{" +
         "id=" + id +
         ", name='" + name + '\'' +
+        ", eco='" + eco + '\'' +
+        ", status=" + status +
         ", estimatedCost=" + estimatedCost +
         ", finalCost=" + finalCost +
-        ", currency=" + currency +
+        ", estimatedCurrency=" + estimatedCurrency +
+        ", finalCurrency=" + finalCurrency +
         '}';
   }
 }

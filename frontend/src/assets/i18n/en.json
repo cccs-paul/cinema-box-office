@@ -713,7 +713,19 @@
     "finalCad": "Final (CAD)",
     "totalEstimatedCad": "Total Estimated (CAD)",
     "totalActualCad": "Total Actual (CAD)",
-    "deleteParticipantConfirm": "Are you sure you want to delete this participant?"
+    "deleteParticipantConfirm": "Are you sure you want to delete this participant?",
+    "budgetMismatchEstimated": "Budget mismatch: O&M allocation ({{allocation}}) ≠ estimated cost ({{estimated}})",
+    "budgetMismatchActual": "Budget mismatch: O&M allocation ({{allocation}}) ≠ actual cost ({{actual}})",
+    "estCurrency": "Est. Currency",
+    "finalCurrency": "Final Currency",
+    "estExchangeRate": "Est. Exchange Rate",
+    "finalExchangeRate": "Final Exchange Rate",
+    "participantStatus": "Status",
+    "status_participant_PLANNED": "Planned",
+    "status_participant_ECO_CREATED": "ECO Created",
+    "status_participant_REGISTERED": "Registered",
+    "status_participant_COMPLETED": "Completed",
+    "status_participant_CANCELLED": "Cancelled"
   },
   "travel": {
     "title": "Travel",
@@ -795,7 +807,13 @@
     "finalCad": "Final (CAD)",
     "totalEstimatedCad": "Total Estimated (CAD)",
     "totalActualCad": "Total Actual (CAD)",
-    "deleteTravellerConfirm": "Are you sure you want to delete this traveller?"
+    "deleteTravellerConfirm": "Are you sure you want to delete this traveller?",
+    "budgetMismatchEstimated": "Budget mismatch: O&M allocation ({{allocation}}) ≠ estimated cost ({{estimated}})",
+    "budgetMismatchActual": "Budget mismatch: O&M allocation ({{allocation}}) ≠ actual cost ({{actual}})",
+    "estCurrency": "Est. Currency",
+    "finalCurrency": "Final Currency",
+    "estExchangeRate": "Est. Exchange Rate",
+    "finalExchangeRate": "Final Exchange Rate"
   },
   "summary": {
     "title": "Summary",
@@ -1041,7 +1059,9 @@
     "trainingEnabledMsg": "Training has been enabled for this RC",
     "trainingDisabledMsg": "Training has been disabled for this RC",
     "travelEnabledMsg": "Travel has been enabled for this RC",
-    "travelDisabledMsg": "Travel has been disabled for this RC"
+    "travelDisabledMsg": "Travel has been disabled for this RC",
+    "includeInSummary": "Include in Insights / Summary",
+    "includeInSummaryDesc": "When enabled, costs from this module are included in the Summary page and O&M calculations. When disabled, costs only appear on their own page."
   },
   "developerTools": {
     "title": "Developer Tools",

@@ -28,13 +28,13 @@ describe('TrainingItemService', () => {
     name: 'Java Certification',
     description: 'Oracle Java SE certification course',
     provider: 'Oracle',
-    eco: 'ECO-001',
     format: 'ONLINE',
     status: 'PLANNED',
     trainingType: 'COURSE_TRAINING',
     startDate: '2026-03-01',
     endDate: '2026-03-15',
     location: 'Online',
+    numberOfParticipants: 0,
     participants: [],
     fiscalYearId: 1,
     createdAt: '2026-02-16T12:00:00Z',
@@ -126,7 +126,6 @@ describe('TrainingItemService', () => {
         name: 'Java Certification',
         description: 'Oracle Java SE certification course',
         provider: 'Oracle',
-        eco: 'ECO-001',
         format: 'ONLINE',
         trainingType: 'COURSE_TRAINING',
         moneyAllocations: [mockAllocation]
@@ -223,6 +222,52 @@ describe('TrainingItemService', () => {
       expect(req.request.method).toBe('PUT');
       expect(req.request.body).toEqual(allocations);
       req.flush(mockTrainingItem);
+    });
+  });
+
+  describe('Participant management', () => {
+    const mockParticipant = {
+      id: 10,
+      name: 'Test Participant',
+      eco: 'ECO-001',
+      status: 'PLANNED',
+      estimatedCost: 1000,
+      finalCost: null,
+      estimatedCurrency: 'CAD',
+      estimatedExchangeRate: 1.0,
+      finalCurrency: 'CAD',
+      finalExchangeRate: null
+    };
+
+    it('should add a participant to a training item', () => {
+      const newParticipant = { name: 'New Person', eco: '', status: 'PLANNED', estimatedCost: null, finalCost: null, estimatedCurrency: 'CAD', estimatedExchangeRate: null, finalCurrency: 'CAD', finalExchangeRate: null };
+
+      service.addParticipant(1, 1, 1, newParticipant as any).subscribe(p => {
+        expect(p.id).toBe(10);
+        expect(p.name).toBe('Test Participant');
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/fiscal-years/1/training-items/1/participants');
+      expect(req.request.method).toBe('POST');
+      req.flush(mockParticipant);
+    });
+
+    it('should update a participant', () => {
+      service.updateParticipant(1, 1, 1, 10, mockParticipant as any).subscribe(p => {
+        expect(p.name).toBe('Test Participant');
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/fiscal-years/1/training-items/1/participants/10');
+      expect(req.request.method).toBe('PUT');
+      req.flush(mockParticipant);
+    });
+
+    it('should delete a participant', () => {
+      service.deleteParticipant(1, 1, 1, 10).subscribe();
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/fiscal-years/1/training-items/1/participants/10');
+      expect(req.request.method).toBe('DELETE');
+      req.flush(null);
     });
   });
 });

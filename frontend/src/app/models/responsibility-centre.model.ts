@@ -14,6 +14,8 @@ export interface ResponsibilityCentreDTO {
   canEdit?: boolean; // Backend uses @JsonProperty("canEdit")
   trainingEnabled?: boolean;
   travelEnabled?: boolean;
+  trainingIncludeInSummary?: boolean;
+  travelIncludeInSummary?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

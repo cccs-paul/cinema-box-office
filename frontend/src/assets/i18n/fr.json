@@ -707,7 +707,19 @@
     "finalCad": "Final (CAD)",
     "totalEstimatedCad": "Total estimé (CAD)",
     "totalActualCad": "Total réel (CAD)",
-    "deleteParticipantConfirm": "Êtes-vous sûr de vouloir supprimer ce participant?"
+    "deleteParticipantConfirm": "Êtes-vous sûr de vouloir supprimer ce participant?",
+    "budgetMismatchEstimated": "Écart budgétaire : allocation F&E ({{allocation}}) ≠ coût estimé ({{estimated}})",
+    "budgetMismatchActual": "Écart budgétaire : allocation F&E ({{allocation}}) ≠ coût réel ({{actual}})",
+    "estCurrency": "Devise est.",
+    "finalCurrency": "Devise finale",
+    "estExchangeRate": "Taux de change est.",
+    "finalExchangeRate": "Taux de change final",
+    "participantStatus": "Statut",
+    "status_participant_PLANNED": "Planifié",
+    "status_participant_ECO_CREATED": "ECO créé",
+    "status_participant_REGISTERED": "Inscrit",
+    "status_participant_COMPLETED": "Terminé",
+    "status_participant_CANCELLED": "Annulé"
   },
   "travel": {
     "title": "Voyages",
@@ -789,7 +801,13 @@
     "finalCad": "Final (CAD)",
     "totalEstimatedCad": "Total estimé (CAD)",
     "totalActualCad": "Total réel (CAD)",
-    "deleteTravellerConfirm": "Êtes-vous sûr de vouloir supprimer ce voyageur?"
+    "deleteTravellerConfirm": "Êtes-vous sûr de vouloir supprimer ce voyageur?",
+    "budgetMismatchEstimated": "Écart budgétaire : allocation F&E ({{allocation}}) ≠ coût estimé ({{estimated}})",
+    "budgetMismatchActual": "Écart budgétaire : allocation F&E ({{allocation}}) ≠ coût réel ({{actual}})",
+    "estCurrency": "Devise est.",
+    "finalCurrency": "Devise finale",
+    "estExchangeRate": "Taux de change est.",
+    "finalExchangeRate": "Taux de change final"
   },
   "summary": {
     "title": "Sommaire",
@@ -1025,7 +1043,9 @@
     "trainingEnabledMsg": "La formation a été activée pour ce CR",
     "trainingDisabledMsg": "La formation a été désactivée pour ce CR",
     "travelEnabledMsg": "Le voyage a été activé pour ce CR",
-    "travelDisabledMsg": "Le voyage a été désactivé pour ce CR"
+    "travelDisabledMsg": "Le voyage a été désactivé pour ce CR",
+    "includeInSummary": "Inclure dans les Perspectives / Sommaire",
+    "includeInSummaryDesc": "Lorsqu'activé, les coûts de ce module sont inclus dans la page Sommaire et les calculs F&E. Lorsque désactivé, les coûts n'apparaissent que sur leur propre page."
   },
   "developerTools": {
     "title": "Outils développeur",

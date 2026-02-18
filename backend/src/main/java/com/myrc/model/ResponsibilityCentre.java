@@ -74,6 +74,12 @@ public class ResponsibilityCentre {
   @Column(nullable = false)
   private Boolean travelEnabled = true;
 
+  @Column(nullable = false)
+  private Boolean trainingIncludeInSummary = false;
+
+  @Column(nullable = false)
+  private Boolean travelIncludeInSummary = false;
+
   // Constructors
   public ResponsibilityCentre() {}
 
@@ -172,6 +178,22 @@ public class ResponsibilityCentre {
 
   public void setTravelEnabled(Boolean travelEnabled) {
     this.travelEnabled = travelEnabled;
+  }
+
+  public Boolean getTrainingIncludeInSummary() {
+    return trainingIncludeInSummary;
+  }
+
+  public void setTrainingIncludeInSummary(Boolean trainingIncludeInSummary) {
+    this.trainingIncludeInSummary = trainingIncludeInSummary;
+  }
+
+  public Boolean getTravelIncludeInSummary() {
+    return travelIncludeInSummary;
+  }
+
+  public void setTravelIncludeInSummary(Boolean travelIncludeInSummary) {
+    this.travelIncludeInSummary = travelIncludeInSummary;
   }
 
   @Override

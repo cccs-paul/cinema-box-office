@@ -619,4 +619,34 @@ public class ResponsibilityCentreServiceImpl implements ResponsibilityCentreServ
     rc = rcRepository.save(rc);
     return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, "OWNER"));
   }
+
+  @Override
+  public Optional<ResponsibilityCentreDTO> setTrainingIncludeInSummary(Long rcId, String username, boolean include) {
+    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
+    if (rcOpt.isEmpty()) return Optional.empty();
+
+    ResponsibilityCentre rc = rcOpt.get();
+    if (!rc.getOwner().getUsername().equals(username)) {
+      throw new IllegalArgumentException("Only the owner can change training settings");
+    }
+
+    rc.setTrainingIncludeInSummary(include);
+    rc = rcRepository.save(rc);
+    return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, "OWNER"));
+  }
+
+  @Override
+  public Optional<ResponsibilityCentreDTO> setTravelIncludeInSummary(Long rcId, String username, boolean include) {
+    Optional<ResponsibilityCentre> rcOpt = rcRepository.findById(rcId);
+    if (rcOpt.isEmpty()) return Optional.empty();
+
+    ResponsibilityCentre rc = rcOpt.get();
+    if (!rc.getOwner().getUsername().equals(username)) {
+      throw new IllegalArgumentException("Only the owner can change travel settings");
+    }
+
+    rc.setTravelIncludeInSummary(include);
+    rc = rcRepository.save(rc);
+    return Optional.of(ResponsibilityCentreDTO.fromEntity(rc, username, "OWNER"));
+  }
 }

@@ -16,6 +16,8 @@ import { FundingItemService } from '../../services/funding-item.service';
 import { SpendingItemService } from '../../services/spending-item.service';
 import { ProcurementService } from '../../services/procurement.service';
 import { CategoryService } from '../../services/category.service';
+import { TrainingItemService } from '../../services/training-item.service';
+import { TravelItemService } from '../../services/travel-item.service';
 import { User } from '../../models/user.model';
 
 describe('InsightsComponent', () => {
@@ -29,6 +31,8 @@ describe('InsightsComponent', () => {
   let spendingItemService: jasmine.SpyObj<SpendingItemService>;
   let procurementService: jasmine.SpyObj<ProcurementService>;
   let categoryService: jasmine.SpyObj<CategoryService>;
+  let trainingItemService: jasmine.SpyObj<TrainingItemService>;
+  let travelItemService: jasmine.SpyObj<TravelItemService>;
   let languageService: jasmine.SpyObj<LanguageService>;
 
   let currentUserSubject: BehaviorSubject<User | null>;
@@ -119,6 +123,12 @@ describe('InsightsComponent', () => {
     categoryService = jasmine.createSpyObj('CategoryService', ['getCategoriesByFY']);
     categoryService.getCategoriesByFY.and.returnValue(of([] as any));
 
+    trainingItemService = jasmine.createSpyObj('TrainingItemService', ['getTrainingItemsByFY']);
+    trainingItemService.getTrainingItemsByFY.and.returnValue(of([] as any));
+
+    travelItemService = jasmine.createSpyObj('TravelItemService', ['getTravelItemsByFY']);
+    travelItemService.getTravelItemsByFY.and.returnValue(of([] as any));
+
     languageService = jasmine.createSpyObj('LanguageService', ['toggleLanguage'], {
       currentLanguage$: currentLanguageSubject.asObservable()
     });
@@ -134,6 +144,8 @@ describe('InsightsComponent', () => {
     .overrideProvider(SpendingItemService, { useValue: spendingItemService })
     .overrideProvider(ProcurementService, { useValue: procurementService })
     .overrideProvider(CategoryService, { useValue: categoryService })
+    .overrideProvider(TrainingItemService, { useValue: trainingItemService })
+    .overrideProvider(TravelItemService, { useValue: travelItemService })
     .overrideProvider(LanguageService, { useValue: languageService })
     .compileComponents();
 

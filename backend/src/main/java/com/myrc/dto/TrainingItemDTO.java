@@ -29,7 +29,6 @@ public class TrainingItemDTO {
   private String name;
   private String description;
   private String provider;
-  private String eco;
   private String status;
   private String trainingType;
   private String format;
@@ -61,7 +60,6 @@ public class TrainingItemDTO {
     dto.setName(entity.getName());
     dto.setDescription(entity.getDescription());
     dto.setProvider(entity.getProvider());
-    dto.setEco(entity.getEco());
     dto.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
     dto.setTrainingType(entity.getTrainingType() != null ? entity.getTrainingType().name() : null);
     dto.setFormat(entity.getFormat() != null ? entity.getFormat().name() : null);
@@ -118,9 +116,6 @@ public class TrainingItemDTO {
 
   public String getProvider() { return provider; }
   public void setProvider(String provider) { this.provider = provider; }
-
-  public String getEco() { return eco; }
-  public void setEco(String eco) { this.eco = eco; }
 
   public String getStatus() { return status; }
   public void setStatus(String status) { this.status = status; }

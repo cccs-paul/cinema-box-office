@@ -625,7 +625,6 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
       cloned.setName(source.getName());
       cloned.setDescription(source.getDescription());
       cloned.setProvider(source.getProvider());
-      cloned.setEco(source.getEco());
       cloned.setStatus(source.getStatus());
       cloned.setTrainingType(source.getTrainingType());
       cloned.setFormat(source.getFormat());
@@ -641,8 +640,12 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
         clonedP.setName(srcP.getName());
         clonedP.setEstimatedCost(srcP.getEstimatedCost());
         clonedP.setFinalCost(srcP.getFinalCost());
-        clonedP.setCurrency(srcP.getCurrency());
-        clonedP.setExchangeRate(srcP.getExchangeRate());
+        clonedP.setEstimatedCurrency(srcP.getEstimatedCurrency());
+        clonedP.setEstimatedExchangeRate(srcP.getEstimatedExchangeRate());
+        clonedP.setFinalCurrency(srcP.getFinalCurrency());
+        clonedP.setFinalExchangeRate(srcP.getFinalExchangeRate());
+        clonedP.setEco(srcP.getEco());
+        clonedP.setStatus(srcP.getStatus());
         cloned.addParticipant(clonedP);
       }
 
@@ -709,8 +712,10 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
         clonedT.setTaac(srcT.getTaac());
         clonedT.setEstimatedCost(srcT.getEstimatedCost());
         clonedT.setFinalCost(srcT.getFinalCost());
-        clonedT.setCurrency(srcT.getCurrency());
-        clonedT.setExchangeRate(srcT.getExchangeRate());
+        clonedT.setEstimatedCurrency(srcT.getEstimatedCurrency());
+        clonedT.setEstimatedExchangeRate(srcT.getEstimatedExchangeRate());
+        clonedT.setFinalCurrency(srcT.getFinalCurrency());
+        clonedT.setFinalExchangeRate(srcT.getFinalExchangeRate());
         clonedT.setApprovalStatus(srcT.getApprovalStatus());
         cloned.addTraveller(clonedT);
       }

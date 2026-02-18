@@ -104,7 +104,6 @@ class TrainingItemServiceTest {
     testTrainingItem.setName("Java Certification");
     testTrainingItem.setDescription("Oracle Java SE certification");
     testTrainingItem.setProvider("Oracle");
-    testTrainingItem.setEco("ECO-2025-001");
     testTrainingItem.setStatus(TrainingItem.Status.PLANNED);
     testTrainingItem.setTrainingType(TrainingItem.TrainingType.COURSE_TRAINING);
     testTrainingItem.setFormat(TrainingItem.TrainingFormat.IN_PERSON);
@@ -191,7 +190,6 @@ class TrainingItemServiceTest {
       dto.setFiscalYearId(1L);
       dto.setStatus("PLANNED");
       dto.setTrainingType("COURSE_TRAINING");
-      dto.setEco("ECO-2025-001");
       dto.setFormat("IN_PERSON");
 
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));

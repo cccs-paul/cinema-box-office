@@ -1557,7 +1557,7 @@ public class DataInitializer implements ApplicationRunner {
                 item.setName(name);
                 item.setDescription((String) data[1]);
                 item.setProvider((String) data[2]);
-                item.setEco((String) data[3]);
+                String itemEco = (String) data[3];
                 item.setLocation((String) data[4]);
                 item.setStatus((TrainingItem.Status) data[5]);
                 item.setTrainingType((TrainingItem.TrainingType) data[6]);
@@ -1573,8 +1573,12 @@ public class DataInitializer implements ApplicationRunner {
                     if (pData[2] != null) {
                         p.setFinalCost(new BigDecimal((String) pData[2]));
                     }
-                    p.setCurrency((Currency) pData[3]);
-                    p.setExchangeRate(BigDecimal.ONE);
+                    p.setEstimatedCurrency((Currency) pData[3]);
+                    p.setEstimatedExchangeRate(BigDecimal.ONE);
+                    p.setFinalCurrency((Currency) pData[3]);
+                    p.setFinalExchangeRate(BigDecimal.ONE);
+                    p.setEco(itemEco);
+                    p.setStatus(TrainingParticipant.ParticipantStatus.PLANNED);
                     item.addParticipant(p);
                 }
 
@@ -1708,8 +1712,10 @@ public class DataInitializer implements ApplicationRunner {
                     if (tData[3] != null) {
                         t.setFinalCost(new BigDecimal((String) tData[3]));
                     }
-                    t.setCurrency((Currency) tData[4]);
-                    t.setExchangeRate(BigDecimal.ONE);
+                    t.setEstimatedCurrency((Currency) tData[4]);
+                    t.setEstimatedExchangeRate(BigDecimal.ONE);
+                    t.setFinalCurrency((Currency) tData[4]);
+                    t.setFinalExchangeRate(BigDecimal.ONE);
                     t.setApprovalStatus((TravelTraveller.ApprovalStatus) tData[5]);
                     item.addTraveller(t);
                 }

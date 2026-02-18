@@ -146,6 +146,22 @@ export class ResponsibilityCentreService {
     ).pipe(catchError(this.handleError));
   }
 
+  setTrainingIncludeInSummary(rcId: number, include: boolean): Observable<ResponsibilityCentreDTO> {
+    return this.http.patch<ResponsibilityCentreDTO>(
+      `${this.apiUrl}/${rcId}/training-include-in-summary`,
+      { include },
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
+  setTravelIncludeInSummary(rcId: number, include: boolean): Observable<ResponsibilityCentreDTO> {
+    return this.http.patch<ResponsibilityCentreDTO>(
+      `${this.apiUrl}/${rcId}/travel-include-in-summary`,
+      { include },
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
   private getStoredSelectedRC(): number | null {
     const stored = localStorage.getItem('selectedRC');
     return stored ? parseInt(stored, 10) : null;

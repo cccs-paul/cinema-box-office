@@ -20,8 +20,10 @@ public class TravelTravellerDTO {
   private String taac;
   private BigDecimal estimatedCost;
   private BigDecimal finalCost;
-  private String currency;
-  private BigDecimal exchangeRate;
+  private String estimatedCurrency;
+  private BigDecimal estimatedExchangeRate;
+  private String finalCurrency;
+  private BigDecimal finalExchangeRate;
   private String approvalStatus;
   private BigDecimal estimatedCostCad;
   private BigDecimal finalCostCad;
@@ -46,11 +48,20 @@ public class TravelTravellerDTO {
   public BigDecimal getFinalCost() { return finalCost; }
   public void setFinalCost(BigDecimal finalCost) { this.finalCost = finalCost; }
 
-  public String getCurrency() { return currency; }
-  public void setCurrency(String currency) { this.currency = currency; }
+  public String getCurrency() { return estimatedCurrency; }
+  public void setCurrency(String currency) { this.estimatedCurrency = currency; }
 
-  public BigDecimal getExchangeRate() { return exchangeRate; }
-  public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
+  public String getEstimatedCurrency() { return estimatedCurrency; }
+  public void setEstimatedCurrency(String estimatedCurrency) { this.estimatedCurrency = estimatedCurrency; }
+
+  public BigDecimal getEstimatedExchangeRate() { return estimatedExchangeRate; }
+  public void setEstimatedExchangeRate(BigDecimal estimatedExchangeRate) { this.estimatedExchangeRate = estimatedExchangeRate; }
+
+  public String getFinalCurrency() { return finalCurrency; }
+  public void setFinalCurrency(String finalCurrency) { this.finalCurrency = finalCurrency; }
+
+  public BigDecimal getFinalExchangeRate() { return finalExchangeRate; }
+  public void setFinalExchangeRate(BigDecimal finalExchangeRate) { this.finalExchangeRate = finalExchangeRate; }
 
   public String getApprovalStatus() { return approvalStatus; }
   public void setApprovalStatus(String approvalStatus) { this.approvalStatus = approvalStatus; }
@@ -77,8 +88,10 @@ public class TravelTravellerDTO {
     dto.setTaac(entity.getTaac());
     dto.setEstimatedCost(entity.getEstimatedCost());
     dto.setFinalCost(entity.getFinalCost());
-    dto.setCurrency(entity.getCurrency() != null ? entity.getCurrency().name() : "CAD");
-    dto.setExchangeRate(entity.getExchangeRate());
+    dto.setEstimatedCurrency(entity.getEstimatedCurrency() != null ? entity.getEstimatedCurrency().name() : "CAD");
+    dto.setEstimatedExchangeRate(entity.getEstimatedExchangeRate());
+    dto.setFinalCurrency(entity.getFinalCurrency() != null ? entity.getFinalCurrency().name() : "CAD");
+    dto.setFinalExchangeRate(entity.getFinalExchangeRate());
     dto.setApprovalStatus(entity.getApprovalStatus() != null ? entity.getApprovalStatus().name() : "PLANNED");
     dto.setEstimatedCostCad(entity.getEstimatedCostInCAD());
     dto.setFinalCostCad(entity.getFinalCostInCAD());

@@ -128,11 +128,17 @@ export interface TravelTraveller {
   /** Final cost */
   finalCost: number | null;
 
-  /** Currency code (ISO 4217) */
-  currency: string;
+  /** Currency code for estimated cost */
+  estimatedCurrency: string;
 
-  /** Exchange rate to CAD */
-  exchangeRate: number | null;
+  /** Exchange rate to CAD for estimated cost */
+  estimatedExchangeRate: number | null;
+
+  /** Currency code for final cost */
+  finalCurrency: string;
+
+  /** Exchange rate to CAD for final cost */
+  finalExchangeRate: number | null;
 
   /** Approval status */
   approvalStatus: TravelApprovalStatus;

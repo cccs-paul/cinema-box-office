@@ -20,7 +20,6 @@ export interface TrainingItemCreateRequest {
   name: string;
   description?: string;
   provider?: string;
-  eco?: string;
   status?: string;
   trainingType?: string;
   format?: string;
@@ -38,7 +37,6 @@ export interface TrainingItemUpdateRequest {
   name?: string;
   description?: string;
   provider?: string;
-  eco?: string;
   status?: string;
   trainingType?: string;
   format?: string;

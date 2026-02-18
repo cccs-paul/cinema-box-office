@@ -53,6 +53,8 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   checkingTravelItems = false;
   togglingTraining = false;
   togglingTravel = false;
+  togglingTrainingInclude = false;
+  togglingTravelInclude = false;
   featureError: string | null = null;
 
   // Money management state
@@ -361,6 +363,52 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    */
   clearFeatureError(): void {
     this.featureError = null;
+  }
+
+  /**
+   * Toggle training include in summary.
+   */
+  toggleTrainingIncludeInSummary(): void {
+    if (!this.rcId || !this.selectedRC || this.isNotOwner) return;
+
+    const newValue = !(this.selectedRC.trainingIncludeInSummary === true);
+    this.togglingTrainingInclude = true;
+    this.featureError = null;
+
+    this.rcService.setTrainingIncludeInSummary(this.rcId, newValue).subscribe({
+      next: (updatedRc) => {
+        this.selectedRC = updatedRc;
+        this.togglingTrainingInclude = false;
+        this.rcService.notifyRCUpdated(this.rcId!);
+      },
+      error: (err) => {
+        this.featureError = err.message || 'Failed to update training include in summary';
+        this.togglingTrainingInclude = false;
+      }
+    });
+  }
+
+  /**
+   * Toggle travel include in summary.
+   */
+  toggleTravelIncludeInSummary(): void {
+    if (!this.rcId || !this.selectedRC || this.isNotOwner) return;
+
+    const newValue = !(this.selectedRC.travelIncludeInSummary === true);
+    this.togglingTravelInclude = true;
+    this.featureError = null;
+
+    this.rcService.setTravelIncludeInSummary(this.rcId, newValue).subscribe({
+      next: (updatedRc) => {
+        this.selectedRC = updatedRc;
+        this.togglingTravelInclude = false;
+        this.rcService.notifyRCUpdated(this.rcId!);
+      },
+      error: (err) => {
+        this.featureError = err.message || 'Failed to update travel include in summary';
+        this.togglingTravelInclude = false;
+      }
+    });
   }
 
   /**

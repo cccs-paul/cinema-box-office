@@ -99,10 +99,6 @@
           <label for="provider">{{ 'training.provider' | translate }}</label>
           <input type="text" id="provider" [(ngModel)]="newItemProvider" [placeholder]="'training.enterProvider' | translate" class="form-control">
         </div>
-        <div class="form-group">
-          <label for="eco">{{ 'training.eco' | translate }}</label>
-          <input type="text" id="eco" [(ngModel)]="newItemEco" [placeholder]="'training.enterEco' | translate" class="form-control">
-        </div>
       </div>
 
       <div class="form-row">
@@ -153,22 +149,42 @@
               <input type="text" [(ngModel)]="p.name" [placeholder]="'training.enterParticipantName' | translate" class="form-control">
             </div>
             <div class="form-group">
+              <label>{{ 'training.eco' | translate }}</label>
+              <input type="text" [(ngModel)]="p.eco" [placeholder]="'training.enterEco' | translate" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>{{ 'common.status' | translate }}</label>
+              <select [(ngModel)]="p.status" class="form-control">
+                <option *ngFor="let ps of participantStatusOptions" [value]="ps">{{ getParticipantStatusLabel(ps) }}</option>
+              </select>
+            </div>
+            <div class="form-group">
               <label>{{ 'training.estimatedCost' | translate }}</label>
               <input type="number" [(ngModel)]="p.estimatedCost" step="0.01" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>{{ 'training.estCurrency' | translate }}</label>
+              <select [(ngModel)]="p.estimatedCurrency" class="form-control">
+                <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }}</option>
+              </select>
+            </div>
+            <div class="form-group" *ngIf="p.estimatedCurrency !== 'CAD'">
+              <label>{{ 'training.estExchangeRate' | translate }}</label>
+              <input type="number" [(ngModel)]="p.estimatedExchangeRate" step="0.0001" class="form-control">
             </div>
             <div class="form-group">
               <label>{{ 'training.finalCost' | translate }}</label>
               <input type="number" [(ngModel)]="p.finalCost" step="0.01" class="form-control">
             </div>
             <div class="form-group">
-              <label>{{ 'common.currency' | translate }}</label>
-              <select [(ngModel)]="p.currency" class="form-control">
+              <label>{{ 'training.finalCurrency' | translate }}</label>
+              <select [(ngModel)]="p.finalCurrency" class="form-control">
                 <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }}</option>
               </select>
             </div>
-            <div class="form-group" *ngIf="p.currency !== 'CAD'">
-              <label>{{ 'training.exchangeRate' | translate }}</label>
-              <input type="number" [(ngModel)]="p.exchangeRate" step="0.0001" class="form-control">
+            <div class="form-group" *ngIf="p.finalCurrency !== 'CAD'">
+              <label>{{ 'training.finalExchangeRate' | translate }}</label>
+              <input type="number" [(ngModel)]="p.finalExchangeRate" step="0.0001" class="form-control">
             </div>
             <button class="btn-remove-allocation" (click)="removeNewParticipant(newItemParticipants, i)">✕</button>
           </div>
@@ -239,23 +255,45 @@
       *ngFor="let item of filteredItems"
       [class.expanded]="isExpanded(item.id)"
     >
-      <!-- Item Header (click to expand) -->
-      <div class="item-header" (click)="toggleItem(item.id)">
-        <div class="item-main-info">
+      <!-- Item Summary Row (Spending-style) -->
+      <div class="item-summary" (click)="toggleItem(item.id)">
+        <div class="item-info">
           <span class="item-type-icon">{{ getTrainingTypeInfo(item.trainingType).icon }}</span>
           <span class="item-name">{{ item.name }}</span>
           <span class="status-badge" [attr.data-status]="item.status">
             {{ getStatusInfo(item.status).icon }} {{ 'training.status_' + item.status | translate }}
           </span>
-        </div>
-        <div class="item-meta">
-          <span class="item-cost" *ngIf="item.estimatedCostCad !== null && item.estimatedCostCad !== undefined">
-            {{ formatCurrency(item.estimatedCostCad) }}
-          </span>
+          <span class="warning-indicator"
+                *ngIf="getItemWarnings(item).length > 0"
+                [title]="getItemWarnings(item).join('\n')">⚠️</span>
           <span class="item-participants" *ngIf="item.numberOfParticipants">
             👥 {{ item.numberOfParticipants }}
           </span>
-          <span class="expand-icon" [class.rotated]="isExpanded(item.id)">▼</span>
+          <span class="total-amount" *ngIf="item.estimatedCostCad !== null && item.estimatedCostCad !== undefined">
+            {{ formatCurrency(item.estimatedCostCad) }}
+          </span>
+        </div>
+        <div class="item-actions">
+          <button
+            class="btn-icon expand-btn"
+            [title]="isExpanded(item.id) ? ('common.collapse' | translate) : ('common.expand' | translate)"
+            (click)="toggleItem(item.id); $event.stopPropagation()">
+            {{ isExpanded(item.id) ? '▲' : '▼' }}
+          </button>
+          <button
+            class="btn-icon btn-edit"
+            [title]="'common.edit' | translate"
+            *ngIf="canWrite && editingItemId !== item.id"
+            (click)="startEdit(item); $event.stopPropagation()">
+            ✏️
+          </button>
+          <button
+            class="btn-icon btn-delete"
+            [title]="'common.delete' | translate"
+            *ngIf="canWrite"
+            (click)="deleteItem(item); $event.stopPropagation()">
+            🗑️
+          </button>
         </div>
       </div>
 
@@ -271,10 +309,6 @@
             <div class="detail-field" *ngIf="item.provider">
               <span class="detail-label">{{ 'training.provider' | translate }}</span>
               <span class="detail-value">{{ item.provider }}</span>
-            </div>
-            <div class="detail-field" *ngIf="item.eco">
-              <span class="detail-label">{{ 'training.eco' | translate }}</span>
-              <span class="detail-value">{{ item.eco }}</span>
             </div>
             <div class="detail-field" *ngIf="item.location">
               <span class="detail-label">{{ 'training.location' | translate }}</span>
@@ -317,10 +351,12 @@
               <thead>
                 <tr>
                   <th>{{ 'training.participantName' | translate }}</th>
-                  <th>{{ 'common.currency' | translate }}</th>
-                  <th>{{ 'training.exchangeRate' | translate }}</th>
+                  <th>{{ 'training.eco' | translate }}</th>
+                  <th>{{ 'common.status' | translate }}</th>
                   <th>{{ 'training.estimatedCost' | translate }}</th>
+                  <th>{{ 'training.estCurrency' | translate }}</th>
                   <th>{{ 'training.finalCost' | translate }}</th>
+                  <th>{{ 'training.finalCurrency' | translate }}</th>
                   <th>{{ 'training.estimatedCad' | translate }}</th>
                   <th>{{ 'training.finalCad' | translate }}</th>
                 </tr>
@@ -328,17 +364,19 @@
               <tbody>
                 <tr *ngFor="let p of item.participants">
                   <td>{{ p.name || '—' }}</td>
-                  <td>{{ getCurrencyFlag(p.currency) }} {{ p.currency }}</td>
-                  <td>{{ p.exchangeRate ?? '—' }}</td>
-                  <td class="amount-cell">{{ formatCurrency(p.estimatedCost, p.currency) }}</td>
-                  <td class="amount-cell">{{ formatCurrency(p.finalCost, p.currency) }}</td>
+                  <td>{{ p.eco || '—' }}</td>
+                  <td><span class="participant-status-badge" [attr.data-status]="p.status">{{ getParticipantStatusLabel(p.status) }}</span></td>
+                  <td class="amount-cell">{{ formatCurrency(p.estimatedCost, p.estimatedCurrency) }}</td>
+                  <td>{{ getCurrencyFlag(p.estimatedCurrency) }} {{ p.estimatedCurrency }}</td>
+                  <td class="amount-cell">{{ formatCurrency(p.finalCost, p.finalCurrency) }}</td>
+                  <td>{{ getCurrencyFlag(p.finalCurrency) }} {{ p.finalCurrency }}</td>
                   <td class="amount-cell">{{ formatCurrency(p.estimatedCostCad, 'CAD') }}</td>
                   <td class="amount-cell">{{ formatCurrency(p.finalCostCad, 'CAD') }}</td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="5"><strong>{{ 'common.total' | translate }} (CAD)</strong></td>
+                  <td colspan="7"><strong>{{ 'common.total' | translate }} (CAD)</strong></td>
                   <td class="amount-cell"><strong>{{ formatCurrency(item.estimatedCostCad, 'CAD') }}</strong></td>
                   <td class="amount-cell"><strong>{{ formatCurrency(item.actualCostCad, 'CAD') }}</strong></td>
                 </tr>
@@ -378,12 +416,6 @@
               <option *ngFor="let s of statusOptions" [value]="s">{{ 'training.status_' + s | translate }}</option>
             </select>
           </div>
-
-          <!-- Action Buttons -->
-          <div class="item-actions">
-            <button class="btn btn-secondary" (click)="startEdit(item)">{{ 'common.edit' | translate }}</button>
-            <button class="btn btn-danger" (click)="deleteItem(item)">{{ 'common.delete' | translate }}</button>
-          </div>
         </div>
 
         <!-- Edit Mode -->
@@ -412,10 +444,6 @@
             <div class="form-group">
               <label>{{ 'training.provider' | translate }}</label>
               <input type="text" [(ngModel)]="editItemProvider" class="form-control">
-            </div>
-            <div class="form-group">
-              <label>{{ 'training.eco' | translate }}</label>
-              <input type="text" [(ngModel)]="editItemEco" class="form-control">
             </div>
           </div>
 
@@ -467,22 +495,42 @@
                   <input type="text" [(ngModel)]="p.name" class="form-control">
                 </div>
                 <div class="form-group">
+                  <label>{{ 'training.eco' | translate }}</label>
+                  <input type="text" [(ngModel)]="p.eco" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>{{ 'common.status' | translate }}</label>
+                  <select [(ngModel)]="p.status" class="form-control">
+                    <option *ngFor="let ps of participantStatusOptions" [value]="ps">{{ getParticipantStatusLabel(ps) }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
                   <label>{{ 'training.estimatedCost' | translate }}</label>
                   <input type="number" [(ngModel)]="p.estimatedCost" step="0.01" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>{{ 'training.estCurrency' | translate }}</label>
+                  <select [(ngModel)]="p.estimatedCurrency" class="form-control">
+                    <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }}</option>
+                  </select>
+                </div>
+                <div class="form-group" *ngIf="p.estimatedCurrency !== 'CAD'">
+                  <label>{{ 'training.estExchangeRate' | translate }}</label>
+                  <input type="number" [(ngModel)]="p.estimatedExchangeRate" step="0.0001" class="form-control">
                 </div>
                 <div class="form-group">
                   <label>{{ 'training.finalCost' | translate }}</label>
                   <input type="number" [(ngModel)]="p.finalCost" step="0.01" class="form-control">
                 </div>
                 <div class="form-group">
-                  <label>{{ 'common.currency' | translate }}</label>
-                  <select [(ngModel)]="p.currency" class="form-control">
+                  <label>{{ 'training.finalCurrency' | translate }}</label>
+                  <select [(ngModel)]="p.finalCurrency" class="form-control">
                     <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }}</option>
                   </select>
                 </div>
-                <div class="form-group" *ngIf="p.currency !== 'CAD'">
-                  <label>{{ 'training.exchangeRate' | translate }}</label>
-                  <input type="number" [(ngModel)]="p.exchangeRate" step="0.0001" class="form-control">
+                <div class="form-group" *ngIf="p.finalCurrency !== 'CAD'">
+                  <label>{{ 'training.finalExchangeRate' | translate }}</label>
+                  <input type="number" [(ngModel)]="p.finalExchangeRate" step="0.0001" class="form-control">
                 </div>
                 <div class="participant-actions">
                   <button class="btn btn-sm btn-primary" (click)="saveParticipant(item, p)" [disabled]="isSavingParticipant">💾</button>

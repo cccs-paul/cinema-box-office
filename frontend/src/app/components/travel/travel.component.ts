@@ -121,6 +121,10 @@ export class TravelComponent implements OnInit, OnDestroy {
   totalItems = 0;
   totalTravellers = 0;
 
+  get canWrite(): boolean {
+    return this.selectedRC?.accessLevel === 'OWNER' || this.selectedRC?.accessLevel === 'READ_WRITE';
+  }
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -572,6 +576,31 @@ export class TravelComponent implements OnInit, OnDestroy {
     return getCurrencyFlag(code);
   }
 
+  /**
+   * Get budget mismatch warnings for a travel item.
+   * Warns when money allocation total doesn't match estimated or final cost totals.
+   */
+  getItemWarnings(item: TravelItem): string[] {
+    const warnings: string[] = [];
+    const allocTotal = item.moneyAllocationTotalOm ?? 0;
+    const estTotal = item.estimatedCostCad ?? 0;
+    const actTotal = item.actualCostCad ?? 0;
+
+    if (allocTotal > 0 && estTotal > 0 && Math.abs(allocTotal - estTotal) > 0.01) {
+      warnings.push(this.translate.instant('travel.budgetMismatchEstimated', {
+        allocation: this.formatCurrency(allocTotal),
+        estimated: this.formatCurrency(estTotal)
+      }));
+    }
+    if (allocTotal > 0 && actTotal > 0 && Math.abs(allocTotal - actTotal) > 0.01) {
+      warnings.push(this.translate.instant('travel.budgetMismatchActual', {
+        allocation: this.formatCurrency(allocTotal),
+        actual: this.formatCurrency(actTotal)
+      }));
+    }
+    return warnings;
+  }
+
   formatCurrency(amount: number | null | undefined, currency?: string): string {
     if (amount === null || amount === undefined) return '—';
     const cur = currency || 'CAD';
@@ -597,8 +626,10 @@ export class TravelComponent implements OnInit, OnDestroy {
       taac: '',
       estimatedCost: null,
       finalCost: null,
-      currency: DEFAULT_CURRENCY,
-      exchangeRate: null,
+      estimatedCurrency: DEFAULT_CURRENCY,
+      estimatedExchangeRate: null,
+      finalCurrency: DEFAULT_CURRENCY,
+      finalExchangeRate: null,
       approvalStatus: 'PLANNED'
     });
   }
@@ -620,8 +651,10 @@ export class TravelComponent implements OnInit, OnDestroy {
       taac: '',
       estimatedCost: null,
       finalCost: null,
-      currency: DEFAULT_CURRENCY,
-      exchangeRate: null,
+      estimatedCurrency: DEFAULT_CURRENCY,
+      estimatedExchangeRate: null,
+      finalCurrency: DEFAULT_CURRENCY,
+      finalExchangeRate: null,
       approvalStatus: 'PLANNED'
     };
 

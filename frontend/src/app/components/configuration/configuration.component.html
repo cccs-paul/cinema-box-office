@@ -656,9 +656,6 @@
         </div>
         <p class="feature-description">{{ 'configuration.trainingFeatureDesc' | translate }}</p>
         <div class="feature-status">
-          <span class="status-badge" [class.status-enabled]="selectedRC?.trainingEnabled !== false" [class.status-disabled]="selectedRC?.trainingEnabled === false">
-            {{ (selectedRC?.trainingEnabled !== false ? 'configuration.enabled' : 'configuration.disabled') | translate }}
-          </span>
           <span class="status-hint" *ngIf="hasTrainingItems">
             {{ 'configuration.hasItemsWarning' | translate }}
           </span>
@@ -675,6 +672,24 @@
         </label>
         <span class="toggle-loading" *ngIf="togglingTraining || checkingTrainingItems">⏳</span>
       </div>
+      <!-- Include in Insights/Summary sub-toggle -->
+      <div class="feature-sub-option" *ngIf="selectedRC?.trainingEnabled !== false">
+        <div class="sub-option-info">
+          <span class="sub-option-label">{{ 'configuration.includeInSummary' | translate }}</span>
+          <span class="sub-option-desc">{{ 'configuration.includeInSummaryDesc' | translate }}</span>
+        </div>
+        <div class="sub-option-control">
+          <label class="toggle-switch toggle-small" [class.disabled]="isNotOwner || togglingTrainingInclude">
+            <input
+              type="checkbox"
+              [checked]="selectedRC?.trainingIncludeInSummary === true"
+              (change)="toggleTrainingIncludeInSummary()"
+              [disabled]="isNotOwner || togglingTrainingInclude">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-loading" *ngIf="togglingTrainingInclude">⏳</span>
+        </div>
+      </div>
     </div>
 
     <!-- Travel Feature Card -->
@@ -686,9 +701,6 @@
         </div>
         <p class="feature-description">{{ 'configuration.travelFeatureDesc' | translate }}</p>
         <div class="feature-status">
-          <span class="status-badge" [class.status-enabled]="selectedRC?.travelEnabled !== false" [class.status-disabled]="selectedRC?.travelEnabled === false">
-            {{ (selectedRC?.travelEnabled !== false ? 'configuration.enabled' : 'configuration.disabled') | translate }}
-          </span>
           <span class="status-hint" *ngIf="hasTravelItems">
             {{ 'configuration.hasItemsWarning' | translate }}
           </span>
@@ -704,6 +716,24 @@
           <span class="toggle-slider"></span>
         </label>
         <span class="toggle-loading" *ngIf="togglingTravel || checkingTravelItems">⏳</span>
+      </div>
+      <!-- Include in Insights/Summary sub-toggle -->
+      <div class="feature-sub-option" *ngIf="selectedRC?.travelEnabled !== false">
+        <div class="sub-option-info">
+          <span class="sub-option-label">{{ 'configuration.includeInSummary' | translate }}</span>
+          <span class="sub-option-desc">{{ 'configuration.includeInSummaryDesc' | translate }}</span>
+        </div>
+        <div class="sub-option-control">
+          <label class="toggle-switch toggle-small" [class.disabled]="isNotOwner || togglingTravelInclude">
+            <input
+              type="checkbox"
+              [checked]="selectedRC?.travelIncludeInSummary === true"
+              (change)="toggleTravelIncludeInSummary()"
+              [disabled]="isNotOwner || togglingTravelInclude">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-loading" *ngIf="togglingTravelInclude">⏳</span>
+        </div>
       </div>
     </div>
   </div>

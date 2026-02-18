@@ -113,7 +113,6 @@ public class TrainingItemServiceImpl implements TrainingItemService {
     item.setName(dto.getName());
     item.setDescription(dto.getDescription());
     item.setProvider(dto.getProvider());
-    item.setEco(dto.getEco());
     item.setStatus(dto.getStatus() != null ? TrainingItem.Status.valueOf(dto.getStatus()) : TrainingItem.Status.PLANNED);
     item.setTrainingType(dto.getTrainingType() != null ? TrainingItem.TrainingType.valueOf(dto.getTrainingType()) : TrainingItem.TrainingType.OTHER);
     item.setFormat(dto.getFormat() != null ? TrainingItem.TrainingFormat.valueOf(dto.getFormat()) : TrainingItem.TrainingFormat.IN_PERSON);
@@ -159,7 +158,6 @@ public class TrainingItemServiceImpl implements TrainingItemService {
     if (dto.getName() != null) item.setName(dto.getName());
     if (dto.getDescription() != null) item.setDescription(dto.getDescription());
     if (dto.getProvider() != null) item.setProvider(dto.getProvider());
-    if (dto.getEco() != null) item.setEco(dto.getEco());
     if (dto.getStatus() != null) item.setStatus(TrainingItem.Status.valueOf(dto.getStatus()));
     if (dto.getTrainingType() != null) item.setTrainingType(TrainingItem.TrainingType.valueOf(dto.getTrainingType()));
     if (dto.getFormat() != null) item.setFormat(TrainingItem.TrainingFormat.valueOf(dto.getFormat()));
@@ -278,10 +276,14 @@ public class TrainingItemServiceImpl implements TrainingItemService {
 
     TrainingParticipant participant = new TrainingParticipant();
     participant.setName(participantDTO.getName());
+    participant.setEco(participantDTO.getEco());
+    participant.setStatus(participantDTO.getStatus() != null ? TrainingParticipant.ParticipantStatus.valueOf(participantDTO.getStatus()) : TrainingParticipant.ParticipantStatus.PLANNED);
     participant.setEstimatedCost(participantDTO.getEstimatedCost());
     participant.setFinalCost(participantDTO.getFinalCost());
-    participant.setCurrency(participantDTO.getCurrency() != null ? Currency.valueOf(participantDTO.getCurrency()) : Currency.CAD);
-    participant.setExchangeRate(participantDTO.getExchangeRate());
+    participant.setEstimatedCurrency(participantDTO.getEstimatedCurrency() != null ? Currency.valueOf(participantDTO.getEstimatedCurrency()) : Currency.CAD);
+    participant.setEstimatedExchangeRate(participantDTO.getEstimatedExchangeRate());
+    participant.setFinalCurrency(participantDTO.getFinalCurrency() != null ? Currency.valueOf(participantDTO.getFinalCurrency()) : Currency.CAD);
+    participant.setFinalExchangeRate(participantDTO.getFinalExchangeRate());
 
     item.addParticipant(participant);
     trainingItemRepository.save(item);
@@ -309,10 +311,14 @@ public class TrainingItemServiceImpl implements TrainingItemService {
     }
 
     if (participantDTO.getName() != null) participant.setName(participantDTO.getName());
+    if (participantDTO.getEco() != null) participant.setEco(participantDTO.getEco());
+    if (participantDTO.getStatus() != null) participant.setStatus(TrainingParticipant.ParticipantStatus.valueOf(participantDTO.getStatus()));
     if (participantDTO.getEstimatedCost() != null) participant.setEstimatedCost(participantDTO.getEstimatedCost());
     if (participantDTO.getFinalCost() != null) participant.setFinalCost(participantDTO.getFinalCost());
-    if (participantDTO.getCurrency() != null) participant.setCurrency(Currency.valueOf(participantDTO.getCurrency()));
-    if (participantDTO.getExchangeRate() != null) participant.setExchangeRate(participantDTO.getExchangeRate());
+    if (participantDTO.getEstimatedCurrency() != null) participant.setEstimatedCurrency(Currency.valueOf(participantDTO.getEstimatedCurrency()));
+    if (participantDTO.getEstimatedExchangeRate() != null) participant.setEstimatedExchangeRate(participantDTO.getEstimatedExchangeRate());
+    if (participantDTO.getFinalCurrency() != null) participant.setFinalCurrency(Currency.valueOf(participantDTO.getFinalCurrency()));
+    if (participantDTO.getFinalExchangeRate() != null) participant.setFinalExchangeRate(participantDTO.getFinalExchangeRate());
 
     participant = participantRepository.save(participant);
     logger.info("Updated participant '" + participant.getName() + "' in training item: " + item.getName() + " by user: " + username);
@@ -348,10 +354,14 @@ public class TrainingItemServiceImpl implements TrainingItemService {
     for (TrainingParticipantDTO dto : participantDtos) {
       TrainingParticipant participant = new TrainingParticipant();
       participant.setName(dto.getName());
+      participant.setEco(dto.getEco());
+      participant.setStatus(dto.getStatus() != null ? TrainingParticipant.ParticipantStatus.valueOf(dto.getStatus()) : TrainingParticipant.ParticipantStatus.PLANNED);
       participant.setEstimatedCost(dto.getEstimatedCost());
       participant.setFinalCost(dto.getFinalCost());
-      participant.setCurrency(dto.getCurrency() != null ? Currency.valueOf(dto.getCurrency()) : Currency.CAD);
-      participant.setExchangeRate(dto.getExchangeRate());
+      participant.setEstimatedCurrency(dto.getEstimatedCurrency() != null ? Currency.valueOf(dto.getEstimatedCurrency()) : Currency.CAD);
+      participant.setEstimatedExchangeRate(dto.getEstimatedExchangeRate());
+      participant.setFinalCurrency(dto.getFinalCurrency() != null ? Currency.valueOf(dto.getFinalCurrency()) : Currency.CAD);
+      participant.setFinalExchangeRate(dto.getFinalExchangeRate());
       item.addParticipant(participant);
     }
     trainingItemRepository.save(item);

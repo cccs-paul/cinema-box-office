@@ -57,7 +57,6 @@ class TrainingItemControllerTest {
     testItem.setFiscalYearId(1L);
     testItem.setStatus("PLANNED");
     testItem.setTrainingType("COURSE_TRAINING");
-    testItem.setEco("ECO-2025-001");
     testItem.setFormat("IN_PERSON");
     testItem.setNumberOfParticipants(3);
   }

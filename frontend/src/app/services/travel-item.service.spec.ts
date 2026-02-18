@@ -35,6 +35,7 @@ describe('TravelItemService', () => {
     departureDate: '2026-04-01',
     returnDate: '2026-04-05',
     travellers: [],
+    numberOfTravellers: 0,
     fiscalYearId: 1,
     createdAt: '2026-02-16T12:00:00Z',
     updatedAt: '2026-02-16T12:00:00Z',
@@ -221,6 +222,52 @@ describe('TravelItemService', () => {
       expect(req.request.method).toBe('PUT');
       expect(req.request.body).toEqual(allocations);
       req.flush(mockTravelItem);
+    });
+  });
+
+  describe('Traveller management', () => {
+    const mockTraveller = {
+      id: 10,
+      name: 'Test Traveller',
+      taac: 'TAAC-001',
+      approvalStatus: 'PLANNED',
+      estimatedCost: 2000,
+      finalCost: null,
+      estimatedCurrency: 'CAD',
+      estimatedExchangeRate: 1.0,
+      finalCurrency: 'CAD',
+      finalExchangeRate: null
+    };
+
+    it('should add a traveller to a travel item', () => {
+      const newTraveller = { name: 'New Traveller', taac: '', approvalStatus: 'PLANNED', estimatedCost: null, finalCost: null, estimatedCurrency: 'CAD', estimatedExchangeRate: null, finalCurrency: 'CAD', finalExchangeRate: null };
+
+      service.addTraveller(1, 1, 1, newTraveller as any).subscribe(t => {
+        expect(t.id).toBe(10);
+        expect(t.name).toBe('Test Traveller');
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/fiscal-years/1/travel-items/1/travellers');
+      expect(req.request.method).toBe('POST');
+      req.flush(mockTraveller);
+    });
+
+    it('should update a traveller', () => {
+      service.updateTraveller(1, 1, 1, 10, mockTraveller as any).subscribe(t => {
+        expect(t.name).toBe('Test Traveller');
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/fiscal-years/1/travel-items/1/travellers/10');
+      expect(req.request.method).toBe('PUT');
+      req.flush(mockTraveller);
+    });
+
+    it('should delete a traveller', () => {
+      service.deleteTraveller(1, 1, 1, 10).subscribe();
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/fiscal-years/1/travel-items/1/travellers/10');
+      expect(req.request.method).toBe('DELETE');
+      req.flush(null);
     });
   });
 });

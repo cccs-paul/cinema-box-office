@@ -413,4 +413,60 @@ describe('ResponsibilityCentreService', () => {
       req.error(new ProgressEvent('network error'));
     });
   });
+
+  describe('Feature toggle methods', () => {
+    it('setTrainingEnabled should PATCH training-enabled endpoint', () => {
+      service.setTrainingEnabled(1, true).subscribe(rc => {
+        expect(rc).toEqual(mockRC);
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/training-enabled');
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual({ enabled: true });
+      req.flush(mockRC);
+    });
+
+    it('setTravelEnabled should PATCH travel-enabled endpoint', () => {
+      service.setTravelEnabled(1, false).subscribe(rc => {
+        expect(rc).toEqual(mockRC);
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/travel-enabled');
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual({ enabled: false });
+      req.flush(mockRC);
+    });
+
+    it('setTrainingIncludeInSummary should PATCH training-include-in-summary endpoint', () => {
+      service.setTrainingIncludeInSummary(1, true).subscribe(rc => {
+        expect(rc).toEqual(mockRC);
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/training-include-in-summary');
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual({ include: true });
+      req.flush(mockRC);
+    });
+
+    it('setTravelIncludeInSummary should PATCH travel-include-in-summary endpoint', () => {
+      service.setTravelIncludeInSummary(1, false).subscribe(rc => {
+        expect(rc).toEqual(mockRC);
+      });
+
+      const req = httpMock.expectOne('/api/responsibility-centres/1/travel-include-in-summary');
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual({ include: false });
+      req.flush(mockRC);
+    });
+  });
+
+  describe('RC update notification', () => {
+    it('should emit on rcUpdated$ when notifyRCUpdated is called', (done) => {
+      service.rcUpdated$.subscribe(rcId => {
+        expect(rcId).toBe(42);
+        done();
+      });
+      service.notifyRCUpdated(42);
+    });
+  });
 });

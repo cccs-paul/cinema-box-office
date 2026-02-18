@@ -85,6 +85,8 @@ describe('TravelComponent', () => {
     departureDate: '2026-04-01',
     returnDate: '2026-04-05',
     travellers: [],
+    numberOfTravellers: 0,
+    estimatedCostCad: 3200,
     fiscalYearId: 1,
     active: true,
     moneyAllocations: [mockAllocation],
@@ -267,6 +269,7 @@ describe('TravelComponent', () => {
 
   describe('Delete travel item', () => {
     it('should delete travel item', () => {
+      spyOn(window, 'confirm').and.returnValue(true);
       travelItemService.deleteTravelItem.and.returnValue(of(void 0));
       travelItemService.getTravelItemsByFY.and.returnValue(of([]));
 
@@ -284,6 +287,98 @@ describe('TravelComponent', () => {
       component.updateStatus(mockTravelItem, 'APPROVED');
 
       expect(travelItemService.updateStatus).toHaveBeenCalledWith(1, 1, 1, 'APPROVED');
+    });
+  });
+
+  describe('Budget mismatch warnings', () => {
+    it('should return no warnings when allocation matches estimated cost', () => {
+      const item = { ...mockTravelItem, moneyAllocationTotalOm: 3200, estimatedCostCad: 3200, actualCostCad: null };
+      expect(component.getItemWarnings(item as any)).toEqual([]);
+    });
+
+    it('should warn when allocation differs from estimated cost', () => {
+      const item = { ...mockTravelItem, moneyAllocationTotalOm: 4000, estimatedCostCad: 3200, actualCostCad: null };
+      const warnings = component.getItemWarnings(item as any);
+      expect(warnings.length).toBe(1);
+    });
+
+    it('should warn when allocation differs from actual cost', () => {
+      const item = { ...mockTravelItem, moneyAllocationTotalOm: 4000, estimatedCostCad: null, actualCostCad: 3200 };
+      const warnings = component.getItemWarnings(item as any);
+      expect(warnings.length).toBe(1);
+    });
+
+    it('should return two warnings when both estimated and actual differ', () => {
+      const item = { ...mockTravelItem, moneyAllocationTotalOm: 4000, estimatedCostCad: 3200, actualCostCad: 3500 };
+      const warnings = component.getItemWarnings(item as any);
+      expect(warnings.length).toBe(2);
+    });
+
+    it('should not warn when allocation is zero', () => {
+      const item = { ...mockTravelItem, moneyAllocationTotalOm: 0, estimatedCostCad: 3200, actualCostCad: 3200 };
+      expect(component.getItemWarnings(item as any)).toEqual([]);
+    });
+
+    it('should not warn when both costs are zero', () => {
+      const item = { ...mockTravelItem, moneyAllocationTotalOm: 1000, estimatedCostCad: 0, actualCostCad: 0 };
+      expect(component.getItemWarnings(item as any)).toEqual([]);
+    });
+
+    it('should tolerate tiny float differences within $0.01', () => {
+      const item = { ...mockTravelItem, moneyAllocationTotalOm: 3200, estimatedCostCad: 3200.005, actualCostCad: null };
+      expect(component.getItemWarnings(item as any)).toEqual([]);
+    });
+  });
+
+  describe('Summary calculations', () => {
+    it('should count total travellers', () => {
+      const itemWithTravellers = { ...mockTravelItem, numberOfTravellers: 4 };
+      travelItemService.getTravelItemsByFY.and.returnValue(of([itemWithTravellers]));
+      component.ngOnInit();
+      fixture.detectChanges();
+      expect(component.totalTravellers).toBe(4);
+    });
+
+    it('should sum grandTotalActual from actualCostCad', () => {
+      const item = { ...mockTravelItem, estimatedCostCad: 3200, actualCostCad: 2800 };
+      travelItemService.getTravelItemsByFY.and.returnValue(of([item]));
+      component.ngOnInit();
+      fixture.detectChanges();
+      expect(component.grandTotalActual).toBe(2800);
+    });
+  });
+
+  describe('Delete confirmation', () => {
+    it('should not delete when confirm is cancelled', () => {
+      spyOn(window, 'confirm').and.returnValue(false);
+      travelItemService.deleteTravelItem.and.returnValue(of(void 0));
+
+      component.deleteItem(mockTravelItem);
+
+      expect(travelItemService.deleteTravelItem).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Traveller management', () => {
+    it('should add new traveller with default values', () => {
+      const travellers: any[] = [];
+      component.addNewTraveller(travellers);
+      expect(travellers.length).toBe(1);
+      expect(travellers[0].approvalStatus).toBe('PLANNED');
+      expect(travellers[0].estimatedCurrency).toBe('CAD');
+      expect(travellers[0].finalCurrency).toBe('CAD');
+      expect(travellers[0].estimatedCost).toBeNull();
+      expect(travellers[0].finalCost).toBeNull();
+    });
+
+    it('should remove new traveller by index', () => {
+      const travellers: any[] = [
+        { name: 'Alice', approvalStatus: 'PLANNED' },
+        { name: 'Bob', approvalStatus: 'PLANNED' }
+      ];
+      component.removeNewTraveller(travellers, 0);
+      expect(travellers.length).toBe(1);
+      expect(travellers[0].name).toBe('Bob');
     });
   });
 });

@@ -19,6 +19,7 @@ import { RCConfigurationComponent } from './rc-configuration.component';
 import { ResponsibilityCentreService } from '../../services/responsibility-centre.service';
 import { RCPermissionService } from '../../services/rc-permission.service';
 import { DirectorySearchService } from '../../services/directory-search.service';
+import { AuditService } from '../../services/audit.service';
 
 describe('RCConfigurationComponent', () => {
   let component: RCConfigurationComponent;
@@ -67,6 +68,10 @@ describe('RCConfigurationComponent', () => {
     directorySearchService.searchDistributionLists.and.returnValue(of([]));
     directorySearchService.searchAllGroups.and.returnValue(of([]));
 
+    const auditService = jasmine.createSpyObj('AuditService', ['getAuditEventsForRC', 'getAuditEventsForFiscalYear']);
+    auditService.getAuditEventsForRC.and.returnValue(of([]));
+    auditService.getAuditEventsForFiscalYear.and.returnValue(of([]));
+
     await TestBed.configureTestingModule({
       imports: [RCConfigurationComponent, TranslateModule.forRoot()]
     })
@@ -77,6 +82,7 @@ describe('RCConfigurationComponent', () => {
     })
     .overrideProvider(RCPermissionService, { useValue: permissionService })
     .overrideProvider(DirectorySearchService, { useValue: directorySearchService })
+    .overrideProvider(AuditService, { useValue: auditService })
     .compileComponents();
 
     fixture = TestBed.createComponent(RCConfigurationComponent);
