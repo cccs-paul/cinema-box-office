@@ -107,27 +107,9 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label for="travellerName">{{ 'travel.travellerName' | translate }}</label>
-          <input type="text" id="travellerName" [(ngModel)]="newItemTravellerName" [placeholder]="'travel.enterTravellerName' | translate" class="form-control">
+          <label for="emap">{{ 'travel.emap' | translate }}</label>
+          <input type="text" id="emap" [(ngModel)]="newItemEmap" [placeholder]="'travel.enterEmap' | translate" class="form-control">
         </div>
-        <div class="form-group">
-          <label for="numberOfTravellers">{{ 'travel.numberOfTravellers' | translate }}</label>
-          <input type="number" id="numberOfTravellers" [(ngModel)]="newItemNumberOfTravellers" min="1" class="form-control">
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="travelAuthorizationNumber">{{ 'travel.travelAuthorizationNumber' | translate }}</label>
-          <input type="text" id="travelAuthorizationNumber" [(ngModel)]="newItemTravelAuthorizationNumber" [placeholder]="'travel.enterTravelAuthorizationNumber' | translate" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="referenceNumber">{{ 'travel.referenceNumber' | translate }}</label>
-          <input type="text" id="referenceNumber" [(ngModel)]="newItemReferenceNumber" [placeholder]="'travel.enterReferenceNumber' | translate" class="form-control">
-        </div>
-      </div>
-
-      <div class="form-row">
         <div class="form-group">
           <label for="status">{{ 'common.status' | translate }}</label>
           <select id="status" [(ngModel)]="newItemStatus" class="form-control">
@@ -147,27 +129,50 @@
         </div>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="currency">{{ 'common.currency' | translate }}</label>
-          <select id="currency" [(ngModel)]="newItemCurrency" class="form-control">
-            <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }} - {{ c.name }}</option>
-          </select>
+      <!-- Travellers Section -->
+      <div class="travellers-section">
+        <div class="travellers-header">
+          <h3>{{ 'travel.travellers' | translate }}</h3>
+          <button class="btn-add-allocation" (click)="addNewTraveller(newItemTravellers)">
+            + {{ 'travel.addTraveller' | translate }}
+          </button>
         </div>
-        <div class="form-group" *ngIf="newItemCurrency !== 'CAD'">
-          <label for="exchangeRate">{{ 'travel.exchangeRate' | translate }}</label>
-          <input type="number" id="exchangeRate" [(ngModel)]="newItemExchangeRate" step="0.0001" class="form-control">
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label for="estimatedCost">{{ 'travel.estimatedCost' | translate }}</label>
-          <input type="number" id="estimatedCost" [(ngModel)]="newItemEstimatedCost" step="0.01" [placeholder]="'travel.enterEstimatedCost' | translate" class="form-control">
-        </div>
-        <div class="form-group">
-          <label for="actualCost">{{ 'travel.actualCost' | translate }}</label>
-          <input type="number" id="actualCost" [(ngModel)]="newItemActualCost" step="0.01" [placeholder]="'travel.enterActualCost' | translate" class="form-control">
+        <div class="traveller-row" *ngFor="let t of newItemTravellers; let i = index">
+          <div class="traveller-fields">
+            <div class="form-group">
+              <label>{{ 'travel.travellerName' | translate }}</label>
+              <input type="text" [(ngModel)]="t.name" [placeholder]="'travel.enterTravellerName' | translate" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>{{ 'travel.taac' | translate }}</label>
+              <input type="text" [(ngModel)]="t.taac" [placeholder]="'travel.enterTaac' | translate" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>{{ 'travel.approvalStatus' | translate }}</label>
+              <select [(ngModel)]="t.approvalStatus" class="form-control">
+                <option *ngFor="let status of approvalStatusOptions" [value]="status">{{ 'travel.approval_' + status | translate }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>{{ 'travel.estimatedCost' | translate }}</label>
+              <input type="number" [(ngModel)]="t.estimatedCost" step="0.01" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>{{ 'travel.finalCost' | translate }}</label>
+              <input type="number" [(ngModel)]="t.finalCost" step="0.01" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>{{ 'common.currency' | translate }}</label>
+              <select [(ngModel)]="t.currency" class="form-control">
+                <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }}</option>
+              </select>
+            </div>
+            <div class="form-group" *ngIf="t.currency !== 'CAD'">
+              <label>{{ 'travel.exchangeRate' | translate }}</label>
+              <input type="number" [(ngModel)]="t.exchangeRate" step="0.0001" class="form-control">
+            </div>
+            <button class="btn-remove-allocation" (click)="removeNewTraveller(newItemTravellers, i)">✕</button>
+          </div>
         </div>
       </div>
 
@@ -248,8 +253,8 @@
           <span class="item-destination" *ngIf="item.destination">
             📍 {{ item.destination }}
           </span>
-          <span class="item-cost" *ngIf="item.estimatedCost !== null">
-            {{ formatCurrency(item.estimatedCostCad ?? item.estimatedCost) }}
+          <span class="item-cost" *ngIf="item.estimatedCostCad !== null && item.estimatedCostCad !== undefined">
+            {{ formatCurrency(item.estimatedCostCad) }}
           </span>
           <span class="item-travellers" *ngIf="item.numberOfTravellers">
             👥 {{ item.numberOfTravellers }}
@@ -275,17 +280,9 @@
               <span class="detail-label">{{ 'travel.purpose' | translate }}</span>
               <span class="detail-value">{{ item.purpose }}</span>
             </div>
-            <div class="detail-field" *ngIf="item.travelAuthorizationNumber">
-              <span class="detail-label">{{ 'travel.travelAuthorizationNumber' | translate }}</span>
-              <span class="detail-value">{{ item.travelAuthorizationNumber }}</span>
-            </div>
-            <div class="detail-field" *ngIf="item.referenceNumber">
-              <span class="detail-label">{{ 'travel.referenceNumber' | translate }}</span>
-              <span class="detail-value">{{ item.referenceNumber }}</span>
-            </div>
-            <div class="detail-field" *ngIf="item.travellerName">
-              <span class="detail-label">{{ 'travel.travellerName' | translate }}</span>
-              <span class="detail-value">{{ item.travellerName }}</span>
+            <div class="detail-field" *ngIf="item.emap">
+              <span class="detail-label">{{ 'travel.emap' | translate }}</span>
+              <span class="detail-value">{{ item.emap }}</span>
             </div>
             <div class="detail-field">
               <span class="detail-label">{{ 'travel.travelType' | translate }}</span>
@@ -304,17 +301,55 @@
               <span class="detail-value">{{ item.numberOfTravellers }}</span>
             </div>
             <div class="detail-field">
-              <span class="detail-label">{{ 'travel.estimatedCost' | translate }}</span>
-              <span class="detail-value">{{ formatCurrency(item.estimatedCost, item.currency) }}
-                <span *ngIf="item.currency !== 'CAD' && item.estimatedCostCad"> ({{ formatCurrency(item.estimatedCostCad, 'CAD') }})</span>
-              </span>
+              <span class="detail-label">{{ 'travel.totalEstimatedCad' | translate }}</span>
+              <span class="detail-value">{{ formatCurrency(item.estimatedCostCad, 'CAD') }}</span>
             </div>
             <div class="detail-field">
-              <span class="detail-label">{{ 'travel.actualCost' | translate }}</span>
-              <span class="detail-value">{{ formatCurrency(item.actualCost, item.currency) }}
-                <span *ngIf="item.currency !== 'CAD' && item.actualCostCad"> ({{ formatCurrency(item.actualCostCad, 'CAD') }})</span>
-              </span>
+              <span class="detail-label">{{ 'travel.totalActualCad' | translate }}</span>
+              <span class="detail-value">{{ formatCurrency(item.actualCostCad, 'CAD') }}</span>
             </div>
+          </div>
+
+          <!-- Travellers Display -->
+          <div class="travellers-display" *ngIf="item.travellers && item.travellers.length > 0">
+            <h4>{{ 'travel.travellers' | translate }} ({{ item.travellers.length }})</h4>
+            <table class="allocations-table">
+              <thead>
+                <tr>
+                  <th>{{ 'travel.travellerName' | translate }}</th>
+                  <th>{{ 'travel.taac' | translate }}</th>
+                  <th>{{ 'travel.approvalStatus' | translate }}</th>
+                  <th>{{ 'common.currency' | translate }}</th>
+                  <th>{{ 'travel.estimatedCost' | translate }}</th>
+                  <th>{{ 'travel.finalCost' | translate }}</th>
+                  <th>{{ 'travel.estimatedCad' | translate }}</th>
+                  <th>{{ 'travel.finalCad' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let t of item.travellers">
+                  <td>{{ t.name || '—' }}</td>
+                  <td>{{ t.taac || '—' }}</td>
+                  <td>
+                    <span class="status-badge" [attr.data-status]="t.approvalStatus">
+                      {{ getApprovalStatusInfo(t.approvalStatus).icon }} {{ 'travel.approval_' + t.approvalStatus | translate }}
+                    </span>
+                  </td>
+                  <td>{{ getCurrencyFlag(t.currency) }} {{ t.currency }}</td>
+                  <td class="amount-cell">{{ formatCurrency(t.estimatedCost, t.currency) }}</td>
+                  <td class="amount-cell">{{ formatCurrency(t.finalCost, t.currency) }}</td>
+                  <td class="amount-cell">{{ formatCurrency(t.estimatedCostCad, 'CAD') }}</td>
+                  <td class="amount-cell">{{ formatCurrency(t.finalCostCad, 'CAD') }}</td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="6"><strong>{{ 'common.total' | translate }} (CAD)</strong></td>
+                  <td class="amount-cell"><strong>{{ formatCurrency(item.estimatedCostCad, 'CAD') }}</strong></td>
+                  <td class="amount-cell"><strong>{{ formatCurrency(item.actualCostCad, 'CAD') }}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
 
           <!-- Money Allocations Display -->
@@ -392,27 +427,9 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label>{{ 'travel.travellerName' | translate }}</label>
-              <input type="text" [(ngModel)]="editItemTravellerName" class="form-control">
+              <label>{{ 'travel.emap' | translate }}</label>
+              <input type="text" [(ngModel)]="editItemEmap" class="form-control">
             </div>
-            <div class="form-group">
-              <label>{{ 'travel.numberOfTravellers' | translate }}</label>
-              <input type="number" [(ngModel)]="editItemNumberOfTravellers" min="1" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>{{ 'travel.travelAuthorizationNumber' | translate }}</label>
-              <input type="text" [(ngModel)]="editItemTravelAuthorizationNumber" class="form-control">
-            </div>
-            <div class="form-group">
-              <label>{{ 'travel.referenceNumber' | translate }}</label>
-              <input type="text" [(ngModel)]="editItemReferenceNumber" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
             <div class="form-group">
               <label>{{ 'common.status' | translate }}</label>
               <select [(ngModel)]="editItemStatus" class="form-control">
@@ -432,27 +449,53 @@
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>{{ 'common.currency' | translate }}</label>
-              <select [(ngModel)]="editItemCurrency" class="form-control">
-                <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }} - {{ c.name }}</option>
-              </select>
+          <!-- Travellers Edit -->
+          <div class="travellers-section">
+            <div class="travellers-header">
+              <h3>{{ 'travel.travellers' | translate }} ({{ editingTravellers.length }})</h3>
+              <button class="btn-add-allocation" (click)="addTraveller(item)" [disabled]="isAddingTraveller">
+                {{ isAddingTraveller ? ('travel.addingTraveller' | translate) : '+ ' + ('travel.addTraveller' | translate) }}
+              </button>
             </div>
-            <div class="form-group" *ngIf="editItemCurrency !== 'CAD'">
-              <label>{{ 'travel.exchangeRate' | translate }}</label>
-              <input type="number" [(ngModel)]="editItemExchangeRate" step="0.0001" class="form-control">
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label>{{ 'travel.estimatedCost' | translate }}</label>
-              <input type="number" [(ngModel)]="editItemEstimatedCost" step="0.01" class="form-control">
-            </div>
-            <div class="form-group">
-              <label>{{ 'travel.actualCost' | translate }}</label>
-              <input type="number" [(ngModel)]="editItemActualCost" step="0.01" class="form-control">
+            <div class="traveller-row" *ngFor="let t of editingTravellers; let i = index">
+              <div class="traveller-fields">
+                <div class="form-group">
+                  <label>{{ 'travel.travellerName' | translate }}</label>
+                  <input type="text" [(ngModel)]="t.name" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>{{ 'travel.taac' | translate }}</label>
+                  <input type="text" [(ngModel)]="t.taac" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>{{ 'travel.approvalStatus' | translate }}</label>
+                  <select [(ngModel)]="t.approvalStatus" class="form-control">
+                    <option *ngFor="let status of approvalStatusOptions" [value]="status">{{ 'travel.approval_' + status | translate }}</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>{{ 'travel.estimatedCost' | translate }}</label>
+                  <input type="number" [(ngModel)]="t.estimatedCost" step="0.01" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>{{ 'travel.finalCost' | translate }}</label>
+                  <input type="number" [(ngModel)]="t.finalCost" step="0.01" class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>{{ 'common.currency' | translate }}</label>
+                  <select [(ngModel)]="t.currency" class="form-control">
+                    <option *ngFor="let c of currencies" [value]="c.code">{{ getCurrencyFlag(c.code) }} {{ c.code }}</option>
+                  </select>
+                </div>
+                <div class="form-group" *ngIf="t.currency !== 'CAD'">
+                  <label>{{ 'travel.exchangeRate' | translate }}</label>
+                  <input type="number" [(ngModel)]="t.exchangeRate" step="0.0001" class="form-control">
+                </div>
+                <div class="traveller-actions">
+                  <button class="btn btn-sm btn-primary" (click)="saveTraveller(item, t)" [disabled]="isSavingTraveller">💾</button>
+                  <button class="btn btn-sm btn-danger" (click)="deleteTraveller(item, t)">✕</button>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -22,11 +22,20 @@ export type TravelItemStatus =
  */
 export type TravelType =
   | 'DOMESTIC'
+  | 'NORTH_AMERICA'
   | 'INTERNATIONAL'
-  | 'LOCAL'
-  | 'CONFERENCE'
-  | 'TRAINING'
-  | 'OTHER';
+  | 'LOCAL';
+
+/**
+ * Enum for traveller approval status values.
+ */
+export type TravelApprovalStatus =
+  | 'PLANNED'
+  | 'TAAC_ESTIMATE_SUBMITTED'
+  | 'TAAC_ESTIMATE_APPROVED'
+  | 'TAAC_FINAL_SUBMITTED'
+  | 'TAAC_FINAL_APPROVED'
+  | 'CANCELLED';
 
 /**
  * Status information for display.
@@ -53,11 +62,21 @@ export const TRAVEL_STATUS_INFO: Record<TravelItemStatus, TravelStatusInfo> = {
  */
 export const TRAVEL_TYPE_INFO: Record<TravelType, TravelStatusInfo> = {
   DOMESTIC: { label: 'Domestic', color: 'blue', icon: '🏠' },
+  NORTH_AMERICA: { label: 'North America', color: 'teal', icon: '🌎' },
   INTERNATIONAL: { label: 'International', color: 'purple', icon: '🌍' },
-  LOCAL: { label: 'Local', color: 'green', icon: '📍' },
-  CONFERENCE: { label: 'Conference', color: 'orange', icon: '🎤' },
-  TRAINING: { label: 'Training', color: 'teal', icon: '🎓' },
-  OTHER: { label: 'Other', color: 'gray', icon: '📝' }
+  LOCAL: { label: 'Local', color: 'green', icon: '📍' }
+};
+
+/**
+ * Map of approval status to display information.
+ */
+export const TRAVEL_APPROVAL_STATUS_INFO: Record<TravelApprovalStatus, TravelStatusInfo> = {
+  PLANNED: { label: 'Planned', color: 'secondary', icon: '📋' },
+  TAAC_ESTIMATE_SUBMITTED: { label: 'TAAC Estimate Submitted', color: 'info', icon: '📤' },
+  TAAC_ESTIMATE_APPROVED: { label: 'TAAC Estimate Approved', color: 'primary', icon: '✅' },
+  TAAC_FINAL_SUBMITTED: { label: 'TAAC Final Submitted', color: 'warning', icon: '📤' },
+  TAAC_FINAL_APPROVED: { label: 'TAAC Final Approved', color: 'success', icon: '✔️' },
+  CANCELLED: { label: 'Cancelled', color: 'danger', icon: '❌' }
 };
 
 /**
@@ -91,6 +110,47 @@ export interface TravelMoneyAllocation {
 }
 
 /**
+ * Travel traveller within a travel item.
+ */
+export interface TravelTraveller {
+  /** Unique identifier */
+  id?: number;
+
+  /** Traveller name */
+  name: string;
+
+  /** TAAC number */
+  taac?: string;
+
+  /** Estimated cost */
+  estimatedCost: number | null;
+
+  /** Final cost */
+  finalCost: number | null;
+
+  /** Currency code (ISO 4217) */
+  currency: string;
+
+  /** Exchange rate to CAD */
+  exchangeRate: number | null;
+
+  /** Approval status */
+  approvalStatus: TravelApprovalStatus;
+
+  /** Estimated cost converted to CAD */
+  estimatedCostCad?: number | null;
+
+  /** Final cost converted to CAD */
+  finalCostCad?: number | null;
+
+  /** Creation timestamp */
+  createdAt?: string;
+
+  /** Last update timestamp */
+  updatedAt?: string;
+}
+
+/**
  * Travel Item interface representing a travel activity within a fiscal year.
  */
 export interface TravelItem {
@@ -103,11 +163,8 @@ export interface TravelItem {
   /** Description */
   description?: string;
 
-  /** Travel authorization number */
-  travelAuthorizationNumber?: string;
-
-  /** Reference number */
-  referenceNumber?: string;
+  /** EMAP number */
+  emap?: string;
 
   /** Destination */
   destination?: string;
@@ -115,23 +172,11 @@ export interface TravelItem {
   /** Purpose of travel */
   purpose?: string;
 
-  /** Estimated cost */
-  estimatedCost: number | null;
-
-  /** Actual cost */
-  actualCost: number | null;
-
   /** Current status */
   status: TravelItemStatus;
 
   /** Type of travel */
   travelType: TravelType;
-
-  /** Currency code (ISO 4217) */
-  currency: string;
-
-  /** Exchange rate to CAD */
-  exchangeRate: number | null;
 
   /** Departure date */
   departureDate?: string | null;
@@ -139,11 +184,11 @@ export interface TravelItem {
   /** Return date */
   returnDate?: string | null;
 
-  /** Traveller name */
-  travellerName?: string;
-
-  /** Number of travellers */
+  /** Number of travellers (computed from travellers list) */
   numberOfTravellers: number;
+
+  /** Travellers list */
+  travellers?: TravelTraveller[];
 
   /** ID of the parent fiscal year */
   fiscalYearId: number;
@@ -157,10 +202,10 @@ export interface TravelItem {
   /** Total of all money allocation O&M amounts */
   moneyAllocationTotalOm?: number | null;
 
-  /** Estimated cost converted to CAD */
+  /** Estimated cost converted to CAD (computed from travellers) */
   estimatedCostCad?: number | null;
 
-  /** Actual cost converted to CAD */
+  /** Actual cost converted to CAD (computed from travellers) */
   actualCostCad?: number | null;
 
   /** Creation timestamp */

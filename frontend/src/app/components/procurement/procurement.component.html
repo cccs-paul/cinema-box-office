@@ -1362,10 +1362,15 @@
                                     <span class="file-description" *ngIf="file.description">- {{ file.description }}</span>
                                   </div>
                                   <div class="file-actions">
-                                    <button class="btn-icon" [title]="'common.view' | translate" 
-                                            (click)="viewEventFile(event, file)">👁️</button>
+                                    <button class="btn-icon" [title]="'procurement.preview' | translate" (click)="previewEventFile(event, file)" *ngIf="isPreviewable(file.contentType)">👁️</button>
+                                    <button class="btn-icon" [title]="'procurement.openInNewTab' | translate" (click)="viewEventFile(event, file)">🔗</button>
                                     <button class="btn-icon" [title]="'common.download' | translate" 
                                             (click)="downloadEventFile(event, file)">⬇️</button>
+                                    <label class="btn-icon btn-replace" *ngIf="canWrite" [title]="'procurement.replaceFile' | translate">
+                                      🔄
+                                      <input type="file" (change)="replaceEventFile($event, event, file)" style="display: none"
+                                             accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.txt,.csv" />
+                                    </label>
                                     <button class="btn-icon" *ngIf="canWrite" [title]="'common.edit' | translate" 
                                             (click)="editEventFileDescription(file)">✏️</button>
                                     <button class="btn-icon btn-danger" *ngIf="canWrite" [title]="'common.delete' | translate" 
@@ -1577,8 +1582,10 @@
       <div class="preview-header">
         <h3>{{ previewingFile.fileName }}</h3>
         <div class="preview-actions">
-          <button class="btn-icon" [title]="'procurement.openInNewTab' | translate" (click)="viewFile(previewingFile)">🔗</button>
-          <button class="btn-icon" [title]="'common.download' | translate" (click)="downloadFile(previewingFile)">⬇️</button>
+          <button class="btn-icon" [title]="'procurement.openInNewTab' | translate"
+            (click)="previewingEventContext ? viewEventFile(previewingEventContext.event, $any(previewingFile)) : viewFile($any(previewingFile))">🔗</button>
+          <button class="btn-icon" [title]="'common.download' | translate"
+            (click)="previewingEventContext ? downloadEventFile(previewingEventContext.event, $any(previewingFile)) : downloadFile($any(previewingFile))">⬇️</button>
           <button class="btn-close" (click)="closePreview()">✕</button>
         </div>
       </div>

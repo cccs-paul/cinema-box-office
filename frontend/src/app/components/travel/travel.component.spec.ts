@@ -77,20 +77,14 @@ describe('TravelComponent', () => {
     id: 1,
     name: 'Ottawa Conference Trip',
     description: 'Annual government technology conference',
-    travelAuthorizationNumber: 'TA-2026-001',
-    referenceNumber: 'TV-001',
+    emap: 'EMAP-001',
     destination: 'Ottawa, ON',
     purpose: 'Conference attendance',
-    estimatedCost: 3200,
-    actualCost: null,
     status: 'PLANNED',
-    travelType: 'CONFERENCE',
-    currency: 'CAD',
-    exchangeRate: null,
+    travelType: 'DOMESTIC',
     departureDate: '2026-04-01',
     returnDate: '2026-04-05',
-    travellerName: 'Jane Smith',
-    numberOfTravellers: 2,
+    travellers: [],
     fiscalYearId: 1,
     active: true,
     moneyAllocations: [mockAllocation],
@@ -265,7 +259,6 @@ describe('TravelComponent', () => {
       component.openCreateForm();
       component.newItemName = 'New Trip';
       component.newItemTravelType = 'DOMESTIC';
-      component.newItemCurrency = 'CAD';
       component.createItem();
 
       expect(travelItemService.createTravelItem).toHaveBeenCalled();

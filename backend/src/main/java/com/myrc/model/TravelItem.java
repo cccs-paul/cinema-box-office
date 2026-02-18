@@ -5,11 +5,12 @@
  *
  * Author: myRC Team
  * Date: 2026-02-16
- * Version: 1.0.0
+ * Version: 2.0.0
  *
  * Description:
  * Entity representing a Travel Item (trip) associated with a Fiscal Year.
  * Each fiscal year can have 0..n travel items.
+ * Travel items have 1..n travellers with individual costs.
  * Travel items track trip costs with OM-only money type breakdowns.
  */
 package com.myrc.model;
@@ -41,11 +42,11 @@ import jakarta.persistence.Version;
 
 /**
  * Entity representing a Travel Item (trip) associated with a Fiscal Year.
- * Travel items represent business trips including transportation, accommodation,
- * meals, and incidentals within a fiscal year.
+ * Travel items represent business trips. Each has 1..n travellers with
+ * individual costs, TAAC numbers, and approval statuses.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2026-02-16
  */
 @Entity
@@ -54,9 +55,6 @@ import jakarta.persistence.Version;
 })
 public class TravelItem {
 
-  /**
-   * Enumeration of travel item status values.
-   */
   public enum Status {
     PLANNED,
     APPROVED,
@@ -65,16 +63,11 @@ public class TravelItem {
     CANCELLED
   }
 
-  /**
-   * Enumeration of travel type values.
-   */
   public enum TravelType {
     DOMESTIC,
+    NORTH_AMERICA,
     INTERNATIONAL,
-    LOCAL,
-    CONFERENCE,
-    TRAINING,
-    OTHER
+    LOCAL
   }
 
   @Id
@@ -88,40 +81,16 @@ public class TravelItem {
   private String description;
 
   /**
-   * Travel authorization number.
+   * EMAP number (replaces reference number).
    */
   @Column(length = 100)
-  private String travelAuthorizationNumber;
+  private String emap;
 
-  /**
-   * Reference number for expense claim.
-   */
-  @Column(length = 100)
-  private String referenceNumber;
-
-  /**
-   * Destination city/location.
-   */
   @Column(length = 500)
   private String destination;
 
-  /**
-   * Purpose of the trip.
-   */
   @Column(length = 2000)
   private String purpose;
-
-  /**
-   * Estimated total cost of the trip.
-   */
-  @Column(precision = 15, scale = 2)
-  private BigDecimal estimatedCost;
-
-  /**
-   * Actual/final total cost of the trip.
-   */
-  @Column(precision = 15, scale = 2)
-  private BigDecimal actualCost;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
@@ -129,48 +98,24 @@ public class TravelItem {
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, length = 20)
-  private TravelType travelType = TravelType.OTHER;
+  private TravelType travelType = TravelType.DOMESTIC;
 
-  /**
-   * The currency for this travel item. Defaults to CAD.
-   */
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 3)
-  private Currency currency = Currency.CAD;
-
-  /**
-   * The exchange rate to convert to CAD. Required when currency is not CAD.
-   */
-  @Column(precision = 15, scale = 6)
-  private BigDecimal exchangeRate;
-
-  /**
-   * Departure date of the trip.
-   */
   @Column
   private LocalDate departureDate;
 
-  /**
-   * Return date of the trip.
-   */
   @Column
   private LocalDate returnDate;
-
-  /**
-   * Traveller name(s).
-   */
-  @Column(length = 500)
-  private String travellerName;
-
-  /**
-   * Number of travellers.
-   */
-  @Column
-  private Integer numberOfTravellers;
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "fiscal_year_id", nullable = false)
   private FiscalYear fiscalYear;
+
+  /**
+   * Travellers for this travel item.
+   * Each traveller has their own name, TAAC, costs, currency, exchange rate, and approval status.
+   */
+  @OneToMany(mappedBy = "travelItem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+  private List<TravelTraveller> travellers = new ArrayList<>();
 
   /**
    * Money allocations for this travel item (OM only).
@@ -204,156 +149,53 @@ public class TravelItem {
   }
 
   // Getters and Setters
-  public Long getId() {
-    return id;
+  public Long getId() { return id; }
+  public void setId(Long id) { this.id = id; }
+
+  public String getName() { return name; }
+  public void setName(String name) { this.name = name; }
+
+  public String getDescription() { return description; }
+  public void setDescription(String description) { this.description = description; }
+
+  public String getEmap() { return emap; }
+  public void setEmap(String emap) { this.emap = emap; }
+
+  public String getDestination() { return destination; }
+  public void setDestination(String destination) { this.destination = destination; }
+
+  public String getPurpose() { return purpose; }
+  public void setPurpose(String purpose) { this.purpose = purpose; }
+
+  public Status getStatus() { return status; }
+  public void setStatus(Status status) { this.status = status; }
+
+  public TravelType getTravelType() { return travelType; }
+  public void setTravelType(TravelType travelType) { this.travelType = travelType; }
+
+  public LocalDate getDepartureDate() { return departureDate; }
+  public void setDepartureDate(LocalDate departureDate) { this.departureDate = departureDate; }
+
+  public LocalDate getReturnDate() { return returnDate; }
+  public void setReturnDate(LocalDate returnDate) { this.returnDate = returnDate; }
+
+  public FiscalYear getFiscalYear() { return fiscalYear; }
+  public void setFiscalYear(FiscalYear fiscalYear) { this.fiscalYear = fiscalYear; }
+
+  public List<TravelTraveller> getTravellers() { return travellers; }
+  public void setTravellers(List<TravelTraveller> travellers) { this.travellers = travellers; }
+
+  public List<TravelMoneyAllocation> getMoneyAllocations() { return moneyAllocations; }
+  public void setMoneyAllocations(List<TravelMoneyAllocation> moneyAllocations) { this.moneyAllocations = moneyAllocations; }
+
+  public void addTraveller(TravelTraveller traveller) {
+    travellers.add(traveller);
+    traveller.setTravelItem(this);
   }
 
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
-
-  public String getTravelAuthorizationNumber() {
-    return travelAuthorizationNumber;
-  }
-
-  public void setTravelAuthorizationNumber(String travelAuthorizationNumber) {
-    this.travelAuthorizationNumber = travelAuthorizationNumber;
-  }
-
-  public String getReferenceNumber() {
-    return referenceNumber;
-  }
-
-  public void setReferenceNumber(String referenceNumber) {
-    this.referenceNumber = referenceNumber;
-  }
-
-  public String getDestination() {
-    return destination;
-  }
-
-  public void setDestination(String destination) {
-    this.destination = destination;
-  }
-
-  public String getPurpose() {
-    return purpose;
-  }
-
-  public void setPurpose(String purpose) {
-    this.purpose = purpose;
-  }
-
-  public BigDecimal getEstimatedCost() {
-    return estimatedCost;
-  }
-
-  public void setEstimatedCost(BigDecimal estimatedCost) {
-    this.estimatedCost = estimatedCost;
-  }
-
-  public BigDecimal getActualCost() {
-    return actualCost;
-  }
-
-  public void setActualCost(BigDecimal actualCost) {
-    this.actualCost = actualCost;
-  }
-
-  public Status getStatus() {
-    return status;
-  }
-
-  public void setStatus(Status status) {
-    this.status = status;
-  }
-
-  public TravelType getTravelType() {
-    return travelType;
-  }
-
-  public void setTravelType(TravelType travelType) {
-    this.travelType = travelType;
-  }
-
-  public Currency getCurrency() {
-    return currency;
-  }
-
-  public void setCurrency(Currency currency) {
-    this.currency = currency;
-  }
-
-  public BigDecimal getExchangeRate() {
-    return exchangeRate;
-  }
-
-  public void setExchangeRate(BigDecimal exchangeRate) {
-    this.exchangeRate = exchangeRate;
-  }
-
-  public LocalDate getDepartureDate() {
-    return departureDate;
-  }
-
-  public void setDepartureDate(LocalDate departureDate) {
-    this.departureDate = departureDate;
-  }
-
-  public LocalDate getReturnDate() {
-    return returnDate;
-  }
-
-  public void setReturnDate(LocalDate returnDate) {
-    this.returnDate = returnDate;
-  }
-
-  public String getTravellerName() {
-    return travellerName;
-  }
-
-  public void setTravellerName(String travellerName) {
-    this.travellerName = travellerName;
-  }
-
-  public Integer getNumberOfTravellers() {
-    return numberOfTravellers;
-  }
-
-  public void setNumberOfTravellers(Integer numberOfTravellers) {
-    this.numberOfTravellers = numberOfTravellers;
-  }
-
-  public FiscalYear getFiscalYear() {
-    return fiscalYear;
-  }
-
-  public void setFiscalYear(FiscalYear fiscalYear) {
-    this.fiscalYear = fiscalYear;
-  }
-
-  public List<TravelMoneyAllocation> getMoneyAllocations() {
-    return moneyAllocations;
-  }
-
-  public void setMoneyAllocations(List<TravelMoneyAllocation> moneyAllocations) {
-    this.moneyAllocations = moneyAllocations;
+  public void removeTraveller(TravelTraveller traveller) {
+    travellers.remove(traveller);
+    traveller.setTravelItem(null);
   }
 
   public void addMoneyAllocation(TravelMoneyAllocation allocation) {
@@ -366,86 +208,54 @@ public class TravelItem {
     allocation.setTravelItem(null);
   }
 
-  public LocalDateTime getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(LocalDateTime createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  public LocalDateTime getUpdatedAt() {
-    return updatedAt;
-  }
-
-  public void setUpdatedAt(LocalDateTime updatedAt) {
-    this.updatedAt = updatedAt;
-  }
-
-  public Long getVersion() {
-    return version;
-  }
-
-  public void setVersion(Long version) {
-    this.version = version;
-  }
-
-  public Boolean getActive() {
-    return active;
-  }
-
-  public void setActive(Boolean active) {
-    this.active = active;
-  }
-
   /**
-   * Get the estimated cost in CAD, applying exchange rate if necessary.
+   * Get total estimated cost in CAD, computed from all travellers.
    */
   public BigDecimal getEstimatedCostInCAD() {
-    if (estimatedCost == null) {
-      return BigDecimal.ZERO;
-    }
-    if (currency == Currency.CAD || exchangeRate == null) {
-      return estimatedCost;
-    }
-    return estimatedCost.multiply(exchangeRate);
+    return travellers.stream()
+        .map(TravelTraveller::getEstimatedCostInCAD)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
   /**
-   * Get the actual cost in CAD, applying exchange rate if necessary.
+   * Get total actual/final cost in CAD, computed from all travellers.
    */
   public BigDecimal getActualCostInCAD() {
-    if (actualCost == null) {
-      return BigDecimal.ZERO;
-    }
-    if (currency == Currency.CAD || exchangeRate == null) {
-      return actualCost;
-    }
-    return actualCost.multiply(exchangeRate);
+    return travellers.stream()
+        .map(TravelTraveller::getFinalCostInCAD)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
+
+  /**
+   * Get the number of travellers.
+   */
+  public int getNumberOfTravellers() {
+    return travellers.size();
+  }
+
+  public LocalDateTime getCreatedAt() { return createdAt; }
+  public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+  public LocalDateTime getUpdatedAt() { return updatedAt; }
+  public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+  public Long getVersion() { return version; }
+  public void setVersion(Long version) { this.version = version; }
+
+  public Boolean getActive() { return active; }
+  public void setActive(Boolean active) { this.active = active; }
 
   @Override
   public String toString() {
     return "TravelItem{" +
         "id=" + id +
         ", name='" + name + '\'' +
-        ", description='" + description + '\'' +
-        ", travelAuthorizationNumber='" + travelAuthorizationNumber + '\'' +
-        ", referenceNumber='" + referenceNumber + '\'' +
-        ", destination='" + destination + '\'' +
-        ", estimatedCost=" + estimatedCost +
-        ", actualCost=" + actualCost +
-        ", status=" + status +
         ", travelType=" + travelType +
-        ", currency=" + currency +
-        ", exchangeRate=" + exchangeRate +
-        ", departureDate=" + departureDate +
-        ", returnDate=" + returnDate +
-        ", travellerName='" + travellerName + '\'' +
+        ", emap='" + emap + '\'' +
+        ", status=" + status +
+        ", travellers=" + (travellers != null ? travellers.size() : 0) +
         ", fiscalYear=" + (fiscalYear != null ? fiscalYear.getName() : null) +
         ", active=" + active +
-        ", createdAt=" + createdAt +
-        ", updatedAt=" + updatedAt +
         '}';
   }
 }

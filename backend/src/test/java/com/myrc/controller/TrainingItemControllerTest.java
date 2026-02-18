@@ -56,9 +56,9 @@ class TrainingItemControllerTest {
     testItem.setDescription("Oracle Java SE certification course");
     testItem.setFiscalYearId(1L);
     testItem.setStatus("PLANNED");
-    testItem.setTrainingType("CERTIFICATION");
-    testItem.setCurrency("CAD");
-    testItem.setEstimatedCost(new java.math.BigDecimal("2500.00"));
+    testItem.setTrainingType("COURSE_TRAINING");
+    testItem.setEco("ECO-2025-001");
+    testItem.setFormat("IN_PERSON");
     testItem.setNumberOfParticipants(3);
   }
 

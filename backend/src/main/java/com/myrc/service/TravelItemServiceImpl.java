@@ -7,15 +7,18 @@ package com.myrc.service;
 
 import com.myrc.dto.TravelItemDTO;
 import com.myrc.dto.TravelMoneyAllocationDTO;
+import com.myrc.dto.TravelTravellerDTO;
 import com.myrc.model.Currency;
 import com.myrc.model.FiscalYear;
 import com.myrc.model.Money;
 import com.myrc.model.TravelItem;
 import com.myrc.model.TravelMoneyAllocation;
+import com.myrc.model.TravelTraveller;
 import com.myrc.repository.FiscalYearRepository;
 import com.myrc.repository.MoneyRepository;
 import com.myrc.repository.TravelItemRepository;
 import com.myrc.repository.TravelMoneyAllocationRepository;
+import com.myrc.repository.TravelTravellerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +42,7 @@ public class TravelItemServiceImpl implements TravelItemService {
 
   private final TravelItemRepository travelItemRepository;
   private final TravelMoneyAllocationRepository allocationRepository;
+  private final TravelTravellerRepository travellerRepository;
   private final FiscalYearRepository fiscalYearRepository;
   private final MoneyRepository moneyRepository;
   private final RCPermissionService rcPermissionService;
@@ -46,11 +50,13 @@ public class TravelItemServiceImpl implements TravelItemService {
   public TravelItemServiceImpl(
       TravelItemRepository travelItemRepository,
       TravelMoneyAllocationRepository allocationRepository,
+      TravelTravellerRepository travellerRepository,
       FiscalYearRepository fiscalYearRepository,
       MoneyRepository moneyRepository,
       RCPermissionService rcPermissionService) {
     this.travelItemRepository = travelItemRepository;
     this.allocationRepository = allocationRepository;
+    this.travellerRepository = travellerRepository;
     this.fiscalYearRepository = fiscalYearRepository;
     this.moneyRepository = moneyRepository;
     this.rcPermissionService = rcPermissionService;
@@ -104,23 +110,21 @@ public class TravelItemServiceImpl implements TravelItemService {
     TravelItem item = new TravelItem();
     item.setName(dto.getName());
     item.setDescription(dto.getDescription());
-    item.setTravelAuthorizationNumber(dto.getTravelAuthorizationNumber());
-    item.setReferenceNumber(dto.getReferenceNumber());
+    item.setEmap(dto.getEmap());
     item.setDestination(dto.getDestination());
     item.setPurpose(dto.getPurpose());
-    item.setEstimatedCost(dto.getEstimatedCost());
-    item.setActualCost(dto.getActualCost());
     item.setStatus(dto.getStatus() != null ? TravelItem.Status.valueOf(dto.getStatus()) : TravelItem.Status.PLANNED);
-    item.setTravelType(dto.getTravelType() != null ? TravelItem.TravelType.valueOf(dto.getTravelType()) : TravelItem.TravelType.OTHER);
-    item.setCurrency(dto.getCurrency() != null ? Currency.valueOf(dto.getCurrency()) : Currency.CAD);
-    item.setExchangeRate(dto.getExchangeRate());
+    item.setTravelType(dto.getTravelType() != null ? TravelItem.TravelType.valueOf(dto.getTravelType()) : TravelItem.TravelType.DOMESTIC);
     item.setDepartureDate(dto.getDepartureDate());
     item.setReturnDate(dto.getReturnDate());
-    item.setTravellerName(dto.getTravellerName());
-    item.setNumberOfTravellers(dto.getNumberOfTravellers());
     item.setFiscalYear(fy);
 
     item = travelItemRepository.save(item);
+
+    // Save travellers
+    if (dto.getTravellers() != null && !dto.getTravellers().isEmpty()) {
+      saveTravellers(item, dto.getTravellers());
+    }
 
     if (dto.getMoneyAllocations() != null && !dto.getMoneyAllocations().isEmpty()) {
       saveMoneyAllocations(item, dto.getMoneyAllocations());
@@ -149,20 +153,13 @@ public class TravelItemServiceImpl implements TravelItemService {
 
     if (dto.getName() != null) item.setName(dto.getName());
     if (dto.getDescription() != null) item.setDescription(dto.getDescription());
-    if (dto.getTravelAuthorizationNumber() != null) item.setTravelAuthorizationNumber(dto.getTravelAuthorizationNumber());
-    if (dto.getReferenceNumber() != null) item.setReferenceNumber(dto.getReferenceNumber());
+    if (dto.getEmap() != null) item.setEmap(dto.getEmap());
     if (dto.getDestination() != null) item.setDestination(dto.getDestination());
     if (dto.getPurpose() != null) item.setPurpose(dto.getPurpose());
-    if (dto.getEstimatedCost() != null) item.setEstimatedCost(dto.getEstimatedCost());
-    if (dto.getActualCost() != null) item.setActualCost(dto.getActualCost());
     if (dto.getStatus() != null) item.setStatus(TravelItem.Status.valueOf(dto.getStatus()));
     if (dto.getTravelType() != null) item.setTravelType(TravelItem.TravelType.valueOf(dto.getTravelType()));
-    if (dto.getCurrency() != null) item.setCurrency(Currency.valueOf(dto.getCurrency()));
-    if (dto.getExchangeRate() != null) item.setExchangeRate(dto.getExchangeRate());
     if (dto.getDepartureDate() != null) item.setDepartureDate(dto.getDepartureDate());
     if (dto.getReturnDate() != null) item.setReturnDate(dto.getReturnDate());
-    if (dto.getTravellerName() != null) item.setTravellerName(dto.getTravellerName());
-    if (dto.getNumberOfTravellers() != null) item.setNumberOfTravellers(dto.getNumberOfTravellers());
 
     if (dto.getMoneyAllocations() != null) {
       item.getMoneyAllocations().clear();
@@ -241,6 +238,126 @@ public class TravelItemServiceImpl implements TravelItemService {
     item = travelItemRepository.findById(travelItemId).orElseThrow();
     logger.info("Updated money allocations for travel item: " + item.getName() + " by user: " + username);
     return TravelItemDTO.fromEntity(item);
+  }
+
+  // ========== Traveller management ==========
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<TravelTravellerDTO> getTravellers(Long travelItemId, String username) {
+    TravelItem item = travelItemRepository.findById(travelItemId)
+        .orElseThrow(() -> new IllegalArgumentException("Travel item not found: " + travelItemId));
+
+    Long rcId = item.getFiscalYear().getResponsibilityCentre().getId();
+    if (!rcPermissionService.hasAccess(rcId, username)) {
+      throw new IllegalArgumentException("Access denied to responsibility centre: " + rcId);
+    }
+
+    return item.getTravellers().stream()
+        .map(TravelTravellerDTO::fromEntity)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  @Transactional
+  public TravelTravellerDTO addTraveller(Long travelItemId, TravelTravellerDTO travellerDTO, String username) {
+    TravelItem item = travelItemRepository.findById(travelItemId)
+        .orElseThrow(() -> new IllegalArgumentException("Travel item not found: " + travelItemId));
+
+    Long rcId = item.getFiscalYear().getResponsibilityCentre().getId();
+    if (!rcPermissionService.hasWriteAccess(rcId, username)) {
+      throw new IllegalArgumentException("Write access denied to responsibility centre: " + rcId);
+    }
+
+    TravelTraveller traveller = new TravelTraveller();
+    traveller.setName(travellerDTO.getName());
+    traveller.setTaac(travellerDTO.getTaac());
+    traveller.setEstimatedCost(travellerDTO.getEstimatedCost());
+    traveller.setFinalCost(travellerDTO.getFinalCost());
+    traveller.setCurrency(travellerDTO.getCurrency() != null ? Currency.valueOf(travellerDTO.getCurrency()) : Currency.CAD);
+    traveller.setExchangeRate(travellerDTO.getExchangeRate());
+    if (travellerDTO.getApprovalStatus() != null) {
+      traveller.setApprovalStatus(TravelTraveller.ApprovalStatus.valueOf(travellerDTO.getApprovalStatus()));
+    }
+
+    item.addTraveller(traveller);
+    travelItemRepository.save(item);
+
+    logger.info("Added traveller '" + traveller.getName() + "' to travel item: " + item.getName() + " by user: " + username);
+    return TravelTravellerDTO.fromEntity(traveller);
+  }
+
+  @Override
+  @Transactional
+  public TravelTravellerDTO updateTraveller(Long travelItemId, Long travellerId, TravelTravellerDTO travellerDTO, String username) {
+    TravelItem item = travelItemRepository.findById(travelItemId)
+        .orElseThrow(() -> new IllegalArgumentException("Travel item not found: " + travelItemId));
+
+    Long rcId = item.getFiscalYear().getResponsibilityCentre().getId();
+    if (!rcPermissionService.hasWriteAccess(rcId, username)) {
+      throw new IllegalArgumentException("Write access denied to responsibility centre: " + rcId);
+    }
+
+    TravelTraveller traveller = travellerRepository.findById(travellerId)
+        .orElseThrow(() -> new IllegalArgumentException("Traveller not found: " + travellerId));
+
+    if (!traveller.getTravelItem().getId().equals(travelItemId)) {
+      throw new IllegalArgumentException("Traveller does not belong to this travel item");
+    }
+
+    if (travellerDTO.getName() != null) traveller.setName(travellerDTO.getName());
+    if (travellerDTO.getTaac() != null) traveller.setTaac(travellerDTO.getTaac());
+    if (travellerDTO.getEstimatedCost() != null) traveller.setEstimatedCost(travellerDTO.getEstimatedCost());
+    if (travellerDTO.getFinalCost() != null) traveller.setFinalCost(travellerDTO.getFinalCost());
+    if (travellerDTO.getCurrency() != null) traveller.setCurrency(Currency.valueOf(travellerDTO.getCurrency()));
+    if (travellerDTO.getExchangeRate() != null) traveller.setExchangeRate(travellerDTO.getExchangeRate());
+    if (travellerDTO.getApprovalStatus() != null) traveller.setApprovalStatus(TravelTraveller.ApprovalStatus.valueOf(travellerDTO.getApprovalStatus()));
+
+    traveller = travellerRepository.save(traveller);
+    logger.info("Updated traveller '" + traveller.getName() + "' in travel item: " + item.getName() + " by user: " + username);
+    return TravelTravellerDTO.fromEntity(traveller);
+  }
+
+  @Override
+  @Transactional
+  public void deleteTraveller(Long travelItemId, Long travellerId, String username) {
+    TravelItem item = travelItemRepository.findById(travelItemId)
+        .orElseThrow(() -> new IllegalArgumentException("Travel item not found: " + travelItemId));
+
+    Long rcId = item.getFiscalYear().getResponsibilityCentre().getId();
+    if (!rcPermissionService.hasWriteAccess(rcId, username)) {
+      throw new IllegalArgumentException("Write access denied to responsibility centre: " + rcId);
+    }
+
+    TravelTraveller traveller = travellerRepository.findById(travellerId)
+        .orElseThrow(() -> new IllegalArgumentException("Traveller not found: " + travellerId));
+
+    if (!traveller.getTravelItem().getId().equals(travelItemId)) {
+      throw new IllegalArgumentException("Traveller does not belong to this travel item");
+    }
+
+    item.removeTraveller(traveller);
+    travellerRepository.delete(traveller);
+    logger.info("Deleted traveller '" + traveller.getName() + "' from travel item: " + item.getName() + " by user: " + username);
+  }
+
+  // ========== Private helpers ==========
+
+  private void saveTravellers(TravelItem item, List<TravelTravellerDTO> travellerDtos) {
+    for (TravelTravellerDTO dto : travellerDtos) {
+      TravelTraveller traveller = new TravelTraveller();
+      traveller.setName(dto.getName());
+      traveller.setTaac(dto.getTaac());
+      traveller.setEstimatedCost(dto.getEstimatedCost());
+      traveller.setFinalCost(dto.getFinalCost());
+      traveller.setCurrency(dto.getCurrency() != null ? Currency.valueOf(dto.getCurrency()) : Currency.CAD);
+      traveller.setExchangeRate(dto.getExchangeRate());
+      if (dto.getApprovalStatus() != null) {
+        traveller.setApprovalStatus(TravelTraveller.ApprovalStatus.valueOf(dto.getApprovalStatus()));
+      }
+      item.addTraveller(traveller);
+    }
+    travelItemRepository.save(item);
   }
 
   private void saveMoneyAllocations(TravelItem item, List<TravelMoneyAllocationDTO> allocDtos) {

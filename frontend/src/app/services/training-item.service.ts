@@ -11,7 +11,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { TrainingItem, TrainingMoneyAllocation } from '../models/training-item.model';
+import { TrainingItem, TrainingMoneyAllocation, TrainingParticipant } from '../models/training-item.model';
 
 /**
  * Request body for creating a training item.
@@ -20,18 +20,14 @@ export interface TrainingItemCreateRequest {
   name: string;
   description?: string;
   provider?: string;
-  referenceNumber?: string;
-  estimatedCost?: number | null;
-  actualCost?: number | null;
+  eco?: string;
   status?: string;
   trainingType?: string;
-  currency?: string;
-  exchangeRate?: number | null;
+  format?: string;
   startDate?: string | null;
   endDate?: string | null;
   location?: string;
-  employeeName?: string;
-  numberOfParticipants?: number;
+  participants?: TrainingParticipant[];
   moneyAllocations?: TrainingMoneyAllocation[];
 }
 
@@ -42,18 +38,13 @@ export interface TrainingItemUpdateRequest {
   name?: string;
   description?: string;
   provider?: string;
-  referenceNumber?: string;
-  estimatedCost?: number | null;
-  actualCost?: number | null;
+  eco?: string;
   status?: string;
   trainingType?: string;
-  currency?: string;
-  exchangeRate?: number | null;
+  format?: string;
   startDate?: string | null;
   endDate?: string | null;
   location?: string;
-  employeeName?: string;
-  numberOfParticipants?: number;
   moneyAllocations?: TrainingMoneyAllocation[];
 }
 
@@ -131,6 +122,42 @@ export class TrainingItemService {
    */
   updateMoneyAllocations(rcId: number, fyId: number, trainingItemId: number, allocations: TrainingMoneyAllocation[]): Observable<TrainingItem> {
     return this.http.put<TrainingItem>(`${this.baseUrl(rcId, fyId)}/${trainingItemId}/allocations`, allocations, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ============================
+  // Participant Management
+  // ============================
+
+  /**
+   * Get all participants for a training item.
+   */
+  getParticipants(rcId: number, fyId: number, trainingItemId: number): Observable<TrainingParticipant[]> {
+    return this.http.get<TrainingParticipant[]>(`${this.baseUrl(rcId, fyId)}/${trainingItemId}/participants`, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Add a participant to a training item.
+   */
+  addParticipant(rcId: number, fyId: number, trainingItemId: number, participant: TrainingParticipant): Observable<TrainingParticipant> {
+    return this.http.post<TrainingParticipant>(`${this.baseUrl(rcId, fyId)}/${trainingItemId}/participants`, participant, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Update a participant.
+   */
+  updateParticipant(rcId: number, fyId: number, trainingItemId: number, participantId: number, participant: TrainingParticipant): Observable<TrainingParticipant> {
+    return this.http.put<TrainingParticipant>(`${this.baseUrl(rcId, fyId)}/${trainingItemId}/participants/${participantId}`, participant, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Delete a participant.
+   */
+  deleteParticipant(rcId: number, fyId: number, trainingItemId: number, participantId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl(rcId, fyId)}/${trainingItemId}/participants/${participantId}`, { withCredentials: true })
       .pipe(catchError(this.handleError));
   }
 

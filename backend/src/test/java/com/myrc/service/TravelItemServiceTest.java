@@ -16,6 +16,7 @@ import com.myrc.repository.FiscalYearRepository;
 import com.myrc.repository.MoneyRepository;
 import com.myrc.repository.TravelItemRepository;
 import com.myrc.repository.TravelMoneyAllocationRepository;
+import com.myrc.repository.TravelTravellerRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +55,9 @@ class TravelItemServiceTest {
   @Mock
   private RCPermissionService permissionService;
 
+  @Mock
+  private TravelTravellerRepository travellerRepository;
+
   private TravelItemServiceImpl travelItemService;
 
   private User testUser;
@@ -67,6 +71,7 @@ class TravelItemServiceTest {
     travelItemService = new TravelItemServiceImpl(
         travelItemRepository,
         allocationRepository,
+        travellerRepository,
         fiscalYearRepository,
         moneyRepository,
         permissionService
@@ -99,12 +104,9 @@ class TravelItemServiceTest {
     testTravelItem.setDescription("Annual government technology conference");
     testTravelItem.setDestination("Ottawa, ON");
     testTravelItem.setPurpose("Conference attendance");
-    testTravelItem.setEstimatedCost(new BigDecimal("3200.00"));
+    testTravelItem.setEmap("EMAP-2025-001");
     testTravelItem.setStatus(TravelItem.Status.PLANNED);
-    testTravelItem.setTravelType(TravelItem.TravelType.CONFERENCE);
-    testTravelItem.setCurrency(Currency.CAD);
-    testTravelItem.setExchangeRate(new BigDecimal("1.0"));
-    testTravelItem.setNumberOfTravellers(2);
+    testTravelItem.setTravelType(TravelItem.TravelType.DOMESTIC);
     testTravelItem.setFiscalYear(fy);
     testTravelItem.setMoneyAllocations(new ArrayList<>());
 
@@ -187,9 +189,8 @@ class TravelItemServiceTest {
       dto.setName("Ottawa Conference Trip");
       dto.setFiscalYearId(1L);
       dto.setStatus("PLANNED");
-      dto.setTravelType("CONFERENCE");
-      dto.setCurrency("CAD");
-      dto.setEstimatedCost(new BigDecimal("3200.00"));
+      dto.setTravelType("DOMESTIC");
+      dto.setEmap("EMAP-2025-001");
 
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));
       when(travelItemRepository.existsByNameAndFiscalYearId("Ottawa Conference Trip", 1L)).thenReturn(false);
@@ -226,7 +227,6 @@ class TravelItemServiceTest {
     void shouldUpdateTravelItem() {
       TravelItemDTO dto = new TravelItemDTO();
       dto.setName("Updated Trip");
-      dto.setEstimatedCost(new BigDecimal("4000.00"));
 
       when(travelItemRepository.findById(1L)).thenReturn(Optional.of(testTravelItem));
       when(travelItemRepository.existsByNameAndFiscalYearId("Updated Trip", 1L)).thenReturn(false);

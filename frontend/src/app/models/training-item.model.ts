@@ -21,13 +21,14 @@ export type TrainingItemStatus =
  * Enum for training type values.
  */
 export type TrainingType =
-  | 'COURSE'
-  | 'CONFERENCE'
-  | 'CERTIFICATION'
-  | 'WORKSHOP'
-  | 'SEMINAR'
-  | 'ONLINE'
+  | 'COURSE_TRAINING'
+  | 'CONFERENCE_REGISTRATION'
   | 'OTHER';
+
+/**
+ * Enum for training format values.
+ */
+export type TrainingFormat = 'IN_PERSON' | 'ONLINE';
 
 /**
  * Status information for display.
@@ -53,13 +54,17 @@ export const TRAINING_STATUS_INFO: Record<TrainingItemStatus, TrainingStatusInfo
  * Map of training type to display information.
  */
 export const TRAINING_TYPE_INFO: Record<TrainingType, TrainingStatusInfo> = {
-  COURSE: { label: 'Course', color: 'blue', icon: '📚' },
-  CONFERENCE: { label: 'Conference', color: 'purple', icon: '🎤' },
-  CERTIFICATION: { label: 'Certification', color: 'green', icon: '📜' },
-  WORKSHOP: { label: 'Workshop', color: 'orange', icon: '🔧' },
-  SEMINAR: { label: 'Seminar', color: 'teal', icon: '🎓' },
-  ONLINE: { label: 'Online', color: 'cyan', icon: '💻' },
+  COURSE_TRAINING: { label: 'Course / Training', color: 'blue', icon: '📚' },
+  CONFERENCE_REGISTRATION: { label: 'Conference Registration', color: 'purple', icon: '🎤' },
   OTHER: { label: 'Other', color: 'gray', icon: '📝' }
+};
+
+/**
+ * Map of training format to display information.
+ */
+export const TRAINING_FORMAT_INFO: Record<TrainingFormat, TrainingStatusInfo> = {
+  IN_PERSON: { label: 'In Person', color: 'green', icon: '🏢' },
+  ONLINE: { label: 'Online', color: 'cyan', icon: '💻' }
 };
 
 /**
@@ -93,6 +98,41 @@ export interface TrainingMoneyAllocation {
 }
 
 /**
+ * Training participant within a training item.
+ */
+export interface TrainingParticipant {
+  /** Unique identifier */
+  id?: number;
+
+  /** Participant name */
+  name: string;
+
+  /** Estimated cost */
+  estimatedCost: number | null;
+
+  /** Final cost */
+  finalCost: number | null;
+
+  /** Currency code (ISO 4217) */
+  currency: string;
+
+  /** Exchange rate to CAD */
+  exchangeRate: number | null;
+
+  /** Estimated cost converted to CAD */
+  estimatedCostCad?: number | null;
+
+  /** Final cost converted to CAD */
+  finalCostCad?: number | null;
+
+  /** Creation timestamp */
+  createdAt?: string;
+
+  /** Last update timestamp */
+  updatedAt?: string;
+}
+
+/**
  * Training Item interface representing a training activity within a fiscal year.
  */
 export interface TrainingItem {
@@ -108,14 +148,8 @@ export interface TrainingItem {
   /** Training provider */
   provider?: string;
 
-  /** Reference number */
-  referenceNumber?: string;
-
-  /** Estimated cost */
-  estimatedCost: number | null;
-
-  /** Actual cost */
-  actualCost: number | null;
+  /** ECO number */
+  eco?: string;
 
   /** Current status */
   status: TrainingItemStatus;
@@ -123,11 +157,8 @@ export interface TrainingItem {
   /** Type of training */
   trainingType: TrainingType;
 
-  /** Currency code (ISO 4217) */
-  currency: string;
-
-  /** Exchange rate to CAD */
-  exchangeRate: number | null;
+  /** Format (in-person or online) */
+  format?: TrainingFormat;
 
   /** Start date of training */
   startDate?: string | null;
@@ -138,11 +169,11 @@ export interface TrainingItem {
   /** Location of training */
   location?: string;
 
-  /** Employee name */
-  employeeName?: string;
-
-  /** Number of participants */
+  /** Number of participants (computed from participants list) */
   numberOfParticipants: number;
+
+  /** Participants list */
+  participants?: TrainingParticipant[];
 
   /** ID of the parent fiscal year */
   fiscalYearId: number;
@@ -156,10 +187,10 @@ export interface TrainingItem {
   /** Total of all money allocation O&M amounts */
   moneyAllocationTotalOm?: number | null;
 
-  /** Estimated cost converted to CAD */
+  /** Estimated cost converted to CAD (computed from participants) */
   estimatedCostCad?: number | null;
 
-  /** Actual cost converted to CAD */
+  /** Actual cost converted to CAD (computed from participants) */
   actualCostCad?: number | null;
 
   /** Creation timestamp */

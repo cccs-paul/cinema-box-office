@@ -78,18 +78,14 @@ describe('TrainingComponent', () => {
     name: 'Java Certification',
     description: 'Oracle Java SE certification course',
     provider: 'Oracle',
-    referenceNumber: 'TR-001',
-    estimatedCost: 2500,
-    actualCost: null,
+    eco: 'ECO-001',
+    format: 'ONLINE',
     status: 'PLANNED',
-    trainingType: 'CERTIFICATION',
-    currency: 'CAD',
-    exchangeRate: null,
+    trainingType: 'COURSE_TRAINING',
     startDate: '2026-03-01',
     endDate: '2026-03-15',
     location: 'Online',
-    employeeName: 'John Doe',
-    numberOfParticipants: 3,
+    participants: [],
     fiscalYearId: 1,
     active: true,
     moneyAllocations: [mockAllocation],
@@ -263,8 +259,7 @@ describe('TrainingComponent', () => {
 
       component.openCreateForm();
       component.newItemName = 'New Training';
-      component.newItemTrainingType = 'COURSE';
-      component.newItemCurrency = 'CAD';
+      component.newItemTrainingType = 'COURSE_TRAINING';
       component.createItem();
 
       expect(trainingItemService.createTrainingItem).toHaveBeenCalled();

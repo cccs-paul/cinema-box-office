@@ -6,7 +6,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
@@ -77,6 +77,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private formBuilder: FormBuilder,
     private http: HttpClient,
     private themeService: ThemeService,
@@ -99,6 +100,13 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     // Force light theme on login page - dark theme is only available after RC/FY selection
     this.themeService.setTheme('light');
+
+    // Check if user was redirected due to session expiry
+    this.route.queryParams.subscribe(params => {
+      if (params['sessionExpired'] === 'true') {
+        this.errorMessage = 'Your session has expired. Please log in again.';
+      }
+    });
 
     // If already logged in, redirect to RC selection page
     if (this.authService.isLoggedIn) {

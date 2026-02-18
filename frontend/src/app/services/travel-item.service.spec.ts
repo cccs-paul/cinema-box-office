@@ -27,20 +27,14 @@ describe('TravelItemService', () => {
     id: 1,
     name: 'Ottawa Conference Trip',
     description: 'Annual government technology conference',
-    travelAuthorizationNumber: 'TA-2026-001',
-    referenceNumber: 'TV-001',
+    emap: 'EMAP-001',
     destination: 'Ottawa, ON',
     purpose: 'Conference attendance',
-    estimatedCost: 3200,
-    actualCost: null,
     status: 'PLANNED',
-    travelType: 'CONFERENCE',
-    currency: 'CAD',
-    exchangeRate: null,
+    travelType: 'DOMESTIC',
     departureDate: '2026-04-01',
     returnDate: '2026-04-05',
-    travellerName: 'Jane Smith',
-    numberOfTravellers: 2,
+    travellers: [],
     fiscalYearId: 1,
     createdAt: '2026-02-16T12:00:00Z',
     updatedAt: '2026-02-16T12:00:00Z',
@@ -53,10 +47,8 @@ describe('TravelItemService', () => {
     id: 2,
     name: 'Vancouver Training',
     description: 'DevOps training course',
-    travelType: 'TRAINING',
-    destination: 'Vancouver, BC',
-    estimatedCost: 5000,
-    numberOfTravellers: 1
+    travelType: 'NORTH_AMERICA',
+    destination: 'Vancouver, BC'
   };
 
   beforeEach(() => {
@@ -133,9 +125,8 @@ describe('TravelItemService', () => {
         name: 'Ottawa Conference Trip',
         description: 'Annual government technology conference',
         destination: 'Ottawa, ON',
-        currency: 'CAD',
-        estimatedCost: 3200,
-        travelType: 'CONFERENCE',
+        emap: 'EMAP-001',
+        travelType: 'DOMESTIC',
         moneyAllocations: [mockAllocation]
       };
 
@@ -167,8 +158,7 @@ describe('TravelItemService', () => {
   describe('updateTravelItem', () => {
     it('should update a travel item', () => {
       const request: TravelItemUpdateRequest = {
-        name: 'Updated Ottawa Trip',
-        estimatedCost: 4000
+        name: 'Updated Ottawa Trip'
       };
 
       service.updateTravelItem(1, 1, 1, request).subscribe(item => {

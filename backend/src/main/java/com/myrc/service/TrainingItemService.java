@@ -7,6 +7,7 @@ package com.myrc.service;
 
 import com.myrc.dto.TrainingItemDTO;
 import com.myrc.dto.TrainingMoneyAllocationDTO;
+import com.myrc.dto.TrainingParticipantDTO;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,7 +15,7 @@ import java.util.Optional;
  * Service interface for Training Item management operations.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2026-02-16
  */
 public interface TrainingItemService {
@@ -34,4 +35,13 @@ public interface TrainingItemService {
   List<TrainingMoneyAllocationDTO> getMoneyAllocations(Long trainingItemId, String username);
 
   TrainingItemDTO updateMoneyAllocations(Long trainingItemId, List<TrainingMoneyAllocationDTO> allocations, String username);
+
+  // Participant management
+  List<TrainingParticipantDTO> getParticipants(Long trainingItemId, String username);
+
+  TrainingParticipantDTO addParticipant(Long trainingItemId, TrainingParticipantDTO participantDTO, String username);
+
+  TrainingParticipantDTO updateParticipant(Long trainingItemId, Long participantId, TrainingParticipantDTO participantDTO, String username);
+
+  void deleteParticipant(Long trainingItemId, Long participantId, String username);
 }

@@ -20,11 +20,6 @@
     <span>❌</span> {{ errorMessage }}
   </div>
 
-  <!-- Success Message -->
-  <div class="alert alert-success" *ngIf="successMessage">
-    <span>✅</span> {{ successMessage }}
-  </div>
-
   <!-- Loading State -->
   <div class="loading-state" *ngIf="isLoading">
     <div class="spinner"></div>
@@ -44,20 +39,6 @@
       </button>
       <button
         class="tab-btn"
-        [class.active]="activeTab === 'training'"
-        (click)="setActiveTab('training')">
-        <span class="tab-icon">🎓</span>
-        <span class="tab-label">{{ 'rcConfiguration.trainingTab' | translate }}</span>
-      </button>
-      <button
-        class="tab-btn"
-        [class.active]="activeTab === 'travel'"
-        (click)="setActiveTab('travel')">
-        <span class="tab-icon">✈️</span>
-        <span class="tab-label">{{ 'rcConfiguration.travelTab' | translate }}</span>
-      </button>
-      <button
-        class="tab-btn"
         [class.active]="activeTab === 'audit'"
         (click)="setActiveTab('audit')">
         <span class="tab-icon">📋</span>
@@ -68,82 +49,6 @@
     <!-- Permissions Tab Content -->
     <div class="tab-content" *ngIf="activeTab === 'permissions'">
       <app-rc-permissions [embedded]="true"></app-rc-permissions>
-    </div>
-
-    <!-- Training Tab Content -->
-    <div class="tab-content" *ngIf="activeTab === 'training'">
-      <div class="toggle-section">
-        <div class="toggle-header">
-          <div class="toggle-info">
-            <h3>🎓 {{ 'rcConfiguration.trainingTitle' | translate }}</h3>
-            <p class="toggle-description">{{ 'rcConfiguration.trainingDescription' | translate }}</p>
-          </div>
-          <div class="toggle-control">
-            <label class="toggle-switch" [class.disabled]="!isOwner || togglingTraining || (hasTrainingItems && rc!.trainingEnabled)">
-              <input
-                type="checkbox"
-                [checked]="rc!.trainingEnabled"
-                [disabled]="!isOwner || togglingTraining || (hasTrainingItems && rc!.trainingEnabled)"
-                (change)="toggleTrainingEnabled()"
-              >
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="toggle-status" [class.enabled]="rc!.trainingEnabled" [class.disabled-status]="!rc!.trainingEnabled">
-              {{ rc!.trainingEnabled ? ('rcConfiguration.enabled' | translate) : ('rcConfiguration.disabled' | translate) }}
-            </span>
-          </div>
-        </div>
-        <div class="toggle-warning" *ngIf="hasTrainingItems && rc!.trainingEnabled">
-          <span class="warning-icon">⚠️</span>
-          <span>{{ 'rcConfiguration.cannotDisableTraining' | translate }}</span>
-        </div>
-        <div class="toggle-warning" *ngIf="!isOwner">
-          <span class="warning-icon">⚠️</span>
-          <span>{{ 'rcConfiguration.onlyOwnerCanToggle' | translate }}</span>
-        </div>
-        <div class="toggle-loading" *ngIf="togglingTraining || checkingTrainingItems">
-          <div class="spinner-small"></div>
-          <span>{{ 'common.loading' | translate }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Travel Tab Content -->
-    <div class="tab-content" *ngIf="activeTab === 'travel'">
-      <div class="toggle-section">
-        <div class="toggle-header">
-          <div class="toggle-info">
-            <h3>✈️ {{ 'rcConfiguration.travelTitle' | translate }}</h3>
-            <p class="toggle-description">{{ 'rcConfiguration.travelDescription' | translate }}</p>
-          </div>
-          <div class="toggle-control">
-            <label class="toggle-switch" [class.disabled]="!isOwner || togglingTravel || (hasTravelItems && rc!.travelEnabled)">
-              <input
-                type="checkbox"
-                [checked]="rc!.travelEnabled"
-                [disabled]="!isOwner || togglingTravel || (hasTravelItems && rc!.travelEnabled)"
-                (change)="toggleTravelEnabled()"
-              >
-              <span class="toggle-slider"></span>
-            </label>
-            <span class="toggle-status" [class.enabled]="rc!.travelEnabled" [class.disabled-status]="!rc!.travelEnabled">
-              {{ rc!.travelEnabled ? ('rcConfiguration.enabled' | translate) : ('rcConfiguration.disabled' | translate) }}
-            </span>
-          </div>
-        </div>
-        <div class="toggle-warning" *ngIf="hasTravelItems && rc!.travelEnabled">
-          <span class="warning-icon">⚠️</span>
-          <span>{{ 'rcConfiguration.cannotDisableTravel' | translate }}</span>
-        </div>
-        <div class="toggle-warning" *ngIf="!isOwner">
-          <span class="warning-icon">⚠️</span>
-          <span>{{ 'rcConfiguration.onlyOwnerCanToggle' | translate }}</span>
-        </div>
-        <div class="toggle-loading" *ngIf="togglingTravel || checkingTravelItems">
-          <div class="spinner-small"></div>
-          <span>{{ 'common.loading' | translate }}</span>
-        </div>
-      </div>
     </div>
 
     <!-- Audit Tab Content -->

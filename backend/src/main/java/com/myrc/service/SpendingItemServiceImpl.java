@@ -384,8 +384,27 @@ public class SpendingItemServiceImpl implements SpendingItemService {
 
   /**
    * Update money allocations for a spending item.
+   * Allocations in the DTO list are updated/created. Allocations NOT in the DTO list
+   * are zeroed out to ensure the server-computed totals always reflect reality.
    */
   private void updateMoneyAllocations(SpendingItem spendingItem, List<SpendingMoneyAllocationDTO> allocationDTOs) {
+    // Build a set of money IDs present in the request for quick lookup
+    java.util.Set<Long> requestedMoneyIds = new java.util.HashSet<>();
+    for (SpendingMoneyAllocationDTO dto : allocationDTOs) {
+      if (dto.getMoneyId() != null) {
+        requestedMoneyIds.add(dto.getMoneyId());
+      }
+    }
+
+    // Zero out any existing allocations NOT in the request
+    for (SpendingMoneyAllocation existing : spendingItem.getMoneyAllocations()) {
+      if (!requestedMoneyIds.contains(existing.getMoney().getId())) {
+        existing.setCapAmount(BigDecimal.ZERO);
+        existing.setOmAmount(BigDecimal.ZERO);
+      }
+    }
+
+    // Update or create allocations from the request
     for (SpendingMoneyAllocationDTO dto : allocationDTOs) {
       if (dto.getMoneyId() == null) {
         continue;

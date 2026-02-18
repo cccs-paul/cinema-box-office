@@ -640,6 +640,32 @@ export class ProcurementService {
     ).pipe(catchError(this.handleError));
   }
 
+  /**
+   * Replace an event file with a new one.
+   *
+   * @param rcId The responsibility centre ID
+   * @param fyId The fiscal year ID
+   * @param procurementItemId The procurement item ID
+   * @param eventId The event ID
+   * @param fileId The file ID to replace
+   * @param file The new file
+   * @param description Optional new description
+   * @returns Observable of the updated file metadata
+   */
+  replaceEventFile(rcId: number, fyId: number, procurementItemId: number, eventId: number,
+                    fileId: number, file: File, description?: string): Observable<ProcurementEventFile> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (description) {
+      formData.append('description', description);
+    }
+    return this.http.put<ProcurementEventFile>(
+      `${this.baseUrl(rcId, fyId)}/${procurementItemId}/events/${eventId}/files/${fileId}/replace`,
+      formData,
+      { withCredentials: true }
+    ).pipe(catchError(this.handleError));
+  }
+
   // ==========================
   // Spending Link Methods
   // ==========================

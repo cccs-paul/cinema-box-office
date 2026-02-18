@@ -60,17 +60,17 @@
     </button>
     <button 
       class="tab-btn" 
-      [class.active]="activeTab === 'import-export'"
-      (click)="setActiveTab('import-export')">
-      <span class="tab-icon">📥</span>
-      <span class="tab-label">{{ 'configuration.importExport' | translate }}</span>
-    </button>
-    <button 
-      class="tab-btn" 
       [class.active]="activeTab === 'features'"
       (click)="setActiveTab('features')">
       <span class="tab-icon">🧩</span>
       <span class="tab-label">{{ 'configuration.features' | translate }}</span>
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'import-export'"
+      (click)="setActiveTab('import-export')">
+      <span class="tab-icon">📥</span>
+      <span class="tab-label">{{ 'configuration.importExport' | translate }}</span>
     </button>
   </div>
 

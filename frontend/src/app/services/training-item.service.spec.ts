@@ -28,18 +28,14 @@ describe('TrainingItemService', () => {
     name: 'Java Certification',
     description: 'Oracle Java SE certification course',
     provider: 'Oracle',
-    referenceNumber: 'TR-001',
-    estimatedCost: 2500,
-    actualCost: null,
+    eco: 'ECO-001',
+    format: 'ONLINE',
     status: 'PLANNED',
-    trainingType: 'CERTIFICATION',
-    currency: 'CAD',
-    exchangeRate: null,
+    trainingType: 'COURSE_TRAINING',
     startDate: '2026-03-01',
     endDate: '2026-03-15',
     location: 'Online',
-    employeeName: 'John Doe',
-    numberOfParticipants: 3,
+    participants: [],
     fiscalYearId: 1,
     createdAt: '2026-02-16T12:00:00Z',
     updatedAt: '2026-02-16T12:00:00Z',
@@ -53,9 +49,7 @@ describe('TrainingItemService', () => {
     name: 'Leadership Workshop',
     description: 'Management training',
     provider: 'Internal',
-    trainingType: 'WORKSHOP',
-    estimatedCost: 1500,
-    numberOfParticipants: 10
+    trainingType: 'CONFERENCE_REGISTRATION'
   };
 
   beforeEach(() => {
@@ -132,9 +126,9 @@ describe('TrainingItemService', () => {
         name: 'Java Certification',
         description: 'Oracle Java SE certification course',
         provider: 'Oracle',
-        currency: 'CAD',
-        estimatedCost: 2500,
-        trainingType: 'CERTIFICATION',
+        eco: 'ECO-001',
+        format: 'ONLINE',
+        trainingType: 'COURSE_TRAINING',
         moneyAllocations: [mockAllocation]
       };
 
@@ -166,8 +160,7 @@ describe('TrainingItemService', () => {
   describe('updateTrainingItem', () => {
     it('should update a training item', () => {
       const request: TrainingItemUpdateRequest = {
-        name: 'Updated Java Cert',
-        estimatedCost: 3000
+        name: 'Updated Java Cert'
       };
 
       service.updateTrainingItem(1, 1, 1, request).subscribe(item => {

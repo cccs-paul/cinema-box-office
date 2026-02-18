@@ -7,6 +7,7 @@ package com.myrc.service;
 
 import com.myrc.dto.TravelItemDTO;
 import com.myrc.dto.TravelMoneyAllocationDTO;
+import com.myrc.dto.TravelTravellerDTO;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,4 +35,13 @@ public interface TravelItemService {
   List<TravelMoneyAllocationDTO> getMoneyAllocations(Long travelItemId, String username);
 
   TravelItemDTO updateMoneyAllocations(Long travelItemId, List<TravelMoneyAllocationDTO> allocations, String username);
+
+  // Traveller management
+  List<TravelTravellerDTO> getTravellers(Long travelItemId, String username);
+
+  TravelTravellerDTO addTraveller(Long travelItemId, TravelTravellerDTO travellerDTO, String username);
+
+  TravelTravellerDTO updateTraveller(Long travelItemId, Long travellerId, TravelTravellerDTO travellerDTO, String username);
+
+  void deleteTraveller(Long travelItemId, Long travellerId, String username);
 }

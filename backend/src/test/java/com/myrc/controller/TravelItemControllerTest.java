@@ -56,9 +56,8 @@ class TravelItemControllerTest {
     testItem.setDescription("Annual government technology conference");
     testItem.setFiscalYearId(1L);
     testItem.setStatus("PLANNED");
-    testItem.setTravelType("CONFERENCE");
-    testItem.setCurrency("CAD");
-    testItem.setEstimatedCost(new java.math.BigDecimal("3200.00"));
+    testItem.setTravelType("DOMESTIC");
+    testItem.setEmap("EMAP-2025-001");
     testItem.setDestination("Ottawa, ON");
     testItem.setNumberOfTravellers(2);
   }

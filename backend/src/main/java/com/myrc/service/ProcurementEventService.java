@@ -175,4 +175,15 @@ public interface ProcurementEventService {
      * @param username the deleting user's username
      */
     void deleteEventFile(Long fileId, String username);
+
+    /**
+     * Replace an existing event file with a new one.
+     *
+     * @param fileId the file ID to replace
+     * @param file the new file
+     * @param description optional new description
+     * @param username the replacing user's username
+     * @return the updated file DTO
+     */
+    ProcurementEventFileDTO replaceEventFile(Long fileId, MultipartFile file, String description, String username);
 }

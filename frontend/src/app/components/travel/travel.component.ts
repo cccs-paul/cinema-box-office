@@ -20,7 +20,7 @@ import { CurrencyService } from '../../services/currency.service';
 import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
-import { TravelItem, TravelMoneyAllocation, TravelItemStatus, TravelType, TRAVEL_STATUS_INFO, TRAVEL_TYPE_INFO } from '../../models/travel-item.model';
+import { TravelItem, TravelMoneyAllocation, TravelItemStatus, TravelType, TravelTraveller, TravelApprovalStatus, TRAVEL_STATUS_INFO, TRAVEL_TYPE_INFO, TRAVEL_APPROVAL_STATUS_INFO } from '../../models/travel-item.model';
 import { Money } from '../../models/money.model';
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 
@@ -72,21 +72,15 @@ export class TravelComponent implements OnInit, OnDestroy {
   isCreating = false;
   newItemName = '';
   newItemDescription = '';
-  newItemTravelAuthorizationNumber = '';
-  newItemReferenceNumber = '';
+  newItemEmap = '';
   newItemDestination = '';
   newItemPurpose = '';
-  newItemEstimatedCost: number | null = null;
-  newItemActualCost: number | null = null;
   newItemStatus: TravelItemStatus = 'PLANNED';
   newItemTravelType: TravelType = 'DOMESTIC';
-  newItemCurrency = DEFAULT_CURRENCY;
-  newItemExchangeRate: number | null = null;
   newItemDepartureDate = '';
   newItemReturnDate = '';
-  newItemTravellerName = '';
-  newItemNumberOfTravellers = 1;
   newItemMoneyAllocations: TravelMoneyAllocation[] = [];
+  newItemTravellers: TravelTraveller[] = [];
 
   // Expandable item tracking
   expandedItemId: number | null = null;
@@ -96,21 +90,19 @@ export class TravelComponent implements OnInit, OnDestroy {
   isUpdating = false;
   editItemName = '';
   editItemDescription = '';
-  editItemTravelAuthorizationNumber = '';
-  editItemReferenceNumber = '';
+  editItemEmap = '';
   editItemDestination = '';
   editItemPurpose = '';
-  editItemEstimatedCost: number | null = null;
-  editItemActualCost: number | null = null;
   editItemStatus: TravelItemStatus = 'PLANNED';
   editItemTravelType: TravelType = 'DOMESTIC';
-  editItemCurrency = DEFAULT_CURRENCY;
-  editItemExchangeRate: number | null = null;
   editItemDepartureDate = '';
   editItemReturnDate = '';
-  editItemTravellerName = '';
-  editItemNumberOfTravellers = 1;
   editItemMoneyAllocations: TravelMoneyAllocation[] = [];
+
+  // Traveller management
+  editingTravellers: TravelTraveller[] = [];
+  isAddingTraveller = false;
+  isSavingTraveller = false;
 
   // Messages
   errorMessage: string | null = null;
@@ -118,7 +110,8 @@ export class TravelComponent implements OnInit, OnDestroy {
 
   // Status and type lists for dropdowns
   statusOptions: TravelItemStatus[] = ['PLANNED', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
-  travelTypeOptions: TravelType[] = ['DOMESTIC', 'INTERNATIONAL', 'LOCAL', 'CONFERENCE', 'TRAINING', 'OTHER'];
+  travelTypeOptions: TravelType[] = ['DOMESTIC', 'NORTH_AMERICA', 'INTERNATIONAL', 'LOCAL'];
+  approvalStatusOptions: TravelApprovalStatus[] = ['PLANNED', 'TAAC_ESTIMATE_SUBMITTED', 'TAAC_ESTIMATE_APPROVED', 'TAAC_FINAL_SUBMITTED', 'TAAC_FINAL_APPROVED', 'CANCELLED'];
 
   // Summary data
   summaryByMoneyType: { moneyCode: string; moneyName: string; totalOm: number }[] = [];
@@ -264,9 +257,8 @@ export class TravelComponent implements OnInit, OnDestroy {
           name: item.name,
           description: item.description,
           destination: item.destination,
-          travellerName: item.travellerName,
-          purpose: item.purpose,
-          referenceNumber: item.referenceNumber
+          emap: item.emap,
+          purpose: item.purpose
         })
       );
     }
@@ -304,8 +296,8 @@ export class TravelComponent implements OnInit, OnDestroy {
     const moneyTotals: Record<number, { moneyCode: string; moneyName: string; totalOm: number }> = {};
 
     for (const item of this.travelItems) {
-      this.grandTotalEstimated += (item.estimatedCostCad ?? item.estimatedCost ?? 0);
-      this.grandTotalActual += (item.actualCostCad ?? item.actualCost ?? 0);
+      this.grandTotalEstimated += (item.estimatedCostCad ?? 0);
+      this.grandTotalActual += (item.actualCostCad ?? 0);
       this.totalTravellers += item.numberOfTravellers || 0;
 
       if (item.moneyAllocations) {
@@ -347,21 +339,15 @@ export class TravelComponent implements OnInit, OnDestroy {
   private resetCreateForm(): void {
     this.newItemName = '';
     this.newItemDescription = '';
-    this.newItemTravelAuthorizationNumber = '';
-    this.newItemReferenceNumber = '';
+    this.newItemEmap = '';
     this.newItemDestination = '';
     this.newItemPurpose = '';
-    this.newItemEstimatedCost = null;
-    this.newItemActualCost = null;
     this.newItemStatus = 'PLANNED';
     this.newItemTravelType = 'DOMESTIC';
-    this.newItemCurrency = DEFAULT_CURRENCY;
-    this.newItemExchangeRate = null;
     this.newItemDepartureDate = '';
     this.newItemReturnDate = '';
-    this.newItemTravellerName = '';
-    this.newItemNumberOfTravellers = 1;
     this.newItemMoneyAllocations = [];
+    this.newItemTravellers = [];
   }
 
   createItem(): void {
@@ -373,20 +359,14 @@ export class TravelComponent implements OnInit, OnDestroy {
     const request: TravelItemCreateRequest = {
       name: this.newItemName.trim(),
       description: this.newItemDescription.trim() || undefined,
-      travelAuthorizationNumber: this.newItemTravelAuthorizationNumber.trim() || undefined,
-      referenceNumber: this.newItemReferenceNumber.trim() || undefined,
+      emap: this.newItemEmap.trim() || undefined,
       destination: this.newItemDestination.trim() || undefined,
       purpose: this.newItemPurpose.trim() || undefined,
-      estimatedCost: this.newItemEstimatedCost,
-      actualCost: this.newItemActualCost,
       status: this.newItemStatus,
       travelType: this.newItemTravelType,
-      currency: this.newItemCurrency,
-      exchangeRate: this.newItemCurrency !== DEFAULT_CURRENCY ? this.newItemExchangeRate : null,
       departureDate: this.newItemDepartureDate || null,
       returnDate: this.newItemReturnDate || null,
-      travellerName: this.newItemTravellerName.trim() || undefined,
-      numberOfTravellers: this.newItemNumberOfTravellers,
+      travellers: this.newItemTravellers.length > 0 ? this.newItemTravellers : undefined,
       moneyAllocations: this.newItemMoneyAllocations.length > 0 ? this.newItemMoneyAllocations : undefined
     };
 
@@ -432,21 +412,15 @@ export class TravelComponent implements OnInit, OnDestroy {
     this.editingItemId = item.id;
     this.editItemName = item.name;
     this.editItemDescription = item.description || '';
-    this.editItemTravelAuthorizationNumber = item.travelAuthorizationNumber || '';
-    this.editItemReferenceNumber = item.referenceNumber || '';
+    this.editItemEmap = item.emap || '';
     this.editItemDestination = item.destination || '';
     this.editItemPurpose = item.purpose || '';
-    this.editItemEstimatedCost = item.estimatedCost;
-    this.editItemActualCost = item.actualCost;
     this.editItemStatus = item.status;
     this.editItemTravelType = item.travelType;
-    this.editItemCurrency = item.currency || DEFAULT_CURRENCY;
-    this.editItemExchangeRate = item.exchangeRate;
     this.editItemDepartureDate = item.departureDate || '';
     this.editItemReturnDate = item.returnDate || '';
-    this.editItemTravellerName = item.travellerName || '';
-    this.editItemNumberOfTravellers = item.numberOfTravellers || 1;
     this.editItemMoneyAllocations = item.moneyAllocations ? item.moneyAllocations.map(a => ({ ...a })) : [];
+    this.editingTravellers = item.travellers ? item.travellers.map(t => ({ ...t })) : [];
   }
 
   cancelEdit(): void {
@@ -462,20 +436,13 @@ export class TravelComponent implements OnInit, OnDestroy {
     const request: TravelItemUpdateRequest = {
       name: this.editItemName.trim(),
       description: this.editItemDescription.trim() || undefined,
-      travelAuthorizationNumber: this.editItemTravelAuthorizationNumber.trim() || undefined,
-      referenceNumber: this.editItemReferenceNumber.trim() || undefined,
+      emap: this.editItemEmap.trim() || undefined,
       destination: this.editItemDestination.trim() || undefined,
       purpose: this.editItemPurpose.trim() || undefined,
-      estimatedCost: this.editItemEstimatedCost,
-      actualCost: this.editItemActualCost,
       status: this.editItemStatus,
       travelType: this.editItemTravelType,
-      currency: this.editItemCurrency,
-      exchangeRate: this.editItemCurrency !== DEFAULT_CURRENCY ? this.editItemExchangeRate : null,
       departureDate: this.editItemDepartureDate || null,
       returnDate: this.editItemReturnDate || null,
-      travellerName: this.editItemTravellerName.trim() || undefined,
-      numberOfTravellers: this.editItemNumberOfTravellers,
       moneyAllocations: this.editItemMoneyAllocations.length > 0 ? this.editItemMoneyAllocations : undefined
     };
 
@@ -597,6 +564,10 @@ export class TravelComponent implements OnInit, OnDestroy {
     return TRAVEL_TYPE_INFO[type] || { label: type, color: 'gray', icon: '📝' };
   }
 
+  getApprovalStatusInfo(status: TravelApprovalStatus) {
+    return TRAVEL_APPROVAL_STATUS_INFO[status] || { label: status, color: 'secondary', icon: '❓' };
+  }
+
   getCurrencyFlag(code: string): string {
     return getCurrencyFlag(code);
   }
@@ -614,6 +585,92 @@ export class TravelComponent implements OnInit, OnDestroy {
     } catch {
       return date;
     }
+  }
+
+  // ============================
+  // Traveller Management (Create Form)
+  // ============================
+
+  addNewTraveller(travellers: TravelTraveller[]): void {
+    travellers.push({
+      name: '',
+      taac: '',
+      estimatedCost: null,
+      finalCost: null,
+      currency: DEFAULT_CURRENCY,
+      exchangeRate: null,
+      approvalStatus: 'PLANNED'
+    });
+  }
+
+  removeNewTraveller(travellers: TravelTraveller[], index: number): void {
+    travellers.splice(index, 1);
+  }
+
+  // ============================
+  // Traveller Management (Edit/Existing Item)
+  // ============================
+
+  addTraveller(item: TravelItem): void {
+    if (!this.selectedRC || !this.selectedFY) return;
+    this.isAddingTraveller = true;
+
+    const traveller: TravelTraveller = {
+      name: '',
+      taac: '',
+      estimatedCost: null,
+      finalCost: null,
+      currency: DEFAULT_CURRENCY,
+      exchangeRate: null,
+      approvalStatus: 'PLANNED'
+    };
+
+    this.travelItemService.addTraveller(this.selectedRC.id, this.selectedFY.id, item.id, traveller).subscribe({
+      next: (created) => {
+        this.editingTravellers.push(created);
+        this.isAddingTraveller = false;
+        this.loadTravelItems();
+      },
+      error: (error) => {
+        this.errorMessage = error.message || 'Failed to add traveller';
+        this.isAddingTraveller = false;
+      }
+    });
+  }
+
+  saveTraveller(item: TravelItem, traveller: TravelTraveller): void {
+    if (!this.selectedRC || !this.selectedFY || !traveller.id) return;
+    this.isSavingTraveller = true;
+
+    this.travelItemService.updateTraveller(this.selectedRC.id, this.selectedFY.id, item.id, traveller.id, traveller).subscribe({
+      next: (updated) => {
+        const idx = this.editingTravellers.findIndex(t => t.id === updated.id);
+        if (idx >= 0) this.editingTravellers[idx] = updated;
+        this.isSavingTraveller = false;
+        this.loadTravelItems();
+      },
+      error: (error) => {
+        this.errorMessage = error.message || 'Failed to update traveller';
+        this.isSavingTraveller = false;
+      }
+    });
+  }
+
+  deleteTraveller(item: TravelItem, traveller: TravelTraveller): void {
+    if (!this.selectedRC || !this.selectedFY || !traveller.id) return;
+
+    const confirmMsg = this.translate.instant('travel.deleteTravellerConfirm');
+    if (!confirm(confirmMsg)) return;
+
+    this.travelItemService.deleteTraveller(this.selectedRC.id, this.selectedFY.id, item.id, traveller.id).subscribe({
+      next: () => {
+        this.editingTravellers = this.editingTravellers.filter(t => t.id !== traveller.id);
+        this.loadTravelItems();
+      },
+      error: (error) => {
+        this.errorMessage = error.message || 'Failed to delete traveller';
+      }
+    });
   }
 
   // ============================

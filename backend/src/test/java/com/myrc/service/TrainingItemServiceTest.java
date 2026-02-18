@@ -16,6 +16,7 @@ import com.myrc.repository.FiscalYearRepository;
 import com.myrc.repository.MoneyRepository;
 import com.myrc.repository.TrainingItemRepository;
 import com.myrc.repository.TrainingMoneyAllocationRepository;
+import com.myrc.repository.TrainingParticipantRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -55,6 +56,9 @@ class TrainingItemServiceTest {
   @Mock
   private RCPermissionService permissionService;
 
+  @Mock
+  private TrainingParticipantRepository participantRepository;
+
   private TrainingItemServiceImpl trainingItemService;
 
   private User testUser;
@@ -68,6 +72,7 @@ class TrainingItemServiceTest {
     trainingItemService = new TrainingItemServiceImpl(
         trainingItemRepository,
         allocationRepository,
+        participantRepository,
         fiscalYearRepository,
         moneyRepository,
         permissionService
@@ -99,12 +104,10 @@ class TrainingItemServiceTest {
     testTrainingItem.setName("Java Certification");
     testTrainingItem.setDescription("Oracle Java SE certification");
     testTrainingItem.setProvider("Oracle");
-    testTrainingItem.setEstimatedCost(new BigDecimal("2500.00"));
+    testTrainingItem.setEco("ECO-2025-001");
     testTrainingItem.setStatus(TrainingItem.Status.PLANNED);
-    testTrainingItem.setTrainingType(TrainingItem.TrainingType.CERTIFICATION);
-    testTrainingItem.setCurrency(Currency.CAD);
-    testTrainingItem.setExchangeRate(new BigDecimal("1.0"));
-    testTrainingItem.setNumberOfParticipants(3);
+    testTrainingItem.setTrainingType(TrainingItem.TrainingType.COURSE_TRAINING);
+    testTrainingItem.setFormat(TrainingItem.TrainingFormat.IN_PERSON);
     testTrainingItem.setFiscalYear(fy);
     testTrainingItem.setMoneyAllocations(new ArrayList<>());
 
@@ -187,9 +190,9 @@ class TrainingItemServiceTest {
       dto.setName("Java Certification");
       dto.setFiscalYearId(1L);
       dto.setStatus("PLANNED");
-      dto.setTrainingType("CERTIFICATION");
-      dto.setCurrency("CAD");
-      dto.setEstimatedCost(new BigDecimal("2500.00"));
+      dto.setTrainingType("COURSE_TRAINING");
+      dto.setEco("ECO-2025-001");
+      dto.setFormat("IN_PERSON");
 
       when(fiscalYearRepository.findById(1L)).thenReturn(Optional.of(fy));
       when(trainingItemRepository.existsByNameAndFiscalYearId("Java Certification", 1L)).thenReturn(false);
@@ -226,7 +229,6 @@ class TrainingItemServiceTest {
     void shouldUpdateTrainingItem() {
       TrainingItemDTO dto = new TrainingItemDTO();
       dto.setName("Updated Certification");
-      dto.setEstimatedCost(new BigDecimal("3000.00"));
 
       when(trainingItemRepository.findById(1L)).thenReturn(Optional.of(testTrainingItem));
       when(trainingItemRepository.existsByNameAndFiscalYearId("Updated Certification", 1L)).thenReturn(false);

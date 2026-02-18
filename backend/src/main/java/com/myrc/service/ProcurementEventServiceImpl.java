@@ -443,4 +443,44 @@ public class ProcurementEventServiceImpl implements ProcurementEventService {
         eventFileRepository.save(file);
         logger.info("Deleted file " + fileId + " by user " + username);
     }
+
+    @Override
+    public ProcurementEventFileDTO replaceEventFile(Long fileId, MultipartFile newFile, String description, String username) {
+        if (newFile == null || newFile.isEmpty()) {
+            throw new IllegalArgumentException("File is required");
+        }
+        if (newFile.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("File size exceeds maximum limit of 50 MB");
+        }
+
+        Optional<ProcurementEventFile> fileOpt = eventFileRepository.findById(fileId);
+        if (fileOpt.isEmpty() || !Boolean.TRUE.equals(fileOpt.get().getActive())) {
+            throw new IllegalArgumentException("File not found");
+        }
+
+        ProcurementEventFile file = fileOpt.get();
+        ProcurementEvent event = file.getEvent();
+        Long procurementItemId = event.getProcurementItem().getId();
+
+        // Verify write access
+        getProcurementItemWithAccess(procurementItemId, username, true);
+
+        try {
+            file.setFileName(newFile.getOriginalFilename());
+            file.setContentType(newFile.getContentType() != null ? newFile.getContentType() : "application/octet-stream");
+            file.setFileSize(newFile.getSize());
+            file.setContent(newFile.getBytes());
+            if (description != null) {
+                file.setDescription(description);
+            }
+
+            ProcurementEventFile saved = eventFileRepository.save(file);
+            logger.info("Replaced event file " + fileId + " with '" + newFile.getOriginalFilename() + "' by user " + username);
+
+            return ProcurementEventFileDTO.fromEntity(saved);
+        } catch (IOException e) {
+            logger.severe("Failed to read file content: " + e.getMessage());
+            throw new IllegalStateException("Failed to process uploaded file", e);
+        }
+    }
 }

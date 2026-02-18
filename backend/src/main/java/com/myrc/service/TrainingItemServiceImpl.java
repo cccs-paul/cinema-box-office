@@ -7,20 +7,22 @@ package com.myrc.service;
 
 import com.myrc.dto.TrainingItemDTO;
 import com.myrc.dto.TrainingMoneyAllocationDTO;
+import com.myrc.dto.TrainingParticipantDTO;
 import com.myrc.model.Currency;
 import com.myrc.model.FiscalYear;
 import com.myrc.model.Money;
 import com.myrc.model.TrainingItem;
 import com.myrc.model.TrainingMoneyAllocation;
+import com.myrc.model.TrainingParticipant;
 import com.myrc.repository.FiscalYearRepository;
 import com.myrc.repository.MoneyRepository;
 import com.myrc.repository.TrainingItemRepository;
 import com.myrc.repository.TrainingMoneyAllocationRepository;
+import com.myrc.repository.TrainingParticipantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -28,9 +30,10 @@ import java.util.stream.Collectors;
 
 /**
  * Service implementation for Training Item management operations.
+ * Training items now have 1..n participants with individual costs.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2026-02-16
  */
 @Service
@@ -40,6 +43,7 @@ public class TrainingItemServiceImpl implements TrainingItemService {
 
   private final TrainingItemRepository trainingItemRepository;
   private final TrainingMoneyAllocationRepository allocationRepository;
+  private final TrainingParticipantRepository participantRepository;
   private final FiscalYearRepository fiscalYearRepository;
   private final MoneyRepository moneyRepository;
   private final RCPermissionService rcPermissionService;
@@ -47,11 +51,13 @@ public class TrainingItemServiceImpl implements TrainingItemService {
   public TrainingItemServiceImpl(
       TrainingItemRepository trainingItemRepository,
       TrainingMoneyAllocationRepository allocationRepository,
+      TrainingParticipantRepository participantRepository,
       FiscalYearRepository fiscalYearRepository,
       MoneyRepository moneyRepository,
       RCPermissionService rcPermissionService) {
     this.trainingItemRepository = trainingItemRepository;
     this.allocationRepository = allocationRepository;
+    this.participantRepository = participantRepository;
     this.fiscalYearRepository = fiscalYearRepository;
     this.moneyRepository = moneyRepository;
     this.rcPermissionService = rcPermissionService;
@@ -107,21 +113,21 @@ public class TrainingItemServiceImpl implements TrainingItemService {
     item.setName(dto.getName());
     item.setDescription(dto.getDescription());
     item.setProvider(dto.getProvider());
-    item.setReferenceNumber(dto.getReferenceNumber());
-    item.setEstimatedCost(dto.getEstimatedCost());
-    item.setActualCost(dto.getActualCost());
+    item.setEco(dto.getEco());
     item.setStatus(dto.getStatus() != null ? TrainingItem.Status.valueOf(dto.getStatus()) : TrainingItem.Status.PLANNED);
     item.setTrainingType(dto.getTrainingType() != null ? TrainingItem.TrainingType.valueOf(dto.getTrainingType()) : TrainingItem.TrainingType.OTHER);
-    item.setCurrency(dto.getCurrency() != null ? Currency.valueOf(dto.getCurrency()) : Currency.CAD);
-    item.setExchangeRate(dto.getExchangeRate());
+    item.setFormat(dto.getFormat() != null ? TrainingItem.TrainingFormat.valueOf(dto.getFormat()) : TrainingItem.TrainingFormat.IN_PERSON);
     item.setStartDate(dto.getStartDate());
     item.setEndDate(dto.getEndDate());
     item.setLocation(dto.getLocation());
-    item.setEmployeeName(dto.getEmployeeName());
-    item.setNumberOfParticipants(dto.getNumberOfParticipants());
     item.setFiscalYear(fy);
 
     item = trainingItemRepository.save(item);
+
+    // Save participants
+    if (dto.getParticipants() != null && !dto.getParticipants().isEmpty()) {
+      saveParticipants(item, dto.getParticipants());
+    }
 
     // Save money allocations
     if (dto.getMoneyAllocations() != null && !dto.getMoneyAllocations().isEmpty()) {
@@ -153,18 +159,13 @@ public class TrainingItemServiceImpl implements TrainingItemService {
     if (dto.getName() != null) item.setName(dto.getName());
     if (dto.getDescription() != null) item.setDescription(dto.getDescription());
     if (dto.getProvider() != null) item.setProvider(dto.getProvider());
-    if (dto.getReferenceNumber() != null) item.setReferenceNumber(dto.getReferenceNumber());
-    if (dto.getEstimatedCost() != null) item.setEstimatedCost(dto.getEstimatedCost());
-    if (dto.getActualCost() != null) item.setActualCost(dto.getActualCost());
+    if (dto.getEco() != null) item.setEco(dto.getEco());
     if (dto.getStatus() != null) item.setStatus(TrainingItem.Status.valueOf(dto.getStatus()));
     if (dto.getTrainingType() != null) item.setTrainingType(TrainingItem.TrainingType.valueOf(dto.getTrainingType()));
-    if (dto.getCurrency() != null) item.setCurrency(Currency.valueOf(dto.getCurrency()));
-    if (dto.getExchangeRate() != null) item.setExchangeRate(dto.getExchangeRate());
+    if (dto.getFormat() != null) item.setFormat(TrainingItem.TrainingFormat.valueOf(dto.getFormat()));
     if (dto.getStartDate() != null) item.setStartDate(dto.getStartDate());
     if (dto.getEndDate() != null) item.setEndDate(dto.getEndDate());
     if (dto.getLocation() != null) item.setLocation(dto.getLocation());
-    if (dto.getEmployeeName() != null) item.setEmployeeName(dto.getEmployeeName());
-    if (dto.getNumberOfParticipants() != null) item.setNumberOfParticipants(dto.getNumberOfParticipants());
 
     // Update money allocations if provided
     if (dto.getMoneyAllocations() != null) {
@@ -244,6 +245,116 @@ public class TrainingItemServiceImpl implements TrainingItemService {
     item = trainingItemRepository.findById(trainingItemId).orElseThrow();
     logger.info("Updated money allocations for training item: " + item.getName() + " by user: " + username);
     return TrainingItemDTO.fromEntity(item);
+  }
+
+  // ========== Participant management ==========
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<TrainingParticipantDTO> getParticipants(Long trainingItemId, String username) {
+    TrainingItem item = trainingItemRepository.findById(trainingItemId)
+        .orElseThrow(() -> new IllegalArgumentException("Training item not found: " + trainingItemId));
+
+    Long rcId = item.getFiscalYear().getResponsibilityCentre().getId();
+    if (!rcPermissionService.hasAccess(rcId, username)) {
+      throw new IllegalArgumentException("Access denied to responsibility centre: " + rcId);
+    }
+
+    return item.getParticipants().stream()
+        .map(TrainingParticipantDTO::fromEntity)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  @Transactional
+  public TrainingParticipantDTO addParticipant(Long trainingItemId, TrainingParticipantDTO participantDTO, String username) {
+    TrainingItem item = trainingItemRepository.findById(trainingItemId)
+        .orElseThrow(() -> new IllegalArgumentException("Training item not found: " + trainingItemId));
+
+    Long rcId = item.getFiscalYear().getResponsibilityCentre().getId();
+    if (!rcPermissionService.hasWriteAccess(rcId, username)) {
+      throw new IllegalArgumentException("Write access denied to responsibility centre: " + rcId);
+    }
+
+    TrainingParticipant participant = new TrainingParticipant();
+    participant.setName(participantDTO.getName());
+    participant.setEstimatedCost(participantDTO.getEstimatedCost());
+    participant.setFinalCost(participantDTO.getFinalCost());
+    participant.setCurrency(participantDTO.getCurrency() != null ? Currency.valueOf(participantDTO.getCurrency()) : Currency.CAD);
+    participant.setExchangeRate(participantDTO.getExchangeRate());
+
+    item.addParticipant(participant);
+    trainingItemRepository.save(item);
+
+    logger.info("Added participant '" + participant.getName() + "' to training item: " + item.getName() + " by user: " + username);
+    return TrainingParticipantDTO.fromEntity(participant);
+  }
+
+  @Override
+  @Transactional
+  public TrainingParticipantDTO updateParticipant(Long trainingItemId, Long participantId, TrainingParticipantDTO participantDTO, String username) {
+    TrainingItem item = trainingItemRepository.findById(trainingItemId)
+        .orElseThrow(() -> new IllegalArgumentException("Training item not found: " + trainingItemId));
+
+    Long rcId = item.getFiscalYear().getResponsibilityCentre().getId();
+    if (!rcPermissionService.hasWriteAccess(rcId, username)) {
+      throw new IllegalArgumentException("Write access denied to responsibility centre: " + rcId);
+    }
+
+    TrainingParticipant participant = participantRepository.findById(participantId)
+        .orElseThrow(() -> new IllegalArgumentException("Participant not found: " + participantId));
+
+    if (!participant.getTrainingItem().getId().equals(trainingItemId)) {
+      throw new IllegalArgumentException("Participant does not belong to this training item");
+    }
+
+    if (participantDTO.getName() != null) participant.setName(participantDTO.getName());
+    if (participantDTO.getEstimatedCost() != null) participant.setEstimatedCost(participantDTO.getEstimatedCost());
+    if (participantDTO.getFinalCost() != null) participant.setFinalCost(participantDTO.getFinalCost());
+    if (participantDTO.getCurrency() != null) participant.setCurrency(Currency.valueOf(participantDTO.getCurrency()));
+    if (participantDTO.getExchangeRate() != null) participant.setExchangeRate(participantDTO.getExchangeRate());
+
+    participant = participantRepository.save(participant);
+    logger.info("Updated participant '" + participant.getName() + "' in training item: " + item.getName() + " by user: " + username);
+    return TrainingParticipantDTO.fromEntity(participant);
+  }
+
+  @Override
+  @Transactional
+  public void deleteParticipant(Long trainingItemId, Long participantId, String username) {
+    TrainingItem item = trainingItemRepository.findById(trainingItemId)
+        .orElseThrow(() -> new IllegalArgumentException("Training item not found: " + trainingItemId));
+
+    Long rcId = item.getFiscalYear().getResponsibilityCentre().getId();
+    if (!rcPermissionService.hasWriteAccess(rcId, username)) {
+      throw new IllegalArgumentException("Write access denied to responsibility centre: " + rcId);
+    }
+
+    TrainingParticipant participant = participantRepository.findById(participantId)
+        .orElseThrow(() -> new IllegalArgumentException("Participant not found: " + participantId));
+
+    if (!participant.getTrainingItem().getId().equals(trainingItemId)) {
+      throw new IllegalArgumentException("Participant does not belong to this training item");
+    }
+
+    item.removeParticipant(participant);
+    participantRepository.delete(participant);
+    logger.info("Deleted participant '" + participant.getName() + "' from training item: " + item.getName() + " by user: " + username);
+  }
+
+  // ========== Private helpers ==========
+
+  private void saveParticipants(TrainingItem item, List<TrainingParticipantDTO> participantDtos) {
+    for (TrainingParticipantDTO dto : participantDtos) {
+      TrainingParticipant participant = new TrainingParticipant();
+      participant.setName(dto.getName());
+      participant.setEstimatedCost(dto.getEstimatedCost());
+      participant.setFinalCost(dto.getFinalCost());
+      participant.setCurrency(dto.getCurrency() != null ? Currency.valueOf(dto.getCurrency()) : Currency.CAD);
+      participant.setExchangeRate(dto.getExchangeRate());
+      item.addParticipant(participant);
+    }
+    trainingItemRepository.save(item);
   }
 
   private void saveMoneyAllocations(TrainingItem item, List<TrainingMoneyAllocationDTO> allocDtos) {

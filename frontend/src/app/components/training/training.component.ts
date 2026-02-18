@@ -20,7 +20,7 @@ import { CurrencyService } from '../../services/currency.service';
 import { FuzzySearchService } from '../../services/fuzzy-search.service';
 import { ResponsibilityCentreDTO } from '../../models/responsibility-centre.model';
 import { FiscalYear } from '../../models/fiscal-year.model';
-import { TrainingItem, TrainingMoneyAllocation, TrainingItemStatus, TrainingType, TRAINING_STATUS_INFO, TRAINING_TYPE_INFO } from '../../models/training-item.model';
+import { TrainingItem, TrainingMoneyAllocation, TrainingItemStatus, TrainingType, TrainingFormat, TrainingParticipant, TRAINING_STATUS_INFO, TRAINING_TYPE_INFO, TRAINING_FORMAT_INFO } from '../../models/training-item.model';
 import { Money } from '../../models/money.model';
 import { Currency, DEFAULT_CURRENCY, getCurrencyFlag } from '../../models/currency.model';
 
@@ -73,19 +73,15 @@ export class TrainingComponent implements OnInit, OnDestroy {
   newItemName = '';
   newItemDescription = '';
   newItemProvider = '';
-  newItemReferenceNumber = '';
-  newItemEstimatedCost: number | null = null;
-  newItemActualCost: number | null = null;
+  newItemEco = '';
   newItemStatus: TrainingItemStatus = 'PLANNED';
-  newItemTrainingType: TrainingType = 'COURSE';
-  newItemCurrency = DEFAULT_CURRENCY;
-  newItemExchangeRate: number | null = null;
+  newItemTrainingType: TrainingType = 'COURSE_TRAINING';
+  newItemFormat: TrainingFormat = 'IN_PERSON';
   newItemStartDate = '';
   newItemEndDate = '';
   newItemLocation = '';
-  newItemEmployeeName = '';
-  newItemNumberOfParticipants = 1;
   newItemMoneyAllocations: TrainingMoneyAllocation[] = [];
+  newItemParticipants: TrainingParticipant[] = [];
 
   // Expandable item tracking
   expandedItemId: number | null = null;
@@ -96,19 +92,19 @@ export class TrainingComponent implements OnInit, OnDestroy {
   editItemName = '';
   editItemDescription = '';
   editItemProvider = '';
-  editItemReferenceNumber = '';
-  editItemEstimatedCost: number | null = null;
-  editItemActualCost: number | null = null;
+  editItemEco = '';
   editItemStatus: TrainingItemStatus = 'PLANNED';
-  editItemTrainingType: TrainingType = 'COURSE';
-  editItemCurrency = DEFAULT_CURRENCY;
-  editItemExchangeRate: number | null = null;
+  editItemTrainingType: TrainingType = 'COURSE_TRAINING';
+  editItemFormat: TrainingFormat = 'IN_PERSON';
   editItemStartDate = '';
   editItemEndDate = '';
   editItemLocation = '';
-  editItemEmployeeName = '';
-  editItemNumberOfParticipants = 1;
   editItemMoneyAllocations: TrainingMoneyAllocation[] = [];
+
+  // Participant management
+  editingParticipants: TrainingParticipant[] = [];
+  isAddingParticipant = false;
+  isSavingParticipant = false;
 
   // Messages
   errorMessage: string | null = null;
@@ -116,7 +112,8 @@ export class TrainingComponent implements OnInit, OnDestroy {
 
   // Status and type lists for dropdowns
   statusOptions: TrainingItemStatus[] = ['PLANNED', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
-  trainingTypeOptions: TrainingType[] = ['COURSE', 'CONFERENCE', 'CERTIFICATION', 'WORKSHOP', 'SEMINAR', 'ONLINE', 'OTHER'];
+  trainingTypeOptions: TrainingType[] = ['COURSE_TRAINING', 'CONFERENCE_REGISTRATION', 'OTHER'];
+  formatOptions: TrainingFormat[] = ['IN_PERSON', 'ONLINE'];
 
   // Summary data
   summaryByMoneyType: { moneyCode: string; moneyName: string; totalOm: number }[] = [];
@@ -262,9 +259,8 @@ export class TrainingComponent implements OnInit, OnDestroy {
           name: item.name,
           description: item.description,
           provider: item.provider,
-          employeeName: item.employeeName,
-          location: item.location,
-          referenceNumber: item.referenceNumber
+          eco: item.eco,
+          location: item.location
         })
       );
     }
@@ -302,8 +298,8 @@ export class TrainingComponent implements OnInit, OnDestroy {
     const moneyTotals: Record<number, { moneyCode: string; moneyName: string; totalOm: number }> = {};
 
     for (const item of this.trainingItems) {
-      this.grandTotalEstimated += (item.estimatedCostCad ?? item.estimatedCost ?? 0);
-      this.grandTotalActual += (item.actualCostCad ?? item.actualCost ?? 0);
+      this.grandTotalEstimated += (item.estimatedCostCad ?? 0);
+      this.grandTotalActual += (item.actualCostCad ?? 0);
       this.totalParticipants += item.numberOfParticipants || 0;
 
       if (item.moneyAllocations) {
@@ -346,19 +342,15 @@ export class TrainingComponent implements OnInit, OnDestroy {
     this.newItemName = '';
     this.newItemDescription = '';
     this.newItemProvider = '';
-    this.newItemReferenceNumber = '';
-    this.newItemEstimatedCost = null;
-    this.newItemActualCost = null;
+    this.newItemEco = '';
     this.newItemStatus = 'PLANNED';
-    this.newItemTrainingType = 'COURSE';
-    this.newItemCurrency = DEFAULT_CURRENCY;
-    this.newItemExchangeRate = null;
+    this.newItemTrainingType = 'COURSE_TRAINING';
+    this.newItemFormat = 'IN_PERSON';
     this.newItemStartDate = '';
     this.newItemEndDate = '';
     this.newItemLocation = '';
-    this.newItemEmployeeName = '';
-    this.newItemNumberOfParticipants = 1;
     this.newItemMoneyAllocations = [];
+    this.newItemParticipants = [];
   }
 
   createItem(): void {
@@ -371,18 +363,14 @@ export class TrainingComponent implements OnInit, OnDestroy {
       name: this.newItemName.trim(),
       description: this.newItemDescription.trim() || undefined,
       provider: this.newItemProvider.trim() || undefined,
-      referenceNumber: this.newItemReferenceNumber.trim() || undefined,
-      estimatedCost: this.newItemEstimatedCost,
-      actualCost: this.newItemActualCost,
+      eco: this.newItemEco.trim() || undefined,
       status: this.newItemStatus,
       trainingType: this.newItemTrainingType,
-      currency: this.newItemCurrency,
-      exchangeRate: this.newItemCurrency !== DEFAULT_CURRENCY ? this.newItemExchangeRate : null,
+      format: this.newItemFormat,
       startDate: this.newItemStartDate || null,
       endDate: this.newItemEndDate || null,
       location: this.newItemLocation.trim() || undefined,
-      employeeName: this.newItemEmployeeName.trim() || undefined,
-      numberOfParticipants: this.newItemNumberOfParticipants,
+      participants: this.newItemParticipants.length > 0 ? this.newItemParticipants : undefined,
       moneyAllocations: this.newItemMoneyAllocations.length > 0 ? this.newItemMoneyAllocations : undefined
     };
 
@@ -429,19 +417,15 @@ export class TrainingComponent implements OnInit, OnDestroy {
     this.editItemName = item.name;
     this.editItemDescription = item.description || '';
     this.editItemProvider = item.provider || '';
-    this.editItemReferenceNumber = item.referenceNumber || '';
-    this.editItemEstimatedCost = item.estimatedCost;
-    this.editItemActualCost = item.actualCost;
+    this.editItemEco = item.eco || '';
     this.editItemStatus = item.status;
     this.editItemTrainingType = item.trainingType;
-    this.editItemCurrency = item.currency || DEFAULT_CURRENCY;
-    this.editItemExchangeRate = item.exchangeRate;
+    this.editItemFormat = item.format || 'IN_PERSON';
     this.editItemStartDate = item.startDate || '';
     this.editItemEndDate = item.endDate || '';
     this.editItemLocation = item.location || '';
-    this.editItemEmployeeName = item.employeeName || '';
-    this.editItemNumberOfParticipants = item.numberOfParticipants || 1;
     this.editItemMoneyAllocations = item.moneyAllocations ? item.moneyAllocations.map(a => ({ ...a })) : [];
+    this.editingParticipants = item.participants ? item.participants.map(p => ({ ...p })) : [];
   }
 
   cancelEdit(): void {
@@ -458,18 +442,13 @@ export class TrainingComponent implements OnInit, OnDestroy {
       name: this.editItemName.trim(),
       description: this.editItemDescription.trim() || undefined,
       provider: this.editItemProvider.trim() || undefined,
-      referenceNumber: this.editItemReferenceNumber.trim() || undefined,
-      estimatedCost: this.editItemEstimatedCost,
-      actualCost: this.editItemActualCost,
+      eco: this.editItemEco.trim() || undefined,
       status: this.editItemStatus,
       trainingType: this.editItemTrainingType,
-      currency: this.editItemCurrency,
-      exchangeRate: this.editItemCurrency !== DEFAULT_CURRENCY ? this.editItemExchangeRate : null,
+      format: this.editItemFormat,
       startDate: this.editItemStartDate || null,
       endDate: this.editItemEndDate || null,
       location: this.editItemLocation.trim() || undefined,
-      employeeName: this.editItemEmployeeName.trim() || undefined,
-      numberOfParticipants: this.editItemNumberOfParticipants,
       moneyAllocations: this.editItemMoneyAllocations.length > 0 ? this.editItemMoneyAllocations : undefined
     };
 
@@ -591,6 +570,10 @@ export class TrainingComponent implements OnInit, OnDestroy {
     return TRAINING_TYPE_INFO[type] || { label: type, color: 'gray', icon: '📝' };
   }
 
+  getFormatInfo(format: TrainingFormat) {
+    return TRAINING_FORMAT_INFO[format] || { label: format, color: 'gray', icon: '📝' };
+  }
+
   getCurrencyFlag(code: string): string {
     return getCurrencyFlag(code);
   }
@@ -608,6 +591,88 @@ export class TrainingComponent implements OnInit, OnDestroy {
     } catch {
       return date;
     }
+  }
+
+  // ============================
+  // Participant Management (Create Form)
+  // ============================
+
+  addNewParticipant(participants: TrainingParticipant[]): void {
+    participants.push({
+      name: '',
+      estimatedCost: null,
+      finalCost: null,
+      currency: DEFAULT_CURRENCY,
+      exchangeRate: null
+    });
+  }
+
+  removeNewParticipant(participants: TrainingParticipant[], index: number): void {
+    participants.splice(index, 1);
+  }
+
+  // ============================
+  // Participant Management (Edit/Existing Item)
+  // ============================
+
+  addParticipant(item: TrainingItem): void {
+    if (!this.selectedRC || !this.selectedFY) return;
+    this.isAddingParticipant = true;
+
+    const participant: TrainingParticipant = {
+      name: '',
+      estimatedCost: null,
+      finalCost: null,
+      currency: DEFAULT_CURRENCY,
+      exchangeRate: null
+    };
+
+    this.trainingItemService.addParticipant(this.selectedRC.id, this.selectedFY.id, item.id, participant).subscribe({
+      next: (created) => {
+        this.editingParticipants.push(created);
+        this.isAddingParticipant = false;
+        this.loadTrainingItems();
+      },
+      error: (error) => {
+        this.errorMessage = error.message || 'Failed to add participant';
+        this.isAddingParticipant = false;
+      }
+    });
+  }
+
+  saveParticipant(item: TrainingItem, participant: TrainingParticipant): void {
+    if (!this.selectedRC || !this.selectedFY || !participant.id) return;
+    this.isSavingParticipant = true;
+
+    this.trainingItemService.updateParticipant(this.selectedRC.id, this.selectedFY.id, item.id, participant.id, participant).subscribe({
+      next: (updated) => {
+        const idx = this.editingParticipants.findIndex(p => p.id === updated.id);
+        if (idx >= 0) this.editingParticipants[idx] = updated;
+        this.isSavingParticipant = false;
+        this.loadTrainingItems();
+      },
+      error: (error) => {
+        this.errorMessage = error.message || 'Failed to update participant';
+        this.isSavingParticipant = false;
+      }
+    });
+  }
+
+  deleteParticipant(item: TrainingItem, participant: TrainingParticipant): void {
+    if (!this.selectedRC || !this.selectedFY || !participant.id) return;
+
+    const confirmMsg = this.translate.instant('training.deleteParticipantConfirm');
+    if (!confirm(confirmMsg)) return;
+
+    this.trainingItemService.deleteParticipant(this.selectedRC.id, this.selectedFY.id, item.id, participant.id).subscribe({
+      next: () => {
+        this.editingParticipants = this.editingParticipants.filter(p => p.id !== participant.id);
+        this.loadTrainingItems();
+      },
+      error: (error) => {
+        this.errorMessage = error.message || 'Failed to delete participant';
+      }
+    });
   }
 
   // ============================

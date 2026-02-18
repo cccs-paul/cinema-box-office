@@ -22,8 +22,10 @@ import com.myrc.model.SpendingItem;
 import com.myrc.model.SpendingMoneyAllocation;
 import com.myrc.model.TrainingItem;
 import com.myrc.model.TrainingMoneyAllocation;
+import com.myrc.model.TrainingParticipant;
 import com.myrc.model.TravelItem;
 import com.myrc.model.TravelMoneyAllocation;
+import com.myrc.model.TravelTraveller;
 import com.myrc.repository.CategoryRepository;
 import com.myrc.repository.FiscalYearRepository;
 import com.myrc.repository.FundingItemRepository;
@@ -623,20 +625,27 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
       cloned.setName(source.getName());
       cloned.setDescription(source.getDescription());
       cloned.setProvider(source.getProvider());
-      cloned.setReferenceNumber(source.getReferenceNumber());
-      cloned.setEstimatedCost(source.getEstimatedCost());
-      cloned.setActualCost(source.getActualCost());
+      cloned.setEco(source.getEco());
       cloned.setStatus(source.getStatus());
       cloned.setTrainingType(source.getTrainingType());
-      cloned.setCurrency(source.getCurrency());
-      cloned.setExchangeRate(source.getExchangeRate());
+      cloned.setFormat(source.getFormat());
       cloned.setStartDate(source.getStartDate());
       cloned.setEndDate(source.getEndDate());
       cloned.setLocation(source.getLocation());
-      cloned.setEmployeeName(source.getEmployeeName());
-      cloned.setNumberOfParticipants(source.getNumberOfParticipants());
       cloned.setFiscalYear(clonedFY);
       cloned.setActive(source.getActive());
+
+      // Clone participants
+      for (TrainingParticipant srcP : source.getParticipants()) {
+        TrainingParticipant clonedP = new TrainingParticipant();
+        clonedP.setName(srcP.getName());
+        clonedP.setEstimatedCost(srcP.getEstimatedCost());
+        clonedP.setFinalCost(srcP.getFinalCost());
+        clonedP.setCurrency(srcP.getCurrency());
+        clonedP.setExchangeRate(srcP.getExchangeRate());
+        cloned.addParticipant(clonedP);
+      }
+
       cloned = trainingItemRepository.save(cloned);
 
       // Clone training money allocations
@@ -683,22 +692,29 @@ public class FiscalYearCloneServiceImpl implements FiscalYearCloneService {
       TravelItem cloned = new TravelItem();
       cloned.setName(source.getName());
       cloned.setDescription(source.getDescription());
-      cloned.setTravelAuthorizationNumber(source.getTravelAuthorizationNumber());
-      cloned.setReferenceNumber(source.getReferenceNumber());
+      cloned.setEmap(source.getEmap());
       cloned.setDestination(source.getDestination());
       cloned.setPurpose(source.getPurpose());
-      cloned.setEstimatedCost(source.getEstimatedCost());
-      cloned.setActualCost(source.getActualCost());
       cloned.setStatus(source.getStatus());
       cloned.setTravelType(source.getTravelType());
-      cloned.setCurrency(source.getCurrency());
-      cloned.setExchangeRate(source.getExchangeRate());
       cloned.setDepartureDate(source.getDepartureDate());
       cloned.setReturnDate(source.getReturnDate());
-      cloned.setTravellerName(source.getTravellerName());
-      cloned.setNumberOfTravellers(source.getNumberOfTravellers());
       cloned.setFiscalYear(clonedFY);
       cloned.setActive(source.getActive());
+
+      // Clone travellers
+      for (TravelTraveller srcT : source.getTravellers()) {
+        TravelTraveller clonedT = new TravelTraveller();
+        clonedT.setName(srcT.getName());
+        clonedT.setTaac(srcT.getTaac());
+        clonedT.setEstimatedCost(srcT.getEstimatedCost());
+        clonedT.setFinalCost(srcT.getFinalCost());
+        clonedT.setCurrency(srcT.getCurrency());
+        clonedT.setExchangeRate(srcT.getExchangeRate());
+        clonedT.setApprovalStatus(srcT.getApprovalStatus());
+        cloned.addTraveller(clonedT);
+      }
+
       cloned = travelItemRepository.save(cloned);
 
       // Clone travel money allocations

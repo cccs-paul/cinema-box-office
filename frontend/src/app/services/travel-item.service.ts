@@ -11,7 +11,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { TravelItem, TravelMoneyAllocation } from '../models/travel-item.model';
+import { TravelItem, TravelMoneyAllocation, TravelTraveller } from '../models/travel-item.model';
 
 /**
  * Request body for creating a travel item.
@@ -19,20 +19,14 @@ import { TravelItem, TravelMoneyAllocation } from '../models/travel-item.model';
 export interface TravelItemCreateRequest {
   name: string;
   description?: string;
-  travelAuthorizationNumber?: string;
-  referenceNumber?: string;
+  emap?: string;
   destination?: string;
   purpose?: string;
-  estimatedCost?: number | null;
-  actualCost?: number | null;
   status?: string;
   travelType?: string;
-  currency?: string;
-  exchangeRate?: number | null;
   departureDate?: string | null;
   returnDate?: string | null;
-  travellerName?: string;
-  numberOfTravellers?: number;
+  travellers?: TravelTraveller[];
   moneyAllocations?: TravelMoneyAllocation[];
 }
 
@@ -42,20 +36,13 @@ export interface TravelItemCreateRequest {
 export interface TravelItemUpdateRequest {
   name?: string;
   description?: string;
-  travelAuthorizationNumber?: string;
-  referenceNumber?: string;
+  emap?: string;
   destination?: string;
   purpose?: string;
-  estimatedCost?: number | null;
-  actualCost?: number | null;
   status?: string;
   travelType?: string;
-  currency?: string;
-  exchangeRate?: number | null;
   departureDate?: string | null;
   returnDate?: string | null;
-  travellerName?: string;
-  numberOfTravellers?: number;
   moneyAllocations?: TravelMoneyAllocation[];
 }
 
@@ -133,6 +120,42 @@ export class TravelItemService {
    */
   updateMoneyAllocations(rcId: number, fyId: number, travelItemId: number, allocations: TravelMoneyAllocation[]): Observable<TravelItem> {
     return this.http.put<TravelItem>(`${this.baseUrl(rcId, fyId)}/${travelItemId}/allocations`, allocations, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  // ============================
+  // Traveller Management
+  // ============================
+
+  /**
+   * Get all travellers for a travel item.
+   */
+  getTravellers(rcId: number, fyId: number, travelItemId: number): Observable<TravelTraveller[]> {
+    return this.http.get<TravelTraveller[]>(`${this.baseUrl(rcId, fyId)}/${travelItemId}/travellers`, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Add a traveller to a travel item.
+   */
+  addTraveller(rcId: number, fyId: number, travelItemId: number, traveller: TravelTraveller): Observable<TravelTraveller> {
+    return this.http.post<TravelTraveller>(`${this.baseUrl(rcId, fyId)}/${travelItemId}/travellers`, traveller, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Update a traveller.
+   */
+  updateTraveller(rcId: number, fyId: number, travelItemId: number, travellerId: number, traveller: TravelTraveller): Observable<TravelTraveller> {
+    return this.http.put<TravelTraveller>(`${this.baseUrl(rcId, fyId)}/${travelItemId}/travellers/${travellerId}`, traveller, { withCredentials: true })
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Delete a traveller.
+   */
+  deleteTraveller(rcId: number, fyId: number, travelItemId: number, travellerId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl(rcId, fyId)}/${travelItemId}/travellers/${travellerId}`, { withCredentials: true })
       .pipe(catchError(this.handleError));
   }
 

@@ -7,6 +7,7 @@ package com.myrc.dto;
 
 import com.myrc.model.TravelItem;
 import com.myrc.model.TravelMoneyAllocation;
+import com.myrc.model.TravelTraveller;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,9 +17,10 @@ import java.util.List;
 
 /**
  * Data Transfer Object for TravelItem.
+ * Travellers carry individual costs; item-level costs are computed from travellers.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2026-02-16
  */
 public class TravelItemDTO {
@@ -26,19 +28,13 @@ public class TravelItemDTO {
   private Long id;
   private String name;
   private String description;
-  private String travelAuthorizationNumber;
-  private String referenceNumber;
+  private String emap;
   private String destination;
   private String purpose;
-  private BigDecimal estimatedCost;
-  private BigDecimal actualCost;
   private String status;
   private String travelType;
-  private String currency;
-  private BigDecimal exchangeRate;
   private LocalDate departureDate;
   private LocalDate returnDate;
-  private String travellerName;
   private Integer numberOfTravellers;
   private Long fiscalYearId;
   private String fiscalYearName;
@@ -47,6 +43,7 @@ public class TravelItemDTO {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
+  private List<TravelTravellerDTO> travellers = new ArrayList<>();
   private List<TravelMoneyAllocationDTO> moneyAllocations = new ArrayList<>();
   private BigDecimal moneyAllocationTotalOm;
   private BigDecimal estimatedCostCad;
@@ -62,19 +59,13 @@ public class TravelItemDTO {
     dto.setId(entity.getId());
     dto.setName(entity.getName());
     dto.setDescription(entity.getDescription());
-    dto.setTravelAuthorizationNumber(entity.getTravelAuthorizationNumber());
-    dto.setReferenceNumber(entity.getReferenceNumber());
+    dto.setEmap(entity.getEmap());
     dto.setDestination(entity.getDestination());
     dto.setPurpose(entity.getPurpose());
-    dto.setEstimatedCost(entity.getEstimatedCost());
-    dto.setActualCost(entity.getActualCost());
     dto.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
     dto.setTravelType(entity.getTravelType() != null ? entity.getTravelType().name() : null);
-    dto.setCurrency(entity.getCurrency() != null ? entity.getCurrency().name() : "CAD");
-    dto.setExchangeRate(entity.getExchangeRate());
     dto.setDepartureDate(entity.getDepartureDate());
     dto.setReturnDate(entity.getReturnDate());
-    dto.setTravellerName(entity.getTravellerName());
     dto.setNumberOfTravellers(entity.getNumberOfTravellers());
     dto.setFiscalYearId(entity.getFiscalYear().getId());
     dto.setFiscalYearName(entity.getFiscalYear().getName());
@@ -83,6 +74,17 @@ public class TravelItemDTO {
     dto.setCreatedAt(entity.getCreatedAt());
     dto.setUpdatedAt(entity.getUpdatedAt());
     dto.setActive(entity.getActive());
+
+    // Map travellers
+    List<TravelTravellerDTO> travellerDtos = new ArrayList<>();
+    if (entity.getTravellers() != null) {
+      for (TravelTraveller t : entity.getTravellers()) {
+        travellerDtos.add(TravelTravellerDTO.fromEntity(t));
+      }
+    }
+    dto.setTravellers(travellerDtos);
+
+    // Compute costs from travellers
     dto.setEstimatedCostCad(entity.getEstimatedCostInCAD());
     dto.setActualCostCad(entity.getActualCostInCAD());
 
@@ -112,11 +114,8 @@ public class TravelItemDTO {
   public String getDescription() { return description; }
   public void setDescription(String description) { this.description = description; }
 
-  public String getTravelAuthorizationNumber() { return travelAuthorizationNumber; }
-  public void setTravelAuthorizationNumber(String travelAuthorizationNumber) { this.travelAuthorizationNumber = travelAuthorizationNumber; }
-
-  public String getReferenceNumber() { return referenceNumber; }
-  public void setReferenceNumber(String referenceNumber) { this.referenceNumber = referenceNumber; }
+  public String getEmap() { return emap; }
+  public void setEmap(String emap) { this.emap = emap; }
 
   public String getDestination() { return destination; }
   public void setDestination(String destination) { this.destination = destination; }
@@ -124,32 +123,17 @@ public class TravelItemDTO {
   public String getPurpose() { return purpose; }
   public void setPurpose(String purpose) { this.purpose = purpose; }
 
-  public BigDecimal getEstimatedCost() { return estimatedCost; }
-  public void setEstimatedCost(BigDecimal estimatedCost) { this.estimatedCost = estimatedCost; }
-
-  public BigDecimal getActualCost() { return actualCost; }
-  public void setActualCost(BigDecimal actualCost) { this.actualCost = actualCost; }
-
   public String getStatus() { return status; }
   public void setStatus(String status) { this.status = status; }
 
   public String getTravelType() { return travelType; }
   public void setTravelType(String travelType) { this.travelType = travelType; }
 
-  public String getCurrency() { return currency; }
-  public void setCurrency(String currency) { this.currency = currency; }
-
-  public BigDecimal getExchangeRate() { return exchangeRate; }
-  public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
-
   public LocalDate getDepartureDate() { return departureDate; }
   public void setDepartureDate(LocalDate departureDate) { this.departureDate = departureDate; }
 
   public LocalDate getReturnDate() { return returnDate; }
   public void setReturnDate(LocalDate returnDate) { this.returnDate = returnDate; }
-
-  public String getTravellerName() { return travellerName; }
-  public void setTravellerName(String travellerName) { this.travellerName = travellerName; }
 
   public Integer getNumberOfTravellers() { return numberOfTravellers; }
   public void setNumberOfTravellers(Integer numberOfTravellers) { this.numberOfTravellers = numberOfTravellers; }
@@ -174,6 +158,9 @@ public class TravelItemDTO {
 
   public Boolean getActive() { return active; }
   public void setActive(Boolean active) { this.active = active; }
+
+  public List<TravelTravellerDTO> getTravellers() { return travellers; }
+  public void setTravellers(List<TravelTravellerDTO> travellers) { this.travellers = travellers; }
 
   public List<TravelMoneyAllocationDTO> getMoneyAllocations() { return moneyAllocations; }
   public void setMoneyAllocations(List<TravelMoneyAllocationDTO> moneyAllocations) { this.moneyAllocations = moneyAllocations; }

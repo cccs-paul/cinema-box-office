@@ -9,6 +9,7 @@ import com.myrc.audit.Audited;
 import com.myrc.dto.ErrorResponse;
 import com.myrc.dto.TravelItemDTO;
 import com.myrc.dto.TravelMoneyAllocationDTO;
+import com.myrc.dto.TravelTravellerDTO;
 import com.myrc.service.TravelItemService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -259,6 +260,99 @@ public class TravelItemController {
     } catch (Exception e) {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
           .body(new ErrorResponse("Failed to update allocations"));
+    }
+  }
+
+  // ========== Traveller endpoints ==========
+
+  @GetMapping("/{travelItemId}/travellers")
+  @Operation(summary = "Get travellers for a travel item")
+  public ResponseEntity<List<TravelTravellerDTO>> getTravellers(
+      @PathVariable Long rcId,
+      @PathVariable Long fyId,
+      @PathVariable Long travelItemId,
+      Authentication authentication) {
+    String username = getUsername(authentication);
+    try {
+      List<TravelTravellerDTO> travellers = travelItemService.getTravellers(travelItemId, username);
+      return ResponseEntity.ok(travellers);
+    } catch (IllegalArgumentException e) {
+      if (e.getMessage().contains("not found")) {
+        return ResponseEntity.notFound().build();
+      }
+      return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+  }
+
+  @PostMapping("/{travelItemId}/travellers")
+  @Audited(action = "ADD_TRAVEL_TRAVELLER", entityType = "TRAVEL_ITEM")
+  @Operation(summary = "Add a traveller to a travel item")
+  public ResponseEntity<?> addTraveller(
+      @PathVariable Long rcId,
+      @PathVariable Long fyId,
+      @PathVariable Long travelItemId,
+      Authentication authentication,
+      @RequestBody TravelTravellerDTO travellerDTO) {
+    String username = getUsername(authentication);
+    try {
+      TravelTravellerDTO created = travelItemService.addTraveller(travelItemId, travellerDTO, username);
+      return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ErrorResponse("Failed to add traveller"));
+    }
+  }
+
+  @PutMapping("/{travelItemId}/travellers/{travellerId}")
+  @Audited(action = "UPDATE_TRAVEL_TRAVELLER", entityType = "TRAVEL_ITEM")
+  @Operation(summary = "Update a traveller in a travel item")
+  public ResponseEntity<?> updateTraveller(
+      @PathVariable Long rcId,
+      @PathVariable Long fyId,
+      @PathVariable Long travelItemId,
+      @PathVariable Long travellerId,
+      Authentication authentication,
+      @RequestBody TravelTravellerDTO travellerDTO) {
+    String username = getUsername(authentication);
+    try {
+      TravelTravellerDTO updated = travelItemService.updateTraveller(travelItemId, travellerId, travellerDTO, username);
+      return ResponseEntity.ok(updated);
+    } catch (IllegalArgumentException e) {
+      if (e.getMessage().contains("not found")) {
+        return ResponseEntity.notFound().build();
+      }
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ErrorResponse("Failed to update traveller"));
+    }
+  }
+
+  @DeleteMapping("/{travelItemId}/travellers/{travellerId}")
+  @Audited(action = "DELETE_TRAVEL_TRAVELLER", entityType = "TRAVEL_ITEM")
+  @Operation(summary = "Delete a traveller from a travel item")
+  public ResponseEntity<?> deleteTraveller(
+      @PathVariable Long rcId,
+      @PathVariable Long fyId,
+      @PathVariable Long travelItemId,
+      @PathVariable Long travellerId,
+      Authentication authentication) {
+    String username = getUsername(authentication);
+    try {
+      travelItemService.deleteTraveller(travelItemId, travellerId, username);
+      return ResponseEntity.noContent().build();
+    } catch (IllegalArgumentException e) {
+      if (e.getMessage().contains("not found")) {
+        return ResponseEntity.notFound().build();
+      }
+      return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body(new ErrorResponse("Failed to delete traveller"));
     }
   }
 

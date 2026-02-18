@@ -287,7 +287,8 @@ export class ProcurementComponent implements OnInit, OnDestroy {
   isReplacingFile = false;
 
   // File Preview
-  previewingFile: ProcurementQuoteFile | null = null;
+  previewingFile: ProcurementQuoteFile | ProcurementEventFile | null = null;
+  previewingEventContext: { event: ProcurementEvent } | null = null;
   previewUrl: any = null;
   previewTextContent: string = '';
   isLoadingPreview = false;
@@ -1729,6 +1730,7 @@ export class ProcurementComponent implements OnInit, OnDestroy {
 
   closePreview(): void {
     this.previewingFile = null;
+    this.previewingEventContext = null;
     this.previewUrl = null;
     this.previewTextContent = '';
     this.isLoadingPreview = false;
@@ -2209,12 +2211,88 @@ export class ProcurementComponent implements OnInit, OnDestroy {
         // Open in new tab
         const url = window.URL.createObjectURL(blob);
         window.open(url, '_blank');
-        // Note: the URL will be revoked when the tab is closed
       },
       error: (error) => {
         this.showError('Failed to open file: ' + error.message);
       }
     });
+  }
+
+  /**
+   * Preview an event file in the modal.
+   */
+  previewEventFile(event: ProcurementEvent, file: ProcurementEventFile): void {
+    if (!this.selectedRC || !this.selectedFY || !this.selectedItem) return;
+
+    this.previewingFile = file;
+    this.previewingEventContext = { event };
+    this.isLoadingPreview = true;
+    this.previewUrl = null;
+    this.previewTextContent = '';
+
+    const url = this.procurementService.getEventFileDownloadUrl(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      event.id,
+      file.id
+    );
+
+    if (file.contentType === 'application/pdf' || file.contentType.startsWith('image/')) {
+      this.previewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      this.isLoadingPreview = false;
+    } else if (file.contentType.startsWith('text/')) {
+      fetch(url, { credentials: 'include' })
+        .then(response => response.text())
+        .then(text => {
+          this.previewTextContent = text;
+          this.previewUrl = true;
+          this.isLoadingPreview = false;
+        })
+        .catch(() => {
+          this.showError('Failed to load file preview');
+          this.isLoadingPreview = false;
+          this.previewingFile = null;
+          this.previewingEventContext = null;
+        });
+    } else {
+      this.isLoadingPreview = false;
+    }
+  }
+
+  /**
+   * Replace an event file.
+   */
+  replaceEventFile(fileEvent: Event, event: ProcurementEvent, file: ProcurementEventFile): void {
+    const input = fileEvent.target as HTMLInputElement;
+    if (!input.files?.length || !this.selectedRC || !this.selectedFY || !this.selectedItem) return;
+
+    const newFile = input.files[0];
+    this.procurementService.replaceEventFile(
+      this.selectedRC.id,
+      this.selectedFY.id,
+      this.selectedItem.id,
+      event.id,
+      file.id,
+      newFile
+    ).subscribe({
+      next: (updatedFile) => {
+        // Update local file list
+        if (this.eventFiles[event.id]) {
+          const fileIndex = this.eventFiles[event.id].findIndex(f => f.id === updatedFile.id);
+          if (fileIndex !== -1) {
+            this.eventFiles[event.id][fileIndex] = updatedFile;
+          }
+        }
+        this.showSuccess('File replaced successfully');
+      },
+      error: (error) => {
+        this.showError('Failed to replace file: ' + error.message);
+      }
+    });
+
+    // Reset input
+    input.value = '';
   }
 
   /**

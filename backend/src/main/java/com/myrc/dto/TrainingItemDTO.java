@@ -7,6 +7,7 @@ package com.myrc.dto;
 
 import com.myrc.model.TrainingItem;
 import com.myrc.model.TrainingMoneyAllocation;
+import com.myrc.model.TrainingParticipant;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,9 +17,10 @@ import java.util.List;
 
 /**
  * Data Transfer Object for TrainingItem.
+ * Participants carry individual costs; item-level costs are computed from participants.
  *
  * @author myRC Team
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2026-02-16
  */
 public class TrainingItemDTO {
@@ -27,17 +29,13 @@ public class TrainingItemDTO {
   private String name;
   private String description;
   private String provider;
-  private String referenceNumber;
-  private BigDecimal estimatedCost;
-  private BigDecimal actualCost;
+  private String eco;
   private String status;
   private String trainingType;
-  private String currency;
-  private BigDecimal exchangeRate;
+  private String format;
   private LocalDate startDate;
   private LocalDate endDate;
   private String location;
-  private String employeeName;
   private Integer numberOfParticipants;
   private Long fiscalYearId;
   private String fiscalYearName;
@@ -46,6 +44,7 @@ public class TrainingItemDTO {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean active;
+  private List<TrainingParticipantDTO> participants = new ArrayList<>();
   private List<TrainingMoneyAllocationDTO> moneyAllocations = new ArrayList<>();
   private BigDecimal moneyAllocationTotalOm;
   private BigDecimal estimatedCostCad;
@@ -62,17 +61,13 @@ public class TrainingItemDTO {
     dto.setName(entity.getName());
     dto.setDescription(entity.getDescription());
     dto.setProvider(entity.getProvider());
-    dto.setReferenceNumber(entity.getReferenceNumber());
-    dto.setEstimatedCost(entity.getEstimatedCost());
-    dto.setActualCost(entity.getActualCost());
+    dto.setEco(entity.getEco());
     dto.setStatus(entity.getStatus() != null ? entity.getStatus().name() : null);
     dto.setTrainingType(entity.getTrainingType() != null ? entity.getTrainingType().name() : null);
-    dto.setCurrency(entity.getCurrency() != null ? entity.getCurrency().name() : "CAD");
-    dto.setExchangeRate(entity.getExchangeRate());
+    dto.setFormat(entity.getFormat() != null ? entity.getFormat().name() : null);
     dto.setStartDate(entity.getStartDate());
     dto.setEndDate(entity.getEndDate());
     dto.setLocation(entity.getLocation());
-    dto.setEmployeeName(entity.getEmployeeName());
     dto.setNumberOfParticipants(entity.getNumberOfParticipants());
     dto.setFiscalYearId(entity.getFiscalYear().getId());
     dto.setFiscalYearName(entity.getFiscalYear().getName());
@@ -81,6 +76,17 @@ public class TrainingItemDTO {
     dto.setCreatedAt(entity.getCreatedAt());
     dto.setUpdatedAt(entity.getUpdatedAt());
     dto.setActive(entity.getActive());
+
+    // Map participants
+    List<TrainingParticipantDTO> participantDtos = new ArrayList<>();
+    if (entity.getParticipants() != null) {
+      for (TrainingParticipant p : entity.getParticipants()) {
+        participantDtos.add(TrainingParticipantDTO.fromEntity(p));
+      }
+    }
+    dto.setParticipants(participantDtos);
+
+    // Compute costs from participants
     dto.setEstimatedCostCad(entity.getEstimatedCostInCAD());
     dto.setActualCostCad(entity.getActualCostInCAD());
 
@@ -113,14 +119,8 @@ public class TrainingItemDTO {
   public String getProvider() { return provider; }
   public void setProvider(String provider) { this.provider = provider; }
 
-  public String getReferenceNumber() { return referenceNumber; }
-  public void setReferenceNumber(String referenceNumber) { this.referenceNumber = referenceNumber; }
-
-  public BigDecimal getEstimatedCost() { return estimatedCost; }
-  public void setEstimatedCost(BigDecimal estimatedCost) { this.estimatedCost = estimatedCost; }
-
-  public BigDecimal getActualCost() { return actualCost; }
-  public void setActualCost(BigDecimal actualCost) { this.actualCost = actualCost; }
+  public String getEco() { return eco; }
+  public void setEco(String eco) { this.eco = eco; }
 
   public String getStatus() { return status; }
   public void setStatus(String status) { this.status = status; }
@@ -128,11 +128,8 @@ public class TrainingItemDTO {
   public String getTrainingType() { return trainingType; }
   public void setTrainingType(String trainingType) { this.trainingType = trainingType; }
 
-  public String getCurrency() { return currency; }
-  public void setCurrency(String currency) { this.currency = currency; }
-
-  public BigDecimal getExchangeRate() { return exchangeRate; }
-  public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
+  public String getFormat() { return format; }
+  public void setFormat(String format) { this.format = format; }
 
   public LocalDate getStartDate() { return startDate; }
   public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
@@ -142,9 +139,6 @@ public class TrainingItemDTO {
 
   public String getLocation() { return location; }
   public void setLocation(String location) { this.location = location; }
-
-  public String getEmployeeName() { return employeeName; }
-  public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
 
   public Integer getNumberOfParticipants() { return numberOfParticipants; }
   public void setNumberOfParticipants(Integer numberOfParticipants) { this.numberOfParticipants = numberOfParticipants; }
@@ -169,6 +163,9 @@ public class TrainingItemDTO {
 
   public Boolean getActive() { return active; }
   public void setActive(Boolean active) { this.active = active; }
+
+  public List<TrainingParticipantDTO> getParticipants() { return participants; }
+  public void setParticipants(List<TrainingParticipantDTO> participants) { this.participants = participants; }
 
   public List<TrainingMoneyAllocationDTO> getMoneyAllocations() { return moneyAllocations; }
   public void setMoneyAllocations(List<TrainingMoneyAllocationDTO> moneyAllocations) { this.moneyAllocations = moneyAllocations; }

@@ -30,8 +30,10 @@ import com.myrc.model.SpendingEvent;
 import com.myrc.model.SpendingMoneyAllocation;
 import com.myrc.model.TrainingItem;
 import com.myrc.model.TrainingMoneyAllocation;
+import com.myrc.model.TrainingParticipant;
 import com.myrc.model.TravelItem;
 import com.myrc.model.TravelMoneyAllocation;
+import com.myrc.model.TravelTraveller;
 import com.myrc.model.User;
 import com.myrc.repository.CategoryRepository;
 import com.myrc.repository.FiscalYearRepository;
@@ -1508,28 +1510,38 @@ public class DataInitializer implements ApplicationRunner {
         Money abMoney = fyMonies.stream().filter(m -> "AB".equals(m.getCode())).findFirst().orElse(fyMonies.get(0));
         Money oaMoney = fyMonies.stream().filter(m -> "OA".equals(m.getCode())).findFirst().orElse(null);
 
-        // Training items: {name, description, provider, referenceNumber, employeeName, location, numberOfParticipants, estimatedCost, actualCost, status, type}
+        // Training items: {name, description, provider, eco, location, status, type, format, participants[][name, estCost, finalCost, currency]}
         Object[][] trainingData = {
-            {"AWS Cloud Practitioner Certification", "Cloud fundamentals certification for infrastructure team members", "Amazon Web Services", "TRN-2025-001", "Sarah Chen, David Kim", "Online", 2,
-                new BigDecimal("3500.00"), new BigDecimal("3500.00"), TrainingItem.Status.COMPLETED, TrainingItem.TrainingType.CERTIFICATION},
-            {"Advanced Python for Data Science", "Intensive Python programming course focused on data analytics and ML", "Coursera / University of Michigan", "TRN-2025-002", "Michael Torres", "Online", 1,
-                new BigDecimal("1200.00"), null, TrainingItem.Status.IN_PROGRESS, TrainingItem.TrainingType.ONLINE},
-            {"Project Management Professional (PMP)", "PMP certification preparation and exam", "Project Management Institute", "TRN-2025-003", "Jennifer Walsh", "Ottawa, ON", 1,
-                new BigDecimal("4500.00"), null, TrainingItem.Status.APPROVED, TrainingItem.TrainingType.CERTIFICATION},
-            {"GC Cybersecurity Conference 2025", "Annual government cybersecurity conference with hands-on workshops", "Treasury Board Secretariat", "TRN-2025-004", "Robert Leblanc, Anna Patel, James Liu", "Gatineau, QC", 3,
-                new BigDecimal("2100.00"), new BigDecimal("1950.00"), TrainingItem.Status.COMPLETED, TrainingItem.TrainingType.CONFERENCE},
-            {"French Language Training - Level B", "Intermediate French language training for bilingual proficiency", "Public Service Commission", "TRN-2025-005", "Emily Thompson", "Ottawa, ON", 1,
-                new BigDecimal("6000.00"), null, TrainingItem.Status.IN_PROGRESS, TrainingItem.TrainingType.COURSE},
-            {"Agile Scrum Master Workshop", "Two-day intensive Scrum Master certification workshop", "Scrum Alliance", "TRN-2025-006", "David Kim, Lisa Nguyen", "Toronto, ON", 2,
-                new BigDecimal("3200.00"), null, TrainingItem.Status.PLANNED, TrainingItem.TrainingType.WORKSHOP},
-            {"First Aid & CPR Recertification", "Mandatory workplace health and safety recertification", "Canadian Red Cross", "TRN-2025-007", "All team members", "Ottawa, ON", 12,
-                new BigDecimal("1800.00"), new BigDecimal("1800.00"), TrainingItem.Status.COMPLETED, TrainingItem.TrainingType.COURSE},
-            {"Machine Learning Fundamentals Seminar", "Half-day seminar on ML concepts and applications in government", "National Research Council", "TRN-2025-008", "Sarah Chen, Michael Torres", "Ottawa, ON", 2,
-                new BigDecimal("400.00"), null, TrainingItem.Status.PLANNED, TrainingItem.TrainingType.SEMINAR},
-            {"Leadership Development Program", "Six-month leadership development program for aspiring managers", "Canada School of Public Service", "TRN-2025-009", "Jennifer Walsh", "Ottawa, ON", 1,
-                new BigDecimal("8500.00"), null, TrainingItem.Status.APPROVED, TrainingItem.TrainingType.COURSE},
-            {"ITIL 4 Foundation Certification", "IT service management certification aligned with GC standards", "Axelos / PeopleCert", "TRN-2025-010", "Robert Leblanc", "Online", 1,
-                new BigDecimal("1500.00"), null, TrainingItem.Status.CANCELLED, TrainingItem.TrainingType.CERTIFICATION}
+            {"AWS Cloud Practitioner Certification", "Cloud fundamentals certification for infrastructure team members", "Amazon Web Services", "ECO-2025-001", "Online",
+                TrainingItem.Status.COMPLETED, TrainingItem.TrainingType.COURSE_TRAINING, TrainingItem.TrainingFormat.ONLINE,
+                new Object[][]{{"Sarah Chen", "1750.00", "1750.00", Currency.CAD}, {"David Kim", "1750.00", "1750.00", Currency.CAD}}},
+            {"Advanced Python for Data Science", "Intensive Python programming course focused on data analytics and ML", "Coursera / University of Michigan", "ECO-2025-002", "Online",
+                TrainingItem.Status.IN_PROGRESS, TrainingItem.TrainingType.COURSE_TRAINING, TrainingItem.TrainingFormat.ONLINE,
+                new Object[][]{{"Michael Torres", "1200.00", null, Currency.CAD}}},
+            {"Project Management Professional (PMP)", "PMP certification preparation and exam", "Project Management Institute", "ECO-2025-003", "Ottawa, ON",
+                TrainingItem.Status.APPROVED, TrainingItem.TrainingType.COURSE_TRAINING, TrainingItem.TrainingFormat.IN_PERSON,
+                new Object[][]{{"Jennifer Walsh", "4500.00", null, Currency.CAD}}},
+            {"GC Cybersecurity Conference 2025", "Annual government cybersecurity conference with hands-on workshops", "Treasury Board Secretariat", "ECO-2025-004", "Gatineau, QC",
+                TrainingItem.Status.COMPLETED, TrainingItem.TrainingType.CONFERENCE_REGISTRATION, TrainingItem.TrainingFormat.IN_PERSON,
+                new Object[][]{{"Robert Leblanc", "700.00", "650.00", Currency.CAD}, {"Anna Patel", "700.00", "650.00", Currency.CAD}, {"James Liu", "700.00", "650.00", Currency.CAD}}},
+            {"French Language Training - Level B", "Intermediate French language training for bilingual proficiency", "Public Service Commission", "ECO-2025-005", "Ottawa, ON",
+                TrainingItem.Status.IN_PROGRESS, TrainingItem.TrainingType.COURSE_TRAINING, TrainingItem.TrainingFormat.IN_PERSON,
+                new Object[][]{{"Emily Thompson", "6000.00", null, Currency.CAD}}},
+            {"Agile Scrum Master Workshop", "Two-day intensive Scrum Master certification workshop", "Scrum Alliance", "ECO-2025-006", "Toronto, ON",
+                TrainingItem.Status.PLANNED, TrainingItem.TrainingType.OTHER, TrainingItem.TrainingFormat.IN_PERSON,
+                new Object[][]{{"David Kim", "1600.00", null, Currency.CAD}, {"Lisa Nguyen", "1600.00", null, Currency.CAD}}},
+            {"First Aid & CPR Recertification", "Mandatory workplace health and safety recertification", "Canadian Red Cross", "ECO-2025-007", "Ottawa, ON",
+                TrainingItem.Status.COMPLETED, TrainingItem.TrainingType.COURSE_TRAINING, TrainingItem.TrainingFormat.IN_PERSON,
+                new Object[][]{{"All team members", "1800.00", "1800.00", Currency.CAD}}},
+            {"Machine Learning Fundamentals Seminar", "Half-day seminar on ML concepts and applications in government", "National Research Council", "ECO-2025-008", "Ottawa, ON",
+                TrainingItem.Status.PLANNED, TrainingItem.TrainingType.CONFERENCE_REGISTRATION, TrainingItem.TrainingFormat.IN_PERSON,
+                new Object[][]{{"Sarah Chen", "200.00", null, Currency.CAD}, {"Michael Torres", "200.00", null, Currency.CAD}}},
+            {"Leadership Development Program", "Six-month leadership development program for aspiring managers", "Canada School of Public Service", "ECO-2025-009", "Ottawa, ON",
+                TrainingItem.Status.APPROVED, TrainingItem.TrainingType.COURSE_TRAINING, TrainingItem.TrainingFormat.IN_PERSON,
+                new Object[][]{{"Jennifer Walsh", "8500.00", null, Currency.CAD}}},
+            {"ITIL 4 Foundation Certification", "IT service management certification aligned with GC standards", "Axelos / PeopleCert", "ECO-2025-010", "Online",
+                TrainingItem.Status.CANCELLED, TrainingItem.TrainingType.COURSE_TRAINING, TrainingItem.TrainingFormat.ONLINE,
+                new Object[][]{{"Robert Leblanc", "1500.00", null, Currency.CAD}}}
         };
 
         for (Object[] data : trainingData) {
@@ -1545,16 +1557,26 @@ public class DataInitializer implements ApplicationRunner {
                 item.setName(name);
                 item.setDescription((String) data[1]);
                 item.setProvider((String) data[2]);
-                item.setReferenceNumber((String) data[3]);
-                item.setEmployeeName((String) data[4]);
-                item.setLocation((String) data[5]);
-                item.setNumberOfParticipants((Integer) data[6]);
-                item.setEstimatedCost((BigDecimal) data[7]);
-                item.setActualCost((BigDecimal) data[8]);
-                item.setStatus((TrainingItem.Status) data[9]);
-                item.setTrainingType((TrainingItem.TrainingType) data[10]);
-                item.setCurrency(Currency.CAD);
+                item.setEco((String) data[3]);
+                item.setLocation((String) data[4]);
+                item.setStatus((TrainingItem.Status) data[5]);
+                item.setTrainingType((TrainingItem.TrainingType) data[6]);
+                item.setFormat((TrainingItem.TrainingFormat) data[7]);
                 item.setFiscalYear(demoFY);
+
+                // Add participants
+                Object[][] participantsData = (Object[][]) data[8];
+                for (Object[] pData : participantsData) {
+                    TrainingParticipant p = new TrainingParticipant();
+                    p.setName((String) pData[0]);
+                    p.setEstimatedCost(new BigDecimal((String) pData[1]));
+                    if (pData[2] != null) {
+                        p.setFinalCost(new BigDecimal((String) pData[2]));
+                    }
+                    p.setCurrency((Currency) pData[3]);
+                    p.setExchangeRate(BigDecimal.ONE);
+                    item.addParticipant(p);
+                }
 
                 // Set date ranges based on status
                 LocalDate baseDate = LocalDate.of(2025, 9, 1);
@@ -1581,8 +1603,8 @@ public class DataInitializer implements ApplicationRunner {
 
                 TrainingItem saved = trainingItemRepository.save(item);
 
-                // Add money allocations
-                BigDecimal omAmount = item.getEstimatedCost() != null ? item.getEstimatedCost() : BigDecimal.ZERO;
+                // Add money allocations - use computed estimated cost from participants
+                BigDecimal omAmount = saved.getEstimatedCostInCAD() != null ? saved.getEstimatedCostInCAD() : BigDecimal.ZERO;
 
                 // Split higher-cost items across AB and OA money types
                 if (oaMoney != null && omAmount.compareTo(new BigDecimal("3000")) > 0) {
@@ -1618,28 +1640,43 @@ public class DataInitializer implements ApplicationRunner {
         Money abMoney = fyMonies.stream().filter(m -> "AB".equals(m.getCode())).findFirst().orElse(fyMonies.get(0));
         Money oaMoney = fyMonies.stream().filter(m -> "OA".equals(m.getCode())).findFirst().orElse(null);
 
-        // Travel items: {name, description, destination, purpose, travelAuthNumber, refNumber, travellerName, numberOfTravellers, estimatedCost, actualCost, status, type}
+        // Travel items: {name, description, destination, purpose, emap, status, type, travellers[][name, taac, estCost, finalCost, currency, approvalStatus]}
         Object[][] travelData = {
-            {"Ottawa-Vancouver Cloud Migration Planning", "On-site meetings with Pacific region team for cloud infrastructure migration planning", "Vancouver, BC", "Technical planning sessions for Phase 2 cloud migration", "TA-2025-0101", "EXP-2025-301", "Sarah Chen, David Kim", 2,
-                new BigDecimal("6200.00"), new BigDecimal("5850.00"), TravelItem.Status.COMPLETED, TravelItem.TravelType.DOMESTIC},
-            {"GC Digital Exchange Conference", "Participation in annual GC digital innovation conference with presentation on ML initiatives", "Toronto, ON", "Conference presentation and networking", "TA-2025-0102", "EXP-2025-302", "Michael Torres", 1,
-                new BigDecimal("2800.00"), new BigDecimal("2650.00"), TravelItem.Status.COMPLETED, TravelItem.TravelType.CONFERENCE},
-            {"Five Eyes Cybersecurity Summit", "International intelligence partnership meetings on cybersecurity cooperation", "London, UK", "Bilateral meetings and summit participation", "TA-2025-0103", "EXP-2025-303", "Robert Leblanc, Anna Patel", 2,
-                new BigDecimal("14500.00"), null, TravelItem.Status.APPROVED, TravelItem.TravelType.INTERNATIONAL},
-            {"Montreal Data Centre Inspection", "Quarterly inspection of primary data centre facility and vendor meetings", "Montreal, QC", "Facility inspection and vendor review", "TA-2025-0104", "EXP-2025-304", "James Liu", 1,
-                new BigDecimal("1200.00"), new BigDecimal("980.00"), TravelItem.Status.COMPLETED, TravelItem.TravelType.DOMESTIC},
-            {"Halifax Regional Office Onboarding", "Travel to support onboarding of new Atlantic region staff members", "Halifax, NS", "Staff onboarding and regional coordination", "TA-2025-0105", "EXP-2025-305", "Jennifer Walsh, Emily Thompson", 2,
-                new BigDecimal("4800.00"), null, TravelItem.Status.IN_PROGRESS, TravelItem.TravelType.DOMESTIC},
-            {"AWS re:Invent Conference", "Annual AWS cloud computing conference for technical training and vendor engagement", "Las Vegas, NV, USA", "Technical training and vendor roadmap discussions", "TA-2025-0106", "EXP-2025-306", "David Kim", 1,
-                new BigDecimal("5500.00"), null, TravelItem.Status.PLANNED, TravelItem.TravelType.INTERNATIONAL},
-            {"Winnipeg Satellite Office Setup", "On-site setup and configuration of new satellite office IT infrastructure", "Winnipeg, MB", "IT infrastructure deployment", "TA-2025-0107", "EXP-2025-307", "Lisa Nguyen, James Liu", 2,
-                new BigDecimal("3600.00"), null, TravelItem.Status.APPROVED, TravelItem.TravelType.DOMESTIC},
-            {"Local Client Meetings - NCR", "Regular client meetings across National Capital Region offices", "Gatineau, QC", "Quarterly client check-ins", "TA-2025-0108", "EXP-2025-308", "Jennifer Walsh", 1,
-                new BigDecimal("150.00"), new BigDecimal("120.00"), TravelItem.Status.COMPLETED, TravelItem.TravelType.LOCAL},
-            {"GC Agile Community of Practice Meetup", "Cross-departmental agile practices workshop and community building", "Ottawa, ON", "Knowledge sharing and community building", "TA-2025-0109", "EXP-2025-309", "Emily Thompson, Michael Torres", 2,
-                new BigDecimal("200.00"), null, TravelItem.Status.PLANNED, TravelItem.TravelType.TRAINING},
-            {"Calgary Oil & Gas Sector Briefing", "Sector-specific briefing for regulated industry cybersecurity requirements", "Calgary, AB", "Industry regulatory consultation", "TA-2025-0110", "EXP-2025-310", "Robert Leblanc", 1,
-                new BigDecimal("3200.00"), null, TravelItem.Status.CANCELLED, TravelItem.TravelType.DOMESTIC}
+            {"Ottawa-Vancouver Cloud Migration Planning", "On-site meetings with Pacific region team for cloud infrastructure migration planning", "Vancouver, BC", "Technical planning sessions for Phase 2 cloud migration", "EMAP-2025-301",
+                TravelItem.Status.COMPLETED, TravelItem.TravelType.DOMESTIC,
+                new Object[][]{{"Sarah Chen", "TA-2025-0101", "3100.00", "2925.00", Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_FINAL_APPROVED},
+                               {"David Kim", "TA-2025-0102", "3100.00", "2925.00", Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_FINAL_APPROVED}}},
+            {"GC Digital Exchange Conference", "Participation in annual GC digital innovation conference with presentation on ML initiatives", "Toronto, ON", "Conference presentation and networking", "EMAP-2025-302",
+                TravelItem.Status.COMPLETED, TravelItem.TravelType.DOMESTIC,
+                new Object[][]{{"Michael Torres", "TA-2025-0103", "2800.00", "2650.00", Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_FINAL_APPROVED}}},
+            {"Five Eyes Cybersecurity Summit", "International intelligence partnership meetings on cybersecurity cooperation", "London, UK", "Bilateral meetings and summit participation", "EMAP-2025-303",
+                TravelItem.Status.APPROVED, TravelItem.TravelType.INTERNATIONAL,
+                new Object[][]{{"Robert Leblanc", "TA-2025-0104", "7250.00", null, Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_ESTIMATE_APPROVED},
+                               {"Anna Patel", "TA-2025-0105", "7250.00", null, Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_ESTIMATE_APPROVED}}},
+            {"Montreal Data Centre Inspection", "Quarterly inspection of primary data centre facility and vendor meetings", "Montreal, QC", "Facility inspection and vendor review", "EMAP-2025-304",
+                TravelItem.Status.COMPLETED, TravelItem.TravelType.DOMESTIC,
+                new Object[][]{{"James Liu", "TA-2025-0106", "1200.00", "980.00", Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_FINAL_APPROVED}}},
+            {"Halifax Regional Office Onboarding", "Travel to support onboarding of new Atlantic region staff members", "Halifax, NS", "Staff onboarding and regional coordination", "EMAP-2025-305",
+                TravelItem.Status.IN_PROGRESS, TravelItem.TravelType.DOMESTIC,
+                new Object[][]{{"Jennifer Walsh", "TA-2025-0107", "2400.00", null, Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_ESTIMATE_APPROVED},
+                               {"Emily Thompson", "TA-2025-0108", "2400.00", null, Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_ESTIMATE_APPROVED}}},
+            {"AWS re:Invent Conference", "Annual AWS cloud computing conference for technical training and vendor engagement", "Las Vegas, NV, USA", "Technical training and vendor roadmap discussions", "EMAP-2025-306",
+                TravelItem.Status.PLANNED, TravelItem.TravelType.NORTH_AMERICA,
+                new Object[][]{{"David Kim", "TA-2025-0109", "5500.00", null, Currency.USD, TravelTraveller.ApprovalStatus.TAAC_ESTIMATE_SUBMITTED}}},
+            {"Winnipeg Satellite Office Setup", "On-site setup and configuration of new satellite office IT infrastructure", "Winnipeg, MB", "IT infrastructure deployment", "EMAP-2025-307",
+                TravelItem.Status.APPROVED, TravelItem.TravelType.DOMESTIC,
+                new Object[][]{{"Lisa Nguyen", "TA-2025-0110", "1800.00", null, Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_ESTIMATE_APPROVED},
+                               {"James Liu", "TA-2025-0111", "1800.00", null, Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_ESTIMATE_APPROVED}}},
+            {"Local Client Meetings - NCR", "Regular client meetings across National Capital Region offices", "Gatineau, QC", "Quarterly client check-ins", "EMAP-2025-308",
+                TravelItem.Status.COMPLETED, TravelItem.TravelType.LOCAL,
+                new Object[][]{{"Jennifer Walsh", "TA-2025-0112", "150.00", "120.00", Currency.CAD, TravelTraveller.ApprovalStatus.TAAC_FINAL_APPROVED}}},
+            {"GC Agile Community of Practice Meetup", "Cross-departmental agile practices workshop and community building", "Ottawa, ON", "Knowledge sharing and community building", "EMAP-2025-309",
+                TravelItem.Status.PLANNED, TravelItem.TravelType.LOCAL,
+                new Object[][]{{"Emily Thompson", "TA-2025-0113", "100.00", null, Currency.CAD, TravelTraveller.ApprovalStatus.PLANNED},
+                               {"Michael Torres", "TA-2025-0114", "100.00", null, Currency.CAD, TravelTraveller.ApprovalStatus.PLANNED}}},
+            {"Calgary Oil & Gas Sector Briefing", "Sector-specific briefing for regulated industry cybersecurity requirements", "Calgary, AB", "Industry regulatory consultation", "EMAP-2025-310",
+                TravelItem.Status.CANCELLED, TravelItem.TravelType.DOMESTIC,
+                new Object[][]{{"Robert Leblanc", "TA-2025-0115", "3200.00", null, Currency.CAD, TravelTraveller.ApprovalStatus.CANCELLED}}}
         };
 
         for (Object[] data : travelData) {
@@ -1656,16 +1693,26 @@ public class DataInitializer implements ApplicationRunner {
                 item.setDescription((String) data[1]);
                 item.setDestination((String) data[2]);
                 item.setPurpose((String) data[3]);
-                item.setTravelAuthorizationNumber((String) data[4]);
-                item.setReferenceNumber((String) data[5]);
-                item.setTravellerName((String) data[6]);
-                item.setNumberOfTravellers((Integer) data[7]);
-                item.setEstimatedCost((BigDecimal) data[8]);
-                item.setActualCost((BigDecimal) data[9]);
-                item.setStatus((TravelItem.Status) data[10]);
-                item.setTravelType((TravelItem.TravelType) data[11]);
-                item.setCurrency(Currency.CAD);
+                item.setEmap((String) data[4]);
+                item.setStatus((TravelItem.Status) data[5]);
+                item.setTravelType((TravelItem.TravelType) data[6]);
                 item.setFiscalYear(demoFY);
+
+                // Add travellers
+                Object[][] travellersData = (Object[][]) data[7];
+                for (Object[] tData : travellersData) {
+                    TravelTraveller t = new TravelTraveller();
+                    t.setName((String) tData[0]);
+                    t.setTaac((String) tData[1]);
+                    t.setEstimatedCost(new BigDecimal((String) tData[2]));
+                    if (tData[3] != null) {
+                        t.setFinalCost(new BigDecimal((String) tData[3]));
+                    }
+                    t.setCurrency((Currency) tData[4]);
+                    t.setExchangeRate(BigDecimal.ONE);
+                    t.setApprovalStatus((TravelTraveller.ApprovalStatus) tData[5]);
+                    item.addTraveller(t);
+                }
 
                 // Set date ranges based on status
                 LocalDate baseDate = LocalDate.of(2025, 10, 1);
@@ -1692,8 +1739,8 @@ public class DataInitializer implements ApplicationRunner {
 
                 TravelItem saved = travelItemRepository.save(item);
 
-                // Add money allocations
-                BigDecimal omAmount = item.getEstimatedCost() != null ? item.getEstimatedCost() : BigDecimal.ZERO;
+                // Add money allocations - use computed estimated cost from travellers
+                BigDecimal omAmount = saved.getEstimatedCostInCAD() != null ? saved.getEstimatedCostInCAD() : BigDecimal.ZERO;
 
                 // Split higher-cost trips across AB and OA money types
                 if (oaMoney != null && omAmount.compareTo(new BigDecimal("5000")) > 0) {
