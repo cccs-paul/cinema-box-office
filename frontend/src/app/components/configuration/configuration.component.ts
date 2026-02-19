@@ -49,6 +49,8 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
   // Feature toggles state
   hasTrainingItems = false;
   hasTravelItems = false;
+  trainingItemCount = 0;
+  travelItemCount = 0;
   checkingTrainingItems = false;
   checkingTravelItems = false;
   togglingTraining = false;
@@ -229,66 +231,33 @@ export class ConfigurationComponent implements OnInit, OnDestroy {
    * Prevents disabling features that have data.
    */
   private checkForExistingItems(): void {
-    if (!this.rcId) return;
+    if (!this.rcId || !this.fyId) return;
 
     this.checkingTrainingItems = true;
     this.checkingTravelItems = true;
 
-    this.fyService.getFiscalYearsByRC(this.rcId).subscribe({
-      next: (fiscalYears: any[]) => {
-        if (fiscalYears.length === 0) {
-          this.hasTrainingItems = false;
-          this.hasTravelItems = false;
-          this.checkingTrainingItems = false;
-          this.checkingTravelItems = false;
-          return;
-        }
-
-        let trainingChecked = 0;
-        let travelChecked = 0;
-        let foundTraining = false;
-        let foundTravel = false;
-
-        for (const fy of fiscalYears) {
-          this.trainingItemService.getTrainingItemsByFY(this.rcId!, fy.id).subscribe({
-            next: (items) => {
-              if (items.length > 0) foundTraining = true;
-              trainingChecked++;
-              if (trainingChecked === fiscalYears.length) {
-                this.hasTrainingItems = foundTraining;
-                this.checkingTrainingItems = false;
-              }
-            },
-            error: () => {
-              trainingChecked++;
-              if (trainingChecked === fiscalYears.length) {
-                this.hasTrainingItems = foundTraining;
-                this.checkingTrainingItems = false;
-              }
-            }
-          });
-
-          this.travelItemService.getTravelItemsByFY(this.rcId!, fy.id).subscribe({
-            next: (items) => {
-              if (items.length > 0) foundTravel = true;
-              travelChecked++;
-              if (travelChecked === fiscalYears.length) {
-                this.hasTravelItems = foundTravel;
-                this.checkingTravelItems = false;
-              }
-            },
-            error: () => {
-              travelChecked++;
-              if (travelChecked === fiscalYears.length) {
-                this.hasTravelItems = foundTravel;
-                this.checkingTravelItems = false;
-              }
-            }
-          });
-        }
+    this.trainingItemService.getTrainingItemsByFY(this.rcId, this.fyId).subscribe({
+      next: (items) => {
+        this.trainingItemCount = items.length;
+        this.hasTrainingItems = items.length > 0;
+        this.checkingTrainingItems = false;
       },
       error: () => {
+        this.trainingItemCount = 0;
+        this.hasTrainingItems = false;
         this.checkingTrainingItems = false;
+      }
+    });
+
+    this.travelItemService.getTravelItemsByFY(this.rcId, this.fyId).subscribe({
+      next: (items) => {
+        this.travelItemCount = items.length;
+        this.hasTravelItems = items.length > 0;
+        this.checkingTravelItems = false;
+      },
+      error: () => {
+        this.travelItemCount = 0;
+        this.hasTravelItems = false;
         this.checkingTravelItems = false;
       }
     });

@@ -641,12 +641,6 @@
       <button class="dismiss-btn" (click)="clearFeatureError()">×</button>
     </div>
 
-    <!-- Owner-only notice -->
-    <div class="info-message" *ngIf="isNotOwner">
-      <span class="info-icon">🔒</span>
-      {{ 'configuration.featuresOwnerOnly' | translate }}
-    </div>
-
     <!-- Training Feature Card -->
     <div class="feature-card" [class.enabled]="selectedRC?.trainingEnabled !== false" [class.disabled-feature]="selectedRC?.trainingEnabled === false">
       <div class="feature-info">
@@ -657,7 +651,7 @@
         <p class="feature-description">{{ 'configuration.trainingFeatureDesc' | translate }}</p>
         <div class="feature-status">
           <span class="status-hint" *ngIf="hasTrainingItems">
-            {{ 'configuration.hasItemsWarning' | translate }}
+            {{ 'configuration.hasItemsWarning' | translate:{ count: trainingItemCount } }}
           </span>
         </div>
       </div>
@@ -702,7 +696,7 @@
         <p class="feature-description">{{ 'configuration.travelFeatureDesc' | translate }}</p>
         <div class="feature-status">
           <span class="status-hint" *ngIf="hasTravelItems">
-            {{ 'configuration.hasItemsWarning' | translate }}
+            {{ 'configuration.hasItemsWarning' | translate:{ count: travelItemCount } }}
           </span>
         </div>
       </div>
