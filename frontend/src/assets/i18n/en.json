@@ -68,7 +68,8 @@
     "hideAll": "Hide All",
     "processing": "Processing...",
     "preview": "Preview",
-    "viewInBrowser": "Open in New Tab"
+    "viewInBrowser": "Open in New Tab",
+    "saving": "Saving..."
   },
   "header": {
     "userMenu": "User menu",

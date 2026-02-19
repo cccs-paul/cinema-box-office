@@ -68,7 +68,8 @@
     "hideAll": "Tout masquer",
     "processing": "Traitement en cours...",
     "preview": "Aperçu",
-    "viewInBrowser": "Ouvrir dans un nouvel onglet"
+    "viewInBrowser": "Ouvrir dans un nouvel onglet",
+    "saving": "Enregistrement..."
   },
   "header": {
     "userMenu": "Menu utilisateur",

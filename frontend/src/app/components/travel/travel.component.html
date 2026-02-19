@@ -529,8 +529,12 @@
                   <input type="number" [(ngModel)]="t.finalExchangeRate" step="0.0001" class="form-control">
                 </div>
                 <div class="traveller-actions">
-                  <button class="btn btn-sm btn-primary" (click)="saveTraveller(item, t)" [disabled]="isSavingTraveller">💾</button>
-                  <button class="btn btn-sm btn-danger" (click)="deleteTraveller(item, t)">✕</button>
+                  <button class="btn btn-primary" (click)="saveTraveller(item, t)" [disabled]="isSavingTraveller">
+                    {{ isSavingTraveller ? ('common.saving' | translate) : ('common.save' | translate) }}
+                  </button>
+                  <button class="btn btn-danger" (click)="deleteTraveller(item, t)">
+                    {{ 'common.delete' | translate }}
+                  </button>
                 </div>
               </div>
             </div>

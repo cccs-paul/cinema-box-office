@@ -882,3 +882,193 @@ textarea.form-control {
   padding-top: 1rem;
   border-top: 1px solid var(--border-color, #e5e7eb);
 }
+
+/* ===========================
+   Participants Section Styles
+   =========================== */
+
+.participants-section {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.participants-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+}
+
+.participant-row {
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  background: var(--background-secondary, #f9fafb);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &:hover {
+    border-color: var(--primary-gradient-start, #3b82f6);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
+}
+
+.participant-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+
+  .form-group {
+    margin-bottom: 0;
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-secondary, #6b7280);
+      margin-bottom: 0.25rem;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.5rem 0.625rem;
+      border: 1px solid var(--border-color, #e5e7eb);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      background: var(--background-primary, #ffffff);
+      color: var(--text-primary);
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary-gradient-start, #3b82f6);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+    }
+  }
+}
+
+.participant-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding-top: 0.5rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+  grid-column: 1 / -1;
+
+  .btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.btn-primary {
+      background: var(--primary-gradient-start, #3b82f6);
+      color: #ffffff;
+
+      &:hover:not(:disabled) {
+        background: #2563eb;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    &.btn-danger {
+      background: #ef4444;
+      color: #ffffff;
+
+      &:hover {
+        background: #dc2626;
+      }
+    }
+  }
+}
+
+/* Participants/Allocations Read-Only Table */
+.allocations-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.85rem;
+
+  th, td {
+    padding: 0.625rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+  }
+
+  th {
+    background: var(--background-tertiary, #f3f4f6);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary, #6b7280);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    &:last-child td {
+      border-bottom: 1px solid var(--border-color, #e5e7eb);
+    }
+
+    &:hover {
+      background: var(--background-secondary, #f9fafb);
+    }
+
+    &:nth-child(even) {
+      background: var(--background-secondary, #f9fafb);
+    }
+  }
+
+  tfoot tr {
+    td {
+      border-top: 2px solid var(--border-color, #e5e7eb);
+      border-bottom: none;
+      background: var(--background-tertiary, #f3f4f6);
+      font-weight: 600;
+    }
+  }
+
+  .amount-cell {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    white-space: nowrap;
+  }
+}
+
+.participants-display, .allocations-display {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+
+  h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem;
+    color: var(--text-primary);
+  }
+}

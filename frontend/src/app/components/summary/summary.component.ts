@@ -199,8 +199,8 @@ export class SummaryComponent implements OnInit, OnDestroy {
         this.spendingItems = data.spending;
         this.procurementItems = data.procurement;
         this.moneyTypes = data.moneyTypes;
-        this.trainingItems = data.training;
-        this.travelItems = data.travel;
+        this.trainingItems = this.selectedRC?.trainingIncludeInSummary !== false ? data.training : [];
+        this.travelItems = this.selectedRC?.travelIncludeInSummary !== false ? data.travel : [];
         this.isLoading = false;
         this.calculateTotals();
         this.calculateMoneyTypeSummaries();

@@ -289,7 +289,7 @@
       </div>
 
       <!-- Training Stats -->
-      <div class="stats-card training">
+      <div class="stats-card training" *ngIf="selectedRC?.trainingIncludeInSummary !== false">
         <div class="stats-header">
           <span class="stats-icon">🎓</span>
           <span class="stats-title">{{ 'summary.training' | translate }}</span>
@@ -311,7 +311,7 @@
       </div>
 
       <!-- Travel Stats -->
-      <div class="stats-card travel">
+      <div class="stats-card travel" *ngIf="selectedRC?.travelIncludeInSummary !== false">
         <div class="stats-header">
           <span class="stats-icon">✈️</span>
           <span class="stats-title">{{ 'summary.travel' | translate }}</span>

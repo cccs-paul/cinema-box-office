@@ -189,8 +189,8 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
         this.spendingItems = data.spending;
         this.procurementItems = data.procurement;
         this.categories = data.categories;
-        this.trainingItems = data.training;
-        this.travelItems = data.travel;
+        this.trainingItems = this.selectedRC?.trainingIncludeInSummary !== false ? data.training : [];
+        this.travelItems = this.selectedRC?.travelIncludeInSummary !== false ? data.travel : [];
         this.isLoading = false;
         
         // Give DOM time to render before creating charts
@@ -218,10 +218,14 @@ export class InsightsComponent implements OnInit, OnDestroy, AfterViewInit {
     this.createSpendingStatusChart();
     this.createInvoiceCoverageChart();
     this.createCurrencyDistributionChart();
-    this.createTrainingStatusChart();
-    this.createTrainingTypeChart();
-    this.createTravelStatusChart();
-    this.createTravelTypeChart();
+    if (this.selectedRC?.trainingIncludeInSummary !== false) {
+      this.createTrainingStatusChart();
+      this.createTrainingTypeChart();
+    }
+    if (this.selectedRC?.travelIncludeInSummary !== false) {
+      this.createTravelStatusChart();
+      this.createTravelTypeChart();
+    }
   }
 
   /**

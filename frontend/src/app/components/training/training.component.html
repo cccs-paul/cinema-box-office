@@ -533,8 +533,12 @@
                   <input type="number" [(ngModel)]="p.finalExchangeRate" step="0.0001" class="form-control">
                 </div>
                 <div class="participant-actions">
-                  <button class="btn btn-sm btn-primary" (click)="saveParticipant(item, p)" [disabled]="isSavingParticipant">💾</button>
-                  <button class="btn btn-sm btn-danger" (click)="deleteParticipant(item, p)">✕</button>
+                  <button class="btn btn-primary" (click)="saveParticipant(item, p)" [disabled]="isSavingParticipant">
+                    {{ isSavingParticipant ? ('common.saving' | translate) : ('common.save' | translate) }}
+                  </button>
+                  <button class="btn btn-danger" (click)="deleteParticipant(item, p)">
+                    {{ 'common.delete' | translate }}
+                  </button>
                 </div>
               </div>
             </div>
